@@ -60,24 +60,6 @@ public abstract class MessageImpl implements Message {
     }
 
     @Override
-    public void sendReaction(CustomEmoji emoji) {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
-                .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
-    }
-
-    @Override
-    public void removeReaction(CustomEmoji emoji) {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
-                .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
-    }
-
-    @Override
     public User getSender() {
         return user;
     }
