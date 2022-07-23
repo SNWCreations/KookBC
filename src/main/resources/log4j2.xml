@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+    <appenders>
+        <TerminalConsole name="Console">
+            <PatternLayout
+                    pattern="%highlight{[%d{HH:mm:ss}] [%t/%level]: %msg%n}{FATAL=RED, ERROR=Bright RED, WARN=Bright Yellow, INFO=Bright White, DEBUG=Bright Cyan, TRACE=White}"
+                    disableAnsi="${tca:disableAnsi}"/>
+        </TerminalConsole>
+        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <OnStartupTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="1000"/>
+        </RollingRandomAccessFile>
+        <File name="DebugFile" fileName="logs/debug.log" append="false">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
+        </File>
+    </appenders>
+    <loggers>
+        <root level="all">
+            <appender-ref ref="Console" level="info"/>
+            <appender-ref ref="File" level="info"/>
+            <appender-ref ref="DebugFile" level="debug"/>
+        </root>
+    </loggers>
+</configuration>

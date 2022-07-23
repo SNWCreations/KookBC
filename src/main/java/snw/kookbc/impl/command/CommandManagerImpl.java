@@ -1,0 +1,155 @@
+/*
+ *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
+ *     Copyright (C) 2022 KookBC contributors
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Affero General Public License as published
+ *     by the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Affero General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Affero General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package snw.kookbc.impl.command;
+
+import snw.jkook.JKook;
+import snw.jkook.command.*;
+import snw.jkook.entity.User;
+import snw.jkook.message.Message;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+public class CommandManagerImpl implements CommandManager {
+    private final ArrayList<JKookCommand> commands = new ArrayList<>();
+
+    @Override
+    public void registerCommand(JKookCommand command) {
+        if (getCommand(command.getRootName()) != null
+                ||
+                commands.stream().anyMatch(
+                        IT -> IT.getAliases().stream().anyMatch(C -> Objects.equals(C, IT.getRootName()))
+                )
+        ) {
+            throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
+        }
+        commands.add(command);
+    }
+
+    // this method should only be used for executing Bot commands. And the executor is Console.
+    // user commands should be handled by using executeCommand0, NOT THIS
+    // we hope the Bot can only execute the commands they registered. Not Internal command. It is not safe.
+    // But we won't refuse the Bot to execute internal command (e.g. /stop).
+    // We wish the Bot know what are they doing!
+    @Override
+    public boolean executeCommand(CommandSender sender, String cmdLine) throws CommandException {
+        return executeCommand0(sender, cmdLine, null);
+    }
+
+    public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
+        JKook.getLogger().debug("A command execution request has received. Command line: {}", cmdLine);
+        if (cmdLine.isEmpty()) {
+            JKook.getLogger().debug("Received empty command!");
+            return false;
+        }
+        long startTimeStamp = System.currentTimeMillis(); // debug
+
+        List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
+        String root = args.remove(0);
+        JKookCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
+        if (commandObject == null) {
+            JKook.getLogger().info("Unknown command. Type \"help\" for help.");
+            return false;
+        }
+
+        // first get commands
+        List<JKookCommand> sub = (List<JKookCommand>) commandObject.getSubcommands();
+        // then we should know the latest command to be executed
+        // we will use the "/hello a b" as the example
+        JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
+        if (!sub.isEmpty()) { // if the command have subcommand, expect true
+            JKook.getLogger().debug("The subcommand does exists. Attempting to search the final command.");
+            while (args.size() > 1) {
+                // get the first argument, so we got "a"
+                String subName = args.get(0);
+                JKook.getLogger().debug("Got temp subcommand root name: {}", subName);
+
+                boolean found = false; // expect true
+                // then get the command
+                for (JKookCommand s : sub) {
+                    // if the root name equals to the sub name
+                    if (Objects.equals(s.getRootName(), subName)) { // expect true
+                        JKook.getLogger().debug("Got valid subcommand: {}", subName); // debug
+                        // then remove the first argument
+                        args.remove(0); // "a" was removed, so we have "b" in next round
+                        actualCommand = s; // got "a" subcommand
+                        found = true; // found
+                        break; // it's not necessary to continue
+                    }
+                }
+                if (!found) { // if the subcommand is not found
+                    JKook.getLogger().debug("No subcommand was found. We will attempt to execute the command currently found."); // debug
+                    // then we can regard the actualCommand as the final result to be executed
+                    break; // exit the while loop
+                }
+            }
+        }
+
+        // maybe some commands don't have subcommand?
+        JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
+
+        CommandExecutor executor = finalCommand.getExecutor();
+        if (executor == null) { // no executor?
+            JKook.getLogger().info("No executor was registered for provided command line."); // do nothing! lol
+            return false;
+        }
+
+        // alright, it is time to execute it!
+        try {
+            executor.onCommand(sender, args.toArray(new String[0]), msg);
+        } catch (Throwable e) {
+            JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+            // Why Throwable? We need to keep the client safe.
+            // it is easy to understand. NoClassDefError? NoSuchMethodError?
+            // It is OutOfMemoryError? nothing matters lol.
+            throw new CommandException("Something unexpected happened.", e);
+        }
+
+        JKook.getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+
+        return true; // ok, the command is ok, so we can return true.
+    }
+
+    public ArrayList<JKookCommand> getCommands() {
+        return commands;
+    }
+
+    public JKookCommand getCommand(String rootName) {
+        if (rootName.isEmpty()) return null; // do not execute invalid for loop!
+        for (JKookCommand command : commands) {
+            if (Objects.equals(command.getRootName(), rootName)) {
+                return command;
+            }
+        }
+        return null;
+    }
+
+    protected JKookCommand getCommandWithPrefix(String cmdHeader) {
+        if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
+        for (JKookCommand command : commands) {
+            if (Objects.equals(command.getPrefix() + command.getRootName(), cmdHeader)) {
+                return command;
+            }
+        }
+        return null;
+    }
+}

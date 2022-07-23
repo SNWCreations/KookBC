@@ -1,0 +1,32 @@
+# This is the configuration file of KookBC.
+# You can configure many options here.
+
+### ------ BOT CONFIGURATION ------ ###
+# Tips: The values of the items in this section will be used instead of the values from command line.
+# The values from the command line will be used only if the appropriate value is not provided here.
+
+# The Bot archive file that will be used.
+# If this is empty, then you will need to provide this as the argument to command line.
+bot-file: ""
+
+# The token that will be used for Bot.
+token: ""
+
+### ---- END BOT CONFIGURATION ---- ###
+
+# If true, the data from Websocket server will be compressed.
+# If you want to save the Internet flow, turn it to true.
+compress: true
+
+# If true, when the internal commands that can't be used for users got call from user events,
+#  the executor will simply return.
+# If false, a message will be sent to the user that sent the request.
+ignore-remote-call-invisible-internal-command: true
+
+# If true, when the console executed a command, the content of command line
+#  and execute time will be stored in the ".console_history" file in KookBC folder.
+save-console-history: true
+
+# If true, we will add two lines about KookBC's introduction and the repository link to command help.
+# Please don't set it to false, it won't impact the performance!
+allow-help-ad: true
