@@ -40,7 +40,8 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         JsonObject object = KBCClient.getInstance().getConnector().getClient().get(
                 getRequestURL() + "&page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
         );
-        boolean res = object.getAsJsonObject("meta").get("page_total").getAsInt() < (currentPage.get() - 1);
+        JsonObject meta = object.getAsJsonObject("meta");
+        boolean res = meta.get("page").getAsInt() < meta.get("page_total").getAsInt();
         if (res) {
             processElements(object.getAsJsonArray("items"));
         } else {
