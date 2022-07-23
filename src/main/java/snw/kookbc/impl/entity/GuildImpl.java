@@ -152,11 +152,14 @@ public class GuildImpl implements Guild {
 
     @Override
     public void ban(User user, @Nullable String s, int i) {
-        Map<String, Object> body = new MapBuilder()
+        MapBuilder builder = new MapBuilder()
                 .put("guild_id", getId())
                 .put("target_id", user.getId())
-                .put("del_msg_days", i)
-                .build();
+                .put("del_msg_days", i);
+        if (s != null) {
+            builder.put("remark", s);
+        }
+        Map<String, Object> body = builder.build();
         KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.BLACKLIST_CREATE.toFullURL(), body);
     }
 
