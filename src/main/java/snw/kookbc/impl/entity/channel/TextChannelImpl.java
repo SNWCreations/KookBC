@@ -54,11 +54,17 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     @Override
     public void sendComponent(BaseComponent component, @Nullable Message quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
-        Map<String, Object> body = new MapBuilder()
+        MapBuilder builder = new MapBuilder()
                 .put("target_id", getId())
                 .put("type", result[0])
-                .put("content", result[1])
-                .build();
+                .put("content", result[1]);
+        if (quote != null) {
+            builder.put("quote", quote.getId());
+        }
+        if (tempTarget != null) {
+            builder.put("temp_target_id", tempTarget.getId());
+        }
+        Map<String, Object> body = builder.build();
         KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body);
     }
 
