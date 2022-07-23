@@ -88,6 +88,11 @@ public class GuildImpl implements Guild {
     }
 
     @Override
+    public PageIterator<Set<Role>> getRoles() {
+        return new GuildRoleListIterator(this);
+    }
+
+    @Override
     public String getVoiceChannelServerRegion() {
         return region;
     }
