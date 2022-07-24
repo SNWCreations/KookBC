@@ -109,7 +109,9 @@ public class CommandManagerImpl implements CommandManager {
 
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
-            JKook.getLogger().info("No executor was registered for provided command line."); // do nothing! lol
+            if (sender instanceof ConsoleCommandSender) {
+                JKook.getLogger().info("No executor was registered for provided command line.");
+            } // do nothing! lol
             return false;
         }
 
