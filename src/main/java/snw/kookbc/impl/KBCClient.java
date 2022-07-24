@@ -250,9 +250,7 @@ public class KBCClient {
     private void registerInternal() {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
-                .setExecutor(wrapConsoleCmd((args) -> {
-                    shutdown();
-                }))
+                .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register();
         new JKookCommand("help")
                 .setDescription("获取此帮助列表。")
