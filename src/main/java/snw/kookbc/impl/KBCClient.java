@@ -42,6 +42,7 @@ import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.storage.EntityStorage;
+import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.Validate;
 
 import java.io.File;
@@ -179,6 +180,8 @@ public class KBCClient {
         getStorage().addUser(botUser);
         ((BaseBot) bot).setUser(botUser);
         getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
+
+        getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
     }
 
     // If you need console (normally you won't need it), call this
