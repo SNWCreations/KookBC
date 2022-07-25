@@ -74,8 +74,8 @@ public class KBCClient {
         storage = new EntityStorage(this);
         entityBuilder = new EntityBuilder(this);
         msgBuilder = new MessageBuilder(this);
-        setInstance(this); // make sure the instance can be used from other place
         entityUpdater = new EntityUpdater();
+        setInstance(this); // make sure the instance can be used from other place
     }
 
     // Use this to access the most things in KookBC!
