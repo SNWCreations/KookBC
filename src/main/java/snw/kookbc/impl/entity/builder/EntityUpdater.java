@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-// TODO incomplete
 // The class for building entities.
 public class EntityUpdater {
 
