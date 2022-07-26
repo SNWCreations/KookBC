@@ -134,7 +134,9 @@ public class EntityUpdater {
                 ((TextChannelImpl) channel).setChatLimitTime(chatLimitTime);
             } else if (type == 2) { // VoiceChannel
                 boolean hasPassword = object.get("has_password").getAsBoolean();
+                int size = object.get("limit_amount").getAsInt();
                 ((VoiceChannelImpl) channel).setPasswordProtected(hasPassword);
+                ((VoiceChannelImpl) channel).setMaxSize(size);
             }
         }
     }

@@ -36,9 +36,10 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 
-    public VoiceChannelImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, boolean passwordProtected) {
+    public VoiceChannelImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, boolean passwordProtected, int maxSize) {
         super(id, master, permSync, parent, name, rpo, upo);
         this.passwordProtected = passwordProtected;
+        this.maxSize = maxSize;
     }
 
     @Override
