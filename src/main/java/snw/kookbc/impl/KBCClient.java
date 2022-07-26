@@ -54,7 +54,7 @@ import java.util.function.Consumer;
 import static snw.kookbc.util.Util.getHelp;
 import static snw.kookbc.util.Util.getVersionDifference;
 
-// The client representation. Only one per VM.
+// The client representation.
 public class KBCClient {
     private static KBCClient INSTANCE = null;
     private final Core core;
