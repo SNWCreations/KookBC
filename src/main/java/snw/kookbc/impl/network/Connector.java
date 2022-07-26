@@ -22,7 +22,7 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 import snw.jkook.JKook;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.concurrent.TimeUnit;
 

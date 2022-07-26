@@ -35,7 +35,7 @@ import snw.kookbc.impl.entity.mute.MuteResultImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
 import snw.kookbc.util.MapBuilder;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.Map;
 import java.util.Set;

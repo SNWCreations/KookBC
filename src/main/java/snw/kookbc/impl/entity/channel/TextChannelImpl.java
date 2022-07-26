@@ -31,7 +31,7 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.TextChannelMessageIterator;
 import snw.kookbc.util.MapBuilder;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.Collection;
 import java.util.Map;

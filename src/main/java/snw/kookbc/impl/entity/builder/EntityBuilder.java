@@ -34,7 +34,7 @@ import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.ArrayList;
 import java.util.Collection;

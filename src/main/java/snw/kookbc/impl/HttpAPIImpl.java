@@ -33,7 +33,7 @@ import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.io.File;
 import java.util.Collection;

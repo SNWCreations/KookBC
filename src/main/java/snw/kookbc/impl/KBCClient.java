@@ -43,7 +43,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.io.File;
 import java.io.IOException;

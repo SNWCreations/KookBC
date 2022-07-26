@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Range;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

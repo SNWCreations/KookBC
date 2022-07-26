@@ -29,7 +29,7 @@ import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.*;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.net.MalformedURLException;
 import java.net.URL;

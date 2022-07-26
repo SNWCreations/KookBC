@@ -22,7 +22,7 @@ import snw.jkook.JKook;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.kookbc.util.ThreadFactoryBuilder;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.Map;
 import java.util.concurrent.*;
