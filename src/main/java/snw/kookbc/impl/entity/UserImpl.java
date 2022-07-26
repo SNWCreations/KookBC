@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonElement;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -31,14 +30,13 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
 public class UserImpl implements User {
     private final String id;
     private final boolean bot;
-    private final Collection<Integer> roles = new HashSet<>();
+    private Collection<Integer> roles;
     private String name;
     private int identify;
     private Integer intimacy = null;
@@ -57,8 +55,8 @@ public class UserImpl implements User {
                     int identify,
                     boolean online,
                     boolean ban,
-                    boolean vip
-    ) {
+                    boolean vip,
+                    Collection<Integer> roles) {
         this.id = id;
         this.bot = bot;
         this.name = name;
@@ -68,6 +66,7 @@ public class UserImpl implements User {
         this.online = online;
         this.ban = ban;
         this.vip = vip;
+        this.roles = roles;
     }
 
 
@@ -131,11 +130,7 @@ public class UserImpl implements User {
 
     @Override
     public Collection<Integer> getRoles() {
-        Collection<Integer> result = new HashSet<>();
-        for (JsonElement element : KBCClient.getInstance().getConnector().getClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)).get("roles").getAsJsonArray()) {
-            result.add(element.getAsInt());
-        }
-        return result;
+        return roles;
     }
 
     @Override
