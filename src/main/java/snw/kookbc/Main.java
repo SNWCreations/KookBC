@@ -183,6 +183,7 @@ public class Main {
         CoreImpl core = new CoreImpl(logger);
         JKook.setCore(core);
         KBCClient client = new KBCClient(core, config, botDataFolder);
+        KBCClient.setInstance(client);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
         Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));
