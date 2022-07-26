@@ -106,7 +106,7 @@ public class EventFactory {
                             body.get("msg_id").getAsString(),
                             reaction1 == null ? new ReactionImpl(
                                     body.get("msg_id").getAsString(),
-                                    KBCClient.getInstance().getEntityBuilder().buildEmoji(body.getAsJsonObject("emoji")),
+                                    em,
                                     KBCClient.getInstance().getStorage().getUser(body.get("user_id").getAsString()),
                                     -1
                             ) : reaction1
