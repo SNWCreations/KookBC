@@ -247,6 +247,10 @@ public class UserImpl implements User {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
+    public void setRoles(Collection<Integer> roles) {
+        this.roles = roles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.builder;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
@@ -39,6 +40,7 @@ import snw.jkook.util.Validate;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 
 // The class for building entities.
@@ -53,6 +55,9 @@ public class EntityUpdater {
         boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
+        JsonArray roleArray = object.get("roles").getAsJsonArray();
+        Collection<Integer> roles = new HashSet<>();
+        roleArray.forEach(IT -> roles.add(IT.getAsInt()));
         UserImpl usr = (UserImpl) user;
         usr.setName(userName);
         usr.setAvatarUrl(avatar);
@@ -61,6 +66,7 @@ public class EntityUpdater {
         usr.setOnline(online);
         usr.setBan(ban);
         usr.setVip(vip);
+        usr.setRoles(roles);
     }
 
     public void updateGuild(JsonObject object, Guild guild) {
