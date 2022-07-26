@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonObject;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.VoiceChannel;
@@ -40,6 +41,16 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
         this.passwordProtected = passwordProtected;
     }
 
+    @Override
+    public String createInvite(int validSeconds, int validTimes) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("duration", validSeconds)
+                .put("setting_times", validTimes)
+                .build();
+        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        return object.get("url").getAsString();
+    }
 
     @Override
     public boolean hasPassword() {

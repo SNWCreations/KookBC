@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
@@ -143,17 +142,6 @@ public abstract class ChannelImpl implements Channel {
     @Override
     public PageIterator<Set<Invitation>> getInvitations() {
         return new ChannelInvitationIterator(this);
-    }
-
-    @Override
-    public String createInvite(int validSeconds, int validTimes) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("duration", validSeconds)
-                .put("setting_times", validTimes)
-                .build();
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return object.get("url").getAsString();
     }
 
     @Override
