@@ -20,6 +20,7 @@ package snw.kookbc.impl.message;
 
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
+import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
@@ -29,8 +30,8 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Map;
 
 public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
-    public PrivateMessageImpl(String id, User user, BaseComponent component, long timeStamp) {
-        super(id, user, component, timeStamp);
+    public PrivateMessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote) {
+        super(id, user, component, timeStamp, quote);
     }
 
     @Override

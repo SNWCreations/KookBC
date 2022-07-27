@@ -21,6 +21,7 @@ package snw.kookbc.impl.message;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
@@ -32,8 +33,8 @@ import java.util.Map;
 public class TextChannelMessageImpl extends MessageImpl implements TextChannelMessage {
     private final TextChannel channel;
 
-    public TextChannelMessageImpl(String id, User user, BaseComponent component, long timeStamp, TextChannel channel) {
-        super(id, user, component, timeStamp);
+    public TextChannelMessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
+        super(id, user, component, timeStamp, quote);
         this.channel = channel;
     }
 

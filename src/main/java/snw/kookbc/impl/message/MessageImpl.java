@@ -21,6 +21,7 @@ package snw.kookbc.impl.message;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
@@ -28,25 +29,25 @@ import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
 public abstract class MessageImpl implements Message {
     private final String id;
     private final User user;
     private final BaseComponent component;
     private final long timeStamp;
+    private final Message quote;
 
-    public MessageImpl(String id, User user, BaseComponent component, long timeStamp) {
+    public MessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote) {
         this.id = id;
         this.user = user;
         this.component = component;
         this.timeStamp = timeStamp;
+        this.quote = quote;
     }
 
     @Override
@@ -57,6 +58,11 @@ public abstract class MessageImpl implements Message {
     @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public @Nullable Message getQuote() {
+        return quote;
     }
 
     @Override
