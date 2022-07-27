@@ -106,7 +106,7 @@ public class MessageProcessor extends WebSocketListener implements Listener {
         Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
         switch (frame.getType()) {
             case EVENT:
-                event(frame);
+                JKook.getScheduler().runTask(() -> event(frame));
                 break;
             case HELLO:
                 hello(frame);
