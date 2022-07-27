@@ -210,10 +210,16 @@ public class KBCClient {
         if (bot != null) {
             bot.getLogger().info("Disabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
             bot.onDisable();
-            try {
-                ((SimpleBotClassLoader) bot.getClass().getClassLoader()).close();
-            } catch (IOException e) {
-                JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+            // why do I check this? because in some environments,
+            // the bot won't be loaded by using SimpleClassLoader, maybe another type?
+            // And the Bot can be constructed without any check by BotClassLoader,
+            // so we should check this before casting it.
+            if (bot.getClass().getClassLoader() instanceof SimpleBotClassLoader) {
+                try {
+                    ((SimpleBotClassLoader) bot.getClass().getClassLoader()).close();
+                } catch (IOException e) {
+                    JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+                }
             }
         }
 
