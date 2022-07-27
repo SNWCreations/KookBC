@@ -66,7 +66,7 @@ public class KBCClient {
     private final YamlConfiguration config;
     private final File botDataFolder;
     private Bot bot;
-    private Connector connector;
+    protected Connector connector;
 
     public KBCClient(Core core, YamlConfiguration config, File botDataFolder) {
         Validate.isTrue(botDataFolder.isDirectory(), "The provided botDataFolder object is not a directory.");
