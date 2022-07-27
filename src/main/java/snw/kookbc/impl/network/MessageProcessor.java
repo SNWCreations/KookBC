@@ -228,7 +228,10 @@ public class MessageProcessor extends WebSocketListener implements Listener {
         if (component == null) return false; // not a text component!
 
         for (JKookCommand command : ((CommandManagerImpl) JKook.getCommandManager()).getCommands()) {
-            if (component.toString().startsWith(command.getPrefix() + command.getRootName())) {
+            // effectively final variable for the following expression,
+            // if you replace the "finalComponent" with "component", you will got error.
+            TextComponent finalComponent = component;
+            if (command.getPrefixes().stream().anyMatch(IT -> finalComponent.toString().startsWith(IT + command.getRootName()))) {
                 try {
                     ((CommandManagerImpl) JKook.getCommandManager()).executeCommand0(sender, component.toString(), msg);
                 } catch (Exception e) {
