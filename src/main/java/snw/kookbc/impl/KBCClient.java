@@ -160,7 +160,7 @@ public class KBCClient {
             getCore().getLogger().warn("Bot is using old version of JKook API! We are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
         }
         if (diff == 1) {
-            getCore().getLogger().error("Unsupported API version, we are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+            getCore().getLogger().warn("Unsupported API version, we are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
         }
 
         getCore().getLogger().debug("Registering internal things");
