@@ -28,7 +28,6 @@ import snw.jkook.JKook;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public final class UpdateChecker implements Runnable {
-    private final OkHttpClient client = new OkHttpClient();
 
     @Override
     public void run() {
@@ -43,7 +42,7 @@ public final class UpdateChecker implements Runnable {
         JKook.getLogger().info("Checking updates...");
 
         JsonObject resObj;
-        try (Response response = client.newCall(
+        try (Response response = new OkHttpClient().newCall(
                 new Request.Builder()
                         .get()
                         .url("https://api.github.com/repos/SNWCreations/KookBC/releases/latest")
