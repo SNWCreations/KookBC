@@ -112,7 +112,7 @@ public class CommandManagerImpl implements CommandManager {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 try {
-                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]), null);
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
