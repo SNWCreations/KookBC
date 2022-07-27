@@ -254,11 +254,16 @@ public class KBCClient {
         return connector;
     }
 
-    private void registerInternal() {
+    protected void registerInternal() {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register();
+        registerHelpCommand();
+        JKook.getEventManager().registerHandlers(new InternalEventListener());
+    }
+
+    protected void registerHelpCommand() {
         new JKookCommand("help")
                 .setDescription("获取此帮助列表。")
                 .setExecutor(
@@ -307,7 +312,7 @@ public class KBCClient {
                                 }
                             }
                         }
-                ).register();
-        JKook.getEventManager().registerHandlers(new InternalEventListener());
+                )
+                .register();
     }
 }
