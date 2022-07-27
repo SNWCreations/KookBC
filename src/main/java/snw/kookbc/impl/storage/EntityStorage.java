@@ -221,6 +221,10 @@ public class EntityStorage {
         channels.remove(id);
     }
 
+    public void removeGuild(String id) {
+        guilds.remove(id);
+    }
+
     private <T> T get(String id, Map<String, SoftReference<T>> map) {
         SoftReference<T> object = map.get(id);
         if (object == null) {

@@ -191,6 +191,7 @@ public class EventFactory {
                     KBCClient.getInstance().getEntityUpdater().updateGuild(body, guild1);
                     return new GuildInfoUpdateEvent(msgTimeStamp, guild1);
                 case GUILD_DELETE:
+                    KBCClient.getInstance().getStorage().removeGuild(body.get("id").getAsString());
                     return new GuildDeleteEvent(msgTimeStamp, body.get("id").getAsString());
                 case GUILD_BAN:
                     List<User> banned = new ArrayList<>();
