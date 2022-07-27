@@ -109,6 +109,7 @@ public class EntityBuilder {
         // basic information
         String id = object.get("id").getAsString();
         String name = object.get("name").getAsString();
+        Guild guild = client.getStorage().getGuild(object.get("guild_id").getAsString());
         User master = client.getStorage().getUser(object.get("master_id").getAsString());
         String parentId = object.get("parent_id").getAsString();
         Category parent = (parentId.isEmpty()) ? null : (Category) client.getStorage().getChannel(parentId);
@@ -145,6 +146,7 @@ public class EntityBuilder {
             return new CategoryImpl(
                     id,
                     master,
+                    guild,
                     isPermSync,
                     parent,
                     name,
@@ -158,6 +160,7 @@ public class EntityBuilder {
                 return new TextChannelImpl(
                         id,
                         master,
+                        guild,
                         isPermSync,
                         parent,
                         name,
@@ -171,6 +174,7 @@ public class EntityBuilder {
                 return new VoiceChannelImpl(
                         id,
                         master,
+                        guild,
                         isPermSync,
                         parent,
                         name,
