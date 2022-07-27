@@ -97,7 +97,7 @@ public class CommandManagerImpl implements CommandManager {
                     }
                 }
                 if (!found) { // if the subcommand is not found
-                    JKook.getLogger().debug("No subcommand was found. We will attempt to execute the command currently found."); // debug
+                    JKook.getLogger().debug("No subcommand matching current command root name. We will attempt to execute the command currently found."); // debug
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
