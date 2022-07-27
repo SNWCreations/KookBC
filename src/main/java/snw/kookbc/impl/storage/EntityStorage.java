@@ -39,7 +39,6 @@ public class EntityStorage {
     private final Map<String, Collection<SoftReference<Role>>> roles = new ConcurrentHashMap<>();
     private final Map<String, SoftReference<CustomEmoji>> emojis = new ConcurrentHashMap<>();
     private final Map<String, SoftReference<Message>> msg = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<CustomEmoji>> emoji = new ConcurrentHashMap<>();
     private final Set<SoftReference<Reaction>> reactions = new HashSet<>();
 
     public EntityStorage(KBCClient client) {
