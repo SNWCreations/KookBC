@@ -213,6 +213,10 @@ public class EntityStorage {
         reactions.removeIf(reference -> reference.get() == reaction);
     }
 
+    public void removeMessage(String id) {
+        msg.remove(id);
+    }
+
     private <T> T get(String id, Map<String, SoftReference<T>> map) {
         SoftReference<T> object = map.get(id);
         if (object == null) {

@@ -121,6 +121,7 @@ public class EventFactory {
                             body.get("content").getAsString()
                     );
                 case CHANNEL_MESSAGE_DELETE:
+                    KBCClient.getInstance().getStorage().removeMessage(body.get("msg_id").getAsString());
                     return new ChannelMessageDeleteEvent(
                             msgTimeStamp,
                             (TextChannel) KBCClient.getInstance().getStorage().getChannel(body.get("channel_id").getAsString()), // if this error, we can regard it as internal error
@@ -205,6 +206,7 @@ public class EventFactory {
                 case PM_UPDATE:
                     return new PrivateMessageUpdateEvent(msgTimeStamp, body.get("msg_id").getAsString(), body.get("content").getAsString());
                 case PM_DELETE:
+                    KBCClient.getInstance().getStorage().removeMessage(body.get("msg_id").getAsString());
                     return new PrivateMessageDeleteEvent(msgTimeStamp, body.get("msg_id").getAsString());
                 case USER_JOINED_GUILD:
                     return new UserJoinGuildEvent(
