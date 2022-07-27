@@ -48,6 +48,7 @@ import snw.jkook.util.Validate;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -147,10 +148,11 @@ public class KBCClient {
     // or you will get NullPointerException.
     public void start(File file, String token) {
         long timeStamp = System.currentTimeMillis();
-        @SuppressWarnings("resource") // we will release it when the client stops. See shutdown() method.
-        SimpleBotClassLoader classloader = new SimpleBotClassLoader(this);
-        bot = classloader.loadBot(file, token);
+        bot = Objects.requireNonNull(loadBot(file, token));
+        postLoadBot(timeStamp);
+    }
 
+    protected void postLoadBot(long timeStamp) {
         getCore().getLogger().debug("Checking the API version of the Bot");
         BotDescription description = bot.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
@@ -183,6 +185,13 @@ public class KBCClient {
         getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
 
         getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
+    }
+
+    // Override this if you have other way to load the Bot.
+    protected Bot loadBot(File file, String token) {
+        @SuppressWarnings("resource") // we will release it when the client stops. See shutdown() method.
+        SimpleBotClassLoader classloader = new SimpleBotClassLoader(this);
+        return classloader.loadBot(file, token);
     }
 
     // If you need console (normally you won't need it), call this
