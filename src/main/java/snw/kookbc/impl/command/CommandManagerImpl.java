@@ -148,7 +148,7 @@ public class CommandManagerImpl implements CommandManager {
     protected JKookCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
         for (JKookCommand command : commands) {
-            if (Objects.equals(command.getPrefix() + command.getRootName(), cmdHeader)) {
+            if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
                 return command;
             }
         }
