@@ -78,7 +78,7 @@ public class CommandManagerImpl implements CommandManager {
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
         if (!sub.isEmpty()) { // if the command have subcommand, expect true
             JKook.getLogger().debug("The subcommand does exists. Attempting to search the final command.");
-            while (args.size() > 1) {
+            while (!args.isEmpty()) {
                 // get the first argument, so we got "a"
                 String subName = args.get(0);
                 JKook.getLogger().debug("Got temp subcommand root name: {}", subName);
