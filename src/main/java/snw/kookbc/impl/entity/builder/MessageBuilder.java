@@ -63,7 +63,7 @@ public class MessageBuilder {
         JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         long timeStamp = object.get("msg_timestamp").getAsLong();
-        return new PrivateMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("quote")));
+        return new PrivateMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")));
     }
 
     public TextChannelMessage buildTextChannelMessage(JsonObject object) {
@@ -72,7 +72,7 @@ public class MessageBuilder {
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         TextChannel channel = (TextChannel) client.getStorage().getChannel(object.get("target_id").getAsString());
         long timeStamp = object.get("msg_timestamp").getAsLong();
-        return new TextChannelMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("quote")), channel);
+        return new TextChannelMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")), channel);
     }
 
     public Message buildQuote(JsonObject object) {
