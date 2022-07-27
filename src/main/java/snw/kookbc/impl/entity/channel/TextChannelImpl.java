@@ -20,6 +20,7 @@ package snw.kookbc.impl.entity.channel;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
@@ -41,8 +42,8 @@ import java.util.Objects;
 public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;
 
-    public TextChannelImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int chatLimitTime) {
-        super(id, master, permSync, parent, name, rpo, upo);
+    public TextChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int chatLimitTime) {
+        super(id, master, guild, permSync, parent, name, rpo, upo);
         this.chatLimitTime = chatLimitTime;
     }
 

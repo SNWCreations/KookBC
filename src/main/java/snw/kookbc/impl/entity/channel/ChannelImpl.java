@@ -19,6 +19,7 @@
 package snw.kookbc.impl.entity.channel;
 
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
@@ -38,15 +39,17 @@ import java.util.Set;
 public abstract class ChannelImpl implements Channel {
     private final String id;
     private final User master;
+    private final Guild guild;
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
     private Category parent;
     private String name;
 
-    public ChannelImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo) {
+    public ChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo) {
         this.id = id;
         this.master = master;
+        this.guild = guild;
         this.permSync = permSync;
         this.parent = parent;
         this.name = name;
@@ -57,6 +60,11 @@ public abstract class ChannelImpl implements Channel {
     @Override
     public String getId() {
         return id;
+    }
+
+    @Override
+    public Guild getGuild() {
+        return guild;
     }
 
     @Override
