@@ -73,7 +73,7 @@ public final class UpdateChecker implements Runnable {
         } else if (versionDifference == 0) {
             JKook.getLogger().info("You are using the latest version! :)");
         } else if (versionDifference == 1) {
-            JKook.getLogger().info("The latest version from remote is older than this version.");
+            JKook.getLogger().info("The latest version from remote is not released on Github yet.");
             JKook.getLogger().info("Are you using development version?");
         } else {
             JKook.getLogger().info("Unable to compare the version! Internal method returns {}", versionDifference);
