@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
@@ -77,6 +78,10 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     private TextChannelMessage buildMessage(JsonObject object) {
         String id = object.get("id").getAsString();
+        Message message = KBCClient.getInstance().getStorage().getMessage(id);
+        if (message != null) {
+            return (TextChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
+        }
         long timeStamp = object.get("create_at").getAsLong();
         JsonObject authorObj = object.getAsJsonObject("author");
         User author = KBCClient.getInstance().getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
@@ -86,6 +91,7 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
                 author,
                 component,
                 timeStamp,
+                KBCClient.getInstance().getMessageBuilder().buildQuote(object.getAsJsonObject("quote")),
                 channel
         );
     }
