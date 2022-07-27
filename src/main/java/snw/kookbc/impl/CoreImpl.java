@@ -53,10 +53,10 @@ public class CoreImpl implements Core {
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("git.properties"));
+            getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
         } catch (IOException e) {
             getLogger().warn("Unable to read Git commit information. :(", e);
         }
-        getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
     }
 
     @Override
