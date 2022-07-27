@@ -237,24 +237,14 @@ public class MessageProcessor extends WebSocketListener implements Listener {
                 } catch (Exception e) {
                     StringWriter strWrt = new StringWriter();
                     MarkdownComponent markdownComponent;
-                    if (e instanceof CommandException) {
-                        // remove CommandException stacktrace to make the stacktrace smaller
-                        e.getCause().printStackTrace(new PrintWriter(strWrt));
-                        markdownComponent = new MarkdownComponent(
-                                "执行命令时发生异常，请联系 Bot 的开发者！\n" +
-                                        "(不要联系 KookBC 的开发者！)\n" +
-                                        "以下是堆栈信息 (可以提供给 Bot 的开发者，有助于其诊断问题):\n" +
-                                        "---\n" +
-                                        strWrt
-                        );
-                    } else {
-                        markdownComponent = new MarkdownComponent(
-                                "执行命令时发生内部异常，请联系 KookBC 的开发者！\n" +
-                                        "以下是堆栈信息 (可以提供给 KookBC 的开发者，有助于其诊断问题):\n" +
-                                        "---\n" +
-                                        strWrt
-                        );
-                    }
+                    // remove CommandException stacktrace to make the stacktrace smaller
+                    (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
+                    markdownComponent = new MarkdownComponent(
+                            "执行命令时发生异常，请联系 Bot 的开发者和 KookBC 的开发者！\n" +
+                                    "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
+                                    "---\n" +
+                                    strWrt
+                    );
                     if (event instanceof ChannelMessageEvent) {
                         channel.sendComponent(
                                 markdownComponent,
