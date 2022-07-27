@@ -41,14 +41,14 @@ import snw.jkook.message.component.TextComponent;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.event.EventFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ProtocolException;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static snw.kookbc.util.Util.decompressDeflate;
+import java.util.zip.Inflater;
 
 public class MessageProcessor extends WebSocketListener implements Listener {
     private final Connector connector;
@@ -271,4 +271,27 @@ public class MessageProcessor extends WebSocketListener implements Listener {
         }
         return false; // no command is found
     }
+
+    public static byte[] decompressDeflate(byte[] data) {
+        byte[] output = null;
+
+        Inflater decompressor = new Inflater();
+        decompressor.reset();
+        decompressor.setInput(data);
+
+        try (ByteArrayOutputStream o = new ByteArrayOutputStream(data.length)) {
+            byte[] buf = new byte[1024];
+            while (!decompressor.finished()) {
+                int i = decompressor.inflate(buf);
+                o.write(buf, 0, i);
+            }
+            output = o.toByteArray();
+        } catch (Exception e) {
+            JKook.getLogger().error("Unexpected exception happened while we attempting to decompress the ZLIB/DEFLATE compressed data.", e);
+        }
+
+        decompressor.end();
+        return output;
+    }
+
 }

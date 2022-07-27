@@ -47,12 +47,12 @@ import snw.jkook.util.Validate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static snw.kookbc.util.Util.getHelp;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 // The client representation.
@@ -323,5 +323,19 @@ public class KBCClient {
                         }
                 )
                 .register();
+    }
+
+    public static List<String> getHelp(JKookCommand[] commands) {
+        List<String> result = new LinkedList<>();
+        result.add("-------- 命令帮助 --------");
+        for (JKookCommand command : commands) {
+            result.add(String.format("(%s)%s: %s", String.join("|", command.getPrefixes()), command.getRootName(),
+                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+            ));
+        }
+        result.add("注: 在每条命令帮助的开头，括号中用 \"|\" 隔开的字符为此命令的前缀。");
+        result.add("如 \"(/|.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
+        result.add("-------------------------");
+        return result;
     }
 }
