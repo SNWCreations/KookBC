@@ -136,6 +136,7 @@ public class EventFactory {
                     KBCClient.getInstance().getEntityUpdater().updateChannel(body, channel);
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
+                    KBCClient.getInstance().getStorage().removeChannel(body.get("id").getAsString());
                     return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString());
                 case CHANNEL_MESSAGE_PINNED:
                     return new ChannelMessagePinEvent(
