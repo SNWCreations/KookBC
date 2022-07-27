@@ -66,9 +66,11 @@ public class EventFactory {
                 if (pm.getSender() == KBCClient.getInstance().getBot().getUser()) {
                     return null; // prevent self-process.
                 }
+                KBCClient.getInstance().getStorage().addMessage(pm);
                 return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
             } else {
                 TextChannelMessage message = KBCClient.getInstance().getMessageBuilder().buildTextChannelMessage(object);
+                KBCClient.getInstance().getStorage().addMessage(message);
                 return new ChannelMessageEvent(message.getTimeStamp(), message.getChannel(), message);
             }
         } else {
