@@ -107,6 +107,33 @@ public class CommandManagerImpl implements CommandManager {
         // maybe some commands don't have subcommand?
         JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
 
+        // region support for the syntax sugar that added in JKook 0.24.0
+        if (sender instanceof ConsoleCommandSender) {
+            ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
+            if (consoleCommandExecutor != null) {
+                try {
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]), null);
+                    return true; // prevent CommandExecutor execution.
+                } catch (Throwable e) {
+                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    throw new CommandException("Something unexpected happened.", e);
+                }
+            }
+        }
+        if (sender instanceof User) {
+            UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
+            if (userCommandExecutor != null) {
+                try {
+                    userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
+                    return true; // prevent CommandExecutor execution.
+                } catch (Throwable e) {
+                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    throw new CommandException("Something unexpected happened.", e);
+                }
+            }
+        }
+        // endregion
+
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
             if (sender instanceof ConsoleCommandSender) {
