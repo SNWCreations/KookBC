@@ -161,6 +161,8 @@ public class UserImpl implements User {
 
     @Override
     public void setIntimacy(int i) {
+        if (!((i > 0) && (i < 2200)))
+            throw new IllegalArgumentException("Invalid score. 0--2200 is allowed.");
         Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
                 .put("score", i)
