@@ -31,6 +31,9 @@ import snw.kookbc.util.ThreadFactoryBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +61,17 @@ public class WebHookClient extends KBCClient {
         server.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 4, new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
         getCore().getLogger().info("Server is listening on port {}", port);
-        getConnector().setSession(new Session(null, new AtomicInteger(1)));
+        getCore().getLogger().debug("Initializing SN update listener.");
+        int initSN = 0;
+        File snfile = new File(getBotDataFolder(), "sn");
+        if (snfile.exists()) {
+            List<String> lines = Files.readAllLines(Paths.get(snfile.toURI()));
+            if (!lines.isEmpty()) {
+                initSN = Integer.parseInt(lines.get(0));
+            }
+        }
+        getConnector().setSession(new Session(null, new AtomicInteger(initSN)));
+        new SNUpdateListener(this).start();
     }
 
     @Override
