@@ -18,9 +18,12 @@
 
 package snw.kookbc.impl.network.webhook;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
 import snw.kookbc.impl.network.ListenerImpl;
 
@@ -48,7 +51,9 @@ public class SimpleHttpHandler implements HttpHandler {
         } else {
             res = new String(bytes);
         }
-        listener.parseEvent(res);
+        JsonObject object = JsonParser.parseString(res).getAsJsonObject();
+        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        listener.executeEvent(frame);
         exchange.sendResponseHeaders(200, -1);
         exchange.getResponseBody().close();
     }

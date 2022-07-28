@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.network;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -50,7 +52,9 @@ public class MessageProcessor extends WebSocketListener {
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
         JKook.getLogger().debug("MessageProcessor#onMessage(String) got call. Response: {}", text);
-        listener.parseEvent(text);
+        JsonObject object = JsonParser.parseString(text).getAsJsonObject();
+        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        listener.executeEvent(frame);
     }
 
     // for compressed messages, so we will extract it before processing
@@ -59,7 +63,9 @@ public class MessageProcessor extends WebSocketListener {
         super.onMessage(webSocket, bytes);
         String res = new String(decompressDeflate(bytes.toByteArray()));
         JKook.getLogger().debug("MessageProcessor#onMessage(ByteString) got call. Response: {}", res);
-        listener.parseEvent(res);
+        JsonObject object = JsonParser.parseString(res).getAsJsonObject();
+        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        listener.executeEvent(frame);
     }
 
     @Override

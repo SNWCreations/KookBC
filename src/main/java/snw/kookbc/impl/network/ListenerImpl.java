@@ -19,7 +19,6 @@
 package snw.kookbc.impl.network;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import snw.jkook.JKook;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.JKookCommand;
@@ -49,9 +48,7 @@ public class ListenerImpl implements Listener {
     }
 
     @Override
-    public synchronized void parseEvent(String message) {
-        JsonObject object = JsonParser.parseString(message).getAsJsonObject();
-        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+    public synchronized void executeEvent(Frame frame) {
         switch (frame.getType()) {
             case EVENT:
                 JKook.getScheduler().runTask(() -> event(frame));

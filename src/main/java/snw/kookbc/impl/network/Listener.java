@@ -21,5 +21,5 @@ package snw.kookbc.impl.network;
 // Represents the basic listener.
 public interface Listener {
     // The message is raw JSON format, so if you got compressed data, extract it first.
-    void parseEvent(String message);
+    void executeEvent(Frame frame);
 }
