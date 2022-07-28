@@ -20,7 +20,6 @@ package snw.kookbc.impl;
 
 import snw.jkook.Core;
 import snw.jkook.JKook;
-import snw.jkook.bot.BaseBot;
 import snw.jkook.bot.Bot;
 import snw.jkook.bot.BotDescription;
 import snw.jkook.command.CommandExecutor;
@@ -31,6 +30,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.bot.SimpleBotClassLoader;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
@@ -43,7 +43,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
-import snw.jkook.util.Validate;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,10 +148,16 @@ public class KBCClient {
     public void start(File file, String token) {
         long timeStamp = System.currentTimeMillis();
         bot = Objects.requireNonNull(loadBot(file, token));
-        postLoadBot(timeStamp);
+        postLoadBot();
+        getCore().getLogger().debug("Starting Network");
+        startNetwork();
+        finishStart();
+        getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
+
+        getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
     }
 
-    protected void postLoadBot(long timeStamp) {
+    protected void postLoadBot() {
         getCore().getLogger().debug("Checking the API version of the Bot");
         BotDescription description = bot.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
@@ -174,17 +179,18 @@ public class KBCClient {
         getCore().getLogger().debug("Calling Bot#onEnable");
         bot.getLogger().info("Enabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
         bot.onEnable();
+    }
 
-        getCore().getLogger().debug("Starting Network");
+    protected void startNetwork() {
         (connector = new Connector(this, new NetworkClient(bot))).start();
+    }
+
+    protected void finishStart() {
         User botUser = getEntityBuilder().buildUser(
                 connector.getClient().get(HttpAPIRoute.USER_ME.toFullURL())
         );
         getStorage().addUser(botUser);
-        ((BaseBot) bot).setUser(botUser);
-        getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
-
-        getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
+        bot.setUser(botUser);
     }
 
     // Override this if you have other way to load the Bot.
