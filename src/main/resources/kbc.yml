@@ -39,6 +39,10 @@ webhook-route: "kookbc-webhook"
 
 ## ---- END WEBHOOK CONFIGURATION ----
 
+# The UUID of your Bot in the BotMarket. (see https://www.botmarket.cn)
+# If you provided non-null value and it is a valid value, KookBC will schedule a task for pinging BotMarket.
+botmarket-uuid: ""
+
 # If true, the data from Websocket server will be compressed.
 # If you want to save the Internet flow, turn it to true.
 compress: true

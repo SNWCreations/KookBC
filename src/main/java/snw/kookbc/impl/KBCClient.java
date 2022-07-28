@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl;
 
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import snw.jkook.Core;
 import snw.jkook.JKook;
 import snw.jkook.bot.Bot;
@@ -30,6 +32,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.jkook.scheduler.JKookRunnable;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.bot.SimpleBotClassLoader;
 import snw.kookbc.impl.command.CommandManagerImpl;
@@ -49,6 +52,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -192,6 +196,35 @@ public class KBCClient {
         );
         getStorage().addUser(botUser);
         bot.setUser(botUser);
+
+        // region BotMarket support part - 2022/7/28
+        String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
+        if (rawBotMarketUUID != null) {
+            UUID bmUUID = null;
+            try {
+                bmUUID = UUID.fromString(rawBotMarketUUID);
+            } catch (IllegalArgumentException ignored) {}
+            if (bmUUID != null) {
+                new JKookRunnable() {
+                    private final Request request =
+                            new Request.Builder()
+                                    .post(RequestBody.create("", null))
+                                    .url("https://bot.gekj.net/api/v1/online.bot")
+                                    .header("uuid", rawBotMarketUUID)
+                                    .build();
+                    
+                    @Override
+                    public void run() {
+                        try {
+                            getConnector().getClient().call(request);
+                        } catch (Exception e) {
+                            JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
+                        }
+                    }
+                }.runTaskTimer(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+            }
+        }
+        // endregion
     }
 
     // Override this if you have other way to load the Bot.
