@@ -146,7 +146,7 @@ public class Connector {
         }
     }
 
-    private void shutdownHttp() {
+    public void shutdownHttp() {
         try {
             JKook.getLogger().debug("Called HTTP Bot offline API. Response: {}", client.postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
         } catch (Exception e) {

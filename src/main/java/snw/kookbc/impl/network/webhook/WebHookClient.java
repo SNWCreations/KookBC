@@ -25,6 +25,7 @@ import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.bot.SimpleBotClassLoader;
+import snw.kookbc.impl.network.Session;
 import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.io.File;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebHookClient extends KBCClient {
     protected HttpServer server;
@@ -55,6 +57,8 @@ public class WebHookClient extends KBCClient {
         server.createContext("/kookbc-webhook", new SimpleHttpHandler(this));
         server.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 4, new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
+        getCore().getLogger().info("Server is listening on port {}", port);
+        getConnector().setSession(new Session(null, new AtomicInteger(1)));
     }
 
     @Override

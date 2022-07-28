@@ -179,10 +179,11 @@ public class KBCClient {
         getCore().getLogger().debug("Calling Bot#onEnable");
         bot.getLogger().info("Enabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
         bot.onEnable();
+        connector = new Connector(this, new NetworkClient(bot));
     }
 
     protected void startNetwork() {
-        (connector = new Connector(this, new NetworkClient(bot))).start();
+        connector.start();
     }
 
     protected void finishStart() {

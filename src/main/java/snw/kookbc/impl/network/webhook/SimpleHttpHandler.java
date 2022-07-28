@@ -18,10 +18,13 @@
 
 package snw.kookbc.impl.network.webhook;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import snw.jkook.JKook;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
@@ -30,6 +33,7 @@ import snw.kookbc.impl.network.ListenerImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
 
@@ -44,17 +48,45 @@ public class SimpleHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String res;
-        byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
-        if (client.getConfig().getBoolean("compress")) {
-            res = new String(decompressDeflate(bytes));
+        JKook.getLogger().debug("Got request!");
+        if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
+            JKook.getLogger().debug("Got the request that not using POST. Rejected.");
+            exchange.sendResponseHeaders(405, -1);
         } else {
-            res = new String(bytes);
+            JKook.getLogger().debug("Got POST request");
+            String res;
+            byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
+            if (client.getConfig().getBoolean("compress")) {
+                res = new String(decompressDeflate(bytes));
+            } else {
+                res = new String(bytes);
+            }
+            JKook.getLogger().debug("Got remote request: {}", res); // TODO remove if debug is ok
+            JsonObject object = JsonParser.parseString(
+                    EncryptUtils.decrypt(res)
+            ).getAsJsonObject();
+            Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+            if (!Objects.equals(frame.getData().get("verify_token").getAsString(), client.getConfig().getString("webhook-verify-token"))) {
+                exchange.sendResponseHeaders(403, -1); // illegal access!
+            } else {
+                // challenge part
+                JsonElement channelType = frame.getData().get("channel_type");
+                if (channelType != null && Objects.equals(channelType.getAsString(), "WEBHOOK_CHALLENGE")) {
+                    String finalChallengeResponse = frame.getData().get("challenge").getAsString();
+                    JsonObject obj = new JsonObject();
+                    obj.addProperty("challenge", finalChallengeResponse);
+                    String s = new Gson().toJson(obj);
+                    exchange.sendResponseHeaders(200, 0);
+                    exchange.getResponseBody().write(s.getBytes());
+                    exchange.getResponseBody().flush();
+                }
+                // end challenge part
+                else {
+                    listener.executeEvent(frame);
+                    exchange.sendResponseHeaders(200, -1);
+                }
+            }
         }
-        JsonObject object = JsonParser.parseString(res).getAsJsonObject();
-        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
-        listener.executeEvent(frame);
-        exchange.sendResponseHeaders(200, -1);
         exchange.getResponseBody().close();
     }
 
