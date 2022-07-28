@@ -55,9 +55,13 @@ public class WebHookClient extends KBCClient {
     }
 
     protected void startNetwork0() throws Exception {
+        String route = getConfig().getString("webhook-route");
+        if (route == null || route.isEmpty()) {
+            throw new IllegalArgumentException("Invalid route path!");
+        }
         int port = getConfig().getInt("webhook-port");
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/kookbc-webhook", new SimpleHttpHandler(this));
+        server.createContext(String.format("/%s", route), new SimpleHttpHandler(this));
         server.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 4, new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
         getCore().getLogger().info("Server is listening on port {}", port);
