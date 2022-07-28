@@ -29,6 +29,7 @@ import snw.jkook.config.InvalidConfigurationException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.webhook.WebHookClient;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -182,7 +183,17 @@ public class Main {
 
         CoreImpl core = new CoreImpl(logger);
         JKook.setCore(core);
-        KBCClient client = new KBCClient(core, config, botDataFolder);
+        KBCClient client;
+        String mode = config.getString("mode");
+        if (mode != null) {
+            if (mode.equalsIgnoreCase("webhook")) {
+                client = new WebHookClient(core, config, botDataFolder);
+            } else {
+                client = new KBCClient(core, config, botDataFolder);
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown network mode!");
+        }
         KBCClient.setInstance(client);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
