@@ -22,6 +22,8 @@ import snw.jkook.JKook;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.component.MarkdownComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -139,6 +141,21 @@ public class CommandManagerImpl implements CommandManager {
             if (sender instanceof ConsoleCommandSender) {
                 JKook.getLogger().info("No executor was registered for provided command line.");
             } // do nothing! lol
+            else {
+                if (sender instanceof User) {
+                    if (msg != null) {
+                        if (msg instanceof TextChannelMessage) {
+                            ((TextChannelMessage) msg).getChannel().sendComponent(
+                                    new MarkdownComponent("此命令没有对应的执行器。"),
+                                    null,
+                                    (User) sender
+                            );
+                        }
+                    } else {
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("此命令没有对应的执行器。"));
+                    }
+                }
+            }
             return false;
         }
 
