@@ -22,6 +22,8 @@ webhook-route: "kookbc-webhook"
 
 ## ---- END WEBHOOK CONFIGURATION ----
 
+botmarket-uuid: ""
+
 compress: true
 
 ignore-remote-call-invisible-internal-command: true
@@ -82,6 +84,14 @@ bot-file: "example.jar"
 ```yaml
 mode: "websocket"
 ```
+
+## botmarket-uuid
+
+此配置项用于声明您的 Bot 在 [BotMarket (一个 Kook Bot 发布平台)](https://www.botmarket.cn) 的 UUID 。
+
+若此配置项不为空，则 KookBC 将会创建一个计划任务，自动完成 BotMarket 的 PING 操作。
+
+此配置项没有合适的示例。
 
 ## compress
 
