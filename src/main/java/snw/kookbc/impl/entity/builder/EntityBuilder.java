@@ -169,7 +169,7 @@ public class EntityBuilder {
                         chatLimitTime
                 );
             } else if (type == 2) { // VoiceChannel
-                boolean hasPassword = object.get("has_password").getAsBoolean();
+                boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
                 int size = object.get("limit_amount").getAsInt();
                 return new VoiceChannelImpl(
                         id,
