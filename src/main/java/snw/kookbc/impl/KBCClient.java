@@ -202,28 +202,32 @@ public class KBCClient {
         // region BotMarket support part - 2022/7/28
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
         if (rawBotMarketUUID != null) {
-            UUID bmUUID = null;
-            try {
-                bmUUID = UUID.fromString(rawBotMarketUUID);
-            } catch (IllegalArgumentException ignored) {}
-            if (bmUUID != null) {
-                new JKookRunnable() {
-                    private final Request request =
-                            new Request.Builder()
-                                    .post(RequestBody.create("", null))
-                                    .url("https://bot.gekj.net/api/v1/online.bot")
-                                    .header("uuid", rawBotMarketUUID)
-                                    .build();
-                    
-                    @Override
-                    public void run() {
-                        try {
-                            getNetworkClient().call(request);
-                        } catch (Exception e) {
-                            JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
+            if (!rawBotMarketUUID.isEmpty()) {
+                UUID bmUUID = null;
+                try {
+                    bmUUID = UUID.fromString(rawBotMarketUUID);
+                } catch (IllegalArgumentException e) {
+                    JKook.getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
+                }
+                if (bmUUID != null) {
+                    new JKookRunnable() {
+                        private final Request request =
+                                new Request.Builder()
+                                        .post(RequestBody.create("", null))
+                                        .url("https://bot.gekj.net/api/v1/online.bot")
+                                        .header("uuid", rawBotMarketUUID)
+                                        .build();
+
+                        @Override
+                        public void run() {
+                            try {
+                                getNetworkClient().call(request);
+                            } catch (Exception e) {
+                                JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
+                            }
                         }
-                    }
-                }.runTaskTimer(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+                    }.runTaskTimer(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+                }
             }
         }
         // endregion
