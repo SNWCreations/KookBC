@@ -43,7 +43,11 @@ public class Connector {
                 () -> {
                     while (kbcClient.isRunning()) {
                         if (requireReconnect) {
-                            restart();
+                            try {
+                                restart();
+                            } catch (Exception e) { // make sure thread won't exit if something unexpected happened!
+                                continue;
+                            }
                             requireReconnect = false;
                         }
                     }
