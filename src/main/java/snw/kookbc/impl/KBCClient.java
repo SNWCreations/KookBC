@@ -62,6 +62,7 @@ import static snw.kookbc.util.Util.getVersionDifference;
 public class KBCClient {
     private static KBCClient INSTANCE = null;
     private final Core core;
+    private NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
@@ -183,7 +184,8 @@ public class KBCClient {
         getCore().getLogger().debug("Calling Bot#onEnable");
         bot.getLogger().info("Enabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
         bot.onEnable();
-        connector = new Connector(this, new NetworkClient(bot));
+        networkClient = new NetworkClient(bot);
+        connector = new Connector(this);
     }
 
     protected void startNetwork() {
@@ -192,7 +194,7 @@ public class KBCClient {
 
     protected void finishStart() {
         User botUser = getEntityBuilder().buildUser(
-                connector.getClient().get(HttpAPIRoute.USER_ME.toFullURL())
+                getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
         );
         getStorage().addUser(botUser);
         bot.setUser(botUser);
@@ -216,7 +218,7 @@ public class KBCClient {
                     @Override
                     public void run() {
                         try {
-                            getConnector().getClient().call(request);
+                            getNetworkClient().call(request);
                         } catch (Exception e) {
                             JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
                         }
@@ -301,6 +303,11 @@ public class KBCClient {
 
     public Connector getConnector() {
         return connector;
+    }
+
+    // Notice: don't use it before calling start(), or you will got null.
+    public NetworkClient getNetworkClient() {
+        return networkClient;
     }
 
     protected void registerInternal() {

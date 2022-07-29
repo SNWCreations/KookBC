@@ -89,7 +89,7 @@ public class RoleImpl implements Role {
                 .put("role_id", getId())
                 .put("mentionable", (value ? 1 : 0))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
         this.mentionable = value;
     }
 
@@ -105,7 +105,7 @@ public class RoleImpl implements Role {
                 .put("role_id", getId())
                 .put("hoist", (value ? 1 : 0))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
         this.hoist = value;
     }
 
@@ -116,7 +116,7 @@ public class RoleImpl implements Role {
                 .put("role_id", getId())
                 .put("permissions", permValueSum)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_UPDATE.toFullURL(), body);
         this.permSum = permValueSum;
     }
 
@@ -126,7 +126,7 @@ public class RoleImpl implements Role {
                 .put("guild_id", getGuild().getId())
                 .put("role_id", getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_DELETE.toFullURL(), body);
 
     }
 

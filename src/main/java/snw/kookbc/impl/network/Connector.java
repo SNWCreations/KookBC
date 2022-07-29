@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 // The Connector that will communicate with Kook WebSocket Server.
 public class Connector {
     private final KBCClient kbcClient;
-    private final NetworkClient client; // parent
     private String wsLink = "";
     private WebSocket ws;
     private Session session;
@@ -38,9 +37,8 @@ public class Connector {
     private volatile boolean pingOk = false;
     private volatile boolean requireReconnect = false;
 
-    public Connector(KBCClient kbcClient, NetworkClient client) {
+    public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
-        this.client = client;
         new Thread(
                 () -> {
                     while (kbcClient.isRunning()) {
@@ -98,12 +96,12 @@ public class Connector {
         do {
             connected = false;
             // if self connected is true, call shutdownHttp()
-            if (client.get(HttpAPIRoute.USER_ME.toFullURL()).get("online").getAsBoolean()) {
+            if (kbcClient.getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()).get("online").getAsBoolean()) {
                 shutdownHttp();
             }
             int times = 0;
             do {
-                ws = client.newWebSocket(
+                ws = kbcClient.getNetworkClient().newWebSocket(
                         new Request.Builder()
                                 .url(wsLink)
                                 .build(),
@@ -128,7 +126,7 @@ public class Connector {
     }
 
     private void getGateway() {
-        wsLink = client.get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").getAsString();
+        wsLink = kbcClient.getNetworkClient().get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").getAsString();
     }
 
     public void shutdown() {
@@ -148,14 +146,10 @@ public class Connector {
 
     public void shutdownHttp() {
         try {
-            JKook.getLogger().debug("Called HTTP Bot offline API. Response: {}", client.postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
+            JKook.getLogger().debug("Called HTTP Bot offline API. Response: {}", kbcClient.getNetworkClient().postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
         } catch (Exception e) {
             JKook.getLogger().error("Unexpected Exception when we attempting to request HTTP Bot offline API.", e);
         }
-    }
-
-    public NetworkClient getClient() {
-        return client;
     }
 
     public Session getSession() {

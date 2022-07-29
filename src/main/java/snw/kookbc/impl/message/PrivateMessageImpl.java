@@ -40,7 +40,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
             Map<String, Object> body = new MapBuilder()
                     .put("msg_id", getId())
                     .build();
-            KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
+            KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
         } else {
             throw new UnsupportedOperationException(); // You can't delete others' pm to you
         }

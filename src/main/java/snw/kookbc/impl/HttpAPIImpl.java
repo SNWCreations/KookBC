@@ -82,7 +82,7 @@ public class HttpAPIImpl implements HttpAPI {
                 .post(RequestBody.create(file, MediaType.parse("application/from-data")))
                 .addHeader("Authorization", String.format("Bot %s", bot.getToken()))
                 .build();
-        return JsonParser.parseString(client.getConnector().getClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
 
     @Override
@@ -96,12 +96,12 @@ public class HttpAPIImpl implements HttpAPI {
                 )
                 .addHeader("Authorization", String.format("Bot %s", bot.getToken()))
                 .build();
-        return JsonParser.parseString(client.getConnector().getClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
 
     @Override
     public void removeInvite(String urlCode) {
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
                 new MapBuilder()
                         .put("url_code", urlCode)
                         .build()

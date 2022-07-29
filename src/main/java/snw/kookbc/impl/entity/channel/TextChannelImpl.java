@@ -54,7 +54,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 
@@ -78,7 +78,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
             builder.put("temp_target_id", tempTarget.getId());
         }
         Map<String, Object> body = builder.build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body);
     }
 
     @Override

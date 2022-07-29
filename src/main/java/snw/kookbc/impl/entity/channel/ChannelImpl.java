@@ -91,7 +91,7 @@ public abstract class ChannelImpl implements Channel {
 
     @Override
     public void delete() {
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
                 new MapBuilder()
                         .put("channel_id", getId())
                         .build()
@@ -112,7 +112,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("allow", rawAllow)
                 .put("deny", rawDeny)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
     }
 
     @Override
@@ -124,7 +124,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("allow", rawAllow)
                 .put("deny", rawDeny)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
     }
 
     @Override
@@ -134,7 +134,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("type", "role_id")
                 .put("value", String.valueOf(role.getId()))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
     }
 
     @Override
@@ -144,7 +144,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("type", "user_id")
                 .put("value", String.valueOf(user.getId()))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
     }
 
     @Override

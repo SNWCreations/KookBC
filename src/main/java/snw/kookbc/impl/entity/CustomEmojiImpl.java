@@ -55,7 +55,7 @@ public class CustomEmojiImpl implements CustomEmoji {
                 .put("id", getId())
                 .put("name", name)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_EMOJI_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_UPDATE.toFullURL(), body);
         this.name = name;
     }
 
@@ -69,7 +69,7 @@ public class CustomEmojiImpl implements CustomEmoji {
         Map<String, Object> body = new MapBuilder()
                 .put("id", getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 
@@ -84,7 +84,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("target", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
         getUsers0().addAll(users);
     }
 

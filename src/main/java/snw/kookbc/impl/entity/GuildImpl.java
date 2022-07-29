@@ -104,13 +104,13 @@ public class GuildImpl implements Guild {
 
     @Override
     public int getOnlineUserCount() {
-        JsonObject userStatus = KBCClient.getInstance().getConnector().getClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
+        JsonObject userStatus = KBCClient.getInstance().getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
         return userStatus.get("online_count").getAsInt();
     }
 
     @Override
     public int getUserCount() {
-        JsonObject userStatus = KBCClient.getInstance().getConnector().getClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
+        JsonObject userStatus = KBCClient.getInstance().getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
         return userStatus.get("user_count").getAsInt();
     }
 
@@ -126,7 +126,7 @@ public class GuildImpl implements Guild {
     @Override
     public MuteResult getMuteStatus() {
         String url = String.format("%s?guild_id=%s", HttpAPIRoute.MUTE_LIST, getId());
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().get(url);
+        JsonObject object = KBCClient.getInstance().getNetworkClient().get(url);
 
         MuteResultImpl result = new MuteResultImpl();
         for (JsonElement element : object.getAsJsonObject("mic").getAsJsonObject("user_ids").getAsJsonArray()) {
@@ -152,7 +152,7 @@ public class GuildImpl implements Guild {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_LEAVE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_LEAVE.toFullURL(), body);
     }
 
     @Override
@@ -165,7 +165,7 @@ public class GuildImpl implements Guild {
             builder.put("remark", s);
         }
         Map<String, Object> body = builder.build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.BLACKLIST_CREATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.BLACKLIST_CREATE.toFullURL(), body);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class GuildImpl implements Guild {
                 .put("guild_id", getId())
                 .put("target_id", user.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.BLACKLIST_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.BLACKLIST_DELETE.toFullURL(), body);
     }
 
     @Override
@@ -183,7 +183,7 @@ public class GuildImpl implements Guild {
                 .put("guild_id", getId())
                 .put("target_id", user.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body);
     }
 
     @Override
@@ -196,7 +196,7 @@ public class GuildImpl implements Guild {
             builder.put("parent_id", category.getId());
         }
         Map<String, Object> body = builder.build();
-        TextChannel channel = (TextChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        TextChannel channel = (TextChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
         KBCClient.getInstance().getStorage().addChannel(channel);
         return channel;
     }
@@ -213,7 +213,7 @@ public class GuildImpl implements Guild {
             builder.put("parent_id", category.getId());
         }
         Map<String, Object> body = builder.build();
-        VoiceChannel channel = (VoiceChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        VoiceChannel channel = (VoiceChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
         KBCClient.getInstance().getStorage().addChannel(channel);
         return channel;
     }
@@ -225,7 +225,7 @@ public class GuildImpl implements Guild {
                 .put("name", s)
                 .put("is_category", 1);
         Map<String, Object> body = builder.build();
-        Category result = (Category) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        Category result = (Category) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
         KBCClient.getInstance().getStorage().addChannel(result);
         return result;
     }
@@ -236,7 +236,7 @@ public class GuildImpl implements Guild {
                 .put("guild_id", getId())
                 .put("name", s)
                 .build();
-        JsonObject res = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_CREATE.toFullURL(), body);
+        JsonObject res = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_CREATE.toFullURL(), body);
         Role result = KBCClient.getInstance().getEntityBuilder().buildRole(this, res);
         KBCClient.getInstance().getStorage().addRole(this, result);
         return result;
@@ -250,7 +250,7 @@ public class GuildImpl implements Guild {
         if (s1 != null) {
             builder.put("name", s1);
         }
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_EMOJI_CREATE.toFullURL(), builder.build());
+        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_CREATE.toFullURL(), builder.build());
         CustomEmoji emoji = KBCClient.getInstance().getEntityBuilder().buildEmoji(object);
         KBCClient.getInstance().getStorage().addEmoji(emoji);
         return emoji;
@@ -284,7 +284,7 @@ public class GuildImpl implements Guild {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 

@@ -79,7 +79,7 @@ public abstract class MessageImpl implements Message {
     public Collection<User> getUserByReaction(CustomEmoji customEmoji) {
         JsonArray array;
         try {
-            String rawStr = KBCClient.getInstance().getConnector().getClient().getRawContent(
+            String rawStr = KBCClient.getInstance().getNetworkClient().getRawContent(
                     String.format(
                             "%s?msg_id=%s&emoji=%s",
                             ((this instanceof TextChannelMessage) ?
