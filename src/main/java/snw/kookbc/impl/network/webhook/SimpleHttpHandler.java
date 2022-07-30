@@ -48,6 +48,15 @@ public class SimpleHttpHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        try {
+            handle0(exchange);
+        } catch (Exception e) {
+            JKook.getLogger().error("Something unexpected occurred while we attempting to process the request from remote.", e);
+            exchange.sendResponseHeaders(500, -1);
+        }
+    }
+
+    public void handle0(HttpExchange exchange) throws Exception {
         JKook.getLogger().debug("Got request!");
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             JKook.getLogger().debug("Got the request that not using POST. Rejected.");
