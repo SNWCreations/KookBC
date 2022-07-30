@@ -20,7 +20,6 @@ package snw.kookbc.impl.event;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -49,7 +48,7 @@ import java.util.Objects;
 public class EventFactory {
 
     // the object should be provided from snw.kbc.impl.network.Frame#getData.
-    public static @Nullable Event getEvent(@NotNull JsonObject object) {
+    public static Event getEvent(@NotNull JsonObject object) {
         long msgTimeStamp = object.get("msg_timestamp").getAsLong();
 
         JsonObject extra = object.getAsJsonObject("extra");
@@ -63,9 +62,6 @@ public class EventFactory {
         if (messageType != null) {
             if (Objects.equals(object.get("channel_type").getAsString(), "PERSON")) {
                 PrivateMessage pm = KBCClient.getInstance().getMessageBuilder().buildPrivateMessage(object);
-                if (pm.getSender() == KBCClient.getInstance().getBot().getUser()) {
-                    return null; // prevent self-process.
-                }
                 KBCClient.getInstance().getStorage().addMessage(pm);
                 return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
             } else {
