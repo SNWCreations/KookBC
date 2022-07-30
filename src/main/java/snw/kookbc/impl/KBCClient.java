@@ -49,10 +49,7 @@ import snw.kookbc.impl.tasks.UpdateChecker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -333,7 +330,21 @@ public class KBCClient {
                                 String helpWanted = args[0];
                                 JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager()).getCommand(helpWanted);
                                 if (command == null) {
-                                    getCore().getLogger().info("Unknown command.");
+                                    if (commandSender instanceof User) {
+                                        if (message instanceof TextChannelMessage) {
+                                            ((TextChannelMessage) message).getChannel().sendComponent(
+                                                    new MarkdownComponent("找不到命令。"),
+                                                    null,
+                                                    (User) commandSender
+                                            );
+                                        } else {
+                                            ((User) commandSender).sendPrivateMessage(
+                                                    new MarkdownComponent("找不到命令。")
+                                            );
+                                        }
+                                    } else if (commandSender instanceof ConsoleCommandSender) {
+                                        getCore().getLogger().info("Unknown command.");
+                                    }
                                     return;
                                 }
                                 result = new JKookCommand[]{command};
@@ -377,15 +388,36 @@ public class KBCClient {
     }
 
     public static List<String> getHelp(JKookCommand[] commands) {
+        if (commands.length <= 0) { // I think this is impossible to happen!
+            return Collections.singletonList("无法提供命令帮助。因为此 KookBC 实例没有注册任何命令。");
+        }
         List<String> result = new LinkedList<>();
         result.add("-------- 命令帮助 --------");
-        for (JKookCommand command : commands) {
-            result.add(String.format("(%s)%s: %s", String.join("|", command.getPrefixes()), command.getRootName(),
-                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
-            ));
+        if (commands.length > 1) {
+            for (JKookCommand command : commands) {
+                result.add(String.format("(%s)%s: %s", String.join("|", command.getPrefixes()), command.getRootName(),
+                        (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                ));
+            }
+            result.add("注: 在每条命令帮助的开头，括号中用 \"|\" 隔开的字符为此命令的前缀。");
+            result.add("如 \"(/|.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
+        } else {
+            JKookCommand command = commands[0];
+            result.add(String.format("命令: %s", command.getRootName()));
+            result.add(String.format("别称: %s", String.join(", ", command.getAliases())));
+            result.add(String.format("可用前缀: %s", String.join(", ", command.getPrefixes())));
+            result.add(
+                    String.format("简介: %s",
+                            (command.getDescription() == null)
+                                    ? "此命令没有简介。"
+                                    : command.getDescription()
+                    )
+            );
+            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()){
+                result.add("详细帮助信息:");
+                result.add(command.getHelpContent());
+            }
         }
-        result.add("注: 在每条命令帮助的开头，括号中用 \"|\" 隔开的字符为此命令的前缀。");
-        result.add("如 \"(/|.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
         result.add("-------------------------");
         return result;
     }
