@@ -196,7 +196,7 @@ public class GuildImpl implements Guild {
             builder.put("parent_id", category.getId());
         }
         Map<String, Object> body = builder.build();
-        TextChannel channel = (TextChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        TextChannel channel = (TextChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         KBCClient.getInstance().getStorage().addChannel(channel);
         return channel;
     }
@@ -213,7 +213,7 @@ public class GuildImpl implements Guild {
             builder.put("parent_id", category.getId());
         }
         Map<String, Object> body = builder.build();
-        VoiceChannel channel = (VoiceChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        VoiceChannel channel = (VoiceChannel) KBCClient.getInstance().getEntityBuilder().buildChannel(KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         KBCClient.getInstance().getStorage().addChannel(channel);
         return channel;
     }
