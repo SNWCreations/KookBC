@@ -16,17 +16,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.bot;
+package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
 // A wrapper of Bot logger
-public final class BotLogger implements Logger {
+public final class PluginLogger implements Logger {
     private final String prefix;
     private final Logger logger;
 
-    public BotLogger(String botName, Logger logger) {
+    public PluginLogger(String botName, Logger logger) {
         this.prefix = String.format("[%s]", botName);
         this.logger = logger;
     }
