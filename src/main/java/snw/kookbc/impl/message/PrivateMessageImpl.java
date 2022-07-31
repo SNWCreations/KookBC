@@ -54,13 +54,9 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
 
     @Override
     public void delete() {
-        if (KBCClient.getInstance().getBot().getUser() == getSender()) {
-            Map<String, Object> body = new MapBuilder()
-                    .put("msg_id", getId())
-                    .build();
-            KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
-        } else {
-            throw new UnsupportedOperationException(); // You can't delete others' pm to you
-        }
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
     }
 }
