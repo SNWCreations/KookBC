@@ -407,13 +407,13 @@ public class KBCClient {
         result.add("-------- 命令帮助 --------");
         if (commands.length > 1) {
             for (JKookCommand command : commands) {
-                result.add(String.format("(%s)%s: %s", String.join("|", command.getPrefixes()), command.getRootName(),
+                result.add(String.format("(%s)%s: %s", String.join(",", command.getPrefixes()), command.getRootName(),
                         (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
                 ));
             }
             result.add(""); // the blank line as the separator
-            result.add("注: 在每条命令帮助的开头，括号中用 \"|\" 隔开的字符为此命令的前缀。");
-            result.add("如 \"(/|.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
+            result.add("注: 在每条命令帮助的开头，括号中用 \",\" 隔开的字符为此命令的前缀。");
+            result.add("如 \"(/,.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
         } else {
             JKookCommand command = commands[0];
             result.add(String.format("命令: %s", command.getRootName()));
