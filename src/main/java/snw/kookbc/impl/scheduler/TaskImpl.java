@@ -20,7 +20,7 @@ package snw.kookbc.impl.scheduler;
 
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.concurrent.ScheduledFuture;
 

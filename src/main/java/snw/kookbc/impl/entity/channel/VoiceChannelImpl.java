@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonObject;
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.VoiceChannel;
@@ -35,11 +37,22 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 
-    public VoiceChannelImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, boolean passwordProtected) {
-        super(id, master, permSync, parent, name, rpo, upo);
+    public VoiceChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, boolean passwordProtected, int maxSize) {
+        super(id, master, guild, permSync, parent, name, rpo, upo);
         this.passwordProtected = passwordProtected;
+        this.maxSize = maxSize;
     }
 
+    @Override
+    public String createInvite(int validSeconds, int validTimes) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("duration", validSeconds)
+                .put("setting_times", validTimes)
+                .build();
+        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        return object.get("url").getAsString();
+    }
 
     @Override
     public boolean hasPassword() {
@@ -71,7 +84,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("target", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
         getUsers0().addAll(users);
     }
 

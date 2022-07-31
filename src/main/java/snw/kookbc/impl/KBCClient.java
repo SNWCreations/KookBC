@@ -18,9 +18,10 @@
 
 package snw.kookbc.impl;
 
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import snw.jkook.Core;
 import snw.jkook.JKook;
-import snw.jkook.bot.BaseBot;
 import snw.jkook.bot.Bot;
 import snw.jkook.bot.BotDescription;
 import snw.jkook.command.CommandExecutor;
@@ -31,6 +32,8 @@ import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.jkook.scheduler.JKookRunnable;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.bot.SimpleBotClassLoader;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
@@ -42,21 +45,21 @@ import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.storage.EntityStorage;
-import snw.kookbc.util.Validate;
+import snw.kookbc.impl.tasks.UpdateChecker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static snw.kookbc.util.Util.getHelp;
 import static snw.kookbc.util.Util.getVersionDifference;
 
-// The client representation. Only one per VM.
+// The client representation.
 public class KBCClient {
     private static KBCClient INSTANCE = null;
     private final Core core;
+    private NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
@@ -64,17 +67,18 @@ public class KBCClient {
     private final YamlConfiguration config;
     private final File botDataFolder;
     private Bot bot;
-    private Connector connector;
+    protected Connector connector;
 
     public KBCClient(Core core, YamlConfiguration config, File botDataFolder) {
+        Validate.isTrue(botDataFolder.isDirectory(), "The provided botDataFolder object is not a directory.");
         this.core = core;
         this.config = config;
         this.botDataFolder = botDataFolder;
         storage = new EntityStorage(this);
         entityBuilder = new EntityBuilder(this);
         msgBuilder = new MessageBuilder(this);
-        setInstance(this); // make sure the instance can be used from other place
         entityUpdater = new EntityUpdater();
+        // setInstance(this); // make sure the instance can be used from other place
     }
 
     // Use this to access the most things in KookBC!
@@ -145,10 +149,17 @@ public class KBCClient {
     // or you will get NullPointerException.
     public void start(File file, String token) {
         long timeStamp = System.currentTimeMillis();
-        @SuppressWarnings("resource") // we will release it when the client stops. See shutdown() method.
-        SimpleBotClassLoader classloader = new SimpleBotClassLoader(this);
-        bot = classloader.loadBot(file, token);
+        bot = Objects.requireNonNull(loadBot(file, token));
+        postLoadBot();
+        getCore().getLogger().debug("Starting Network");
+        startNetwork();
+        finishStart();
+        getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
 
+        getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
+    }
+
+    protected void postLoadBot() {
         getCore().getLogger().debug("Checking the API version of the Bot");
         BotDescription description = bot.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
@@ -156,7 +167,7 @@ public class KBCClient {
             getCore().getLogger().warn("Bot is using old version of JKook API! We are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
         }
         if (diff == 1) {
-            getCore().getLogger().error("Unsupported API version, we are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+            getCore().getLogger().warn("Unsupported API version, we are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
         }
 
         getCore().getLogger().debug("Registering internal things");
@@ -170,15 +181,60 @@ public class KBCClient {
         getCore().getLogger().debug("Calling Bot#onEnable");
         bot.getLogger().info("Enabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
         bot.onEnable();
+        networkClient = new NetworkClient(bot);
+        connector = new Connector(this);
+    }
 
-        getCore().getLogger().debug("Starting Network");
-        (connector = new Connector(this, new NetworkClient(bot))).start();
+    protected void startNetwork() {
+        connector.start();
+    }
+
+    protected void finishStart() {
         User botUser = getEntityBuilder().buildUser(
-                connector.getClient().get(HttpAPIRoute.USER_ME.toFullURL())
+                getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
         );
         getStorage().addUser(botUser);
-        ((BaseBot) bot).setUser(botUser);
-        getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
+        bot.setUser(botUser);
+
+        // region BotMarket support part - 2022/7/28
+        String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
+        if (rawBotMarketUUID != null) {
+            if (!rawBotMarketUUID.isEmpty()) {
+                UUID bmUUID = null;
+                try {
+                    bmUUID = UUID.fromString(rawBotMarketUUID);
+                } catch (IllegalArgumentException e) {
+                    JKook.getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
+                }
+                if (bmUUID != null) {
+                    new JKookRunnable() {
+                        private final Request request =
+                                new Request.Builder()
+                                        .post(RequestBody.create("", null))
+                                        .url("https://bot.gekj.net/api/v1/online.bot")
+                                        .header("uuid", rawBotMarketUUID)
+                                        .build();
+
+                        @Override
+                        public void run() {
+                            try {
+                                getNetworkClient().call(request);
+                            } catch (Exception e) {
+                                JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
+                            }
+                        }
+                    }.runTaskTimer(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+                }
+            }
+        }
+        // endregion
+    }
+
+    // Override this if you have other way to load the Bot.
+    protected Bot loadBot(File file, String token) {
+        @SuppressWarnings("resource") // we will release it when the client stops. See shutdown() method.
+        SimpleBotClassLoader classloader = new SimpleBotClassLoader(this);
+        return classloader.loadBot(file, token);
     }
 
     // If you need console (normally you won't need it), call this
@@ -206,10 +262,16 @@ public class KBCClient {
         if (bot != null) {
             bot.getLogger().info("Disabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
             bot.onDisable();
-            try {
-                ((SimpleBotClassLoader) bot.getClass().getClassLoader()).close();
-            } catch (IOException e) {
-                JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+            // why do I check this? because in some environments,
+            // the bot won't be loaded by using SimpleClassLoader, maybe another type?
+            // And the Bot can be constructed without any check by BotClassLoader,
+            // so we should check this before casting it.
+            if (bot.getClass().getClassLoader() instanceof SimpleBotClassLoader) {
+                try {
+                    ((SimpleBotClassLoader) bot.getClass().getClassLoader()).close();
+                } catch (IOException e) {
+                    JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+                }
             }
         }
 
@@ -244,13 +306,21 @@ public class KBCClient {
         return connector;
     }
 
-    private void registerInternal() {
+    // Notice: don't use it before calling start(), or you will got null.
+    public NetworkClient getNetworkClient() {
+        return networkClient;
+    }
+
+    protected void registerInternal() {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
-                .setExecutor(wrapConsoleCmd((args) -> {
-                    shutdown();
-                }))
+                .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register();
+        registerHelpCommand();
+        JKook.getEventManager().registerHandlers(new InternalEventListener());
+    }
+
+    protected void registerHelpCommand() {
         new JKookCommand("help")
                 .setDescription("获取此帮助列表。")
                 .setExecutor(
@@ -260,7 +330,21 @@ public class KBCClient {
                                 String helpWanted = args[0];
                                 JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager()).getCommand(helpWanted);
                                 if (command == null) {
-                                    getCore().getLogger().info("Unknown command.");
+                                    if (commandSender instanceof User) {
+                                        if (message instanceof TextChannelMessage) {
+                                            ((TextChannelMessage) message).getChannel().sendComponent(
+                                                    new MarkdownComponent("找不到命令。"),
+                                                    null,
+                                                    (User) commandSender
+                                            );
+                                        } else {
+                                            ((User) commandSender).sendPrivateMessage(
+                                                    new MarkdownComponent("找不到命令。")
+                                            );
+                                        }
+                                    } else if (commandSender instanceof ConsoleCommandSender) {
+                                        getCore().getLogger().info("Unknown command.");
+                                    }
                                     return;
                                 }
                                 result = new JKookCommand[]{command};
@@ -299,7 +383,42 @@ public class KBCClient {
                                 }
                             }
                         }
-                ).register();
-        JKook.getEventManager().registerHandlers(new InternalEventListener());
+                )
+                .register();
+    }
+
+    public static List<String> getHelp(JKookCommand[] commands) {
+        if (commands.length <= 0) { // I think this is impossible to happen!
+            return Collections.singletonList("无法提供命令帮助。因为此 KookBC 实例没有注册任何命令。");
+        }
+        List<String> result = new LinkedList<>();
+        result.add("-------- 命令帮助 --------");
+        if (commands.length > 1) {
+            for (JKookCommand command : commands) {
+                result.add(String.format("(%s)%s: %s", String.join("|", command.getPrefixes()), command.getRootName(),
+                        (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                ));
+            }
+            result.add("注: 在每条命令帮助的开头，括号中用 \"|\" 隔开的字符为此命令的前缀。");
+            result.add("如 \"(/|.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
+        } else {
+            JKookCommand command = commands[0];
+            result.add(String.format("命令: %s", command.getRootName()));
+            result.add(String.format("别称: %s", String.join(", ", command.getAliases())));
+            result.add(String.format("可用前缀: %s", String.join(", ", command.getPrefixes())));
+            result.add(
+                    String.format("简介: %s",
+                            (command.getDescription() == null)
+                                    ? "此命令没有简介。"
+                                    : command.getDescription()
+                    )
+            );
+            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()){
+                result.add("详细帮助信息:");
+                result.add(command.getHelpContent());
+            }
+        }
+        result.add("-------------------------");
+        return result;
     }
 }

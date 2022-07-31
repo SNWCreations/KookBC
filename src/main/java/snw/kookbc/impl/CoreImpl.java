@@ -30,6 +30,9 @@ import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 
+import java.io.IOException;
+import java.util.Properties;
+
 public class CoreImpl implements Core {
     private final SchedulerImpl scheduler = new SchedulerImpl();
     private final CommandManagerImpl commandManager = new CommandManagerImpl();
@@ -47,6 +50,13 @@ public class CoreImpl implements Core {
         this.logger = logger;
         getLogger().info("Starting KookBC version {}", KBCClient.class.getPackage().getImplementationVersion());
         getLogger().info("This VM is running {} version {} (Implementing API version {})", getImplementationName(), getImplementationVersion(), getAPIVersion());
+        Properties gitProperties = new Properties();
+        try {
+            gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("git.properties"));
+            getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
+        } catch (IOException e) {
+            getLogger().warn("Unable to read Git commit information. :(", e);
+        }
     }
 
     @Override

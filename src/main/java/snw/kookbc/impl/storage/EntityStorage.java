@@ -39,7 +39,6 @@ public class EntityStorage {
     private final Map<String, Collection<SoftReference<Role>>> roles = new ConcurrentHashMap<>();
     private final Map<String, SoftReference<CustomEmoji>> emojis = new ConcurrentHashMap<>();
     private final Map<String, SoftReference<Message>> msg = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<CustomEmoji>> emoji = new ConcurrentHashMap<>();
     private final Set<SoftReference<Reaction>> reactions = new HashSet<>();
 
     public EntityStorage(KBCClient client) {
@@ -53,7 +52,7 @@ public class EntityStorage {
     public User getUser(String id) {
         User result = get(id, users);
         if (result == null) {
-            result = client.getEntityBuilder().buildUser(client.getConnector().getClient().get(
+            result = client.getEntityBuilder().buildUser(client.getNetworkClient().get(
                     String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
             ));
             addUser(result);
@@ -66,7 +65,7 @@ public class EntityStorage {
         if (result == null) {
             try {
                 result = client.getEntityBuilder().buildGuild(
-                        client.getConnector().getClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
+                        client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
                 );
                 addGuild(result);
             } catch (RuntimeException e) {
@@ -80,7 +79,7 @@ public class EntityStorage {
         Channel result = get(id, channels);
         if (result == null) {
             result = client.getEntityBuilder().buildChannel(
-                    client.getConnector().getClient().get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id))
+                    client.getNetworkClient().get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id))
             );
             addChannel(result);
         }
@@ -212,6 +211,18 @@ public class EntityStorage {
 
     public void removeReaction(Reaction reaction) {
         reactions.removeIf(reference -> reference.get() == reaction);
+    }
+
+    public void removeMessage(String id) {
+        msg.remove(id);
+    }
+
+    public void removeChannel(String id) {
+        channels.remove(id);
+    }
+
+    public void removeGuild(String id) {
+        guilds.remove(id);
     }
 
     private <T> T get(String id, Map<String, SoftReference<T>> map) {

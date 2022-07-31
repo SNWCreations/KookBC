@@ -20,7 +20,6 @@ package snw.kookbc.impl.event;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -49,7 +48,7 @@ import java.util.Objects;
 public class EventFactory {
 
     // the object should be provided from snw.kbc.impl.network.Frame#getData.
-    public static @Nullable Event getEvent(@NotNull JsonObject object) {
+    public static Event getEvent(@NotNull JsonObject object) {
         long msgTimeStamp = object.get("msg_timestamp").getAsLong();
 
         JsonObject extra = object.getAsJsonObject("extra");
@@ -63,12 +62,11 @@ public class EventFactory {
         if (messageType != null) {
             if (Objects.equals(object.get("channel_type").getAsString(), "PERSON")) {
                 PrivateMessage pm = KBCClient.getInstance().getMessageBuilder().buildPrivateMessage(object);
-                if (pm.getSender() == KBCClient.getInstance().getBot().getUser()) {
-                    return null; // prevent self-process.
-                }
+                KBCClient.getInstance().getStorage().addMessage(pm);
                 return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
             } else {
                 TextChannelMessage message = KBCClient.getInstance().getMessageBuilder().buildTextChannelMessage(object);
+                KBCClient.getInstance().getStorage().addMessage(message);
                 return new ChannelMessageEvent(message.getTimeStamp(), message.getChannel(), message);
             }
         } else {
@@ -106,7 +104,7 @@ public class EventFactory {
                             body.get("msg_id").getAsString(),
                             reaction1 == null ? new ReactionImpl(
                                     body.get("msg_id").getAsString(),
-                                    KBCClient.getInstance().getEntityBuilder().buildEmoji(body.getAsJsonObject("emoji")),
+                                    em,
                                     KBCClient.getInstance().getStorage().getUser(body.get("user_id").getAsString()),
                                     -1
                             ) : reaction1
@@ -119,6 +117,7 @@ public class EventFactory {
                             body.get("content").getAsString()
                     );
                 case CHANNEL_MESSAGE_DELETE:
+                    KBCClient.getInstance().getStorage().removeMessage(body.get("msg_id").getAsString());
                     return new ChannelMessageDeleteEvent(
                             msgTimeStamp,
                             (TextChannel) KBCClient.getInstance().getStorage().getChannel(body.get("channel_id").getAsString()), // if this error, we can regard it as internal error
@@ -133,6 +132,7 @@ public class EventFactory {
                     KBCClient.getInstance().getEntityUpdater().updateChannel(body, channel);
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
+                    KBCClient.getInstance().getStorage().removeChannel(body.get("id").getAsString());
                     return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString());
                 case CHANNEL_MESSAGE_PINNED:
                     return new ChannelMessagePinEvent(
@@ -187,6 +187,7 @@ public class EventFactory {
                     KBCClient.getInstance().getEntityUpdater().updateGuild(body, guild1);
                     return new GuildInfoUpdateEvent(msgTimeStamp, guild1);
                 case GUILD_DELETE:
+                    KBCClient.getInstance().getStorage().removeGuild(body.get("id").getAsString());
                     return new GuildDeleteEvent(msgTimeStamp, body.get("id").getAsString());
                 case GUILD_BAN:
                     List<User> banned = new ArrayList<>();
@@ -203,6 +204,7 @@ public class EventFactory {
                 case PM_UPDATE:
                     return new PrivateMessageUpdateEvent(msgTimeStamp, body.get("msg_id").getAsString(), body.get("content").getAsString());
                 case PM_DELETE:
+                    KBCClient.getInstance().getStorage().removeMessage(body.get("msg_id").getAsString());
                     return new PrivateMessageDeleteEvent(msgTimeStamp, body.get("msg_id").getAsString());
                 case USER_JOINED_GUILD:
                     return new UserJoinGuildEvent(

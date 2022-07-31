@@ -19,6 +19,7 @@
 package snw.kookbc.impl.entity.channel;
 
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -33,8 +34,8 @@ import java.util.Set;
 public class CategoryImpl extends ChannelImpl implements Category {
     private final Collection<Channel> channels = new HashSet<>();
 
-    public CategoryImpl(String id, User master, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo) {
-        super(id, master, permSync, parent, name, rpo, upo);
+    public CategoryImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo) {
+        super(id, master, guild, permSync, parent, name, rpo, upo);
     }
 
     @Override

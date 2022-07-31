@@ -14,6 +14,35 @@ token: ""
 
 ### ---- END BOT CONFIGURATION ---- ###
 
+# TODO add document for the following four configuration item.
+# The listener mode for the Bot. "websocket" and "webhook" are allowed. (Case insensitive)
+# Invalid value will cause the client stops.
+mode: "websocket"
+
+## ---- START WEBHOOK CONFIGURATION ----
+
+# The webhook server port. KookBC will start a simple HTTP server on the provided port for listening events.
+webhook-port: 8080
+
+# The encrypt key of Webhook. Used for decrypt the message from Kook Open Platform.
+# If this is null or empty, we won't decrypt the message and regard it as non-encrypted message.
+webhook-encrypt-key: ""
+
+# Verify token of Webhook. Used for checking the request, make sure the event message is sent from Kook.
+# Invalid value will cause the client stops.
+webhook-verify-token: ""
+
+# The route path of Webhook.
+# The full Callback URL format is: https://yourdomain.com/{webhook_route}
+# e.g. "kookbc-webhook" -> https://example.io/kookbc-webhook
+webhook-route: "kookbc-webhook"
+
+## ---- END WEBHOOK CONFIGURATION ----
+
+# The UUID of your Bot in the BotMarket. (see https://www.botmarket.cn)
+# If you provided non-null value and it is a valid value, KookBC will schedule a task for pinging BotMarket.
+botmarket-uuid: ""
+
 # If true, the data from Websocket server will be compressed.
 # If you want to save the Internet flow, turn it to true.
 compress: true

@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.builder;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
@@ -35,13 +36,13 @@ import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 
-// TODO incomplete
 // The class for building entities.
 public class EntityUpdater {
 
@@ -54,6 +55,9 @@ public class EntityUpdater {
         boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
+        JsonArray roleArray = object.get("roles").getAsJsonArray();
+        Collection<Integer> roles = new HashSet<>();
+        roleArray.forEach(IT -> roles.add(IT.getAsInt()));
         UserImpl usr = (UserImpl) user;
         usr.setName(userName);
         usr.setAvatarUrl(avatar);
@@ -62,6 +66,7 @@ public class EntityUpdater {
         usr.setOnline(online);
         usr.setBan(ban);
         usr.setVip(vip);
+        usr.setRoles(roles);
     }
 
     public void updateGuild(JsonObject object, Guild guild) {
@@ -128,8 +133,10 @@ public class EntityUpdater {
                 int chatLimitTime = object.get("slow_mode").getAsInt();
                 ((TextChannelImpl) channel).setChatLimitTime(chatLimitTime);
             } else if (type == 2) { // VoiceChannel
-                boolean hasPassword = object.get("has_password").getAsBoolean();
+                boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
+                int size = object.get("limit_amount").getAsInt();
                 ((VoiceChannelImpl) channel).setPasswordProtected(hasPassword);
+                ((VoiceChannelImpl) channel).setMaxSize(size);
             }
         }
     }

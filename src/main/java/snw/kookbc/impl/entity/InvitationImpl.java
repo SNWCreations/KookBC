@@ -68,7 +68,7 @@ public class InvitationImpl implements Invitation {
         Map<String, Object> body = new MapBuilder()
                 .put("url_code", getUrlCode())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(), body);
 
     }
 

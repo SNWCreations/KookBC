@@ -18,37 +18,7 @@
 
 package snw.kookbc.util;
 
-import snw.jkook.JKook;
-import snw.jkook.command.JKookCommand;
-
-import java.io.ByteArrayOutputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.zip.Inflater;
-
 public class Util {
-
-    public static byte[] decompressDeflate(byte[] data) {
-        byte[] output = null;
-
-        Inflater decompressor = new Inflater();
-        decompressor.reset();
-        decompressor.setInput(data);
-
-        try (ByteArrayOutputStream o = new ByteArrayOutputStream(data.length)) {
-            byte[] buf = new byte[1024];
-            while (!decompressor.finished()) {
-                int i = decompressor.inflate(buf);
-                o.write(buf, 0, i);
-            }
-            output = o.toByteArray();
-        } catch (Exception e) {
-            JKook.getLogger().error("Unexpected exception happened while we attempting to decompress the ZLIB/DEFLATE compressed data.", e);
-        }
-
-        decompressor.end();
-        return output;
-    }
 
     // -1 = 过期
     // 0 = 最新版
@@ -89,18 +59,6 @@ public class Util {
             return 0;
 
         return 1;
-    }
-
-    public static List<String> getHelp(JKookCommand[] commands) {
-        List<String> result = new LinkedList<>();
-        result.add("-------- 命令帮助 --------");
-        for (JKookCommand command : commands) {
-            result.add(String.format("%c%s: %s", command.getPrefix(), command.getRootName(),
-                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
-            ));
-        }
-        result.add("-------------------------");
-        return result;
     }
 
 }

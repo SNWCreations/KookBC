@@ -8,6 +8,22 @@ bot-file: ""
 
 token: ""
 
+mode: "websocket"
+
+## ---- START WEBHOOK CONFIGURATION ----
+
+webhook-port: 8080
+
+webhook-encrypt-key: ""
+
+webhook-verify-token: ""
+
+webhook-route: "kookbc-webhook"
+
+## ---- END WEBHOOK CONFIGURATION ----
+
+botmarket-uuid: ""
+
 compress: true
 
 ignore-remote-call-invisible-internal-command: true
@@ -18,6 +34,8 @@ allow-help-ad: true
 ```
 
 其中的注释已经移除。
+
+**注意: 以 "webhook" 开头的配置项不会在这里讲解，请见 [KookBC 与 Webhook](KookBC_with_Webhook.md) 。**
 
 ---
 
@@ -54,6 +72,26 @@ bot-file: "example.jar"
 如果提供的 Token 无效，KookBC 以及 Bot 将无法正常工作。
 
 因 Token 属于隐私内容，故本配置项没有示例。
+
+## mode
+
+决定 KookBC 与 Kook 交互的模式。
+
+只有 "websocket" 和 "webhook" 是有效值，其他值会导致报错并退出。
+
+示例:
+
+```yaml
+mode: "websocket"
+```
+
+## botmarket-uuid
+
+此配置项用于声明您的 Bot 在 [BotMarket (一个 Kook Bot 发布平台)](https://www.botmarket.cn) 的 UUID 。
+
+若此配置项不为空，则 KookBC 将会创建一个计划任务，自动完成 BotMarket 的 PING 操作。
+
+此配置项没有合适的示例。
 
 ## compress
 

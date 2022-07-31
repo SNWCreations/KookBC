@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
@@ -33,6 +34,7 @@ import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.message.PrivateMessageImpl;
+import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 
 public class MessageBuilder {
@@ -61,7 +63,7 @@ public class MessageBuilder {
         JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         long timeStamp = object.get("msg_timestamp").getAsLong();
-        return new PrivateMessageImpl(id, author, buildComponent(object), timeStamp);
+        return new PrivateMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")));
     }
 
     public TextChannelMessage buildTextChannelMessage(JsonObject object) {
@@ -70,7 +72,21 @@ public class MessageBuilder {
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         TextChannel channel = (TextChannel) client.getStorage().getChannel(object.get("target_id").getAsString());
         long timeStamp = object.get("msg_timestamp").getAsLong();
-        return new TextChannelMessageImpl(id, author, buildComponent(object), timeStamp, channel);
+        return new TextChannelMessageImpl(id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")), channel);
+    }
+
+    public Message buildQuote(JsonObject object) {
+        if (object == null) return null;
+
+        String id = object.get("rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
+        Message message = KBCClient.getInstance().getStorage().getMessage(id);
+        if (message != null) return message; // prevent resource leak
+
+        BaseComponent component = buildComponent(object);
+        long timeStamp = object.get("create_at").getAsLong();
+        JsonObject rawUser = object.getAsJsonObject("author");
+        User author = KBCClient.getInstance().getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
+        return new QuoteImpl(component, id, author, timeStamp);
     }
 
     public BaseComponent buildComponent(JsonObject object) {

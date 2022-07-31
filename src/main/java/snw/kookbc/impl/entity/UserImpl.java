@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonElement;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -31,14 +30,13 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
 public class UserImpl implements User {
     private final String id;
     private final boolean bot;
-    private final Collection<Integer> roles = new HashSet<>();
+    private Collection<Integer> roles;
     private String name;
     private int identify;
     private Integer intimacy = null;
@@ -57,8 +55,8 @@ public class UserImpl implements User {
                     int identify,
                     boolean online,
                     boolean ban,
-                    boolean vip
-    ) {
+                    boolean vip,
+                    Collection<Integer> roles) {
         this.id = id;
         this.bot = bot;
         this.name = name;
@@ -68,6 +66,7 @@ public class UserImpl implements User {
         this.online = online;
         this.ban = ban;
         this.vip = vip;
+        this.roles = roles;
     }
 
 
@@ -78,7 +77,7 @@ public class UserImpl implements User {
 
     @Override
     public String getNickName(Guild guild) {
-        return KBCClient.getInstance().getConnector().getClient()
+        return KBCClient.getInstance().getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s",
                         HttpAPIRoute.USER_WHO.toFullURL(),
                         id,
@@ -93,7 +92,7 @@ public class UserImpl implements User {
                 .put("guild_id", guild.getId())
                 .put("nickname", (s != null ? s : ""))
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME.toFullURL(), body);
     }
 
     @Override
@@ -131,11 +130,7 @@ public class UserImpl implements User {
 
     @Override
     public Collection<Integer> getRoles() {
-        Collection<Integer> result = new HashSet<>();
-        for (JsonElement element : KBCClient.getInstance().getConnector().getClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)).get("roles").getAsJsonArray()) {
-            result.add(element.getAsInt());
-        }
-        return result;
+        return roles;
     }
 
     @Override
@@ -148,7 +143,7 @@ public class UserImpl implements User {
                 .put("target_id", getId())
                 .put("content", json)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body);
     }
 
     @Override
@@ -159,18 +154,20 @@ public class UserImpl implements User {
     @Override
     public int getIntimacy() {
         if (intimacy == null) {
-            intimacy = KBCClient.getInstance().getConnector().getClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
+            intimacy = KBCClient.getInstance().getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
         }
         return intimacy;
     }
 
     @Override
     public void setIntimacy(int i) {
+        if (!((i > 0) && (i < 2200)))
+            throw new IllegalArgumentException("Invalid score. 0--2200 is allowed.");
         Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
                 .put("score", i)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
         this.intimacy = i;
     }
 
@@ -181,7 +178,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", role.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
         roles.add(role.getId());
     }
 
@@ -192,7 +189,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", role.getId())
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
         roles.remove(role.getId());
     }
 
@@ -203,7 +200,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", roleId)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
         roles.add(roleId);
     }
 
@@ -214,7 +211,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", roleId)
                 .build();
-        KBCClient.getInstance().getConnector().getClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
         roles.remove(roleId);
     }
 
@@ -250,6 +247,10 @@ public class UserImpl implements User {
 
     public void setVipAvatarUrl(String vipAvatarUrl) {
         this.vipAvatarUrl = vipAvatarUrl;
+    }
+
+    public void setRoles(Collection<Integer> roles) {
+        this.roles = roles;
     }
 
     @Override

@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Range;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,7 +37,7 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         if (!executedOnce) {
             executedOnce = true;
         }
-        JsonObject object = KBCClient.getInstance().getConnector().getClient().get(
+        JsonObject object = KBCClient.getInstance().getNetworkClient().get(
                 getRequestURL() + "&page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
         );
         JsonObject meta = object.getAsJsonObject("meta");

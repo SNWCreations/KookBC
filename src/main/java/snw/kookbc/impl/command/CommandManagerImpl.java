@@ -22,6 +22,8 @@ import snw.jkook.JKook;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.component.MarkdownComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +80,7 @@ public class CommandManagerImpl implements CommandManager {
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
         if (!sub.isEmpty()) { // if the command have subcommand, expect true
             JKook.getLogger().debug("The subcommand does exists. Attempting to search the final command.");
-            while (args.size() > 1) {
+            while (!args.isEmpty()) {
                 // get the first argument, so we got "a"
                 String subName = args.get(0);
                 JKook.getLogger().debug("Got temp subcommand root name: {}", subName);
@@ -97,7 +99,7 @@ public class CommandManagerImpl implements CommandManager {
                     }
                 }
                 if (!found) { // if the subcommand is not found
-                    JKook.getLogger().debug("No subcommand was found. We will attempt to execute the command currently found."); // debug
+                    JKook.getLogger().debug("No subcommand matching current command root name. We will attempt to execute the command currently found."); // debug
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
@@ -107,9 +109,53 @@ public class CommandManagerImpl implements CommandManager {
         // maybe some commands don't have subcommand?
         JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
 
+        // region support for the syntax sugar that added in JKook 0.24.0
+        if (sender instanceof ConsoleCommandSender) {
+            ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
+            if (consoleCommandExecutor != null) {
+                try {
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
+                    return true; // prevent CommandExecutor execution.
+                } catch (Throwable e) {
+                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    throw new CommandException("Something unexpected happened.", e);
+                }
+            }
+        }
+        if (sender instanceof User) {
+            UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
+            if (userCommandExecutor != null) {
+                try {
+                    userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
+                    return true; // prevent CommandExecutor execution.
+                } catch (Throwable e) {
+                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    throw new CommandException("Something unexpected happened.", e);
+                }
+            }
+        }
+        // endregion
+
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
-            JKook.getLogger().info("No executor was registered for provided command line."); // do nothing! lol
+            if (sender instanceof ConsoleCommandSender) {
+                JKook.getLogger().info("No executor was registered for provided command line.");
+            } // do nothing! lol
+            else {
+                if (sender instanceof User) {
+                    if (msg != null) {
+                        if (msg instanceof TextChannelMessage) {
+                            ((TextChannelMessage) msg).getChannel().sendComponent(
+                                    new MarkdownComponent("此命令没有对应的执行器。"),
+                                    null,
+                                    (User) sender
+                            );
+                        }
+                    } else {
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("此命令没有对应的执行器。"));
+                    }
+                }
+            }
             return false;
         }
 
@@ -146,7 +192,7 @@ public class CommandManagerImpl implements CommandManager {
     protected JKookCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
         for (JKookCommand command : commands) {
-            if (Objects.equals(command.getPrefix() + command.getRootName(), cmdHeader)) {
+            if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
                 return command;
             }
         }

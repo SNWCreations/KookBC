@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.builder;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
@@ -34,10 +35,11 @@ import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.kookbc.util.Validate;
+import snw.jkook.util.Validate;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 // The class for building entities.
 public class EntityBuilder {
@@ -57,6 +59,9 @@ public class EntityBuilder {
         boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
+        JsonArray roleArray = object.get("roles").getAsJsonArray();
+        Collection<Integer> roles = new HashSet<>();
+        roleArray.forEach(IT -> roles.add(IT.getAsInt()));
         return new UserImpl(
                 id,
                 bot,
@@ -66,7 +71,8 @@ public class EntityBuilder {
                 identify,
                 online,
                 ban,
-                vip
+                vip,
+                roles
         );
     }
 
@@ -103,6 +109,7 @@ public class EntityBuilder {
         // basic information
         String id = object.get("id").getAsString();
         String name = object.get("name").getAsString();
+        Guild guild = client.getStorage().getGuild(object.get("guild_id").getAsString());
         User master = client.getStorage().getUser(object.get("master_id").getAsString());
         String parentId = object.get("parent_id").getAsString();
         Category parent = (parentId.isEmpty()) ? null : (Category) client.getStorage().getChannel(parentId);
@@ -139,6 +146,7 @@ public class EntityBuilder {
             return new CategoryImpl(
                     id,
                     master,
+                    guild,
                     isPermSync,
                     parent,
                     name,
@@ -152,6 +160,7 @@ public class EntityBuilder {
                 return new TextChannelImpl(
                         id,
                         master,
+                        guild,
                         isPermSync,
                         parent,
                         name,
@@ -160,16 +169,19 @@ public class EntityBuilder {
                         chatLimitTime
                 );
             } else if (type == 2) { // VoiceChannel
-                boolean hasPassword = object.get("has_password").getAsBoolean();
+                boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
+                int size = object.get("limit_amount").getAsInt();
                 return new VoiceChannelImpl(
                         id,
                         master,
+                        guild,
                         isPermSync,
                         parent,
                         name,
                         rpo,
                         upo,
-                        hasPassword
+                        hasPassword,
+                        size
                 );
             }
         }
