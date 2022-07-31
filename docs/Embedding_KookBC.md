@@ -25,7 +25,7 @@
 <dependency>
     <groupId>com.github.SNWCreations</groupId>
     <artifactId>KookBC</artifactId>
-    <version>0.2.0</version>
+    <version>0.6.0</version>
     <scope>compile</scope>
 </dependency>
 ```
