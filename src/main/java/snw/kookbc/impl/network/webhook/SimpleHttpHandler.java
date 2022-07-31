@@ -70,7 +70,7 @@ public class SimpleHttpHandler implements HttpHandler {
             } else {
                 res = new String(bytes);
             }
-            JKook.getLogger().debug("Got remote request: {}", res); // TODO remove if debug is ok
+            JKook.getLogger().debug("Got remote request: {}", res);
             JsonObject object = JsonParser.parseString(
                     EncryptUtils.decrypt(res)
             ).getAsJsonObject();
