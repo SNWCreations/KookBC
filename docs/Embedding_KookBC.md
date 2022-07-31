@@ -127,3 +127,15 @@ public class KBCClient {
 此方法会启动控制台并一直循环监听用户输入。
 
 除非 KookBC 实例终止，或此方法执行过程中出现错误，此方法永远不会返回。
+
+## KBCClient#loadAllPlugins
+
+此方法会从 pluginsFolder 加载插件。
+
+您可以重写此方法，只需要把您所加载的插件通过 `plugins.add(Plugin)` 添加就可以了。
+
+## KBCClient#startNetwork
+
+此方法会启动网络模块。
+
+您可以重写此方法，如果您对于 Kook 连接有自己的处理方法。
