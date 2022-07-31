@@ -4,8 +4,6 @@
 
 一份未经修改的 kbc.yml 模板如下:
 ```yaml
-bot-file: ""
-
 token: ""
 
 mode: "websocket"
@@ -38,26 +36,6 @@ allow-help-ad: true
 **注意: 以 "webhook" 开头的配置项不会在这里讲解，请见 [KookBC 与 Webhook](KookBC_with_Webhook.md) 。**
 
 ---
-
-## bot-file
-
-表示 Bot JAR 的路径 (绝对路径 或 相对路径均允许)。
-
-此配置项允许一个字符串。
-
-KookBC 会将此配置项指定的文件看做 Bot 程序文件，并尝试加载，若失败，程序会报错并退出。
-
-示例:
-
-```yaml
-bot-file: "D:\KookBCDevelopment\example\example.jar"
-```
-
-或
-
-```yaml
-bot-file: "example.jar"
-```
 
 ## token
 

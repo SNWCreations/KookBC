@@ -5,8 +5,6 @@
 # Tips: The values of the items in this section will be used instead of the values from command line.
 # The values from the command line will be used only if the appropriate value is not provided here.
 
-# TODO remove the explain of bot-file in KookBC_Config.md
-
 # The token that will be used for Bot.
 token: ""
 
