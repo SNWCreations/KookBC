@@ -14,7 +14,6 @@ token: ""
 
 ### ---- END BOT CONFIGURATION ---- ###
 
-# TODO add document for the following four configuration item.
 # The listener mode for the Bot. "websocket" and "webhook" are allowed. (Case insensitive)
 # Invalid value will cause the client stops.
 mode: "websocket"
