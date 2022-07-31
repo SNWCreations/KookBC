@@ -152,13 +152,12 @@ public class KBCClient {
     // WARN: Set the JKook Core by constructing CoreImpl and call JKook.setCore() using it first,
     // or you will get NullPointerException.
     public void start() {
-        long timeStamp = System.currentTimeMillis();
         getCore().getLogger().debug("Loading all the plugins from plugins folder.");
         loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
-        getCore().getLogger().info("Done! ({}s), type \"help\" for help.", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - timeStamp));
+        getCore().getLogger().info("Done! Type \"help\" for help.");
 
         getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
     }
