@@ -69,22 +69,24 @@
 ```java
 public class KBCClient {
     public KBCClient(
-            snw.jkook.Core core,
+            snw.kookbc.impl.CoreImpl core,
             snw.jkook.config.file.YamlConfiguration config,
-            java.io.File botDataFolder
+            java.io.File pluginsFolder,
+            String token
     ) {
         // Actual logic here
     }
 }
 ```
 
-由此可见，您需要一个 `Core` 实例，一个 `YamlConfiguration` 实例，和一个 `File` 实例。
+由此可见，您需要一个 `CoreImpl` 实例，一个 `YamlConfiguration` 实例，和一个 `File` 实例。
 
-我需要解释一下这三者的作用:
+我需要解释一下这四者的作用:
 
 * `core`: `Core` 的实例，用于 KookBC 实例的操作。
 * `config`: 即加载了 `kbc.yml` 后得到的结果
-* `botDataFolder`: 即用于存放 Bot 数据的**文件夹**
+* `pluginsFolder`: 即存放插件的 **文件夹**
+* `token`: Bot Token
 
 按照这个方法，您应该得到了一个 `KBCClient` 的实例。
 
@@ -98,18 +100,15 @@ public class KBCClient {
 
 ```java
 public class KBCClient {
-    public void start(File file, String token) {
+    public void start() {
         // Actual logic here 
     }
 }
 ```
 
-由此可见，您需要提供两个参数，我来解释一下吧。
+没有需要的参数，直接调用吧。
 
-* `file`: 即 Bot JAR 文件，KookBC 将把此文件视作 Bot 程序并尝试加载。
-* `token`: 即 Bot Token ，用于使 Bot 与 Kook API 进行交互。
-
-**但请注意，此方法可能会抛出 `RuntimeException` ，请注意捕获并处理。**
+**请注意，此方法可能会抛出 `RuntimeException` ，请注意捕获并处理。**
 
 此方法返回后，意味着您的 Kook Bot 已经启动，可以开始用 JKook API 进行操作了。
 
