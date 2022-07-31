@@ -31,6 +31,7 @@ import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.event.EventFactory;
 
@@ -41,10 +42,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ListenerImpl implements Listener {
-    protected final Connector connector;
+    protected final KBCClient client;
 
-    public ListenerImpl(Connector connector) {
-        this.connector = connector;
+    public ListenerImpl(KBCClient client) {
+        this.client = client;
     }
 
     @Override
@@ -61,25 +62,25 @@ public class ListenerImpl implements Listener {
                 break;
             case PONG:
                 JKook.getLogger().debug("Got PONG");
-                connector.pong();
+                client.getConnector().pong();
                 break;
             case RESUME:
                 JKook.getLogger().debug("Impossible Message from remote: type is RESUME.");
                 break;
             case RECONNECT:
                 JKook.getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
-                connector.setRequireReconnect(true);
+                client.getConnector().setRequireReconnect(true);
                 break;
             case RESUME_ACK:
                 JKook.getLogger().info("Resume finished");
-                connector.getSession().setId(frame.getData().get("session_id").getAsString());
+                client.getSession().setId(frame.getData().get("session_id").getAsString());
                 break;
         }
     }
 
     protected void event(Frame frame) {
         JKook.getLogger().debug("Got EVENT {}", frame);
-        Session session = connector.getSession();
+        Session session = client.getSession();
         AtomicInteger sn = session.getSN();
         Set<Frame> buffer = session.getBuffer();
         int expected = sn.get() + 1;
@@ -119,27 +120,25 @@ public class ListenerImpl implements Listener {
 
     protected void event0(Frame frame) {
         Event event = EventFactory.getEvent(frame.getData());
-        if (event != null) {
-            if (!executeCommand(event)) {
-                JKook.getEventManager().callEvent(event);
-            }
+        if (!executeCommand(event)) {
+            JKook.getEventManager().callEvent(event);
         }
     }
 
     protected void hello(Frame frame) {
         JKook.getLogger().debug("Got HELLO");
-        connector.setConnected(true);
+        client.getConnector().setConnected(true);
         JsonObject object = frame.getData();
         int status = object.get("code").getAsInt();
         if (status == 0) {
-            connector.setSession(new Session(object.get("session_id").getAsString()));
+            KBCClient.getInstance().getSession().setId(object.get("session_id").getAsString());
         } else {
             switch (status) {
                 case 40101:
                     throw new RuntimeException("Invalid Bot Token!");
                 case 40103:
                     JKook.getLogger().debug("WebSocket Token is invalid. Attempting to reconnect.");
-                    connector.setRequireReconnect(true);
+                    client.getConnector().setRequireReconnect(true);
                     break;
                 default:
                     throw new RuntimeException("Unexpected response code: " + status);

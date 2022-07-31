@@ -21,10 +21,13 @@ package snw.kookbc.impl;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 import snw.jkook.Core;
+import snw.jkook.HttpAPI;
 import snw.jkook.command.CommandManager;
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.entity.User;
 import snw.jkook.event.EventManager;
 import snw.jkook.scheduler.Scheduler;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
@@ -39,6 +42,8 @@ public class CoreImpl implements Core {
     private final EventManagerImpl eventManager = new EventManagerImpl();
     private final Logger logger;
     private volatile boolean running = true;
+    private HttpAPI httpApi;
+    private User botUser;
 
     // Note for hardcore developers:
     // Use this instead of CoreImpl(Logger) constructor, unless you want the logging output.
@@ -57,6 +62,11 @@ public class CoreImpl implements Core {
         } catch (IOException e) {
             getLogger().warn("Unable to read Git commit information. :(", e);
         }
+    }
+
+    @Override
+    public HttpAPI getHttpAPI() {
+        return httpApi;
     }
 
     @Override
@@ -100,6 +110,19 @@ public class CoreImpl implements Core {
     }
 
     @Override
+    public User getUser() {
+        return botUser;
+    }
+
+    @Override
+    public void setUser(User user) throws IllegalStateException {
+        if (this.botUser != null) {
+            throw new IllegalStateException("A user has already bound to this core implementation.");
+        }
+        this.botUser = user;
+    }
+
+    @Override
     public void shutdown() {
         running = false; // make sure the client will shut down if Bot wish the client stop.
         getLogger().info("Stopping core");
@@ -109,5 +132,10 @@ public class CoreImpl implements Core {
 
     public boolean isRunning() {
         return running;
+    }
+
+    public void init(HttpAPIImpl impl) {
+        Validate.isTrue(this.httpApi == null, "This core implementation has already initialized.");
+        this.httpApi = impl;
     }
 }

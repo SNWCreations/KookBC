@@ -43,7 +43,7 @@ public class SimpleHttpHandler implements HttpHandler {
 
     public SimpleHttpHandler(KBCClient client) {
         this.client = client;
-        listener = new ListenerImpl(client.getConnector());
+        listener = new ListenerImpl(client);
     }
 
     @Override

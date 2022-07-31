@@ -27,6 +27,7 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.JKook;
+import snw.kookbc.impl.KBCClient;
 
 import java.io.ByteArrayOutputStream;
 import java.net.ProtocolException;
@@ -36,9 +37,9 @@ public class MessageProcessor extends WebSocketListener {
     private final Connector connector;
     private final Listener listener;
 
-    public MessageProcessor(Connector connector) {
-        this.connector = connector;
-        listener = new ListenerImpl(connector);
+    public MessageProcessor(KBCClient client) {
+        this.connector = client.getConnector();
+        listener = new ListenerImpl(client);
     }
 
     @Override

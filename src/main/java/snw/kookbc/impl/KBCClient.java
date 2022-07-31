@@ -22,8 +22,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import snw.jkook.Core;
 import snw.jkook.JKook;
-import snw.jkook.bot.Bot;
-import snw.jkook.bot.BotDescription;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
@@ -32,9 +30,10 @@ import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginDescription;
 import snw.jkook.scheduler.JKookRunnable;
 import snw.jkook.util.Validate;
-import snw.kookbc.impl.bot.SimpleBotClassLoader;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
@@ -44,6 +43,8 @@ import snw.kookbc.impl.event.InternalEventListener;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
+import snw.kookbc.impl.network.Session;
+import snw.kookbc.impl.plugin.SimplePluginClassLoader;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
 
@@ -59,25 +60,28 @@ import static snw.kookbc.util.Util.getVersionDifference;
 public class KBCClient {
     private static KBCClient INSTANCE = null;
     private final Core core;
-    private NetworkClient networkClient;
+    private final NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
     private final EntityUpdater entityUpdater;
     private final YamlConfiguration config;
-    private final File botDataFolder;
-    private Bot bot;
+    private final File pluginsFolder;
+    private final Session session = new Session(null);
     protected Connector connector;
+    protected final Collection<Plugin> plugins = new ArrayList<>();
 
-    public KBCClient(Core core, YamlConfiguration config, File botDataFolder) {
-        Validate.isTrue(botDataFolder.isDirectory(), "The provided botDataFolder object is not a directory.");
+    public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
+        Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
         this.core = core;
         this.config = config;
-        this.botDataFolder = botDataFolder;
+        this.pluginsFolder = pluginsFolder;
+        this.networkClient = new NetworkClient(token);
         storage = new EntityStorage(this);
         entityBuilder = new EntityBuilder(this);
         msgBuilder = new MessageBuilder(this);
         entityUpdater = new EntityUpdater();
+        core.init(new HttpAPIImpl(this, token));
         // setInstance(this); // make sure the instance can be used from other place
     }
 
@@ -134,8 +138,8 @@ public class KBCClient {
         return core;
     }
 
-    public File getBotDataFolder() {
-        return botDataFolder;
+    public File getPluginsFolder() {
+        return pluginsFolder;
     }
 
     public boolean isRunning() {
@@ -147,10 +151,10 @@ public class KBCClient {
     // Call this to start KookBC, then you can use JKook API.
     // WARN: Set the JKook Core by constructing CoreImpl and call JKook.setCore() using it first,
     // or you will get NullPointerException.
-    public void start(File file, String token) {
+    public void start() {
         long timeStamp = System.currentTimeMillis();
-        bot = Objects.requireNonNull(loadBot(file, token));
-        postLoadBot();
+        getCore().getLogger().debug("Loading all the plugins from plugins folder.");
+        loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
@@ -159,42 +163,60 @@ public class KBCClient {
         getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
     }
 
-    protected void postLoadBot() {
-        getCore().getLogger().debug("Checking the API version of the Bot");
-        BotDescription description = bot.getDescription();
-        int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
-        if (diff == -1) {
-            getCore().getLogger().warn("Bot is using old version of JKook API! We are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+    protected void loadAllPlugins() {
+        @SuppressWarnings("resource")
+        SimplePluginClassLoader classLoader = new SimplePluginClassLoader(this);
+        File[] files = getPluginsFolder().listFiles(pathname -> pathname.getName().endsWith(".jar"));
+        if (files != null) {
+            // we must call onLoad() first.
+            for (File file : files) {
+                Plugin plugin;
+                try {
+                    plugin = classLoader.loadPlugin(file);
+                    PluginDescription description = plugin.getDescription();
+                    int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
+                    if (diff == -1) {
+                        plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+                    }
+                    if (diff == 1) {
+                        plugin.getLogger().error("This plugin is using unsupported API version, KookBC is using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+                        plugin.getLogger().error("This plugin won't be enabled.");
+                        continue;
+                    }
+                    plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
+                    plugin.onLoad();
+                } catch (Exception e) {
+                    getCore().getLogger().error("Unable to load a plugin.", e);
+                    continue;
+                }
+                plugins.add(plugin);
+            }
         }
-        if (diff == 1) {
-            getCore().getLogger().warn("Unsupported API version, we are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
+        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
+            Plugin plugin = iterator.next();
+            try {
+                PluginDescription description = plugin.getDescription();
+                plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
+                plugin.onEnable();
+            } catch (Exception e) {
+                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to enable this plugin.", e);
+                iterator.remove();
+            }
         }
-
-        getCore().getLogger().debug("Registering internal things");
-        registerInternal();
-
-        getCore().getLogger().debug("Calling Bot#onLoad");
-        bot.getLogger().info("Loading " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
-        bot.onLoad();
-        getCore().getLogger().debug("Calling Bot#reloadConfig");
-        bot.reloadConfig();
-        getCore().getLogger().debug("Calling Bot#onEnable");
-        bot.getLogger().info("Enabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
-        bot.onEnable();
-        networkClient = new NetworkClient(bot);
-        connector = new Connector(this);
     }
 
     protected void startNetwork() {
+        connector = new Connector(this);
         connector.start();
     }
 
     protected void finishStart() {
+        registerInternal();
         User botUser = getEntityBuilder().buildUser(
                 getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
         );
         getStorage().addUser(botUser);
-        bot.setUser(botUser);
+        core.setUser(botUser);
 
         // region BotMarket support part - 2022/7/28
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
@@ -223,18 +245,11 @@ public class KBCClient {
                                 JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
                             }
                         }
-                    }.runTaskTimer(TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+                    }.runTaskTimer(null, TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
                 }
             }
         }
         // endregion
-    }
-
-    // Override this if you have other way to load the Bot.
-    protected Bot loadBot(File file, String token) {
-        @SuppressWarnings("resource") // we will release it when the client stops. See shutdown() method.
-        SimpleBotClassLoader classloader = new SimpleBotClassLoader(this);
-        return classloader.loadBot(file, token);
     }
 
     // If you need console (normally you won't need it), call this
@@ -259,18 +274,17 @@ public class KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        if (bot != null) {
-            bot.getLogger().info("Disabling " + bot.getDescription().getName() + " version " + bot.getDescription().getVersion());
-            bot.onDisable();
-            // why do I check this? because in some environments,
-            // the bot won't be loaded by using SimpleClassLoader, maybe another type?
-            // And the Bot can be constructed without any check by BotClassLoader,
-            // so we should check this before casting it.
-            if (bot.getClass().getClassLoader() instanceof SimpleBotClassLoader) {
+        for (Plugin plugin : plugins) {
+            try {
+                plugin.onDisable();
+            } catch (Exception e) {
+                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to disable this plugin.");
+            }
+            if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
                 try {
-                    ((SimpleBotClassLoader) bot.getClass().getClassLoader()).close();
+                    ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
                 } catch (IOException e) {
-                    JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+                    JKook.getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
                 }
             }
         }
@@ -280,10 +294,6 @@ public class KBCClient {
         }
         getCore().shutdown();
         getCore().getLogger().info("Client stopped");
-    }
-
-    public Bot getBot() {
-        return bot;
     }
 
     public EntityStorage getStorage() {
@@ -306,9 +316,12 @@ public class KBCClient {
         return connector;
     }
 
-    // Notice: don't use it before calling start(), or you will got null.
     public NetworkClient getNetworkClient() {
         return networkClient;
+    }
+
+    public Session getSession() {
+        return session;
     }
 
     protected void registerInternal() {
@@ -413,7 +426,7 @@ public class KBCClient {
                                     : command.getDescription()
                     )
             );
-            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()){
+            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()) {
                 result.add("详细帮助信息:");
                 result.add(command.getHelpContent());
             }

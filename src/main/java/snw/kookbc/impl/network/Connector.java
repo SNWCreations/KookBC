@@ -31,7 +31,6 @@ public class Connector {
     private final KBCClient kbcClient;
     private String wsLink = "";
     private WebSocket ws;
-    private Session session;
     private volatile boolean connected = false;
     private volatile boolean timeout = false;
     private volatile boolean pingOk = false;
@@ -109,7 +108,7 @@ public class Connector {
                         new Request.Builder()
                                 .url(wsLink)
                                 .build(),
-                        new MessageProcessor(this)
+                        new MessageProcessor(kbcClient)
                 );
                 long ts = System.currentTimeMillis();
                 while (System.currentTimeMillis() - ts < 6000L) {
@@ -156,14 +155,6 @@ public class Connector {
         }
     }
 
-    public Session getSession() {
-        return session;
-    }
-
-    public void setSession(Session session) {
-        this.session = session;
-    }
-
     // following methods should be called by other class:
 
     public synchronized void restart() {
@@ -172,8 +163,8 @@ public class Connector {
         } catch (Exception e) {
             throw new Error("Unable to shutdown. Please restart the application manually.", e);
         }
-        session.getSN().set(0);
-        session.getBuffer().clear();
+        kbcClient.getSession().getSN().set(0);
+        kbcClient.getSession().getBuffer().clear();
         start();
     }
 
@@ -206,7 +197,7 @@ public class Connector {
         }
         JKook.getLogger().debug("Attempting to PING.");
         setPingOk(false);
-        boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", session.getSN().get()));
+        boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         Validate.isTrue(queued, "Unable to queue ping request");
         long ts = System.currentTimeMillis();
         while (System.currentTimeMillis() - ts < 6000L) {
@@ -224,7 +215,7 @@ public class Connector {
         if (isTimeout()) {
             setTimeout(false);
             JKook.getLogger().info("We have recovered from TIMEOUT successfully, attempting to resume.");
-            ws.send(String.format("{\"s\":4,\"sn\":%s}", session.getSN().get()));
+            ws.send(String.format("{\"s\":4,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         }
     }
 

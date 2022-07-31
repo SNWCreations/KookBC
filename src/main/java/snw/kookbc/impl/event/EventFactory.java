@@ -247,9 +247,9 @@ public class EventFactory {
                     updatedUser.setAvatarUrl(body.get("avatar").getAsString());
                     return new UserInfoUpdateEvent(msgTimeStamp, updatedUser);
                 case SELF_JOINED_GUILD:
-                    return new UserJoinGuildEvent(msgTimeStamp, KBCClient.getInstance().getBot().getUser(), KBCClient.getInstance().getStorage().getGuild(body.get("guild_id").getAsString()));
+                    return new UserJoinGuildEvent(msgTimeStamp, KBCClient.getInstance().getCore().getUser(), KBCClient.getInstance().getStorage().getGuild(body.get("guild_id").getAsString()));
                 case SELF_LEFT_GUILD:
-                    return new UserLeaveGuildEvent(msgTimeStamp, KBCClient.getInstance().getBot().getUser(), KBCClient.getInstance().getStorage().getGuild(body.get("guild_id").getAsString()));
+                    return new UserLeaveGuildEvent(msgTimeStamp, KBCClient.getInstance().getCore().getUser(), KBCClient.getInstance().getStorage().getGuild(body.get("guild_id").getAsString()));
             }
         }
         throw new RuntimeException("Unexpected event type");

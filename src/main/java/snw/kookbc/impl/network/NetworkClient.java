@@ -23,7 +23,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
-import snw.jkook.bot.Bot;
 
 import java.io.IOException;
 import java.util.Map;
@@ -33,8 +32,8 @@ public class NetworkClient {
     private final String tokenWithPrefix;
     private final OkHttpClient client = new OkHttpClient();
 
-    public NetworkClient(Bot bot) {
-        tokenWithPrefix = "Bot " + bot.getToken();
+    public NetworkClient(String token) {
+        tokenWithPrefix = "Bot " + token;
     }
 
     public JsonObject get(String fullUrl) {

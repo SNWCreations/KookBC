@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.scheduler;
 
+import snw.jkook.plugin.Plugin;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
@@ -28,11 +29,18 @@ public class TaskImpl implements Task {
     private final Scheduler scheduler;
     private final ScheduledFuture<?> future;
     private final int id;
+    private final Plugin plugin;
 
-    public TaskImpl(Scheduler scheduler, ScheduledFuture<?> future, int id) {
+    public TaskImpl(Scheduler scheduler, ScheduledFuture<?> future, int id, Plugin plugin) {
         this.scheduler = scheduler;
         this.future = future;
         this.id = id;
+        this.plugin = plugin;
+    }
+
+    @Override
+    public Plugin getPlugin() {
+        return plugin;
     }
 
     @Override

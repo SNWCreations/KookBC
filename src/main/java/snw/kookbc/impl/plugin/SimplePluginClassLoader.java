@@ -47,8 +47,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         boolean prev = constructor.isAccessible(); // if other reflect operation turn this to true?
         constructor.setAccessible(true);
         T bot = constructor.newInstance(
-                new File(client.getBotDataFolder(), "config.yml"),
-                client.getBotDataFolder(),
+                new File(client.getPluginsFolder(), "config.yml"),
+                new File(client.getPluginsFolder(), description.getName()),
                 description,
                 new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
                 new PluginLogger(description.getName(), LoggerFactory.getLogger(cls))

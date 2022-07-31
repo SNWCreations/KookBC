@@ -53,14 +53,12 @@ public class Main {
         Thread.currentThread().setName("Main thread");
 
         // KBC accepts following arguments:
-        // --bot-file <filename>  --  Use the filename as the Bot main file
         // --token <tokenValue>   --  Use the tokenValue as the token:
         // --no-jline (Optional)  --  Disable JLine reader and use Java-API based reader
         // --no-color             --  Disable color output
         // --help                 --  Get help and exit
 
         OptionParser parser = new OptionParser();
-        OptionSpec<File> botFileOption = parser.accepts("bot-file", "The Bot archive file path.").withOptionalArg().ofType(File.class);
         OptionSpec<String> tokenOption = parser.accepts("token", "The token that will be used. (Unsafe, write token to token.txt instead.)").withOptionalArg();
         OptionSpec<Void> noJlineOption = parser.accepts("no-jline", "Provide it to disable JLine-based command reader.");
         OptionSpec<Void> noColorOption = parser.accepts("no-color", "Provide it to disable ANSI color codes.");
@@ -98,12 +96,11 @@ public class Main {
             System.setProperty("terminal.ansi", "false");
         }
 
-        File botFile = options.valueOf(botFileOption);
-
         saveKBCConfig();
-        File botDataFolder = new File("bot");
-        if (!botDataFolder.isDirectory()) {
-            botDataFolder.mkdir();
+        File pluginsFolder = new File("plugins");
+        if (!pluginsFolder.isDirectory()) {
+            //noinspection ResultOfMethodCallIgnored
+            pluginsFolder.mkdir();
         }
 
         YamlConfiguration config = new YamlConfiguration();
@@ -113,22 +110,6 @@ public class Main {
         } catch (FileNotFoundException ignored) {
         } catch (IOException | InvalidConfigurationException e) {
             logger.error("Cannot load kbc.yml", e);
-        }
-
-        String configBotFile = config.getString("bot-file");
-        if (configBotFile != null) {
-            File cBotFile = new File(configBotFile);
-            if (cBotFile.exists() && cBotFile.isFile() && cBotFile.canRead()) {
-                logger.debug("Got valid bot-file in kbc.yml.");
-                if (botFile == null) {
-                    logger.debug("The value of bot-file from command line is invalid. We will use the value from kbc.yml configuration.");
-                    botFile = cBotFile;
-                } else {
-                    logger.debug("The value of bot-file from command line is OK, so we won't use the value from kbc.yml configuration.");
-                }
-            } else {
-                logger.warn("Invalid bot-file value in kbc.yml.");
-            }
         }
 
         String configToken = config.getString("token");
@@ -153,24 +134,10 @@ public class Main {
             logger.warn("Detected allow-help-ad is false! :("); // why don't you support us?
         }
 
-        if (botFile == null || !botFile.exists()) {
-            logger.error("Unable to find Bot file.");
-            return 1;
-        }
-        if (!botFile.isFile()) {
-            logger.error("Unable to load Bot file. It is not a file. (Maybe it is a directory?)");
-            return 1;
-        }
-        if (!botFile.canRead()) {
-            logger.error("Unable to load Bot file. We don't have permission to read it.");
-            return 1;
-        }
-
-
-        return main1(botFile, token, config, botDataFolder);
+        return main1(token, config, pluginsFolder);
     }
 
-    private static int main1(File botFile, String token, YamlConfiguration config, File botDataFolder) {
+    private static int main1(String token, YamlConfiguration config, File pluginsFolder) {
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
         OperatingSystemMXBean osMX = ManagementFactory.getOperatingSystemMXBean();
         if (runtimeMX != null && osMX != null) {
@@ -187,9 +154,9 @@ public class Main {
         String mode = config.getString("mode");
         if (mode != null) {
             if (mode.equalsIgnoreCase("webhook")) {
-                client = new WebHookClient(core, config, botDataFolder);
+                client = new WebHookClient(core, config, pluginsFolder, token);
             } else {
-                client = new KBCClient(core, config, botDataFolder);
+                client = new KBCClient(core, config, pluginsFolder, token);
             }
         } else {
             throw new IllegalArgumentException("Unknown network mode!");
@@ -200,7 +167,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));
 
         try {
-            client.start(botFile, token);
+            client.start();
         } catch (Throwable e) {
             logger.error("Failed to start client", e);
             client.shutdown();
@@ -220,6 +187,7 @@ public class Main {
             if (kbcLocal.exists()) {
                 return;
             }
+            //noinspection ResultOfMethodCallIgnored
             kbcLocal.createNewFile();
 
             try (final FileOutputStream out = new FileOutputStream(kbcLocal)) {

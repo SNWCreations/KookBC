@@ -19,13 +19,12 @@
 package snw.kookbc.impl.network.webhook;
 
 import com.sun.net.httpserver.HttpServer;
-import snw.jkook.Core;
 import snw.jkook.JKook;
 import snw.jkook.config.file.YamlConfiguration;
+import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.bot.SimpleBotClassLoader;
-import snw.kookbc.impl.network.Session;
+import snw.kookbc.impl.plugin.SimplePluginClassLoader;
 import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.io.File;
@@ -36,13 +35,12 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WebHookClient extends KBCClient {
     protected HttpServer server;
 
-    public WebHookClient(Core core, YamlConfiguration config, File botDataFolder) {
-        super(core, config, botDataFolder);
+    public WebHookClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
+        super(core, config, pluginsFolder, token);
     }
 
     @Override
@@ -67,14 +65,14 @@ public class WebHookClient extends KBCClient {
         getCore().getLogger().info("Server is listening on port {}", port);
         getCore().getLogger().debug("Initializing SN update listener.");
         int initSN = 0;
-        File snfile = new File(getBotDataFolder(), "sn");
+        File snfile = new File(getPluginsFolder(), "sn");
         if (snfile.exists()) {
             List<String> lines = Files.readAllLines(Paths.get(snfile.toURI()));
             if (!lines.isEmpty()) {
                 initSN = Integer.parseInt(lines.get(0));
             }
         }
-        getConnector().setSession(new Session(null, new AtomicInteger(initSN)));
+        getSession().getSN().set(initSN);
         new SNUpdateListener(this).start();
     }
 
@@ -87,18 +85,17 @@ public class WebHookClient extends KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        if (getBot() != null) {
-            getBot().getLogger().info("Disabling " + getBot().getDescription().getName() + " version " + getBot().getDescription().getVersion());
-            getBot().onDisable();
-            // why do I check this? because in some environments,
-            // the bot won't be loaded by using SimpleClassLoader, maybe another type?
-            // And the Bot can be constructed without any check by BotClassLoader,
-            // so we should check this before casting it.
-            if (getBot().getClass().getClassLoader() instanceof SimpleBotClassLoader) {
+        for (Plugin plugin : plugins) {
+            try {
+                plugin.onDisable();
+            } catch (Exception e) {
+                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to disable this plugin.");
+            }
+            if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
                 try {
-                    ((SimpleBotClassLoader) getBot().getClass().getClassLoader()).close();
+                    ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
                 } catch (IOException e) {
-                    JKook.getLogger().error("Unexpected IOException while we attempting to close the Bot ClassLoader.", e);
+                    JKook.getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
                 }
             }
         }

@@ -24,7 +24,6 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import snw.jkook.HttpAPI;
-import snw.jkook.bot.Bot;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -33,17 +32,17 @@ import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
-import snw.jkook.util.Validate;
 
 import java.io.File;
 import java.util.Collection;
 
 public class HttpAPIImpl implements HttpAPI {
     private final KBCClient client;
-    private Bot bot;
+    private final String token;
 
-    public HttpAPIImpl(KBCClient client) {
+    public HttpAPIImpl(KBCClient client, String token) {
         this.client = client;
+        this.token = token;
     }
 
     @Override
@@ -80,7 +79,7 @@ public class HttpAPIImpl implements HttpAPI {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(RequestBody.create(file, MediaType.parse("application/from-data")))
-                .addHeader("Authorization", String.format("Bot %s", bot.getToken()))
+                .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
@@ -94,7 +93,7 @@ public class HttpAPIImpl implements HttpAPI {
                                 .add("file", binary)
                                 .build()
                 )
-                .addHeader("Authorization", String.format("Bot %s", bot.getToken()))
+                .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
@@ -106,11 +105,5 @@ public class HttpAPIImpl implements HttpAPI {
                         .put("url_code", urlCode)
                         .build()
         );
-    }
-
-    // Note for developers: PLEASE NEVER CALL THIS METHOD
-    public <T extends Bot> void init(T bot) {
-        Validate.isTrue(this.bot == null, "This HttpAPI has already initialized.");
-        this.bot = bot;
     }
 }

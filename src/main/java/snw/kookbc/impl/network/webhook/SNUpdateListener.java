@@ -35,9 +35,9 @@ public class SNUpdateListener extends Thread {
     @Override
     public void run() {
         while (client.isRunning()) {
-            int current = client.getConnector().getSession().getSN().get();
+            int current = client.getSession().getSN().get();
             if (current > prev) {
-                File snfile = new File(client.getBotDataFolder(), "sn");
+                File snfile = new File(client.getPluginsFolder(), "sn");
                 try {
                     if (!snfile.exists()) {
                         // noinspection ResultOfMethodCallIgnored

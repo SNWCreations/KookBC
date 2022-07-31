@@ -19,10 +19,11 @@
 package snw.kookbc.impl.scheduler;
 
 import snw.jkook.JKook;
+import snw.jkook.plugin.Plugin;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
-import snw.kookbc.util.ThreadFactoryBuilder;
 import snw.jkook.util.Validate;
+import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -53,17 +54,17 @@ public class SchedulerImpl implements Scheduler {
     }
 
     @Override
-    public Task runTaskLater(Runnable runnable, long delay) {
+    public Task runTaskLater(Plugin plugin, Runnable runnable, long delay) {
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.schedule(wrap(runnable, id), delay, TimeUnit.MILLISECONDS), id);
+        TaskImpl task = new TaskImpl(this, pool.schedule(wrap(runnable, id), delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }
 
     @Override
-    public Task runTaskTimer(Runnable runnable, long period, long delay) {
+    public Task runTaskTimer(Plugin plugin, Runnable runnable, long period, long delay) {
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id), period, delay, TimeUnit.MILLISECONDS), id);
+        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id), period, delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }
@@ -77,6 +78,15 @@ public class SchedulerImpl implements Scheduler {
     public void cancelTask(int taskId) {
         if (isScheduled(taskId)) {
             scheduledTasks.remove(taskId).cancel0();
+        }
+    }
+
+    @Override
+    public void cancelTasks(Plugin plugin) {
+        for (TaskImpl task : scheduledTasks.values()) {
+            if (task.getPlugin() == plugin) {
+                cancelTask(task.getTaskId());
+            }
         }
     }
 
