@@ -194,6 +194,7 @@ public class KBCClient {
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
             Plugin plugin = iterator.next();
             try {
+                plugin.reloadConfig(); // ensure the default configuration will be loaded
                 PluginDescription description = plugin.getDescription();
                 plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
                 plugin.onEnable();
