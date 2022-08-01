@@ -44,17 +44,14 @@ import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
-import snw.kookbc.impl.plugin.SimplePluginClassLoader;
+import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import static snw.kookbc.util.Util.getVersionDifference;
 
 // The client representation.
 public class KBCClient {
@@ -69,7 +66,7 @@ public class KBCClient {
     private final File pluginsFolder;
     private final Session session = new Session(null);
     protected Connector connector;
-    protected final Collection<Plugin> plugins = new ArrayList<>();
+    protected final SimplePluginManager pluginManager;
 
     public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
         Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -81,6 +78,7 @@ public class KBCClient {
         entityBuilder = new EntityBuilder(this);
         msgBuilder = new MessageBuilder(this);
         entityUpdater = new EntityUpdater();
+        pluginManager = new SimplePluginManager(this);
         core.init(new HttpAPIImpl(this, token));
         // setInstance(this); // make sure the instance can be used from other place
     }
@@ -163,46 +161,39 @@ public class KBCClient {
     }
 
     protected void loadAllPlugins() {
-        @SuppressWarnings("resource")
-        SimplePluginClassLoader classLoader = new SimplePluginClassLoader(this);
-        File[] files = getPluginsFolder().listFiles(pathname -> pathname.getName().endsWith(".jar"));
-        if (files != null) {
-            // we must call onLoad() first.
-            for (File file : files) {
-                Plugin plugin;
-                try {
-                    plugin = classLoader.loadPlugin(file);
-                    PluginDescription description = plugin.getDescription();
-                    int diff = getVersionDifference(description.getApiVersion(), getCore().getAPIVersion());
-                    if (diff == -1) {
-                        plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
-                    }
-                    if (diff == 1) {
-                        plugin.getLogger().error("This plugin is using unsupported API version, KookBC is using {}, got {}", getCore().getAPIVersion(), description.getApiVersion());
-                        plugin.getLogger().error("This plugin won't be enabled.");
-                        continue;
-                    }
-                    plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
-                    plugin.onLoad();
-                } catch (Exception e) {
-                    getCore().getLogger().error("Unable to load a plugin.", e);
-                    continue;
-                }
-                plugins.add(plugin);
+        List<Plugin> plugins = new ArrayList<>(Arrays.asList(pluginManager.loadPlugins(getPluginsFolder())));
+        // we must call onLoad() first.
+        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
+            Plugin plugin = iterator.next();
+
+            // onLoad
+            PluginDescription description = plugin.getDescription();
+            plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
+            try {
+                plugin.onLoad();
+            } catch (Exception e) {
+                getCore().getLogger().error("Unable to call Plugin#onLoad for a plugin.", e);
+                iterator.remove();
             }
+            // end onLoad
         }
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
             Plugin plugin = iterator.next();
+
+            plugin.reloadConfig(); // ensure the default configuration will be loaded
+
+            // onEnable
+            PluginDescription description = plugin.getDescription();
+            plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
             try {
-                plugin.reloadConfig(); // ensure the default configuration will be loaded
-                PluginDescription description = plugin.getDescription();
-                plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
-                plugin.onEnable();
+                pluginManager.enablePlugin(plugin);
             } catch (Exception e) {
-                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to enable this plugin.", e);
+                getCore().getLogger().error("Unable to enable a plugin.", e);
                 iterator.remove();
             }
+            // end onEnable
         }
+        pluginManager.getPlugins0().addAll(plugins);
     }
 
     protected void startNetwork() {
@@ -274,20 +265,7 @@ public class KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        for (Plugin plugin : plugins) {
-            try {
-                plugin.onDisable();
-            } catch (Exception e) {
-                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to disable this plugin.");
-            }
-            if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
-                try {
-                    ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
-                } catch (IOException e) {
-                    JKook.getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
-                }
-            }
-        }
+        pluginManager.clearPlugins();
 
         if (connector != null) {
             connector.shutdown();

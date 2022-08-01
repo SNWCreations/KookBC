@@ -19,16 +19,12 @@
 package snw.kookbc.impl.network.webhook;
 
 import com.sun.net.httpserver.HttpServer;
-import snw.jkook.JKook;
 import snw.jkook.config.file.YamlConfiguration;
-import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.plugin.SimplePluginClassLoader;
 import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -85,20 +81,7 @@ public class WebHookClient extends KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        for (Plugin plugin : plugins) {
-            try {
-                plugin.onDisable();
-            } catch (Exception e) {
-                plugin.getLogger().error("Unexpected exception occurred while the KookBC attempting to disable this plugin.");
-            }
-            if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
-                try {
-                    ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
-                } catch (IOException e) {
-                    JKook.getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
-                }
-            }
-        }
+        pluginManager.clearPlugins();
 
         if (server != null) {
             long httpStopTimeStamp = System.currentTimeMillis();
