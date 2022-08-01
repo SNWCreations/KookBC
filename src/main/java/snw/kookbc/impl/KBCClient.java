@@ -308,7 +308,33 @@ public class KBCClient {
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register();
         registerHelpCommand();
+        registerPluginsCommand();
         JKook.getEventManager().registerHandlers(new InternalEventListener());
+    }
+
+    protected void registerPluginsCommand() {
+        new JKookCommand("plugins")
+                .setDescription("获取已安装到此 KookBC 实例的插件列表。")
+                .setExecutor(
+                        (sender, arguments, message) -> {
+                            StringBuilder builder = new StringBuilder("已安装的插件: ");
+                            pluginManager.getPlugins0().forEach(IT -> builder.append(IT.getDescription().getName()));
+                            if (sender instanceof User) {
+                                if (message instanceof TextChannelMessage) {
+                                    ((TextChannelMessage) message).getChannel().sendComponent(
+                                            new MarkdownComponent(builder.toString()),
+                                            null,
+                                            (User) sender
+                                    );
+                                } else {
+                                    ((User) sender).sendPrivateMessage(new MarkdownComponent(builder.toString()));
+                                }
+                            } else {
+                                getCore().getLogger().info(builder.toString());
+                            }
+                        }
+                )
+                .register();
     }
 
     protected void registerHelpCommand() {
