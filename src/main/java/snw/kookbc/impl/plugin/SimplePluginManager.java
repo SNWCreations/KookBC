@@ -99,7 +99,6 @@ public class SimplePluginManager implements PluginManager {
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
         File[] files = directory.listFiles(pathname -> pathname.getName().endsWith(".jar"));
         if (files != null) {
-            // we must call onLoad() first.
             for (File file : files) {
                 Plugin plugin;
                 try {
