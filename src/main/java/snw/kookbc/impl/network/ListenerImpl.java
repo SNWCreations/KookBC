@@ -50,6 +50,10 @@ public class ListenerImpl implements Listener {
 
     @Override
     public synchronized void executeEvent(Frame frame) {
+        if (frame.getType() == null) {
+            JKook.getLogger().warn("Unknown event type! The raw frame content: {}", frame);
+            return;
+        }
         switch (frame.getType()) {
             case EVENT:
                 JKook.getScheduler().runTask(() -> event(frame));
