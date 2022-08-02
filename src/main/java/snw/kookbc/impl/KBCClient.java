@@ -105,18 +105,12 @@ public class KBCClient {
                 if (getConfig().getBoolean("ignore-remote-call-invisible-internal-command", true)) {
                     return;
                 }
-                if (message != null) {
-                    if (message instanceof TextChannelMessage) {
-                        ((TextChannelMessage) message).getChannel().sendComponent(
-                                new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。"),
-                                null,
-                                message.getSender()
-                        );
-                    } else {
-                        message.getSender().sendPrivateMessage(
-                                new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。")
-                        );
-                    }
+                if (message instanceof TextChannelMessage) {
+                    ((TextChannelMessage) message).getChannel().sendComponent(
+                            new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。"),
+                            null,
+                            message.getSender()
+                    );
                 } else {
                     ((User) sender).sendPrivateMessage(
                             new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。")
@@ -163,7 +157,7 @@ public class KBCClient {
     protected void loadAllPlugins() {
         List<Plugin> plugins = new ArrayList<>(Arrays.asList(pluginManager.loadPlugins(getPluginsFolder())));
         // we must call onLoad() first.
-        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
+        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
             // onLoad
@@ -177,7 +171,7 @@ public class KBCClient {
             }
             // end onLoad
         }
-        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext();) {
+        for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
             plugin.reloadConfig(); // ensure the default configuration will be loaded
