@@ -24,11 +24,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.abilities.Accessory;
 import snw.jkook.message.component.FileComponent;
-import snw.jkook.message.component.card.CardComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.jkook.message.component.card.Size;
-import snw.jkook.message.component.card.Theme;
+import snw.jkook.message.component.card.*;
+import snw.jkook.message.component.card.element.*;
 import snw.jkook.message.component.card.module.*;
+import snw.jkook.message.component.card.structure.Paragraph;
 import snw.jkook.util.Validate;
 
 import java.net.MalformedURLException;
@@ -62,137 +61,142 @@ public class CardBuilder {
                     JsonObject textObject = moduleObj.getAsJsonObject("text");
                     JsonObject rawAccessory = moduleObj.getAsJsonObject("accessory");
                     Accessory accessory = null;
+                    Accessory.Mode mode = null;
                     if (rawAccessory != null) {
-                        Accessory.Mode mode = Accessory.Mode.value(moduleObj.get("mode").getAsString());
-                        Validate.notNull(mode, "Unknown accessory mode.");
+                        mode = Accessory.Mode.value(moduleObj.get("mode").getAsString());
+                        // Validate.notNull(mode, "Unknown accessory mode."); // accessories without mode is allowed in KOOK CardMessage builder.
                         switch (rawAccessory.get("type").getAsString()) {
                             case "image":
                                 String src = rawAccessory.get("src").getAsString();
-                                accessory = new ImageModule(src, mode);
+                                accessory = new ImageElement(src, null, false);
                                 break;
                             case "button":
-                                PlainTextModule buttonText;
+                                BaseElement buttonText;
                                 Theme buttonTheme = Theme.value(rawAccessory.get("theme").getAsString());
                                 JsonObject rawButtonText = rawAccessory.getAsJsonObject("text");
                                 String buttonContent = rawButtonText.get("content").getAsString();
                                 switch (rawButtonText.get("type").getAsString()) {
                                     case "plain-text":
-                                        buttonText = new PlainTextModule(buttonContent, null);
+                                        buttonText = new PlainTextElement(buttonContent, false);
                                         break;
                                     case "kmarkdown":
-                                        buttonText = new MarkdownModule(buttonContent, null);
+                                        buttonText = new MarkdownElement(buttonContent);
                                         break;
                                     default:
                                         throw new IllegalArgumentException("Unknown button text type.");
                                 }
-                                accessory = new ButtonModule(ButtonModule.EventType.NO_ACTION, buttonTheme, null, buttonText, mode);
+                                accessory = new ButtonElement(buttonTheme, rawAccessory.has("value") ? rawAccessory.get("value").getAsString() : null, ButtonElement.EventType.NO_ACTION, buttonText);
                                 break;
                             default:
                                 throw new IllegalArgumentException("Unknown accessory type.");
                         }
                     }
+                    CardScopeElement text;
                     switch (textObject.get("type").getAsString()) {
                         case "plain-text":
-                            moduleList.add(new PlainTextModule(textObject.get("content").getAsString(), accessory));
+                            text = new PlainTextElement(textObject.get("content").getAsString(), false);
                             break;
                         case "kmarkdown":
-                            moduleList.add(new MarkdownModule(textObject.get("content").getAsString(), accessory));
+                            text = new MarkdownElement(textObject.get("content").getAsString());
                             break;
                         case "paragraph":
                             int cols = textObject.get("cols").getAsInt();
                             JsonArray fields = textObject.getAsJsonArray("fields");
-                            List<PlainTextModule> list = new LinkedList<>();
+                            List<BaseElement> list = new LinkedList<>();
                             for (JsonElement rawField : fields) {
                                 JsonObject fieldObj = rawField.getAsJsonObject();
                                 String content = fieldObj.get("content").getAsString();
                                 switch (fieldObj.get("type").getAsString()) {
                                     case "plain-text":
-                                        list.add(new PlainTextModule(content, null));
+                                        list.add(new PlainTextElement(content, false));
                                         break;
                                     case "kmarkdown":
-                                        list.add(new MarkdownModule(content, null));
+                                        list.add(new MarkdownElement(content));
                                         break;
                                     default:
                                         throw new IllegalArgumentException("Unknown paragraph field type");
                                 }
                             }
-                            moduleList.add(new ParagraphModule(cols, list, accessory));
+                            text = new Paragraph(cols, list);
                             break;
+                        default:
+                            throw new IllegalArgumentException("Unknown type of the element in SectionModule.");
                     }
+                    moduleList.add(new SectionModule(text, accessory, mode));
                     break;
                 case "container":
-                    List<ImageModule> lst = new LinkedList<>();
+                    List<ImageElement> lst = new LinkedList<>();
                     JsonArray images = moduleObj.getAsJsonArray("elements");
                     for (JsonElement rawImage : images) {
                         JsonObject rawImageObj = rawImage.getAsJsonObject();
                         Validate.isTrue(Objects.equals(rawImageObj.get("type").getAsString(), "image"), "Container only accepts image objects.");
                         String src = rawImageObj.get("src").getAsString();
-                        lst.add(new ImageModule(src, null));
+                        lst.add(new ImageElement(src, null, false));
                     }
                     moduleList.add(new ContainerModule(lst));
                     break;
                 case "image-group":
-                    List<ImageModule> list = new LinkedList<>();
-                    JsonArray imgArray = moduleObj.getAsJsonArray("elements");
-                    for (JsonElement rawImage : imgArray) {
+                    List<ImageElement> list = new LinkedList<>();
+                    JsonArray imgs = moduleObj.getAsJsonArray("elements");
+                    for (JsonElement rawImage : imgs) {
                         JsonObject rawImageObj = rawImage.getAsJsonObject();
-                        Validate.isTrue(Objects.equals(rawImageObj.get("type").getAsString(), "image"), "Container only accepts image objects.");
+                        Validate.isTrue(Objects.equals(rawImageObj.get("type").getAsString(), "image"), "Image group only accepts image objects.");
                         String src = rawImageObj.get("src").getAsString();
-                        list.add(new ImageModule(src, null));
+                        list.add(new ImageElement(src, null, false));
                     }
                     moduleList.add(new ImageGroupModule(list));
                     break;
                 case "header":
                     JsonObject rawText = moduleObj.getAsJsonObject("text");
                     Validate.isTrue(Objects.equals(rawText.get("type").getAsString(), "plain-text"), "Header module only accepts plain-text.");
-                    moduleList.add(new HeaderModule(rawText.get("content").getAsString()));
+                    moduleList.add(new HeaderModule(new PlainTextElement(rawText.get("content").getAsString(), false)));
                     break;
                 case "divider":
                     moduleList.add(DividerModule.INSTANCE);
                     break;
                 case "action-group":
                     JsonArray elements = moduleObj.getAsJsonArray("elements");
-                    List<ActionModule> actionModules = new LinkedList<>();
+                    List<InteractElement> actionModules = new LinkedList<>();
                     for (JsonElement jsonElement : elements) {
                         JsonObject rawButton = jsonElement.getAsJsonObject();
                         Validate.isTrue(Objects.equals(rawButton.get("type").getAsString(), "button"), "Action Group module only accepts button.");
                         String value = rawButton.get("value") != null ? rawButton.get("value").getAsString() : "";
-                        ButtonModule.EventType type = ButtonModule.EventType.value(rawButton.get("click") != null ? rawButton.get("click").getAsString() : "");
-                        PlainTextModule buttonText;
+                        ButtonElement.EventType type = ButtonElement.EventType.value(rawButton.get("click") != null ? rawButton.get("click").getAsString() : "");
+                        BaseElement buttonText;
                         Theme buttonTheme = Theme.value(rawButton.get("theme").getAsString());
                         JsonObject rawButtonText = rawButton.getAsJsonObject("text");
                         String buttonContent = rawButtonText.get("content").getAsString();
                         switch (rawButtonText.get("type").getAsString()) {
                             case "plain-text":
-                                buttonText = new PlainTextModule(buttonContent, null);
+                                buttonText = new PlainTextElement(buttonContent, false);
                                 break;
                             case "kmarkdown":
-                                buttonText = new MarkdownModule(buttonContent, null);
+                                buttonText = new MarkdownElement(buttonContent);
                                 break;
                             default:
                                 throw new IllegalArgumentException("Unknown button text type.");
                         }
-                        actionModules.add(new ButtonModule(type, buttonTheme, value, buttonText));
+                        actionModules.add(new ButtonElement(buttonTheme, value, type, buttonText));
                     }
                     moduleList.add(new ActionGroupModule(actionModules));
                     break;
                 case "context":
                     JsonArray contextElements = moduleObj.getAsJsonArray("elements");
-                    List<BaseModule> contextModules = new LinkedList<>();
+                    List<BaseElement> contextModules = new LinkedList<>();
                     for (JsonElement contextElement : contextElements) {
                         JsonObject contextObj = contextElement.getAsJsonObject();
                         switch (contextObj.get("type").getAsString()) {
                             case "image":
                                 String src = contextObj.get("src").getAsString();
-                                contextModules.add(new ImageModule(src, null));
+                                contextModules.add(new ImageElement(src, null, false));
                                 break;
                             case "plain-text":
                                 String content = contextObj.get("content").getAsString();
-                                contextModules.add(new PlainTextModule(content, null));
+                                contextModules.add(new PlainTextElement(content, false));
                                 break;
                             case "kmarkdown":
                                 String kmdContent = contextObj.get("content").getAsString();
-                                contextModules.add(new MarkdownModule(kmdContent, null));
+                                contextModules.add(new MarkdownElement(kmdContent));
                                 break;
                             default:
                                 throw new IllegalArgumentException("Unknown context type.");
@@ -203,19 +207,18 @@ public class CardBuilder {
                 case "file":
                     String title = moduleObj.get("title").getAsString();
                     String src = moduleObj.get("src").getAsString();
-                    int fileSize = moduleObj.get("size").getAsInt();
-                    moduleList.add(new FileModule(new FileComponent(src, title, fileSize, FileComponent.Type.FILE)));
+                    moduleList.add(new FileModule(FileComponent.Type.FILE, src, title, null));
                     break;
                 case "audio":
-                    String audioTitle = moduleObj.get("title").getAsString();
-                    String audioSrc = moduleObj.get("src").getAsString();
-                    String audioCover = moduleObj.get("cover").getAsString();
-                    moduleList.add(new AudioModule(audioTitle, audioSrc, audioCover));
+                    title = moduleObj.get("title").getAsString();
+                    src = moduleObj.get("src").getAsString();
+                    String cover = moduleObj.get("cover").getAsString();
+                    moduleList.add(new FileModule(FileComponent.Type.AUDIO, src, title, cover));
                     break;
                 case "video":
-                    String videoTitle = moduleObj.get("title").getAsString();
-                    String videoSrc = moduleObj.get("src").getAsString();
-                    moduleList.add(new VideoModule(videoTitle, videoSrc));
+                    title = moduleObj.get("title").getAsString();
+                    src = moduleObj.get("src").getAsString();
+                    moduleList.add(new FileModule(FileComponent.Type.VIDEO, src, title, null));
                     break;
                 case "countdown":
                     CountdownModule.Type type = CountdownModule.Type.value(moduleObj.get("mode").getAsString());
@@ -249,33 +252,47 @@ public class CardBuilder {
         JsonArray modules = new JsonArray();
         for (BaseModule module : component.getModules()) {
             JsonObject moduleObj = new JsonObject();
-            if (module instanceof PlainTextModule) {
-                JsonObject textObj = new JsonObject();
-                moduleObj.addProperty("type", "section");
-                textObj.addProperty("type", (module instanceof MarkdownModule) ? "kmarkdown" : "plain-text");
-                textObj.addProperty("content", ((PlainTextModule) module).getValue());
-                moduleObj.add("text", textObj);
-                addAccessory(((PlainTextModule) module).getAccessory(), moduleObj);
-            } else if (module instanceof ParagraphModule) {
-                moduleObj.addProperty("type", "section");
-                JsonObject textObj = new JsonObject();
-                textObj.addProperty("type", "paragraph");
-                textObj.addProperty("cols", ((ParagraphModule) module).getColumns());
-                JsonArray fields = new JsonArray();
-                for (PlainTextModule textModule : ((ParagraphModule) module).getModules()) {
-                    String content = textModule.getValue();
-                    String type = (textModule instanceof MarkdownModule) ? "kmarkdown" : "plain-text";
-                    JsonObject fieldObj = new JsonObject();
-                    fieldObj.addProperty("type", type);
-                    fieldObj.addProperty("content", content);
-                    fields.add(fieldObj);
+            if (module instanceof SectionModule) {
+                SectionModule sectionModule = (SectionModule) module;
+                CardScopeElement text = sectionModule.getText();
+                JsonObject rawText = new JsonObject();
+                if (text instanceof PlainTextElement) {
+                    rawText.addProperty("type", "plain-text");
+                    rawText.addProperty("content", ((PlainTextElement) text).getContent());
+                } else if (text instanceof MarkdownElement) {
+                    rawText.addProperty("type", "kmarkdown");
+                    rawText.addProperty("content", ((MarkdownElement) text).getContent());
+                } else if (text instanceof Paragraph) {
+                    rawText.addProperty("type", "paragraph");
+                    rawText.addProperty("cols", ((Paragraph) text).getColumns());
+                    JsonArray elements = new JsonArray();
+                    for (BaseElement field : ((Paragraph) text).getFields()) {
+                        JsonObject rawElement = new JsonObject();
+                        if (field instanceof PlainTextElement) {
+                            rawElement.addProperty("type", "plain-text");
+                            rawElement.addProperty("content", ((PlainTextElement) field).getContent());
+                        } else if (field instanceof MarkdownElement) {
+                            rawElement.addProperty("type", "kmarkdown");
+                            rawElement.addProperty("content", ((MarkdownElement) field).getContent());
+                        } else {
+                            throw new IllegalArgumentException("Unsupported element type found in Paragraph.");
+                        }
+                        elements.add(rawElement);
+                    }
+                    rawText.add("fields", elements);
+                } else {
+                    throw new IllegalArgumentException("Unsupported element type found in SectionModule.");
                 }
-                textObj.add("fields", fields);
-                moduleObj.add("text", textObj);
-                addAccessory(((ParagraphModule) module).getAccessory(), moduleObj);
+                moduleObj.addProperty("type", "section");
+                moduleObj.add("text", rawText);
+                Accessory.Mode mode = ((SectionModule) module).getMode();
+                if (mode != null) {
+                    moduleObj.addProperty("mode", mode.getValue());
+                }
+                addAccessory(sectionModule.getAccessory(), moduleObj);
             } else if (module instanceof ContainerModule) {
                 JsonArray elements = new JsonArray();
-                for (ImageModule image : ((ContainerModule) module).getImages()) {
+                for (ImageElement image : ((ContainerModule) module).getImages()) {
                     JsonObject element = new JsonObject();
                     element.addProperty("type", "image");
                     element.addProperty("src", image.getSource());
@@ -285,7 +302,7 @@ public class CardBuilder {
                 moduleObj.add("elements", elements);
             } else if (module instanceof ImageGroupModule) {
                 JsonArray elements = new JsonArray();
-                for (ImageModule image : ((ImageGroupModule) module).getImages()) {
+                for (ImageElement image : ((ImageGroupModule) module).getImages()) {
                     JsonObject element = new JsonObject();
                     element.addProperty("type", "image");
                     element.addProperty("src", image.getSource());
@@ -296,33 +313,33 @@ public class CardBuilder {
             } else if (module instanceof HeaderModule) {
                 JsonObject textObj = new JsonObject();
                 textObj.addProperty("type", "plain-text");
-                textObj.addProperty("content", ((HeaderModule) module).getValue());
+                textObj.addProperty("content", ((HeaderModule) module).getElement().getContent());
                 moduleObj.addProperty("type", "header");
                 moduleObj.add("text", textObj);
             } else if (module instanceof DividerModule) {
                 moduleObj.addProperty("type", "divider");
             } else if (module instanceof ActionGroupModule) {
                 JsonArray elements = new JsonArray();
-                for (ActionModule actionModule : ((ActionGroupModule) module).getButtons()) {
+                for (InteractElement actionModule : ((ActionGroupModule) module).getButtons()) {
                     // I think the following line maybe throw an exception in the future.
-                    Validate.isTrue(actionModule instanceof ButtonModule, "If this has error, please tell the author of KookBC! Maybe Kook updated the action module?");
-                    ButtonModule button = ((ButtonModule) actionModule);
+                    Validate.isTrue(actionModule instanceof ButtonElement, "If this has error, please tell the author of KookBC! Maybe Kook updated the action module?");
+                    ButtonElement button = ((ButtonElement) actionModule);
                     JsonObject rawButton = new JsonObject();
                     rawButton.addProperty("type", "button");
                     rawButton.addProperty("theme", button.getTheme().getValue());
                     rawButton.addProperty("value", button.getValue());
-                    if (button.getType() == ButtonModule.EventType.LINK) {
+                    if (button.getEventType() == ButtonElement.EventType.LINK) {
                         try {
                             new URL(button.getValue());
                         } catch (MalformedURLException e) {
                             throw new RuntimeException("Invalid URL for the button", e);
                         }
                     }
-                    rawButton.addProperty("click", button.getType().getValue());
+                    rawButton.addProperty("click", button.getEventType().getValue());
                     rawButton.addProperty("value", button.getValue());
-                    PlainTextModule textModule = button.getText();
-                    String content = textModule.getValue();
-                    String type = (textModule instanceof MarkdownModule) ? "kmarkdown" : "plain-text";
+                    BaseElement textModule = button.getText();
+                    String type = (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text";
+                    String content = (textModule instanceof MarkdownElement) ? ((MarkdownElement) textModule).getContent() : ((PlainTextElement) textModule).getContent();
                     JsonObject rawText = new JsonObject();
                     rawText.addProperty("type", type);
                     rawText.addProperty("content", content);
@@ -333,17 +350,23 @@ public class CardBuilder {
                 moduleObj.add("elements", elements);
             } else if (module instanceof ContextModule) {
                 JsonArray elements = new JsonArray();
-                for (BaseModule base : ((ContextModule) module).getModules()) {
+                for (BaseElement base : ((ContextModule) module).getModules()) {
                     JsonObject rawObj = new JsonObject();
-                    if (base instanceof PlainTextModule) {
-                        PlainTextModule textModule = (PlainTextModule) base;
-                        String content = textModule.getValue();
-                        String type = (textModule instanceof MarkdownModule) ? "kmarkdown" : "plain-text";
+                    if (base instanceof PlainTextElement || base instanceof MarkdownElement) {
+                        String content;
+                        String type;
+                        if (base instanceof PlainTextElement) {
+                            type = "plain-text";
+                            content = ((PlainTextElement) base).getContent();
+                        } else {
+                            type = "kmarkdown";
+                            content = ((MarkdownElement) base).getContent();
+                        }
                         rawObj.addProperty("type", type);
                         rawObj.addProperty("content", content);
                         elements.add(rawObj);
-                    } else if (base instanceof ImageModule) {
-                        ImageModule image = (ImageModule) base;
+                    } else if (base instanceof ImageElement) {
+                        ImageElement image = (ImageElement) base;
                         rawObj.addProperty("type", "image");
                         rawObj.addProperty("src", image.getSource());
                         elements.add(rawObj);
@@ -352,50 +375,17 @@ public class CardBuilder {
                 moduleObj.addProperty("type", "context");
                 moduleObj.add("elements", elements);
             } else if (module instanceof FileModule) {
-                FileComponent file = ((FileModule) module).getComponent();
-                moduleObj.addProperty("type", "file");
+                FileModule file = ((FileModule) module);
+                moduleObj.addProperty("type", file.getType().getValue());
                 moduleObj.addProperty("title", (file.getTitle()));
-                moduleObj.addProperty("src", file.getUrl());
-                moduleObj.addProperty("size", file.getSize());
-            } else if (module instanceof AudioModule) {
-                moduleObj.addProperty("type", "audio");
-                moduleObj.addProperty("title", ((AudioModule) module).getTitle());
-                moduleObj.addProperty("src", ((AudioModule) module).getSource());
-                moduleObj.addProperty("cover", ((AudioModule) module).getCover());
-            } else if (module instanceof VideoModule) {
-                moduleObj.addProperty("type", "video");
-                moduleObj.addProperty("title", ((VideoModule) module).getTitle());
-                moduleObj.addProperty("src", ((VideoModule) module).getSource());
+                moduleObj.addProperty("src", file.getSource());
+                if (file.getType() == FileComponent.Type.AUDIO) {
+                    moduleObj.addProperty("cover", file.getCover());
+                }
             } else if (module instanceof CountdownModule) {
                 moduleObj.addProperty("type", "countdown");
                 moduleObj.addProperty("mode", ((CountdownModule) module).getType().getValue());
                 moduleObj.addProperty("endTime", ((CountdownModule) module).getEndTime());
-            } else if (module instanceof ButtonModule) { // special support for single ButtonModule
-                JsonArray elements = new JsonArray();
-                ButtonModule button = ((ButtonModule) module);
-                JsonObject rawButton = new JsonObject();
-                rawButton.addProperty("type", "button");
-                rawButton.addProperty("theme", button.getTheme().getValue());
-                rawButton.addProperty("value", button.getValue());
-                if (button.getType() == ButtonModule.EventType.LINK) {
-                    try {
-                        new URL(button.getValue());
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException("Invalid URL for the button", e);
-                    }
-                }
-                rawButton.addProperty("click", button.getType().getValue());
-                rawButton.addProperty("value", button.getValue());
-                PlainTextModule textModule = button.getText();
-                String content = textModule.getValue();
-                String type = (textModule instanceof MarkdownModule) ? "kmarkdown" : "plain-text";
-                JsonObject rawText = new JsonObject();
-                rawText.addProperty("type", type);
-                rawText.addProperty("content", content);
-                rawButton.add("text", rawText);
-                elements.add(rawButton);
-                moduleObj.addProperty("type", "action-group");
-                moduleObj.add("elements", elements);
             }
             modules.add(moduleObj);
         }
@@ -406,21 +396,27 @@ public class CardBuilder {
     private static void addAccessory(Accessory accessory, JsonObject moduleObj) {
         if (accessory == null) return;
         JsonObject accessoryJson = new JsonObject();
-        Accessory.Mode mode = accessory.getMode();
-        if (accessory instanceof ImageModule) {
+        Accessory.Mode mode = moduleObj.has("mode") ? Accessory.Mode.value(moduleObj.get("mode").getAsString()) : null;
+        if (accessory instanceof ImageElement) {
             accessoryJson.addProperty("type", "image");
-            accessoryJson.addProperty("src", ((ImageModule) accessory).getSource());
-            accessoryJson.addProperty("size", "lg");
-        } else if (accessory instanceof ButtonModule) {
+            accessoryJson.addProperty("src", ((ImageElement) accessory).getSource());
+            accessoryJson.addProperty("size", ((ImageElement) accessory).getSize().getValue());
+        } else if (accessory instanceof ButtonElement) {
             accessoryJson.addProperty("type", "button");
-            accessoryJson.addProperty("theme", ((ButtonModule) accessory).getTheme().getValue());
+            accessoryJson.addProperty("theme", ((ButtonElement) accessory).getTheme().getValue());
             JsonObject textObj = new JsonObject();
-            PlainTextModule textModule = ((ButtonModule) accessory).getText();
-            textObj.addProperty("type", (textModule instanceof MarkdownModule) ? "kmarkdown" : "plain-text");
-            textObj.addProperty("content", textModule.getValue());
+            BaseElement textModule = ((ButtonElement) accessory).getText();
+            textObj.addProperty("type", (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text");
+            textObj.addProperty("content",
+                    (textModule instanceof MarkdownElement) ?
+                            ((MarkdownElement) textModule).getContent() :
+                            ((PlainTextElement) textModule).getContent()
+            );
             accessoryJson.add("text", textObj);
         }
-        moduleObj.addProperty("mode", mode.getValue());
+        if (mode != null) {
+            moduleObj.addProperty("mode", mode.getValue());
+        }
         moduleObj.add("accessory", accessoryJson);
     }
 }
