@@ -52,6 +52,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
@@ -311,20 +312,28 @@ public class KBCClient {
                 .setDescription("获取已安装到此 KookBC 实例的插件列表。")
                 .setExecutor(
                         (sender, arguments, message) -> {
-                            StringBuilder builder = new StringBuilder("已安装的插件: ");
-                            pluginManager.getPlugins0().forEach(IT -> builder.append(IT.getDescription().getName()));
+                            String result = String.format(
+                                    "已安装并正在运行的插件 (%s): %s",
+                                    pluginManager.getPlugins0().size(),
+                                    String.join(", ",
+                                            pluginManager.getPlugins0()
+                                                    .stream()
+                                                    .map(IT -> IT.getDescription().getName())
+                                                    .collect(Collectors.toSet())
+                                    )
+                            );
                             if (sender instanceof User) {
                                 if (message instanceof TextChannelMessage) {
                                     ((TextChannelMessage) message).getChannel().sendComponent(
-                                            new MarkdownComponent(builder.toString()),
+                                            new MarkdownComponent(result),
                                             null,
                                             (User) sender
                                     );
                                 } else {
-                                    ((User) sender).sendPrivateMessage(new MarkdownComponent(builder.toString()));
+                                    ((User) sender).sendPrivateMessage(new MarkdownComponent(result));
                                 }
                             } else {
-                                getCore().getLogger().info(builder.toString());
+                                getCore().getLogger().info(result);
                             }
                         }
                 )
