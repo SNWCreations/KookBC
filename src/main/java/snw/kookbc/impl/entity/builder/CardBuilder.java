@@ -386,6 +386,9 @@ public class CardBuilder {
                 moduleObj.addProperty("type", "countdown");
                 moduleObj.addProperty("mode", ((CountdownModule) module).getType().getValue());
                 moduleObj.addProperty("endTime", ((CountdownModule) module).getEndTime());
+            } else if (module instanceof InviteModule) {
+                moduleObj.addProperty("type", "invite");
+                moduleObj.addProperty("code", ((InviteModule) module).getCode());
             }
             modules.add(moduleObj);
         }
