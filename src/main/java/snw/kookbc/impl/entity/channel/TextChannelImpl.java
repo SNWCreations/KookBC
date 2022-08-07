@@ -41,10 +41,12 @@ import java.util.Objects;
 
 public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;
+    private String topic;
 
-    public TextChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int chatLimitTime) {
+    public TextChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int chatLimitTime, String topic) {
         super(id, master, guild, permSync, parent, name, rpo, upo);
         this.chatLimitTime = chatLimitTime;
+        this.topic = topic;
     }
 
     @Override
@@ -56,6 +58,25 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .build();
         JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
+    }
+
+    @Override
+    public String getTopic() {
+        return topic;
+    }
+
+    @Override
+    public void setTopic(String topic) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("topic", topic)
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setTopic0(topic);
+    }
+
+    public void setTopic0(String topic) {
+        this.topic = topic;
     }
 
     @Override
