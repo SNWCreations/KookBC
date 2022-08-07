@@ -52,11 +52,7 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public Plugin[] getPlugins() {
-        return getPlugins0().toArray(new Plugin[0]);
-    }
-
-    public Collection<Plugin> getPlugins0() {
-        return plugins;
+        return plugins.toArray(new Plugin[0]);
     }
 
     @Override
@@ -155,5 +151,15 @@ public class SimplePluginManager implements PluginManager {
                 client.getCore().getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
             }
         }
+    }
+
+    @Override
+    public void addPlugin(Plugin plugin) {
+        plugins.add(plugin);
+    }
+
+    @Override
+    public void removePlugin(Plugin plugin) {
+        plugins.remove(plugin);
     }
 }
