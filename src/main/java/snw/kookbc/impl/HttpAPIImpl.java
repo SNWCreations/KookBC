@@ -78,7 +78,7 @@ public class HttpAPIImpl implements HttpAPI {
     public String uploadFile(File file) {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(RequestBody.create(file, MediaType.parse("application/from-data")))
+                .post(RequestBody.create(file, MediaType.parse("application/form-data")))
                 .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
