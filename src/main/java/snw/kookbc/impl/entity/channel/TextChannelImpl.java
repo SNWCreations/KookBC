@@ -86,7 +86,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     }
 
     @Override
-    public void sendComponent(BaseComponent component, @Nullable Message quote, @Nullable User tempTarget) {
+    public String sendComponent(BaseComponent component, @Nullable Message quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
         MapBuilder builder = new MapBuilder()
                 .put("target_id", getId())
@@ -99,7 +99,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
             builder.put("temp_target_id", tempTarget.getId());
         }
         Map<String, Object> body = builder.build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body);
+        return KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
     }
 
     @Override
@@ -107,9 +107,17 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
         return chatLimitTime;
     }
 
-    // setters following:
-
+    @Override
     public void setChatLimitTime(int chatLimitTime) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("slow_mode", chatLimitTime)
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setChatLimitTime0(chatLimitTime);
+    }
+
+    public void setChatLimitTime0(int chatLimitTime) {
         this.chatLimitTime = chatLimitTime;
     }
 
