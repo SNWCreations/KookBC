@@ -83,6 +83,15 @@ public abstract class ChannelImpl implements Channel {
 
     @Override
     public void setParent(Category parent) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("parent_id", (parent == null) ? 0 : parent.getId())
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setParent0(parent);
+    }
+
+    public void setParent0(Category parent) {
         if (this.parent != null) {
             ((CategoryImpl) this.parent).getChannels0().remove(this);
         }

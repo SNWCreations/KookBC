@@ -127,7 +127,7 @@ public class EntityUpdater {
         } else {
             String parentId = object.get("parent_id").getAsString();
             Category parent = (parentId.isEmpty()) ? null : (Category) KBCClient.getInstance().getStorage().getChannel(parentId);
-            ((ChannelImpl) channel).setParent(parent);
+            ((ChannelImpl) channel).setParent0(parent);
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = object.get("slow_mode").getAsInt();
