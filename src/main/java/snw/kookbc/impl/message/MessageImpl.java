@@ -28,12 +28,15 @@ import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 public abstract class MessageImpl implements Message {
     private final String id;
@@ -107,5 +110,18 @@ public abstract class MessageImpl implements Message {
             result.add(KBCClient.getInstance().getStorage().getUser(element.getAsJsonObject().get("id").getAsString()));
         }
         return result;
+    }
+
+    @Override
+    public void setComponent(BaseComponent component) {
+        Object content = MessageBuilder.serialize(component)[1];
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("content", content)
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(
+                ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
+                body
+        );
     }
 }
