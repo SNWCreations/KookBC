@@ -188,7 +188,7 @@ public class KBCClient {
             }
             // end onEnable
         }
-        pluginManager.getPlugins0().addAll(plugins);
+        plugins.forEach(pluginManager::addPlugin);
     }
 
     protected void startNetwork() {
@@ -314,10 +314,9 @@ public class KBCClient {
                         (sender, arguments, message) -> {
                             String result = String.format(
                                     "已安装并正在运行的插件 (%s): %s",
-                                    pluginManager.getPlugins0().size(),
+                                    pluginManager.getPlugins().length,
                                     String.join(", ",
-                                            pluginManager.getPlugins0()
-                                                    .stream()
+                                            Arrays.stream(pluginManager.getPlugins())
                                                     .map(IT -> IT.getDescription().getName())
                                                     .collect(Collectors.toSet())
                                     )
