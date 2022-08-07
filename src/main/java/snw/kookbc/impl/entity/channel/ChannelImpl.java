@@ -81,6 +81,7 @@ public abstract class ChannelImpl implements Channel {
         return parent;
     }
 
+    @Override
     public void setParent(Category parent) {
         if (this.parent != null) {
             ((CategoryImpl) this.parent).getChannels0().remove(this);
