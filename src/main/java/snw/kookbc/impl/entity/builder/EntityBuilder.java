@@ -157,6 +157,7 @@ public class EntityBuilder {
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = object.get("slow_mode").getAsInt();
+                String topic = object.get("topic").getAsString();
                 return new TextChannelImpl(
                         id,
                         master,
@@ -166,7 +167,8 @@ public class EntityBuilder {
                         name,
                         rpo,
                         upo,
-                        chatLimitTime
+                        chatLimitTime,
+                        topic
                 );
             } else if (type == 2) { // VoiceChannel
                 boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();

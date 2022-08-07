@@ -131,7 +131,9 @@ public class EntityUpdater {
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = object.get("slow_mode").getAsInt();
-                ((TextChannelImpl) channel).setChatLimitTime(chatLimitTime);
+                String topic = object.get("topic").getAsString();
+                ((TextChannelImpl) channel).setChatLimitTime0(chatLimitTime);
+                ((TextChannelImpl) channel).setTopic0(topic);
             } else if (type == 2) { // VoiceChannel
                 boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
                 int size = object.get("limit_amount").getAsInt();
