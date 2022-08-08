@@ -19,8 +19,8 @@
 package snw.kookbc.impl;
 
 import com.google.gson.JsonParser;
-import okhttp3.FormBody;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import snw.jkook.HttpAPI;
@@ -76,9 +76,12 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public String uploadFile(File file) {
+        RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("file", file.getName(), RequestBody.create(file, MediaType.parse("application/octet-stream")))
+                .build();
         Request request = new Request.Builder()
-                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(RequestBody.create(file, MediaType.parse("application/form-data")))
+                .url("https://www.kookapp.cn/api/v3/asset/create")
+                .post(body)
                 .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
@@ -86,13 +89,13 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public String uploadFile(String binary) {
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "114514", RequestBody.create(binary, MediaType.parse("application/octet-stream")))
+                .build();
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(
-                        new FormBody.Builder()
-                                .add("file", binary)
-                                .build()
-                )
+                .post(requestBody)
                 .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
