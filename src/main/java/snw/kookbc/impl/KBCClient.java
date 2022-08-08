@@ -39,6 +39,7 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.event.InternalEventListener;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -304,7 +305,7 @@ public class KBCClient {
                 .register();
         registerHelpCommand();
         registerPluginsCommand();
-        JKook.getEventManager().registerHandlers(new InternalEventListener());
+        ((EventManagerImpl) JKook.getEventManager()).registerHandlers0(null, new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {

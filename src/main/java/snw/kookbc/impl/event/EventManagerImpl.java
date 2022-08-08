@@ -20,6 +20,8 @@ package snw.kookbc.impl.event;
 
 import snw.jkook.JKook;
 import snw.jkook.event.*;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.util.Validate;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,12 +38,17 @@ public class EventManagerImpl implements EventManager {
     }
 
     @Override
-    public void registerHandlers(Listener listener) {
+    public void registerHandlers(Plugin plugin, Listener listener) {
+        Validate.notNull(plugin, "Require a plugin to register the listener.");
+        registerHandlers0(plugin, listener);
+    }
+
+    public void registerHandlers0(Plugin plugin, Listener listener) {
         for (Method method : listener.getClass().getMethods()) {
             if (method.isAnnotationPresent(EventHandler.class)) {
-                Object object = (Modifier.isStatic(method.getModifiers())) ? null : listener;
+                Listener object = (Modifier.isStatic(method.getModifiers())) ? null : listener;
                 try {
-                    ((HandlerList) method.getParameterTypes()[0].getMethod("getHandlers").invoke(null)).put(method, object);
+                    ((HandlerList) method.getParameterTypes()[0].getMethod("getHandlers").invoke(null)).add(plugin, method, object);
                 } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
                     throw new RuntimeException("Unable to register handler.", e);
                 }
