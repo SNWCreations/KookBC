@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 import snw.jkook.Core;
 import snw.jkook.HttpAPI;
+import snw.jkook.Unsafe;
 import snw.jkook.command.CommandManager;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
@@ -40,6 +41,7 @@ public class CoreImpl implements Core {
     private final SchedulerImpl scheduler = new SchedulerImpl();
     private final CommandManagerImpl commandManager = new CommandManagerImpl();
     private final EventManagerImpl eventManager = new EventManagerImpl();
+    private final UnsafeImpl unsafe = new UnsafeImpl();
     private final Logger logger;
     private volatile boolean running = true;
     private HttpAPI httpApi;
@@ -120,6 +122,11 @@ public class CoreImpl implements Core {
             throw new IllegalStateException("A user has already bound to this core implementation.");
         }
         this.botUser = user;
+    }
+
+    @Override
+    public Unsafe getUnsafe() {
+        return unsafe;
     }
 
     @Override
