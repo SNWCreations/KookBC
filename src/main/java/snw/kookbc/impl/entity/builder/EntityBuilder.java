@@ -114,6 +114,7 @@ public class EntityBuilder {
         String parentId = object.get("parent_id").getAsString();
         Category parent = (parentId.isEmpty()) ? null : (Category) client.getStorage().getChannel(parentId);
         boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
+        int level = object.get("level").getAsInt();
 
         // rpo parse
         Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
@@ -151,7 +152,8 @@ public class EntityBuilder {
                     parent,
                     name,
                     rpo,
-                    upo
+                    upo,
+                    level
             );
         } else {
             int type = object.get("type").getAsInt();
@@ -167,6 +169,7 @@ public class EntityBuilder {
                         name,
                         rpo,
                         upo,
+                        level,
                         chatLimitTime,
                         topic
                 );
@@ -182,6 +185,7 @@ public class EntityBuilder {
                         name,
                         rpo,
                         upo,
+                        level,
                         hasPassword,
                         size
                 );

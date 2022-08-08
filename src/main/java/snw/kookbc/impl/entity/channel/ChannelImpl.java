@@ -45,8 +45,9 @@ public abstract class ChannelImpl implements Channel {
     private boolean permSync;
     private Category parent;
     private String name;
+    private int level;
 
-    public ChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo) {
+    public ChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.id = id;
         this.master = master;
         this.guild = guild;
@@ -55,6 +56,7 @@ public abstract class ChannelImpl implements Channel {
         this.name = name;
         this.rpo = rpo;
         this.upo = upo;
+        this.level = level;
     }
 
     @Override
@@ -106,6 +108,21 @@ public abstract class ChannelImpl implements Channel {
                         .put("channel_id", getId())
                         .build()
         );
+    }
+
+    @Override
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public void setLevel(int level) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("level", level)
+                .build();
+        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.level = level;
     }
 
     @Override
