@@ -63,6 +63,10 @@ public class QuoteImpl implements Message {
     // following methods are NOT supported by this implementation!
 
     @Override
+    public void setComponent(BaseComponent component) {
+    }
+
+    @Override
     public @Nullable Message getQuote() {
         return null;
     }
