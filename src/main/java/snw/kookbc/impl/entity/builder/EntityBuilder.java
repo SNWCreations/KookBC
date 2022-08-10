@@ -21,17 +21,11 @@ package snw.kookbc.impl.entity.builder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.Role;
-import snw.jkook.entity.User;
+import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.CustomEmojiImpl;
-import snw.kookbc.impl.entity.GuildImpl;
-import snw.kookbc.impl.entity.RoleImpl;
-import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.entity.*;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
@@ -216,5 +210,12 @@ public class EntityBuilder {
         }
         String name = object.get("name").getAsString();
         return new CustomEmojiImpl(id, name, guild);
+    }
+
+    public Game buildGame(JsonObject object) {
+        int id = object.get("id").getAsInt();
+        String name = object.get("name").getAsString();
+        String icon = object.get("icon").getAsString();
+        return new GameImpl(id, name, icon);
     }
 }

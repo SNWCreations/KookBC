@@ -131,6 +131,15 @@ public enum HttpAPIRoute {
     BLACKLIST_CREATE("/v3/blacklist/create"),
     BLACKLIST_DELETE("/v3/blacklist/delete"),
 
+    // ------ GAME ------
+
+    GAME_LIST("/v3/game"),
+    GAME_CREATE("/v3/game/create"),
+    GAME_UPDATE("/v3/game/update"),
+    GAME_DELETE("/v3/game/delete"),
+    GAME_CREATE_ACTIVITY("/v3/game/activity"),
+    GAME_DELETE_ACTIVITY("/v3/game/delete-activity")
+
     ;
 
     private final String route;

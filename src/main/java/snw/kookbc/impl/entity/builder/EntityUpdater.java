@@ -21,17 +21,11 @@ package snw.kookbc.impl.entity.builder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.Role;
-import snw.jkook.entity.User;
+import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.CustomEmojiImpl;
-import snw.kookbc.impl.entity.GuildImpl;
-import snw.kookbc.impl.entity.RoleImpl;
-import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.entity.*;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
@@ -165,5 +159,13 @@ public class EntityUpdater {
         String name = object.get("name").getAsString();
         CustomEmojiImpl emojiImpl = (CustomEmojiImpl) emoji;
         emojiImpl.setName0(name);
+    }
+    
+    public void updateGame(JsonObject object, Game game) {
+        GameImpl impl = (GameImpl) game;
+        String name = object.get("name").getAsString();
+        String icon = object.get("icon").getAsString();
+        impl.setName0(name);
+        impl.setIcon0(icon);
     }
 }

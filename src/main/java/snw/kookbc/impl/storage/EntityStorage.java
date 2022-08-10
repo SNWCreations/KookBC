@@ -40,9 +40,26 @@ public class EntityStorage {
     private final Map<String, SoftReference<CustomEmoji>> emojis = new ConcurrentHashMap<>();
     private final Map<String, SoftReference<Message>> msg = new ConcurrentHashMap<>();
     private final Set<SoftReference<Reaction>> reactions = new HashSet<>();
+    private final Set<SoftReference<Game>> games = new HashSet<>();
 
     public EntityStorage(KBCClient client) {
         this.client = client;
+    }
+
+    public Game getGame(int id) {
+        Iterator<SoftReference<Game>> iterator = games.iterator();
+        while (iterator.hasNext()) {
+            SoftReference<Game> ref = iterator.next();
+            Game game = ref.get();
+            if (game != null) {
+                if (game.getId() == id) {
+                    return game;
+                }
+            } else {
+                iterator.remove();
+            }
+        }
+        return null;
     }
 
     public Message getMessage(String id) {
@@ -178,6 +195,10 @@ public class EntityStorage {
             }
         }
         return null;
+    }
+
+    public void addGame(Game game) {
+        games.add(new SoftReference<>(game));
     }
 
     public void addReaction(Reaction reaction) {

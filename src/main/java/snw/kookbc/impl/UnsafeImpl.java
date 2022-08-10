@@ -20,8 +20,10 @@ package snw.kookbc.impl;
 
 import snw.jkook.Unsafe;
 import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Game;
 import snw.jkook.message.PrivateMessage;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
+import snw.kookbc.impl.entity.GameImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 
 // Wait! Are you sure you want to this? This can cause RESOURCE LEAK! Beware.
@@ -37,6 +39,11 @@ public class UnsafeImpl implements Unsafe {
     @Override
     public CustomEmoji getEmoji(String id) {
         return new CustomEmojiImpl(id, null, null);
+    }
+
+    @Override
+    public Game getGame(int id) {
+        return new GameImpl(id, null, null);
     }
 
 }

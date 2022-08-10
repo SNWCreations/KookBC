@@ -18,23 +18,31 @@
 
 package snw.kookbc.impl;
 
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.HttpAPI;
+import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.util.PageIterator;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 public class HttpAPIImpl implements HttpAPI {
     private final KBCClient client;
@@ -103,10 +111,58 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public void removeInvite(String urlCode) {
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
+        client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
                 new MapBuilder()
                         .put("url_code", urlCode)
                         .build()
         );
+    }
+
+    @Override
+    public PageIterator<Collection<Game>> getGames() {
+        return new GameIterator();
+    }
+
+    @Override
+    public Game createGame(String name, @Nullable String icon) {
+        MapBuilder builder = new MapBuilder()
+                .put("name", name);
+        if (icon != null) {
+            builder.put("icon", icon);
+        }
+        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), builder.build());
+        Game game = client.getEntityBuilder().buildGame(object);
+        client.getStorage().addGame(game);
+        return game;
+    }
+
+    @Override
+    public void setPlaying(@Nullable Game game) {
+        if (game != null) {
+            Map<String, Object> body = new MapBuilder()
+                    .put("data_type", 1)
+                    .put("id", game.getId())
+                    .build();
+            client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE_ACTIVITY.toFullURL(), body);
+        } else {
+            client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), new MapBuilder().put("data_type", 1).build());
+        }
+    }
+
+    @Override
+    public void setListening(@NotNull String softwareName, @NotNull String singerName, @NotNull String musicName) {
+        Validate.isTrue(Arrays.asList("cloudmusic", "qqmusic", "kugou").contains(softwareName), "Unsupported music software name.");
+        Map<String, Object> body = new MapBuilder()
+                .put("data_type", 2)
+                .put("software", softwareName)
+                .put("singer", singerName)
+                .put("music_name", musicName)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE_ACTIVITY.toFullURL(), body);
+    }
+
+    @Override
+    public void stopListening() {
+        client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), new MapBuilder().put("data_type", 2).build());
     }
 }
