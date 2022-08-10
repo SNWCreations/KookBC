@@ -6,7 +6,7 @@
     <name>KookBC</name>
     <groupId>snw</groupId>
     <artifactId>kookbc</artifactId>
-    <version>0.9.0</version>
+    <version>0.10.0</version>
     <description>The Kook Bot Client standard implementation for Java.</description>
 
     <developers>
@@ -26,7 +26,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <log4j2.version>2.18.0</log4j2.version>
-        <jkook.version>0.30.0</jkook.version>
+        <jkook.version>0.31.0-R0.2-SNAPSHOT</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -141,8 +141,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.SNWCreations</groupId>
-            <artifactId>JKook</artifactId>
+            <groupId>snw</groupId>
+            <artifactId>jkook</artifactId>
             <version>${jkook.version}</version>
         </dependency>
 
