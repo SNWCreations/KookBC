@@ -379,7 +379,7 @@ public class KBCClient {
                                     getCore().getLogger().info(s);
                                 }
                             } else if (commandSender instanceof User) {
-                                helpList.remove(1); // remove /stop help
+                                helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
 
                                 if (getConfig().getBoolean("allow-help-ad", true)) {
                                     helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v" + JKook.getImplementationVersion() + " 驱动 - JKook API " + JKook.getAPIVersion());
