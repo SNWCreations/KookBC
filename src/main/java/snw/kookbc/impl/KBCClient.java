@@ -180,7 +180,6 @@ public class KBCClient {
 
             // onEnable
             PluginDescription description = plugin.getDescription();
-            plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
             try {
                 pluginManager.enablePlugin(plugin);
             } catch (Exception e) {
