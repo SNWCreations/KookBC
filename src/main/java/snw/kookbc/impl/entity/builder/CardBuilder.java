@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -236,12 +235,12 @@ public class CardBuilder {
         return result;
     }
 
-    public static String serialize(MultipleCardComponent component) {
+    public static JsonArray serialize(MultipleCardComponent component) {
         JsonArray array = new JsonArray();
         for (CardComponent card : component.getComponents()) {
             array.add(serialize0(card));
         }
-        return new Gson().toJson(array);
+        return array;
     }
 
     public static JsonObject serialize0(CardComponent component) {
