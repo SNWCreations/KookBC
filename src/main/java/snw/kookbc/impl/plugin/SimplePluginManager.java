@@ -131,6 +131,7 @@ public class SimplePluginManager implements PluginManager {
             plugin.setEnabled(true);
         } catch (Throwable e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to enable the {} plugin.", plugin.getDescription().getName(), e);
+            disablePlugin(plugin); // make sure the plugin is still disabled
         }
     }
 
