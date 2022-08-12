@@ -179,11 +179,8 @@ public class KBCClient {
             plugin.reloadConfig(); // ensure the default configuration will be loaded
 
             // onEnable
-            PluginDescription description = plugin.getDescription();
-            try {
-                pluginManager.enablePlugin(plugin);
-            } catch (Exception e) {
-                getCore().getLogger().error("Unable to enable a plugin.", e);
+            pluginManager.enablePlugin(plugin);
+            if (!plugin.isEnabled()) {
                 iterator.remove();
             }
             // end onEnable

@@ -79,7 +79,7 @@ public class SimplePluginManager implements PluginManager {
             if (diff == 1) {
                 throw new IllegalArgumentException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (e instanceof InvalidPluginException) {
                 throw (InvalidPluginException) e;
             } else {
@@ -99,7 +99,7 @@ public class SimplePluginManager implements PluginManager {
                 Plugin plugin;
                 try {
                     plugin = loadPlugin(file);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     client.getCore().getLogger().error("Unable to load a plugin.", e);
                     continue;
                 }
@@ -129,8 +129,9 @@ public class SimplePluginManager implements PluginManager {
         plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
         try {
             plugin.setEnabled(true);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to enable the {} plugin.", plugin.getDescription().getName(), e);
+            disablePlugin(plugin); // make sure the plugin is still disabled
         }
         if (!plugin.getDataFolder().exists()) {
             //noinspection ResultOfMethodCallIgnored
@@ -145,7 +146,7 @@ public class SimplePluginManager implements PluginManager {
         plugin.getLogger().info("Disabling {} version {}", description.getName(), description.getVersion());
         try {
             plugin.setEnabled(false);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to disable the {} plugin.", plugin.getDescription().getName(), e);
         }
         if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
