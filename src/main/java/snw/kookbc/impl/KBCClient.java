@@ -19,7 +19,6 @@
 package snw.kookbc.impl;
 
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import snw.jkook.Core;
 import snw.jkook.JKook;
 import snw.jkook.command.CommandExecutor;
@@ -215,7 +214,7 @@ public class KBCClient {
                     new JKookRunnable() {
                         private final Request request =
                                 new Request.Builder()
-                                        .post(RequestBody.create("", null))
+                                        .get()
                                         .url("https://bot.gekj.net/api/v1/online.bot")
                                         .header("uuid", rawBotMarketUUID)
                                         .build();
