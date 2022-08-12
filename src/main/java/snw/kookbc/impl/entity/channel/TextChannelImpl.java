@@ -24,16 +24,15 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
-import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.TextChannelMessageIterator;
 import snw.kookbc.util.MapBuilder;
-import snw.jkook.util.Validate;
 
 import java.util.Collection;
 import java.util.Map;
@@ -86,7 +85,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     }
 
     @Override
-    public String sendComponent(BaseComponent component, @Nullable Message quote, @Nullable User tempTarget) {
+    public String sendComponent(BaseComponent component, @Nullable TextChannelMessage quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
         MapBuilder builder = new MapBuilder()
                 .put("target_id", getId())

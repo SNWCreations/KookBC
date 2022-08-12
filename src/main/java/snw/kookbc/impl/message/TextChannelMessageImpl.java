@@ -62,6 +62,26 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     }
 
     @Override
+    public String replyTemp(BaseComponent component) {
+        return getChannel().sendComponent(component, this, getSender());
+    }
+
+    @Override
+    public String sendToSourceTemp(BaseComponent component) {
+        return getChannel().sendComponent(component, null, getSender());
+    }
+
+    @Override
+    public String reply(BaseComponent component) {
+        return getChannel().sendComponent(component, this, null);
+    }
+
+    @Override
+    public String sendToSource(BaseComponent component) {
+        return getChannel().sendComponent(component, null, null);
+    }
+
+    @Override
     public void delete() {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())

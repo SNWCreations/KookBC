@@ -23,6 +23,7 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
@@ -134,16 +135,24 @@ public class UserImpl implements User {
     }
 
     @Override
-    public void sendPrivateMessage(BaseComponent baseComponent) {
-        Object[] serialize = MessageBuilder.serialize(baseComponent);
+    public String sendPrivateMessage(BaseComponent baseComponent) {
+        return sendPrivateMessage(baseComponent, null);
+    }
+
+    @Override
+    public String sendPrivateMessage(BaseComponent component, PrivateMessage quote) {
+        Object[] serialize = MessageBuilder.serialize(component);
         int type = (int) serialize[0];
         String json = (String) serialize[1];
-        Map<String, Object> body = new MapBuilder()
+        MapBuilder builder = new MapBuilder()
                 .put("type", type)
                 .put("target_id", getId())
-                .put("content", json)
-                .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body);
+                .put("content", json);
+        if (quote != null) {
+            builder.put("quote", quote.getId());
+        }
+        Map<String, Object> body = builder.build();
+        return KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
     }
 
     @Override

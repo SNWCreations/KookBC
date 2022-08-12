@@ -53,6 +53,16 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
     }
 
     @Override
+    public String reply(BaseComponent component) {
+        return getSender().sendPrivateMessage(component, this);
+    }
+
+    @Override
+    public String sendToSource(BaseComponent component) {
+        return getSender().sendPrivateMessage(component);
+    }
+
+    @Override
     public void delete() {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
