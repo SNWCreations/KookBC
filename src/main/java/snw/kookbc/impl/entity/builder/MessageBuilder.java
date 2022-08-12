@@ -32,6 +32,9 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
+import snw.jkook.message.component.card.Size;
+import snw.jkook.message.component.card.Theme;
+import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
@@ -54,6 +57,17 @@ public class MessageBuilder {
             return new Object[]{10, new Gson().toJson(CardBuilder.serialize((CardComponent) component))};
         } else if (component instanceof MultipleCardComponent) {
             return new Object[]{10, new Gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
+        } else if (component instanceof FileComponent) {
+            FileComponent fileComponent = (FileComponent) component;
+            MultipleCardComponent fileCard;
+                fileCard = new snw.jkook.message.component.card.CardBuilder()
+                        .setTheme(Theme.NONE)
+                        .setSize(Size.LG)
+                        .addModule(
+                                new FileModule(fileComponent.getType() != FileComponent.Type.IMAGE ? fileComponent.getType() : FileComponent.Type.FILE, fileComponent.getUrl(), fileComponent.getTitle(), null)
+                        )
+                        .build();
+            return serialize(fileCard); // actually, this is not a loop call
         }
         throw new RuntimeException("Unsupported component");
     }
