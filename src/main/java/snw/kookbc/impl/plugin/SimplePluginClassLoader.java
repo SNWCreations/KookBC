@@ -26,7 +26,7 @@ import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 public class SimplePluginClassLoader extends PluginClassLoader {
     private final KBCClient client;
@@ -37,24 +37,19 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
-        Constructor<T> constructor = cls.getDeclaredConstructor(
-                File.class,
-                File.class,
-                PluginDescription.class,
-                File.class,
-                Logger.class
-        );
-        boolean prev = constructor.isAccessible(); // if other reflect operation turn this to true?
-        constructor.setAccessible(true);
         File dataFolder = new File(client.getPluginsFolder(), description.getName());
-        T plugin = constructor.newInstance(
+        T plugin = cls.newInstance();
+        Method initMethod = cls.getMethod(
+                "init",
+                File.class, File.class, PluginDescription.class, File.class, Logger.class
+        );
+        initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
                 new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
                 new PluginLogger(description.getName(), LoggerFactory.getLogger(cls))
         );
-        constructor.setAccessible(prev);
         return plugin;
     }
 }
