@@ -132,6 +132,10 @@ public class SimplePluginManager implements PluginManager {
         } catch (Exception e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to enable the {} plugin.", plugin.getDescription().getName(), e);
         }
+        if (!plugin.getDataFolder().exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            plugin.getDataFolder().mkdir();
+        }
     }
 
     @Override
