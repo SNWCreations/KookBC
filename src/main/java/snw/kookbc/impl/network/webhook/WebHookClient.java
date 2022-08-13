@@ -75,7 +75,7 @@ public class WebHookClient extends KBCClient {
     @Override
     public void shutdown() {
         getCore().getLogger().debug("Client shutdown request received");
-        if (!((CoreImpl) getCore()).isRunning()) {
+        if (!isRunning()) {
             getCore().getLogger().debug("The client has already stopped");
             return;
         }
