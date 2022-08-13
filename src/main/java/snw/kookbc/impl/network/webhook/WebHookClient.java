@@ -56,7 +56,7 @@ public class WebHookClient extends KBCClient {
         int port = getConfig().getInt("webhook-port");
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext(String.format("/%s", route), new SimpleHttpHandler(this));
-        server.setExecutor(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 4, new ThreadFactoryBuilder("Webhook Thread #").build()));
+        server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
         getCore().getLogger().info("Server is listening on port {}", port);
         getCore().getLogger().debug("Initializing SN update listener.");
