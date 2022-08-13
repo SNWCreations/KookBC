@@ -227,7 +227,7 @@ public class KBCClient {
                                 JKook.getLogger().error("Unable to PING BotMarket. Your Bot will be marked as OFFLINE in BotMarket.", e);
                             }
                         }
-                    }.runTaskTimer(null, TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(30));
+                    }.runTaskTimer(null, 0, TimeUnit.MINUTES.toMillis(30));
                 }
             }
         }
