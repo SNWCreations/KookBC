@@ -75,13 +75,12 @@ public class KBCClient {
         this.config = config;
         this.pluginsFolder = pluginsFolder;
         this.networkClient = new NetworkClient(token);
-        storage = new EntityStorage(this);
-        entityBuilder = new EntityBuilder(this);
-        msgBuilder = new MessageBuilder(this);
-        entityUpdater = new EntityUpdater();
-        pluginManager = new SimplePluginManager(this);
+        this.storage = new EntityStorage(this);
+        this.entityBuilder = new EntityBuilder(this);
+        this.msgBuilder = new MessageBuilder(this);
+        this.entityUpdater = new EntityUpdater();
+        this.pluginManager = new SimplePluginManager(this);
         core.init(new HttpAPIImpl(this, token));
-        // setInstance(this); // make sure the instance can be used from other place
     }
 
     // Use this to access the most things in KookBC!
