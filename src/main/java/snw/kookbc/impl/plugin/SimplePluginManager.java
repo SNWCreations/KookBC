@@ -68,23 +68,14 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
-        Plugin plugin;
-        try {
-            plugin = pluginClassLoader.loadPlugin(file);
-            PluginDescription description = plugin.getDescription();
-            int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
-            if (diff == -1) {
-                plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", client.getCore().getAPIVersion(), description.getApiVersion());
-            }
-            if (diff == 1) {
-                throw new IllegalArgumentException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
-            }
-        } catch (Throwable e) {
-            if (e instanceof InvalidPluginException) {
-                throw (InvalidPluginException) e;
-            } else {
-                throw new InvalidPluginException(e);
-            }
+        Plugin plugin = pluginClassLoader.loadPlugin(file);
+        PluginDescription description = plugin.getDescription();
+        int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
+        if (diff == -1) {
+            plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", client.getCore().getAPIVersion(), description.getApiVersion());
+        }
+        if (diff == 1) {
+            throw new InvalidPluginException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
         }
         return plugin;
     }
