@@ -26,12 +26,10 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     private final String guildId;
-    private Set<Channel> result;
 
     public GuildChannelListIterator(String guildId) {
         this.guildId = guildId;
@@ -44,22 +42,14 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            result.add(KBCClient.getInstance().getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
+            object.add(KBCClient.getInstance().getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
         }
-    }
-
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
     }
 
     @Override
     public Set<Channel> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableSet(result);
+        return Collections.unmodifiableSet(super.next());
     }
 }

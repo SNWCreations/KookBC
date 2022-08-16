@@ -28,12 +28,10 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
     private final Guild guild;
-    private Set<CustomEmoji> result;
 
     public GuildEmojiListIterator(Guild guild) {
         this.guild = guild;
@@ -46,23 +44,15 @@ public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            result.add(KBCClient.getInstance().getStorage().getEmoji(object.get("id").getAsString(), object));
+            JsonObject rawObj = element.getAsJsonObject();
+            object.add(KBCClient.getInstance().getStorage().getEmoji(rawObj.get("id").getAsString(), rawObj));
         }
-    }
-
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
     }
 
     @Override
     public Set<CustomEmoji> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableSet(result);
+        return Collections.unmodifiableSet(super.next());
     }
 }

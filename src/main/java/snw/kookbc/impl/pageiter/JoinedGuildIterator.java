@@ -28,10 +28,8 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 
 public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
-    private Collection<Guild> result = null;
 
     @Override
     protected String getRequestURL() {
@@ -40,23 +38,15 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            result.add(KBCClient.getInstance().getStorage().getGuild(object.get("id").getAsString(), object));
+            JsonObject rawObj = element.getAsJsonObject();
+            object.add(KBCClient.getInstance().getStorage().getGuild(rawObj.get("id").getAsString(), rawObj));
         }
-    }
-
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
     }
 
     @Override
     public Collection<Guild> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableCollection(result);
+        return Collections.unmodifiableCollection(super.next());
     }
 }

@@ -30,12 +30,10 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> {
     private final String guildId;
-    private Set<Invitation> result = null;
 
     public GuildInvitationsIterator(Guild guild) {
         this.guildId = guild.getId();
@@ -48,29 +46,21 @@ public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> 
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            Guild guild = KBCClient.getInstance().getStorage().getGuild(object.get("guild_id").getAsString());
-            String urlCode = object.get("url_code").getAsString();
-            String url = object.get("url").getAsString();
-            User master = KBCClient.getInstance().getStorage().getUser(object.getAsJsonObject("user").get("id").getAsString());
-            result.add(new InvitationImpl(
+            JsonObject rawObj = element.getAsJsonObject();
+            Guild guild = KBCClient.getInstance().getStorage().getGuild(rawObj.get("guild_id").getAsString());
+            String urlCode = rawObj.get("url_code").getAsString();
+            String url = rawObj.get("url").getAsString();
+            User master = KBCClient.getInstance().getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
+            object.add(new InvitationImpl(
                     guild, null, urlCode, url, master
             ));
         }
     }
 
     @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
-    }
-
-    @Override
     public Set<Invitation> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableSet(result);
+        return Collections.unmodifiableSet(super.next());
     }
 }

@@ -27,11 +27,9 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
-    private Set<Role> result = null;
     private final Guild guild;
 
     public GuildRoleListIterator(Guild guild) {
@@ -45,23 +43,11 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            result.add(KBCClient.getInstance().getStorage().getRole(guild, object.get("role_id").getAsInt(), object));
+            JsonObject rawObj = element.getAsJsonObject();
+            object.add(KBCClient.getInstance().getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));
         }
     }
 
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
-    }
-
-    @Override
-    public Set<Role> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return result;
-    }
 }

@@ -27,10 +27,8 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.NoSuchElementException;
 
 public class GameIterator extends PageIteratorImpl<Collection<Game>> {
-    private Collection<Game> result;
 
     @Override
     protected String getRequestURL() {
@@ -39,32 +37,20 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new ArrayList<>();
+        object = new ArrayList<>();
 
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            int id = object.get("id").getAsInt();
+            JsonObject rawObj = element.getAsJsonObject();
+            int id = rawObj.get("id").getAsInt();
             Game game = KBCClient.getInstance().getStorage().getGame(id);
             if (game != null) {
-                KBCClient.getInstance().getEntityUpdater().updateGame(object, game);
+                KBCClient.getInstance().getEntityUpdater().updateGame(rawObj, game);
             } else {
-                game = KBCClient.getInstance().getEntityBuilder().buildGame(object);
+                game = KBCClient.getInstance().getEntityBuilder().buildGame(rawObj);
                 KBCClient.getInstance().getStorage().addGame(game);
             }
-            result.add(game);
+            object.add(game);
         }
     }
 
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
-    }
-
-    @Override
-    public Collection<Game> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return result;
-    }
 }

@@ -27,7 +27,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
@@ -37,7 +36,6 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
     private final Boolean requireMobileVerified;
     private final Boolean activeTimeFirst;
     private final Boolean joinedTimeFirst;
-    private Set<User> result;
 
     public GuildUserListIterator(String guildId) {
         this(guildId, null, null, null, null, null);
@@ -75,23 +73,15 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            JsonObject object = element.getAsJsonObject();
-            result.add(KBCClient.getInstance().getStorage().getUser(object.get("id").getAsString()));
+            JsonObject rawObj = element.getAsJsonObject();
+            object.add(KBCClient.getInstance().getStorage().getUser(rawObj.get("id").getAsString()));
         }
-    }
-
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
     }
 
     @Override
     public Set<User> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableSet(result);
+        return Collections.unmodifiableSet(super.next());
     }
 }

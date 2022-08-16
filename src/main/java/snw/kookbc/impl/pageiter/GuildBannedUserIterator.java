@@ -26,12 +26,10 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
     private final String guildId;
-    private Set<User> result = null;
 
     public GuildBannedUserIterator(Guild guild) {
         guildId = guild.getId();
@@ -44,22 +42,10 @@ public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            result.add(KBCClient.getInstance().getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
+            object.add(KBCClient.getInstance().getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
         }
     }
 
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
-    }
-
-    @Override
-    public Set<User> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return result;
-    }
 }

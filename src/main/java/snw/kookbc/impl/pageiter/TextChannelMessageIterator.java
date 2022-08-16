@@ -33,15 +33,12 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 
 public class TextChannelMessageIterator extends PageIteratorImpl<Collection<TextChannelMessage>> {
     private final TextChannel channel;
     private final String refer;
     private final boolean isPin;
     private final String queryMode;
-
-    private Collection<TextChannelMessage> result = null;
 
     public TextChannelMessageIterator(TextChannel channel, String refer, boolean isPin, String queryMode) {
         this.channel = channel;
@@ -57,23 +54,15 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     @Override
     protected void processElements(JsonArray array) {
-        result = new HashSet<>();
+        object = new HashSet<>();
         for (JsonElement element : array) {
-            result.add(buildMessage(element.getAsJsonObject()));
+            object.add(buildMessage(element.getAsJsonObject()));
         }
-    }
-
-    @Override
-    protected void onHasNextButNoMoreElement() {
-        result = null;
     }
 
     @Override
     public Collection<TextChannelMessage> next() {
-        if (result == null) {
-            throw new NoSuchElementException();
-        }
-        return Collections.unmodifiableCollection(result);
+        return Collections.unmodifiableCollection(super.next());
     }
 
     private TextChannelMessage buildMessage(JsonObject object) {
