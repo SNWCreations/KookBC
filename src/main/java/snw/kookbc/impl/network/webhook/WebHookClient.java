@@ -90,7 +90,9 @@ public class WebHookClient extends KBCClient {
             getCore().getLogger().debug("Webhook HTTP server stopped, elapsed {}", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - httpStopTimeStamp));
         }
 
-        getCore().shutdown();
+        if (((CoreImpl) getCore()).isRunning()) {
+            getCore().shutdown();
+        }
         getCore().getLogger().info("Client stopped");
     }
 }

@@ -175,6 +175,7 @@ public class Main {
         }
 
         client.loop();
+        client.shutdown();
         return 0;
     }
 

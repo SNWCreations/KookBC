@@ -260,7 +260,9 @@ public class KBCClient {
         if (connector != null) {
             connector.shutdown();
         }
-        getCore().shutdown();
+        if (((CoreImpl) getCore()).isRunning()) {
+            getCore().shutdown();
+        }
         getCore().getLogger().info("Client stopped");
     }
 
