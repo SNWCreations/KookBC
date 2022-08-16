@@ -25,29 +25,43 @@ import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.jkook.util.Validate;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class PageIteratorImpl<E> implements PageIterator<E> {
+    protected E object;
     protected final AtomicInteger currentPage = new AtomicInteger(1);
-    private int pageSizePerRequest;
+    private int pageSizePerRequest = 20;
     private boolean executedOnce = false;
+    private boolean next = true;
 
     @Override
     public boolean hasNext() {
+        if (!next) {
+            return false; // make sure we won't execute useless request
+        }
+
         if (!executedOnce) {
             executedOnce = true;
         }
+        String reqUrl = getRequestURL();
         JsonObject object = KBCClient.getInstance().getNetworkClient().get(
-                getRequestURL() + "&page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
+                reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
         );
         JsonObject meta = object.getAsJsonObject("meta");
-        boolean res = meta.get("page").getAsInt() < meta.get("page_total").getAsInt();
-        if (res) {
-            processElements(object.getAsJsonArray("items"));
-        } else {
-            onHasNextButNoMoreElement();
+        next = currentPage.get() < meta.get("page_total").getAsInt();
+        processElements(object.getAsJsonArray("items"));
+        return next;
+    }
+
+    @Override
+    public E next() {
+        if (object == null) {
+            throw new NoSuchElementException();
         }
-        return res;
+        E var1 = object;
+        object = null;
+        return var1;
     }
 
     @Override
@@ -64,7 +78,4 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
     protected abstract String getRequestURL();
 
     protected abstract void processElements(JsonArray array);
-
-    // just a hook, so no argument will be provided
-    protected abstract void onHasNextButNoMoreElement();
 }
