@@ -22,7 +22,6 @@ import snw.jkook.JKook;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
-import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
 
 import java.util.ArrayList;
@@ -144,13 +143,7 @@ public class CommandManagerImpl implements CommandManager {
             else {
                 if (sender instanceof User) {
                     if (msg != null) {
-                        if (msg instanceof TextChannelMessage) {
-                            ((TextChannelMessage) msg).getChannel().sendComponent(
-                                    new MarkdownComponent("此命令没有对应的执行器。"),
-                                    null,
-                                    (User) sender
-                            );
-                        }
+                        msg.reply(new MarkdownComponent("此命令没有对应的执行器。"));
                     } else {
                         ((User) sender).sendPrivateMessage(new MarkdownComponent("此命令没有对应的执行器。"));
                     }
