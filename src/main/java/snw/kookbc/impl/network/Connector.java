@@ -133,9 +133,6 @@ public class Connector {
     }
 
     public void shutdown() {
-//        if (pingTask.isScheduled()) {
-//            pingTask.cancel();
-//        }
         setTimeout(false);
         shutdownWs();
         shutdownHttp();
