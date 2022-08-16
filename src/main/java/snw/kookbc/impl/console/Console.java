@@ -44,7 +44,7 @@ public class Console extends SimpleTerminalConsole {
         JKook.getLogger().info("Console issued command: {}", s);
         try {
             client.getCore().getCommandManager().executeCommand(ConsoleCommandSenderImpl.INSTANCE, s);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             client.getCore().getLogger().error("Unexpected situation happened during the execution of the command.", e);
         }
     }

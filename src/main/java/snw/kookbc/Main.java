@@ -168,7 +168,7 @@ public class Main {
 
         try {
             client.start();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             logger.error("Failed to start client", e);
             client.shutdown();
             return 1;
