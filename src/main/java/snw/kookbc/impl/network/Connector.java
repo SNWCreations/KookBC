@@ -78,12 +78,28 @@ public class Connector {
                                     continue;
                                 }
                                 if (isPingOk()) {
-                                    continue;
+                                    break; // why should I ping again????
                                 }
                                 times++;
                             } while (times < 2);
-                            JKook.getLogger().warn("PING failed. Attempting to reconnect.");
-                            setRequireReconnect(true);
+                            if (Thread.currentThread().isInterrupted()) {
+                                return;
+                            }
+                            if (!isPingOk()) {
+                                JKook.getLogger().warn("PING failed. Attempting to reconnect.");
+                                shutdownWs();
+                                String originalWsLink = wsLink;
+                                wsLink = (String.format("%s&resume=1&sn=%d&sessionId=%s", wsLink, kbcClient.getSession().getSN().get(), kbcClient.getSession().getId()));
+                                start0();
+                                if (!connected) {
+                                    start0();
+                                    if (!connected) {
+                                        setRequireReconnect(true); // Reconnect thread will overwrite wsLink!
+                                    }
+                                } else {
+                                    wsLink = originalWsLink;
+                                }
+                            }
                         }
                     }
                 }, "Ping Thread"
@@ -155,11 +171,7 @@ public class Connector {
     // following methods should be called by other class:
 
     public synchronized void restart() {
-        try {
-            shutdown();
-        } catch (Exception e) {
-            throw new Error("Unable to shutdown. Please restart the application manually.", e);
-        }
+        shutdown();
         kbcClient.getSession().getSN().set(0);
         kbcClient.getSession().getBuffer().clear();
         start();
