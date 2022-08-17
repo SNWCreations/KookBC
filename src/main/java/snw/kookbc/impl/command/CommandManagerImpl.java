@@ -115,7 +115,7 @@ public class CommandManagerImpl implements CommandManager {
                 try {
                     consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
                     return true; // prevent CommandExecutor execution.
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
@@ -127,7 +127,7 @@ public class CommandManagerImpl implements CommandManager {
                 try {
                     userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
                     return true; // prevent CommandExecutor execution.
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
@@ -155,7 +155,7 @@ public class CommandManagerImpl implements CommandManager {
         // alright, it is time to execute it!
         try {
             executor.onCommand(sender, args.toArray(new String[0]), msg);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
             // it is easy to understand. NoClassDefError? NoSuchMethodError?
