@@ -68,7 +68,9 @@ public class CommandManagerImpl implements CommandManager {
         String root = args.remove(0);
         JKookCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
-            JKook.getLogger().info("Unknown command. Type \"help\" for help.");
+            if (sender instanceof ConsoleCommandSender) {
+                JKook.getLogger().info("Unknown command. Type \"help\" for help.");
+            }
             return false;
         }
 
