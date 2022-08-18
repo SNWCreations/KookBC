@@ -27,11 +27,13 @@ import snw.jkook.command.CommandManager;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.event.EventManager;
+import snw.jkook.plugin.PluginManager;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
+import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 
 import java.io.IOException;
@@ -45,6 +47,7 @@ public class CoreImpl implements Core {
     private final Logger logger;
     private volatile boolean running = true;
     private HttpAPI httpApi;
+    private SimplePluginManager pluginManager;
     private User botUser;
 
     // Note for hardcore developers:
@@ -112,6 +115,11 @@ public class CoreImpl implements Core {
     }
 
     @Override
+    public PluginManager getPluginManager() {
+        return pluginManager;
+    }
+
+    @Override
     public User getUser() {
         return botUser;
     }
@@ -141,8 +149,11 @@ public class CoreImpl implements Core {
         return running;
     }
 
-    public void init(HttpAPIImpl impl) {
-        Validate.isTrue(this.httpApi == null, "This core implementation has already initialized.");
+    public void init(HttpAPIImpl impl, SimplePluginManager pluginManager) {
+        Validate.isTrue(this.httpApi == null && this.pluginManager == null, "This core implementation has already initialized.");
+        Validate.notNull(impl);
+        Validate.notNull(pluginManager);
         this.httpApi = impl;
+        this.pluginManager = pluginManager;
     }
 }

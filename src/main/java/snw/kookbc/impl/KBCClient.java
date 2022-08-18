@@ -67,7 +67,6 @@ public class KBCClient {
     private final File pluginsFolder;
     private final Session session = new Session(null);
     protected Connector connector;
-    protected final SimplePluginManager pluginManager;
 
     public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
         Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -79,8 +78,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater();
-        this.pluginManager = new SimplePluginManager(this);
-        core.init(new HttpAPIImpl(this, token));
+        core.init(new HttpAPIImpl(this, token), new SimplePluginManager(this));
     }
 
     // Use this to access the most things in KookBC!
@@ -155,7 +153,7 @@ public class KBCClient {
     }
 
     protected void loadAllPlugins() {
-        List<Plugin> plugins = new ArrayList<>(Arrays.asList(pluginManager.loadPlugins(getPluginsFolder())));
+        List<Plugin> plugins = new ArrayList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -177,13 +175,13 @@ public class KBCClient {
             plugin.reloadConfig(); // ensure the default configuration will be loaded
 
             // onEnable
-            pluginManager.enablePlugin(plugin);
+            getCore().getPluginManager().enablePlugin(plugin);
             if (!plugin.isEnabled()) {
                 iterator.remove();
             }
             // end onEnable
         }
-        plugins.forEach(pluginManager::addPlugin);
+        plugins.forEach(getCore().getPluginManager()::addPlugin);
     }
 
     protected void startNetwork() {
@@ -255,7 +253,7 @@ public class KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        pluginManager.clearPlugins();
+        getCore().getPluginManager().clearPlugins();
 
         if (connector != null) {
             connector.shutdown();
@@ -311,9 +309,9 @@ public class KBCClient {
                         (sender, arguments, message) -> {
                             String result = String.format(
                                     "已安装并正在运行的插件 (%s): %s",
-                                    pluginManager.getPlugins().length,
+                                    getCore().getPluginManager().getPlugins().length,
                                     String.join(", ",
-                                            Arrays.stream(pluginManager.getPlugins())
+                                            Arrays.stream(getCore().getPluginManager().getPlugins())
                                                     .map(IT -> IT.getDescription().getName())
                                                     .collect(Collectors.toSet())
                                     )
