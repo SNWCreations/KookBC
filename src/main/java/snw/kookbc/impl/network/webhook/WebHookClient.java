@@ -81,7 +81,7 @@ public class WebHookClient extends KBCClient {
         }
 
         getCore().getLogger().info("Stopping client");
-        pluginManager.clearPlugins();
+        getCore().getPluginManager().clearPlugins();
 
         if (server != null) {
             long httpStopTimeStamp = System.currentTimeMillis();
