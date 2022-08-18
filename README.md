@@ -20,6 +20,8 @@ java -jar kookbc-<version>.jar
 
 之后，KookBC 会在当前目录下生成一个名为 kbc.yml 的 KookBC YAML 配置文件并退出。
 
+更详细的命令行选项见 [KookBC 命令行](docs/KookBC_CommandLine.md) 。
+
 配置内容详解请见 [KookBC YAML 配置详解](docs/KookBC_Config.md) 。请按照文档的解释，配置您的 KookBC 。
 
 配置完成后，再次使用之前的命令行启动 KookBC ，当如下语句出现时，您的 Kook 机器人就已经准备就绪，可以使用。
