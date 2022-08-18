@@ -27,7 +27,7 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Event;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
-import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
@@ -155,7 +155,7 @@ public class ListenerImpl implements Listener {
         if (!(event instanceof ChannelMessageEvent || event instanceof PrivateMessageReceivedEvent))
             return false; // not a message-related event
         User sender;
-        TextChannelMessage msg = null;
+        Message msg;
         TextChannel channel = null;
         TextComponent component = null;
         if (event instanceof ChannelMessageEvent) {
@@ -167,7 +167,8 @@ public class ListenerImpl implements Listener {
                 component = (TextComponent) baseComponent;
             }
         } else {
-            BaseComponent baseComponent = ((PrivateMessageReceivedEvent) event).getMessage().getComponent();
+            msg = ((PrivateMessageReceivedEvent) event).getMessage();
+            BaseComponent baseComponent = msg.getComponent();
             sender = ((PrivateMessageReceivedEvent) event).getUser();
             if (baseComponent instanceof TextComponent) {
                 component = (TextComponent) baseComponent;
