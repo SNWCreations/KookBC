@@ -21,7 +21,6 @@ package snw.kookbc.impl.network;
 import com.google.gson.JsonObject;
 import snw.jkook.JKook;
 import snw.jkook.command.CommandException;
-import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Event;
@@ -175,40 +174,30 @@ public class ListenerImpl implements Listener {
             }
         }
         if (component == null) return false; // not a text component!
-
-        for (JKookCommand command : ((CommandManagerImpl) JKook.getCommandManager()).getCommands()) {
-            // effectively final variable for the following expression,
-            // if you replace the "finalComponent" with "component", you will got error.
-            TextComponent finalComponent = component;
-            if (command.getPrefixes().stream().anyMatch(IT -> finalComponent.toString().startsWith(IT + command.getRootName()))) {
-                try {
-                    ((CommandManagerImpl) JKook.getCommandManager()).executeCommand0(sender, component.toString(), msg);
-                } catch (Exception e) {
-                    StringWriter strWrt = new StringWriter();
-                    MarkdownComponent markdownComponent;
-                    // remove CommandException stacktrace to make the stacktrace smaller
-                    (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
-                    markdownComponent = new MarkdownComponent(
-                            "执行命令时发生异常，请联系 Bot 的开发者和 KookBC 的开发者！\n" +
-                                    "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
-                                    "---\n" +
-                                    strWrt
-                    );
-                    if (event instanceof ChannelMessageEvent) {
-                        channel.sendComponent(
-                                markdownComponent,
-                                null,
-                                sender
-                        );
-                    } else {
-                        ((PrivateMessageReceivedEvent) event).getUser().sendPrivateMessage(markdownComponent);
-                    }
-                    JKook.getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
-                }
-                return true; // break loop for better performance
+        try {
+            return ((CommandManagerImpl) JKook.getCommandManager()).executeCommand0(sender, component.toString(), msg);
+        } catch (Exception e) {
+            StringWriter strWrt = new StringWriter();
+            MarkdownComponent markdownComponent;
+            // remove CommandException stacktrace to make the stacktrace smaller
+            (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
+            markdownComponent = new MarkdownComponent(
+                    "执行命令时发生异常，请联系 Bot 的开发者和 KookBC 的开发者！\n" +
+                            "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
+                            "---\n" +
+                            strWrt
+            );
+            if (event instanceof ChannelMessageEvent) {
+                channel.sendComponent(
+                        markdownComponent,
+                        null,
+                        sender
+                );
+            } else {
+                ((PrivateMessageReceivedEvent) event).getUser().sendPrivateMessage(markdownComponent);
             }
+            JKook.getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
+            return true; // Although this failed, but it is a valid command
         }
-        return false; // no command is found
     }
-
 }
