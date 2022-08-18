@@ -57,7 +57,7 @@ public class Main {
         // --help                 --  Get help and exit
 
         OptionParser parser = new OptionParser();
-        OptionSpec<String> tokenOption = parser.accepts("token", "The token that will be used. (Unsafe, write token to token.txt instead.)").withOptionalArg();
+        OptionSpec<String> tokenOption = parser.accepts("token", "The token that will be used. (Unsafe, write token to kbc.yml instead.)").withOptionalArg();
         OptionSpec<Void> helpOption = parser.accepts("help", "Get help and exit.");
 
         OptionSet options;
