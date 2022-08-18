@@ -53,15 +53,11 @@ public class Main {
         Thread.currentThread().setName("Main thread");
 
         // KBC accepts following arguments:
-        // --token <tokenValue>   --  Use the tokenValue as the token:
-        // --no-jline (Optional)  --  Disable JLine reader and use Java-API based reader
-        // --no-color             --  Disable color output
+        // --token <tokenValue>   --  Use the tokenValue as the token
         // --help                 --  Get help and exit
 
         OptionParser parser = new OptionParser();
         OptionSpec<String> tokenOption = parser.accepts("token", "The token that will be used. (Unsafe, write token to token.txt instead.)").withOptionalArg();
-        OptionSpec<Void> noJlineOption = parser.accepts("no-jline", "Provide it to disable JLine-based command reader.");
-        OptionSpec<Void> noColorOption = parser.accepts("no-color", "Provide it to disable ANSI color codes.");
         OptionSpec<Void> helpOption = parser.accepts("help", "Get help and exit.");
 
         OptionSet options;
@@ -86,15 +82,6 @@ public class Main {
         }
 
         String token = options.valueOf(tokenOption);
-        boolean noJline = options.has(noJlineOption);
-        boolean noColor = options.has(noColorOption);
-
-        if (noJline) {
-            System.setProperty("terminal.jline", "false");
-        }
-        if (noColor) {
-            System.setProperty("terminal.ansi", "false");
-        }
 
         saveKBCConfig();
         File pluginsFolder = new File("plugins");
