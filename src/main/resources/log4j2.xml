@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration status="WARN">
+    <properties>
+        <property name="LOG_LEVEL">${sys:log4j2.log.level:-info}</property>
+    </properties>
     <appenders>
         <TerminalConsole name="Console">
             <PatternLayout
@@ -20,7 +23,7 @@
     </appenders>
     <loggers>
         <root level="all">
-            <appender-ref ref="Console" level="info"/>
+            <appender-ref ref="Console" level="${LOG_LEVEL}"/>
             <appender-ref ref="File" level="info"/>
             <appender-ref ref="DebugFile" level="debug"/>
         </root>
