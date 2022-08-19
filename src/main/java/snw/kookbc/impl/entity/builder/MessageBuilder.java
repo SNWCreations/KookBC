@@ -59,14 +59,13 @@ public class MessageBuilder {
             return new Object[]{10, new Gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
-            MultipleCardComponent fileCard;
-                fileCard = new snw.jkook.message.component.card.CardBuilder()
-                        .setTheme(Theme.NONE)
-                        .setSize(Size.LG)
-                        .addModule(
-                                new FileModule(fileComponent.getType() != FileComponent.Type.IMAGE ? fileComponent.getType() : FileComponent.Type.FILE, fileComponent.getUrl(), fileComponent.getTitle(), null)
-                        )
-                        .build();
+            MultipleCardComponent fileCard = new snw.jkook.message.component.card.CardBuilder()
+                    .setTheme(Theme.NONE)
+                    .setSize(Size.LG)
+                    .addModule(
+                            new FileModule(fileComponent.getType() != FileComponent.Type.IMAGE ? fileComponent.getType() : FileComponent.Type.FILE, fileComponent.getUrl(), fileComponent.getTitle(), null)
+                    )
+                    .build();
             return serialize(fileCard); // actually, this is not a loop call
         }
         throw new RuntimeException("Unsupported component");
