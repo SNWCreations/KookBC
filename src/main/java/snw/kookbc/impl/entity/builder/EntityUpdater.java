@@ -39,6 +39,11 @@ import java.util.Objects;
 
 // The class for building entities.
 public class EntityUpdater {
+    private final KBCClient client;
+
+    public EntityUpdater(KBCClient client) {
+        this.client = client;
+    }
 
     public void updateUser(JsonObject object, User user) {
         Validate.isTrue(Objects.equals(user.getId(), object.get("id").getAsString()), "You can't update user by using different data");
@@ -104,7 +109,7 @@ public class EntityUpdater {
             JsonObject rawUser = oupo.getAsJsonObject("user");
             upo.add(
                     new Channel.UserPermissionOverwrite(
-                            KBCClient.getInstance().getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
+                            client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
                             oupo.get("allow").getAsInt(),
                             oupo.get("deny").getAsInt()
                     )
@@ -120,7 +125,7 @@ public class EntityUpdater {
             category.setPermissionSync(isPermSync);
         } else {
             String parentId = object.get("parent_id").getAsString();
-            Category parent = (parentId.isEmpty()) ? null : (Category) KBCClient.getInstance().getStorage().getChannel(parentId);
+            Category parent = (parentId.isEmpty()) ? null : (Category) client.getStorage().getChannel(parentId);
             ((ChannelImpl) channel).setParent0(parent);
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel

@@ -77,7 +77,7 @@ public class KBCClient {
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
-        this.entityUpdater = new EntityUpdater();
+        this.entityUpdater = new EntityUpdater(this);
         core.init(new HttpAPIImpl(this, token), new SimplePluginManager(this));
     }
 
