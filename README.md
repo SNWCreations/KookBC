@@ -8,7 +8,7 @@
 
 * **如果可能，请始终使用最新版本！**
 
-下载后，请将下载的 KookBC 程序，以及您将要使用的 基于 JKook API 的 Java Bot 程序 一同放在一个全新目录里。
+下载后，请将下载的 KookBC 程序放在一个全新目录里。
 
 然后用如下命令行启动 KookBC:
 
@@ -20,17 +20,17 @@ java -jar kookbc-<version>.jar
 
 之后，KookBC 会在当前目录下生成一个名为 kbc.yml 的 KookBC YAML 配置文件并退出。
 
-更详细的命令行选项见 [KookBC 命令行](docs/KookBC_CommandLine.md) 。
-
 配置内容详解请见 [KookBC YAML 配置详解](docs/KookBC_Config.md) 。请按照文档的解释，配置您的 KookBC 。
 
-配置完成后，再次使用之前的命令行启动 KookBC ，当如下语句出现时，您的 Kook 机器人就已经准备就绪，可以使用。
+配置完成后，再次使用之前的命令行启动 KookBC ，当如下语句出现时，您的 KookBC 就已经准备就绪，可以使用。
 
 ```text
-[XX:XX:XX] [Main thread/INFO] Done! (XXs) Type "help" for help.
+[XX:XX:XX] [Main thread/INFO] Done! Type "help" for help.
 ```
 
 其中，`X` 为任意可能的值，您可以忽视。
+
+安装一个基于 JKook API 的 插件程序 (假设其基于最新版本的 JKook) ，只需要将其 .jar 文件放入 KookBC 目录下的 plugins 目录即可。
 
 更多 KookBC 的命令行选项可以通过以下命令获得:
 
@@ -39,6 +39,8 @@ java -jar kookbc-<version>.jar --help
 ```
 
 其中，`<version>`是 KookBC 的版本。
+
+更详细的命令行选项见 [KookBC 命令行](docs/KookBC_CommandLine.md) 。
 
 ## 贡献
 
