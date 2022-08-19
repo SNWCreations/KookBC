@@ -93,13 +93,13 @@ public class MessageBuilder {
         if (object == null) return null;
 
         String id = object.get("rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
-        Message message = KBCClient.getInstance().getStorage().getMessage(id);
+        Message message = client.getStorage().getMessage(id);
         if (message != null) return message; // prevent resource leak
 
         BaseComponent component = buildComponent(object);
         long timeStamp = object.get("create_at").getAsLong();
         JsonObject rawUser = object.getAsJsonObject("author");
-        User author = KBCClient.getInstance().getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
+        User author = client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
         return new QuoteImpl(component, id, author, timeStamp);
     }
 
