@@ -18,7 +18,11 @@
 
 package snw.kookbc.impl;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import snw.jkook.Core;
 import snw.jkook.JKook;
 import snw.jkook.command.CommandExecutor;
@@ -215,19 +219,33 @@ public class KBCClient {
                                         .url("https://bot.gekj.net/api/v1/online.bot")
                                         .header("uuid", rawBotMarketUUID)
                                         .build();
+                        private final OkHttpClient client = new OkHttpClient.Builder()
+                                .connectTimeout(60, TimeUnit.SECONDS)
+                                .callTimeout(60, TimeUnit.SECONDS)
+                                .readTimeout(60, TimeUnit.SECONDS)
+                                .build();
 
                         @Override
                         public void run() {
                             getCore().getLogger().debug("PING BotMarket...");
-                            try {
-                                getNetworkClient().call(request);
+                            try (Response response = client.newCall(request).execute()) {
+                                if (response.body() != null) {
+                                    String resStr = response.body().string();
+                                    JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
+                                    int status = object.get("code").getAsInt();
+                                    if (status != 0) {
+                                        throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status, object.get("message").getAsString()));
+                                    }
+                                } else {
+                                    throw new RuntimeException("No response body when we attempting to PING BotMarket.");
+                                }
                             } catch (Exception e) {
                                 JKook.getLogger().error("Unable to PING BotMarket.", e);
                                 return;
                             }
                             getCore().getLogger().debug("PING BotMarket success");
                         }
-                    }.runTaskTimer(null, 0, TimeUnit.MINUTES.toMillis(10));
+                    }.runTaskTimer(null, 0, TimeUnit.MINUTES.toMillis(5));
                 }
             }
         }
