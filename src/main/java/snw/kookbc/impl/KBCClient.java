@@ -218,11 +218,14 @@ public class KBCClient {
 
                         @Override
                         public void run() {
+                            getCore().getLogger().debug("PING BotMarket...");
                             try {
                                 getNetworkClient().call(request);
                             } catch (Exception e) {
                                 JKook.getLogger().error("Unable to PING BotMarket.", e);
+                                return;
                             }
+                            getCore().getLogger().debug("PING BotMarket success");
                         }
                     }.runTaskTimer(null, 0, TimeUnit.MINUTES.toMillis(10));
                 }
