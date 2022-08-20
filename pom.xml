@@ -6,7 +6,7 @@
     <name>KookBC</name>
     <groupId>snw</groupId>
     <artifactId>kookbc</artifactId>
-    <version>0.13.7</version>
+    <version>0.13.8</version>
     <description>The Kook Bot Client standard implementation for Java.</description>
 
     <developers>
