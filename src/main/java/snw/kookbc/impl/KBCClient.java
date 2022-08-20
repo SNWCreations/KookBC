@@ -250,7 +250,7 @@ public class KBCClient {
     // Shutdown this client, and loop() method will return after this method completes.
     public void shutdown() {
         getCore().getLogger().debug("Client shutdown request received");
-        if (!((CoreImpl) getCore()).isRunning()) {
+        if (!isRunning()) {
             getCore().getLogger().debug("The client has already stopped");
             return;
         }
@@ -258,13 +258,18 @@ public class KBCClient {
         getCore().getLogger().info("Stopping client");
         getCore().getPluginManager().clearPlugins();
 
-        if (connector != null) {
-            connector.shutdown();
-        }
-        if (((CoreImpl) getCore()).isRunning()) {
+        shutdownNetwork();
+
+        if (isRunning()) {
             getCore().shutdown();
         }
         getCore().getLogger().info("Client stopped");
+    }
+
+    protected void shutdownNetwork() {
+        if (connector != null) {
+            connector.shutdown();
+        }
     }
 
     public EntityStorage getStorage() {
