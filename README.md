@@ -25,7 +25,7 @@ java -jar kookbc-<version>.jar
 配置完成后，再次使用之前的命令行启动 KookBC ，当如下语句出现时，您的 KookBC 就已经准备就绪，可以使用。
 
 ```text
-[XX:XX:XX] [Main thread/INFO] Done! Type "help" for help.
+[XX:XX:XX] [Main Thread/INFO] Done! Type "help" for help.
 ```
 
 其中，`X` 为任意可能的值，您可以忽视。

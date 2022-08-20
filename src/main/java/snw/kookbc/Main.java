@@ -50,7 +50,7 @@ public class Main {
     }
 
     private static int main0(String[] args) {
-        Thread.currentThread().setName("Main thread");
+        Thread.currentThread().setName("Main Thread");
 
         // KBC accepts following arguments:
         // --token <tokenValue>   --  Use the tokenValue as the token
