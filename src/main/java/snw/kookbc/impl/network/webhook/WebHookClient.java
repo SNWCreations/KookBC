@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class WebHookClient extends KBCClient {
     protected HttpServer server;
@@ -84,10 +83,8 @@ public class WebHookClient extends KBCClient {
         getCore().getPluginManager().clearPlugins();
 
         if (server != null) {
-            long httpStopTimeStamp = System.currentTimeMillis();
             getCore().getLogger().info("Stopping Webhook HTTP server");
-            server.stop(30);
-            getCore().getLogger().debug("Webhook HTTP server stopped, elapsed {}", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - httpStopTimeStamp));
+            server.stop(0);
         }
 
         if (((CoreImpl) getCore()).isRunning()) {
