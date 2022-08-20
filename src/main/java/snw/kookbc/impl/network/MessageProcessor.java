@@ -86,6 +86,7 @@ public class MessageProcessor extends WebSocketListener {
             JKook.getLogger().error("Response is following: {}", response);
             JKook.getLogger().error("Stacktrace is following.", t);
         }
+        webSocket.close(1000, "User Closed Service");
         connector.setRequireReconnect(true);
     }
 
