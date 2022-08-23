@@ -86,6 +86,6 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
+        KBCClient.getInstance().getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
     }
 }
