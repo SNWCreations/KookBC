@@ -208,7 +208,7 @@ public class GuildImpl implements Guild {
                 .put("name", s)
                 .put("type", 2)
                 .put("limit_amount", i)
-                .put("voice_quality", i1);
+                .put("voice_quality", String.valueOf(i1));
         if (category != null) {
             builder.put("parent_id", category.getId());
         }
