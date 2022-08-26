@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.entity;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -31,13 +33,13 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
 public class UserImpl implements User {
     private final String id;
     private final boolean bot;
-    private Collection<Integer> roles;
     private String name;
     private int identify;
     private Integer intimacy = null;
@@ -56,8 +58,7 @@ public class UserImpl implements User {
                     int identify,
                     boolean online,
                     boolean ban,
-                    boolean vip,
-                    Collection<Integer> roles) {
+                    boolean vip) {
         this.id = id;
         this.bot = bot;
         this.name = name;
@@ -67,7 +68,6 @@ public class UserImpl implements User {
         this.online = online;
         this.ban = ban;
         this.vip = vip;
-        this.roles = roles;
     }
 
 
@@ -130,8 +130,18 @@ public class UserImpl implements User {
     }
 
     @Override
-    public Collection<Integer> getRoles() {
-        return roles;
+    public Collection<Integer> getRoles(Guild guild) {
+        JsonArray array = KBCClient.getInstance().getNetworkClient()
+                .get(String.format("%s?user_id=%s&guild_id=%s",
+                        HttpAPIRoute.USER_WHO.toFullURL(),
+                        id,
+                        guild.getId()))
+                .getAsJsonArray("roles");
+        HashSet<Integer> result = new HashSet<>();
+        for (JsonElement element : array) {
+            result.add(element.getAsInt());
+        }
+        return result;
     }
 
     @Override
@@ -188,7 +198,6 @@ public class UserImpl implements User {
                 .put("role_id", role.getId())
                 .build();
         KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
-        roles.add(role.getId());
     }
 
     @Override
@@ -199,7 +208,6 @@ public class UserImpl implements User {
                 .put("role_id", role.getId())
                 .build();
         KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
-        roles.remove(role.getId());
     }
 
     @Override
@@ -210,7 +218,6 @@ public class UserImpl implements User {
                 .put("role_id", roleId)
                 .build();
         KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
-        roles.add(roleId);
     }
 
     @Override
@@ -221,7 +228,6 @@ public class UserImpl implements User {
                 .put("role_id", roleId)
                 .build();
         KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
-        roles.remove(roleId);
     }
 
     @Override
@@ -256,10 +262,6 @@ public class UserImpl implements User {
 
     public void setVipAvatarUrl(String vipAvatarUrl) {
         this.vipAvatarUrl = vipAvatarUrl;
-    }
-
-    public void setRoles(Collection<Integer> roles) {
-        this.roles = roles;
     }
 
     @Override

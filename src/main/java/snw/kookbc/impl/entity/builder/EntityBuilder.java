@@ -53,9 +53,6 @@ public class EntityBuilder {
         boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
-        JsonArray roleArray = object.get("roles").getAsJsonArray();
-        Collection<Integer> roles = new HashSet<>();
-        roleArray.forEach(IT -> roles.add(IT.getAsInt()));
         return new UserImpl(
                 id,
                 bot,
@@ -65,8 +62,7 @@ public class EntityBuilder {
                 identify,
                 online,
                 ban,
-                vip,
-                roles
+                vip
         );
     }
 
