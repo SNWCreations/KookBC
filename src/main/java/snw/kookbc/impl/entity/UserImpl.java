@@ -32,10 +32,7 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class UserImpl implements User {
     private final String id;
@@ -141,7 +138,7 @@ public class UserImpl implements User {
         for (JsonElement element : array) {
             result.add(element.getAsInt());
         }
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     @Override
