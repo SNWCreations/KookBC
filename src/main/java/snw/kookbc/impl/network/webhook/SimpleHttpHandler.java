@@ -54,6 +54,7 @@ public class SimpleHttpHandler implements HttpHandler {
             JKook.getLogger().error("Something unexpected occurred while we attempting to process the request from remote.", e);
             exchange.sendResponseHeaders(500, -1);
         }
+        exchange.close();
     }
 
     public void handle0(HttpExchange exchange) throws Exception {
@@ -96,7 +97,6 @@ public class SimpleHttpHandler implements HttpHandler {
                 }
             }
         }
-        exchange.getResponseBody().close();
     }
 
     protected byte[] inputStreamToByteArray(InputStream stream) throws IOException {
