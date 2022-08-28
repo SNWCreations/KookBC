@@ -197,8 +197,6 @@ public abstract class ChannelImpl implements Channel {
         this.rpo = rpo;
     }
 
-    // setters following:
-
     @Override
     public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions() {
         return Collections.unmodifiableCollection(upo);
