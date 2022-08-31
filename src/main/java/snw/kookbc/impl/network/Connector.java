@@ -34,25 +34,10 @@ public class Connector {
     private volatile boolean connected = false;
     private volatile boolean timeout = false;
     private volatile boolean pingOk = false;
-    private volatile boolean requireReconnect = false;
+    private volatile boolean reconnecting = false;
 
     public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
-        new Thread(
-                () -> {
-                    while (kbcClient.isRunning()) {
-                        if (requireReconnect) {
-                            try {
-                                restart();
-                            } catch (Exception e) { // make sure thread won't exit if something unexpected happened!
-                                continue;
-                            }
-                            requireReconnect = false;
-                        }
-                    }
-                }
-                , "Reconnect Thread"
-        ).start();
         new Thread(
                 () -> {
                     while (kbcClient.isRunning()) {
@@ -94,7 +79,7 @@ public class Connector {
                                 if (!connected) {
                                     start0();
                                     if (!connected) {
-                                        setRequireReconnect(true); // Reconnect thread will overwrite wsLink!
+                                        requestReconnect();
                                     }
                                 } else {
                                     wsLink = originalWsLink;
@@ -228,7 +213,20 @@ public class Connector {
         }
     }
 
-    public void setRequireReconnect(boolean requireReconnect) {
-        this.requireReconnect = requireReconnect;
+    public void requestReconnect() {
+        JKook.getScheduler().runTask(() -> {
+            if (reconnecting) return;
+            reconnecting = true;
+            while (true) {
+                try {
+                    restart();
+                } catch (Exception e) { // make sure thread won't exit if something unexpected happened!
+                    JKook.getLogger().error("Unexpected exception happened when we attempting to reconnect.", e);
+                    continue;
+                }
+                break;
+            }
+            reconnecting = false;
+        });
     }
 }

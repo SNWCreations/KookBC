@@ -72,7 +72,7 @@ public class ListenerImpl implements Listener {
                 break;
             case RECONNECT:
                 JKook.getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
-                client.getConnector().setRequireReconnect(true);
+                client.getConnector().requestReconnect();
                 break;
             case RESUME_ACK:
                 JKook.getLogger().info("Resume finished");
@@ -141,7 +141,7 @@ public class ListenerImpl implements Listener {
                     throw new RuntimeException("Invalid Bot Token!");
                 case 40103:
                     JKook.getLogger().debug("WebSocket Token is invalid. Attempting to reconnect.");
-                    client.getConnector().setRequireReconnect(true);
+                    client.getConnector().requestReconnect();
                     break;
                 default:
                     throw new RuntimeException("Unexpected response code: " + status);
