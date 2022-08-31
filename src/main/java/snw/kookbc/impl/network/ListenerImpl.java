@@ -41,13 +41,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ListenerImpl implements Listener {
     protected final KBCClient client;
+    private final Object lck = new Object();
 
     public ListenerImpl(KBCClient client) {
         this.client = client;
     }
 
     @Override
-    public synchronized void executeEvent(Frame frame) {
+    public void executeEvent(Frame frame) {
         if (frame.getType() == null) {
             client.getCore().getLogger().warn("Unknown event type! The raw frame content: {}", frame);
             return;
@@ -81,42 +82,46 @@ public class ListenerImpl implements Listener {
     }
 
     protected void event(Frame frame) {
-        client.getCore().getLogger().debug("Got EVENT");
-        Session session = client.getSession();
-        AtomicInteger sn = session.getSN();
-        Set<Frame> buffer = session.getBuffer();
-        int expected = sn.get() + 1;
-        int actual = frame.getSN();
-        if (actual > expected) {
-            client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
-            client.getCore().getLogger().warn("We will process it later.");
-            buffer.add(frame);
-        } else if (expected == actual) {
-            sn.addAndGet(1);
-            event0(frame);
-            if (!buffer.isEmpty()) {
-                int continueId = sn.get() + 1;
-                do {
-                    boolean found = false;
-                    Iterator<Frame> bufferIterator = buffer.iterator();
-                    while (bufferIterator.hasNext()) {
-                        Frame bufFrame = bufferIterator.next();
-                        if (bufFrame.getSN() == continueId) {
-                            found = true;       // we found the frame matching the continueId,
-                            // so we will continue after the frame got processed
-                            event0(bufFrame);
-                            continueId++;
-                            bufferIterator.remove(); // we won't need this frame, because it has processed
+        synchronized (lck) {
+            client.getCore().getLogger().debug("Got EVENT");
+            Session session = client.getSession();
+            AtomicInteger sn = session.getSN();
+            Set<Frame> buffer = session.getBuffer();
+            int expected = sn.get() + 1;
+            int actual = frame.getSN();
+            if (actual > expected) {
+                client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
+                client.getCore().getLogger().warn("We will process it later.");
+                buffer.add(frame);
+            } else if (expected == actual) {
+                sn.getAndAdd(1);
+                event0(frame);
+                if (!buffer.isEmpty()) {
+                    int continueId = sn.get() + 1;
+                    do {
+                        boolean found = false;
+                        Iterator<Frame> bufferIterator = buffer.iterator();
+                        while (bufferIterator.hasNext()) {
+                            Frame bufFrame = bufferIterator.next();
+                            if (bufFrame.getSN() == continueId) {
+                                found = true;       // we found the frame matching the continueId,
+                                // so we will continue after the frame got processed
+                                event0(bufFrame);
+                                sn.set(continueId); // make sure the SN will update!
+                                continueId++;
+                                bufferIterator.remove(); // we won't need this frame, because it has processed
+                                client.getCore().getLogger().debug("Processed message in buffer with SN {}", bufFrame.getSN());
+                                break;
+                            }
+                        }
+                        if (!found) {
                             break;
                         }
-                    }
-                    if (!found) {
-                        break;
-                    }
-                } while (true);
+                    } while (true);
+                }
+            } else {
+                client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
             }
-        } else {
-            client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
         }
     }
 
