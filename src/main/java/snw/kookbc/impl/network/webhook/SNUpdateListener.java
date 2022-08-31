@@ -47,7 +47,7 @@ public class SNUpdateListener extends Thread {
                     writer.write(String.valueOf(current));
                     writer.close();
                 } catch (IOException e) {
-                    JKook.getLogger().warn("Unable to write SN to local.", e);
+                    client.getCore().getLogger().warn("Unable to write SN to local.", e);
                 }
                 prev = current;
             }

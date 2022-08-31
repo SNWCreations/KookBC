@@ -1,5 +1,5 @@
 /*
- *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
+ *     KookBC -- The Kook Bot Client & client.getCore() API standard implementation for Java.
  *     Copyright (C) 2022 KookBC contributors
  *
  *     This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,6 @@
 package snw.kookbc.impl.network;
 
 import com.google.gson.JsonObject;
-import snw.jkook.JKook;
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
@@ -50,47 +49,47 @@ public class ListenerImpl implements Listener {
     @Override
     public synchronized void executeEvent(Frame frame) {
         if (frame.getType() == null) {
-            JKook.getLogger().warn("Unknown event type! The raw frame content: {}", frame);
+            client.getCore().getLogger().warn("Unknown event type! The raw frame content: {}", frame);
             return;
         }
         switch (frame.getType()) {
             case EVENT:
-                JKook.getScheduler().runTask(() -> event(frame));
+                client.getCore().getScheduler().runTask(() -> event(frame));
                 break;
             case HELLO:
                 hello(frame);
                 break;
             case PING:
-                JKook.getLogger().debug("Impossible Message from remote: type is PING.");
+                client.getCore().getLogger().debug("Impossible Message from remote: type is PING.");
                 break;
             case PONG:
-                JKook.getLogger().debug("Got PONG");
+                client.getCore().getLogger().debug("Got PONG");
                 client.getConnector().pong();
                 break;
             case RESUME:
-                JKook.getLogger().debug("Impossible Message from remote: type is RESUME.");
+                client.getCore().getLogger().debug("Impossible Message from remote: type is RESUME.");
                 break;
             case RECONNECT:
-                JKook.getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
+                client.getCore().getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
                 client.getConnector().requestReconnect();
                 break;
             case RESUME_ACK:
-                JKook.getLogger().info("Resume finished");
+                client.getCore().getLogger().info("Resume finished");
                 client.getSession().setId(frame.getData().get("session_id").getAsString());
                 break;
         }
     }
 
     protected void event(Frame frame) {
-        JKook.getLogger().debug("Got EVENT {}", frame);
+        client.getCore().getLogger().debug("Got EVENT {}", frame);
         Session session = client.getSession();
         AtomicInteger sn = session.getSN();
         Set<Frame> buffer = session.getBuffer();
         int expected = sn.get() + 1;
         int actual = frame.getSN();
         if (actual > expected) {
-            JKook.getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
-            JKook.getLogger().warn("We will process it later.");
+            client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
+            client.getCore().getLogger().warn("We will process it later.");
             buffer.add(frame);
         } else if (expected == actual) {
             sn.addAndGet(1);
@@ -117,19 +116,19 @@ public class ListenerImpl implements Listener {
                 } while (true);
             }
         } else {
-            JKook.getLogger().warn("Unexpected old message from remote. Dropped it.");
+            client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
         }
     }
 
     protected void event0(Frame frame) {
         Event event = EventFactory.getEvent(frame.getData());
         if (!executeCommand(event)) {
-            JKook.getEventManager().callEvent(event);
+            client.getCore().getEventManager().callEvent(event);
         }
     }
 
     protected void hello(Frame frame) {
-        JKook.getLogger().debug("Got HELLO");
+        client.getCore().getLogger().debug("Got HELLO");
         client.getConnector().setConnected(true);
         JsonObject object = frame.getData();
         int status = object.get("code").getAsInt();
@@ -140,7 +139,7 @@ public class ListenerImpl implements Listener {
                 case 40101:
                     throw new RuntimeException("Invalid Bot Token!");
                 case 40103:
-                    JKook.getLogger().debug("WebSocket Token is invalid. Attempting to reconnect.");
+                    client.getCore().getLogger().debug("WebSocket Token is invalid. Attempting to reconnect.");
                     client.getConnector().requestReconnect();
                     break;
                 default:
@@ -175,7 +174,7 @@ public class ListenerImpl implements Listener {
         }
         if (component == null) return false; // not a text component!
         try {
-            return ((CommandManagerImpl) JKook.getCommandManager()).executeCommand0(sender, component.toString(), msg);
+            return ((CommandManagerImpl) client.getCore().getCommandManager()).executeCommand0(sender, component.toString(), msg);
         } catch (Exception e) {
             StringWriter strWrt = new StringWriter();
             MarkdownComponent markdownComponent;
@@ -196,7 +195,7 @@ public class ListenerImpl implements Listener {
             } else {
                 ((PrivateMessageReceivedEvent) event).getUser().sendPrivateMessage(markdownComponent);
             }
-            JKook.getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
+            client.getCore().getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
             return true; // Although this failed, but it is a valid command
         }
     }

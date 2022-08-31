@@ -1,5 +1,5 @@
 /*
- *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
+ *     KookBC -- The Kook Bot Client & connector.getParent().getCore() API standard implementation for Java.
  *     Copyright (C) 2022 KookBC contributors
  *
  *     This program is free software: you can redistribute it and/or modify
@@ -52,7 +52,7 @@ public class MessageProcessor extends WebSocketListener {
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
-        JKook.getLogger().debug("MessageProcessor#onMessage(String) got call. Response: {}", text);
+        connector.getParent().getCore().getLogger().debug("MessageProcessor#onMessage(String) got call. Response: {}", text);
         JsonObject object = JsonParser.parseString(text).getAsJsonObject();
         Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
         listener.executeEvent(frame);
@@ -63,7 +63,7 @@ public class MessageProcessor extends WebSocketListener {
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
         super.onMessage(webSocket, bytes);
         String res = new String(decompressDeflate(bytes.toByteArray()));
-        JKook.getLogger().debug("MessageProcessor#onMessage(ByteString) got call. Response: {}", res);
+        connector.getParent().getCore().getLogger().debug("MessageProcessor#onMessage(ByteString) got call. Response: {}", res);
         JsonObject object = JsonParser.parseString(res).getAsJsonObject();
         Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
         listener.executeEvent(frame);
@@ -73,7 +73,7 @@ public class MessageProcessor extends WebSocketListener {
     public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
         super.onClosed(webSocket, code, reason);
         if (code == 1002) {
-            JKook.getLogger().error("Unexpected close response from WebSocket server. We will restart network.");
+            connector.getParent().getCore().getLogger().error("Unexpected close response from WebSocket server. We will restart network.");
             connector.requestReconnect();
         }
     }
@@ -82,9 +82,9 @@ public class MessageProcessor extends WebSocketListener {
     public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
         super.onFailure(webSocket, t, response);
         if (!(t instanceof ProtocolException)) {
-            JKook.getLogger().error("Unexpected failure occurred in the Network module. We will restart the Network module.");
-            JKook.getLogger().error("Response is following: {}", response);
-            JKook.getLogger().error("Stacktrace is following.", t);
+            connector.getParent().getCore().getLogger().error("Unexpected failure occurred in the Network module. We will restart the Network module.");
+            connector.getParent().getCore().getLogger().error("Response is following: {}", response);
+            connector.getParent().getCore().getLogger().error("Stacktrace is following.", t);
         }
         webSocket.close(1000, "User Closed Service");
         connector.requestReconnect();

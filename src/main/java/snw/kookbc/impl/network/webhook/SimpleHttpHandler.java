@@ -24,7 +24,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import snw.jkook.JKook;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
@@ -51,19 +50,19 @@ public class SimpleHttpHandler implements HttpHandler {
         try {
             handle0(exchange);
         } catch (Exception e) {
-            JKook.getLogger().error("Something unexpected occurred while we attempting to process the request from remote.", e);
+            client.getCore().getLogger().error("Something unexpected occurred while we attempting to process the request from remote.", e);
             exchange.sendResponseHeaders(500, -1);
         }
         exchange.close();
     }
 
     public void handle0(HttpExchange exchange) throws Exception {
-        JKook.getLogger().debug("Got request!");
+        client.getCore().getLogger().debug("Got request!");
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
-            JKook.getLogger().debug("Got the request that not using POST. Rejected.");
+            client.getCore().getLogger().debug("Got the request that not using POST. Rejected.");
             exchange.sendResponseHeaders(405, -1);
         } else {
-            JKook.getLogger().debug("Got POST request");
+            client.getCore().getLogger().debug("Got POST request");
             String res;
             byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
             if (client.getConfig().getBoolean("compress")) {
@@ -71,7 +70,7 @@ public class SimpleHttpHandler implements HttpHandler {
             } else {
                 res = new String(bytes);
             }
-            JKook.getLogger().debug("Got remote request: {}", res);
+            client.getCore().getLogger().debug("Got remote request: {}", res);
             JsonObject object = JsonParser.parseString(
                     EncryptUtils.decrypt(res)
             ).getAsJsonObject();

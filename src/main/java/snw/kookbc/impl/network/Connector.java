@@ -20,9 +20,10 @@ package snw.kookbc.impl.network;
 
 import okhttp3.Request;
 import okhttp3.WebSocket;
+import snw.jkook.Core;
 import snw.jkook.JKook;
-import snw.kookbc.impl.KBCClient;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.concurrent.TimeUnit;
 
@@ -71,7 +72,7 @@ public class Connector {
                                 return;
                             }
                             if (!isPingOk()) {
-                                JKook.getLogger().warn("PING failed. Attempting to reconnect.");
+                                kbcClient.getCore().getLogger().warn("PING failed. Attempting to reconnect.");
                                 shutdownWs();
                                 String originalWsLink = wsLink;
                                 wsLink = (String.format("%s&resume=1&sn=%d&sessionId=%s", wsLink, kbcClient.getSession().getSN().get(), kbcClient.getSession().getId()));
@@ -126,7 +127,7 @@ public class Connector {
                 getGateway();
             }
         } while (!connected);
-        JKook.getLogger().info("WebSocket Connection OK");
+        kbcClient.getCore().getLogger().info("WebSocket Connection OK");
     }
 
     private void getGateway() {
@@ -147,9 +148,9 @@ public class Connector {
 
     public void shutdownHttp() {
         try {
-            JKook.getLogger().debug("Called HTTP Bot offline API. Response: {}", kbcClient.getNetworkClient().postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
+            kbcClient.getCore().getLogger().debug("Called HTTP Bot offline API. Response: {}", kbcClient.getNetworkClient().postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
         } catch (Exception e) {
-            JKook.getLogger().error("Unexpected Exception when we attempting to request HTTP Bot offline API.", e);
+            kbcClient.getCore().getLogger().error("Unexpected Exception when we attempting to request HTTP Bot offline API.", e);
         }
     }
 
@@ -172,7 +173,7 @@ public class Connector {
 
     public void setTimeout(boolean timeout) {
         if (timeout) {
-            JKook.getLogger().warn("PING failed. Status is now TIMEOUT.");
+            kbcClient.getCore().getLogger().warn("PING failed. Status is now TIMEOUT.");
         }
         this.timeout = timeout;
     }
@@ -189,7 +190,7 @@ public class Connector {
         if (!kbcClient.isRunning()) {
             throw new RuntimeException("The client is not running! (If you see this when the client is stopping, please ignore this)");
         }
-        JKook.getLogger().debug("Attempting to PING.");
+        kbcClient.getCore().getLogger().debug("Attempting to PING.");
         setPingOk(false);
         boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         Validate.isTrue(queued, "Unable to queue ping request");
@@ -208,25 +209,29 @@ public class Connector {
         setPingOk(true);
         if (isTimeout()) {
             setTimeout(false);
-            JKook.getLogger().info("We have recovered from TIMEOUT successfully, attempting to resume.");
+            kbcClient.getCore().getLogger().info("We have recovered from TIMEOUT successfully, attempting to resume.");
             ws.send(String.format("{\"s\":4,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         }
     }
 
     public void requestReconnect() {
-        JKook.getScheduler().runTask(() -> {
+        kbcClient.getCore().getScheduler().runTask(() -> {
             if (reconnecting) return;
             reconnecting = true;
             while (true) {
                 try {
                     restart();
                 } catch (Exception e) { // make sure thread won't exit if something unexpected happened!
-                    JKook.getLogger().error("Unexpected exception happened when we attempting to reconnect.", e);
+                    kbcClient.getCore().getLogger().error("Unexpected exception happened when we attempting to reconnect.", e);
                     continue;
                 }
                 break;
             }
             reconnecting = false;
         });
+    }
+
+    public KBCClient getParent() {
+        return kbcClient;
     }
 }

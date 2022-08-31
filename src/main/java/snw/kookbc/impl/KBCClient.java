@@ -24,7 +24,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import snw.jkook.Core;
-import snw.jkook.JKook;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
@@ -143,7 +142,7 @@ public class KBCClient {
     // Note for hardcore developers:
     // You can also put this client into your project as a module to communicate with Kook
     // Call this to start KookBC, then you can use JKook API.
-    // WARN: Set the JKook Core by constructing CoreImpl and call JKook.setCore() using it first,
+    // WARN: Set the JKook Core by constructing CoreImpl and call getCore().setCore() using it first,
     // or you will get NullPointerException.
     public void start() {
         getCore().getLogger().debug("Loading all the plugins from plugins folder.");
@@ -209,7 +208,7 @@ public class KBCClient {
                 try {
                     bmUUID = UUID.fromString(rawBotMarketUUID);
                 } catch (IllegalArgumentException e) {
-                    JKook.getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
+                    getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
                 }
                 if (bmUUID != null) {
                     new JKookRunnable() {
@@ -240,7 +239,7 @@ public class KBCClient {
                                     throw new RuntimeException("No response body when we attempting to PING BotMarket.");
                                 }
                             } catch (Exception e) {
-                                JKook.getLogger().error("Unable to PING BotMarket.", e);
+                                getCore().getLogger().error("Unable to PING BotMarket.", e);
                                 return;
                             }
                             getCore().getLogger().debug("PING BotMarket success");
@@ -260,7 +259,7 @@ public class KBCClient {
         try {
             new Console(this).start();
         } catch (Exception e) {
-            JKook.getLogger().error("Unexpected situation happened during the main loop.", e);
+            getCore().getLogger().error("Unexpected situation happened during the main loop.", e);
         }
         getCore().getLogger().debug("REPL end");
     }
@@ -325,7 +324,7 @@ public class KBCClient {
                 .register();
         registerHelpCommand();
         registerPluginsCommand();
-        ((EventManagerImpl) JKook.getEventManager()).registerHandlers0(null, new InternalEventListener());
+        ((EventManagerImpl) getCore().getEventManager()).registerHandlers0(null, new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
@@ -402,7 +401,7 @@ public class KBCClient {
                                 helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
 
                                 if (getConfig().getBoolean("allow-help-ad", true)) {
-                                    helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v" + JKook.getImplementationVersion() + " 驱动 - JKook API " + JKook.getAPIVersion());
+                                    helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v" + getCore().getImplementationVersion() + " 驱动 - JKook API " + getCore().getAPIVersion());
                                 } else {
                                     helpList.remove(helpList.size() - 1);
                                 }
