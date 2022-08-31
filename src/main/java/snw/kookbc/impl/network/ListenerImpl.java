@@ -81,7 +81,7 @@ public class ListenerImpl implements Listener {
     }
 
     protected void event(Frame frame) {
-        client.getCore().getLogger().debug("Got EVENT {}", frame);
+        client.getCore().getLogger().debug("Got EVENT");
         Session session = client.getSession();
         AtomicInteger sn = session.getSN();
         Set<Frame> buffer = session.getBuffer();
