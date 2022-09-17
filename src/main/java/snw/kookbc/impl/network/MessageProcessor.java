@@ -1,5 +1,5 @@
 /*
- *     KookBC -- The Kook Bot Client & connector.getParent().getCore() API standard implementation for Java.
+ *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
  *     Copyright (C) 2022 KookBC contributors
  *
  *     This program is free software: you can redistribute it and/or modify
