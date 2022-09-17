@@ -87,7 +87,7 @@ public class ListenerImpl implements Listener {
             Session session = client.getSession();
             AtomicInteger sn = session.getSN();
             Set<Frame> buffer = session.getBuffer();
-            int expected = sn.get() + 1;
+            int expected = sn.get() == 65535 ? 1 : sn.get() + 1;
             int actual = frame.getSN();
             if (actual > expected) {
                 client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
