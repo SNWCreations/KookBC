@@ -94,8 +94,8 @@ public class ListenerImpl implements Listener {
                 client.getCore().getLogger().warn("We will process it later.");
                 buffer.add(frame);
             } else if (expected == actual) {
-                sn.getAndAdd(1);
                 event0(frame);
+                sn.getAndAdd(1);
                 if (!buffer.isEmpty()) {
                     int continueId = sn.get() + 1;
                     do {
