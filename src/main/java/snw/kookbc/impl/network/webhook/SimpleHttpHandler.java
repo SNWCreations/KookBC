@@ -27,7 +27,7 @@ import com.sun.net.httpserver.HttpHandler;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
-import snw.kookbc.impl.network.ListenerImpl;
+import snw.kookbc.impl.network.ListenerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class SimpleHttpHandler implements HttpHandler {
 
     public SimpleHttpHandler(KBCClient client) {
         this.client = client;
-        listener = new ListenerImpl(client);
+        listener = ListenerFactory.getListener(client);
     }
 
     @Override

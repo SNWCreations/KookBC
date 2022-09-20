@@ -39,7 +39,7 @@ public class MessageProcessor extends WebSocketListener {
 
     public MessageProcessor(KBCClient client) {
         this.connector = client.getConnector();
-        listener = new ListenerImpl(client);
+        listener = ListenerFactory.getListener(client);
     }
 
     @Override

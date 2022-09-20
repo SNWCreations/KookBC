@@ -58,7 +58,7 @@ public class WebHookClient extends KBCClient {
         server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
         getCore().getLogger().info("Server is listening on port {}", port);
-        getCore().getLogger().debug("Initializing SN update listener.");
+        getCore().getLogger().debug("Initializing SN from local file.");
         int initSN = 0;
         File snfile = new File(getPluginsFolder(), "sn");
         if (snfile.exists()) {
@@ -68,7 +68,6 @@ public class WebHookClient extends KBCClient {
             }
         }
         getSession().getSN().set(initSN);
-        new SNUpdateListener(this).start();
     }
 
     @Override
