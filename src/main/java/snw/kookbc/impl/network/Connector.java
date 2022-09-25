@@ -33,7 +33,8 @@ public class Connector {
     private volatile boolean connected = false;
     private volatile boolean timeout = false;
     private volatile boolean pingOk = false;
-    private volatile boolean reconnecting = false;
+    private volatile boolean requireReconnect = false;
+    private final Object reconnectLock = new Object();
 
     public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
@@ -88,6 +89,7 @@ public class Connector {
                     }
                 }, "Ping Thread"
         ).start();
+        new Reconnector(kbcClient, reconnectLock).start();
     }
 
     public void start() {
@@ -213,23 +215,29 @@ public class Connector {
     }
 
     public void requestReconnect() {
-        kbcClient.getCore().getScheduler().runTask(() -> {
-            if (reconnecting) return;
-            reconnecting = true;
-            while (true) {
-                try {
-                    restart();
-                } catch (Exception e) { // make sure thread won't exit if something unexpected happened!
-                    kbcClient.getCore().getLogger().error("Unexpected exception happened when we attempting to reconnect.", e);
-                    continue;
+        if (!requireReconnect) {
+            synchronized (reconnectLock) {
+                if (!requireReconnect) {
+                    requireReconnect = true;
+                    reconnectLock.notifyAll();
                 }
-                break;
             }
-            reconnecting = false;
-        });
+        }
     }
 
     public KBCClient getParent() {
         return kbcClient;
+    }
+
+    public void reconnectOk() {
+        requireReconnect = false;
+    }
+
+    public boolean isRequireReconnect() {
+        return requireReconnect;
+    }
+
+    public boolean isConnected() {
+        return connected;
     }
 }
