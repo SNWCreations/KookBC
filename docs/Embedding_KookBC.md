@@ -90,8 +90,6 @@ public class KBCClient {
 
 按照这个方法，您应该得到了一个 `KBCClient` 的实例。
 
-在那之后，请用这个实例调用 `KBCClient#setInstance` 方法，使需要 `KBCClient` 实例的方法能正常运行。
-
 ### 启动 KookBC
 
 现在就是启动了。
