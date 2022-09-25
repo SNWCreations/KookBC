@@ -40,12 +40,13 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class CoreImpl implements Core {
-    private final SchedulerImpl scheduler = new SchedulerImpl();
-    private final CommandManagerImpl commandManager = new CommandManagerImpl();
-    private final EventManagerImpl eventManager = new EventManagerImpl();
-    private final UnsafeImpl unsafe = new UnsafeImpl();
+    private SchedulerImpl scheduler;
+    private CommandManagerImpl commandManager;
+    private EventManagerImpl eventManager;
+    private UnsafeImpl unsafe;
     private final Logger logger;
-    private volatile boolean running = true;
+    volatile boolean running = true;
+    private KBCClient client;
     private HttpAPI httpApi;
     private SimplePluginManager pluginManager;
     private User botUser;
@@ -139,21 +140,23 @@ public class CoreImpl implements Core {
 
     @Override
     public void shutdown() {
-        running = false; // make sure the client will shut down if Bot wish the client stop.
-        getLogger().info("Stopping core");
-        getLogger().info("Stopping scheduler");
-        scheduler.shutdown();
+        client.shutdown();
     }
 
     public boolean isRunning() {
         return running;
     }
 
-    public void init(HttpAPIImpl impl, SimplePluginManager pluginManager) {
-        Validate.isTrue(this.httpApi == null && this.pluginManager == null, "This core implementation has already initialized.");
+    void init(KBCClient client, HttpAPIImpl impl) {
+        Validate.isTrue(this.client == null && this.httpApi == null && this.pluginManager == null, "This core implementation has already initialized.");
+        Validate.notNull(client);
         Validate.notNull(impl);
-        Validate.notNull(pluginManager);
+        this.client = client;
         this.httpApi = impl;
-        this.pluginManager = pluginManager;
+        this.pluginManager = new SimplePluginManager(client);
+        this.unsafe = new UnsafeImpl(client);
+        this.scheduler = new SchedulerImpl(client);
+        this.eventManager = new EventManagerImpl(client);
+        this.commandManager = new CommandManagerImpl(client);
     }
 }

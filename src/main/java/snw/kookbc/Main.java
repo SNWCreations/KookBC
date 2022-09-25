@@ -148,7 +148,6 @@ public class Main {
         } else {
             throw new IllegalArgumentException("Unknown network mode!");
         }
-        KBCClient.setInstance(client);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
         Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));

@@ -72,7 +72,7 @@ public class SimpleHttpHandler implements HttpHandler {
             }
             client.getCore().getLogger().debug("Got remote request: {}", res);
             JsonObject object = JsonParser.parseString(
-                    EncryptUtils.decrypt(res)
+                    EncryptUtils.decrypt(client, res)
             ).getAsJsonObject();
             Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
             if (!Objects.equals(frame.getData().get("verify_token").getAsString(), client.getConfig().getString("webhook-verify-token"))) {

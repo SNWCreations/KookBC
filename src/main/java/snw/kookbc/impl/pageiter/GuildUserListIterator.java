@@ -37,11 +37,12 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
     private final Boolean activeTimeFirst;
     private final Boolean joinedTimeFirst;
 
-    public GuildUserListIterator(String guildId) {
-        this(guildId, null, null, null, null, null);
+    public GuildUserListIterator(KBCClient client, String guildId) {
+        this(client, guildId, null, null, null, null, null);
     }
 
-    public GuildUserListIterator(String guildId, String keyword, Integer roleId, Boolean requireMobileVerified, Boolean activeTimeFirst, Boolean joinedTimeFirst) {
+    public GuildUserListIterator(KBCClient client, String guildId, String keyword, Integer roleId, Boolean requireMobileVerified, Boolean activeTimeFirst, Boolean joinedTimeFirst) {
+        super(client);
         this.guildId = guildId;
         this.keyword = keyword;
         this.roleId = roleId;
@@ -76,7 +77,7 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            object.add(KBCClient.getInstance().getStorage().getUser(rawObj.get("id").getAsString()));
+            object.add(client.getStorage().getUser(rawObj.get("id").getAsString()));
         }
     }
 

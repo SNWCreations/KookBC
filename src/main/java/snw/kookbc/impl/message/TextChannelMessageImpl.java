@@ -33,8 +33,8 @@ import java.util.Map;
 public class TextChannelMessageImpl extends MessageImpl implements TextChannelMessage {
     private final TextChannel channel;
 
-    public TextChannelMessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
-        super(id, user, component, timeStamp, quote);
+    public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
+        super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
     }
 
@@ -44,7 +44,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -86,6 +86,6 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
     }
 }

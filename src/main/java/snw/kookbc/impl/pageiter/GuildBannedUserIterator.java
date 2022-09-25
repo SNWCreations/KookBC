@@ -31,7 +31,8 @@ import java.util.Set;
 public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
     private final String guildId;
 
-    public GuildBannedUserIterator(Guild guild) {
+    public GuildBannedUserIterator(KBCClient client, Guild guild) {
+        super(client);
         guildId = guild.getId();
     }
 
@@ -44,7 +45,7 @@ public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
     protected void processElements(JsonArray array) {
         object = new HashSet<>();
         for (JsonElement element : array) {
-            object.add(KBCClient.getInstance().getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
+            object.add(client.getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
         }
     }
 

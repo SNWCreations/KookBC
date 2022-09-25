@@ -28,8 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class EncryptUtils {
-    public static String decrypt(String src) {
-        String key = KBCClient.getInstance().getConfig().getString("webhook-encrypt-key");
+    public static String decrypt(KBCClient client, String src) {
+        String key = client.getConfig().getString("webhook-encrypt-key");
         if (key != null && !key.isEmpty()) { // decryption
             String decodedBase64 = new String(
                     Base64.getDecoder().decode(

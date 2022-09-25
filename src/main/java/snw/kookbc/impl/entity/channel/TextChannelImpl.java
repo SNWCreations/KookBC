@@ -42,8 +42,8 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;
     private String topic;
 
-    public TextChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime, String topic) {
-        super(id, master, guild, permSync, parent, name, rpo, upo, level);
+    public TextChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime, String topic) {
+        super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.chatLimitTime = chatLimitTime;
         this.topic = topic;
     }
@@ -55,7 +55,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 
@@ -70,7 +70,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .put("channel_id", getId())
                 .put("topic", topic)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         setTopic0(topic);
     }
 
@@ -81,7 +81,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     @Override
     public PageIterator<Collection<TextChannelMessage>> getMessages(@Nullable String refer, boolean isPin, String queryMode) {
         Validate.isTrue(Objects.equals(queryMode, "before") || Objects.equals(queryMode, "around") || Objects.equals(queryMode, "after"), "Invalid queryMode");
-        return new TextChannelMessageIterator(this, refer, isPin, queryMode);
+        return new TextChannelMessageIterator(client, this, refer, isPin, queryMode);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
             builder.put("temp_target_id", tempTarget.getId());
         }
         Map<String, Object> body = builder.build();
-        return KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
+        return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
     }
 
     @Override
@@ -112,7 +112,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .put("channel_id", getId())
                 .put("slow_mode", chatLimitTime)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         setChatLimitTime0(chatLimitTime);
     }
 

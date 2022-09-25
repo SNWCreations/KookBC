@@ -18,22 +18,20 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.*;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.jkook.util.Validate;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 // The class for building entities.
 public class EntityBuilder {
@@ -54,6 +52,7 @@ public class EntityBuilder {
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
         return new UserImpl(
+                client,
                 id,
                 bot,
                 userName,
@@ -85,6 +84,7 @@ public class EntityBuilder {
 
         String avatar = object.get("icon").getAsString();
         return new GuildImpl(
+                client,
                 id,
                 name,
                 isPublic,
@@ -135,15 +135,11 @@ public class EntityBuilder {
 
         if (object.get("is_category").getAsBoolean()) {
             return new CategoryImpl(
-                    id,
+                    client, id,
                     master,
                     guild,
-                    isPermSync,
-                    parent,
-                    name,
-                    rpo,
-                    upo,
-                    level
+                    parent, isPermSync,
+                    rpo, upo, level, name
             );
         } else {
             int type = object.get("type").getAsInt();
@@ -151,6 +147,7 @@ public class EntityBuilder {
                 int chatLimitTime = object.get("slow_mode").getAsInt();
                 String topic = object.get("topic").getAsString();
                 return new TextChannelImpl(
+                        client,
                         id,
                         master,
                         guild,
@@ -167,6 +164,7 @@ public class EntityBuilder {
                 boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
                 int size = object.get("limit_amount").getAsInt();
                 return new VoiceChannelImpl(
+                        client,
                         id,
                         master,
                         guild,
@@ -192,7 +190,7 @@ public class EntityBuilder {
         boolean hoist = object.get("hoist").getAsInt() == 1;
         boolean mentionable = object.get("mentionable").getAsInt() == 1;
         int permissions = object.get("permissions").getAsInt();
-        return new RoleImpl(guild, id, color, pos, permissions, mentionable, hoist, name);
+        return new RoleImpl(client, guild, id, color, pos, permissions, mentionable, hoist, name);
     }
 
     public CustomEmoji buildEmoji(JsonObject object) {
@@ -205,13 +203,13 @@ public class EntityBuilder {
             } // you don't have permission to access it!
         }
         String name = object.get("name").getAsString();
-        return new CustomEmojiImpl(id, name, guild);
+        return new CustomEmojiImpl(client, id, name, guild);
     }
 
     public Game buildGame(JsonObject object) {
         int id = object.get("id").getAsInt();
         String name = object.get("name").getAsString();
         String icon = object.get("icon").getAsString();
-        return new GameImpl(id, name, icon);
+        return new GameImpl(client, id, name, icon);
     }
 }

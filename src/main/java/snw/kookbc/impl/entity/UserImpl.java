@@ -35,6 +35,7 @@ import snw.kookbc.util.MapBuilder;
 import java.util.*;
 
 public class UserImpl implements User {
+    private final KBCClient client;
     private final String id;
     private final boolean bot;
     private String name;
@@ -47,7 +48,7 @@ public class UserImpl implements User {
     private String vipAvatarUrl;
     private VoiceChannel joinedChannel; // set by using setJoinedChannel()
 
-    public UserImpl(String id,
+    public UserImpl(KBCClient client, String id,
                     boolean bot,
                     String name,
                     String avatarUrl,
@@ -56,6 +57,7 @@ public class UserImpl implements User {
                     boolean online,
                     boolean ban,
                     boolean vip) {
+        this.client = client;
         this.id = id;
         this.bot = bot;
         this.name = name;
@@ -75,7 +77,7 @@ public class UserImpl implements User {
 
     @Override
     public String getNickName(Guild guild) {
-        return KBCClient.getInstance().getNetworkClient()
+        return client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s",
                         HttpAPIRoute.USER_WHO.toFullURL(),
                         id,
@@ -90,7 +92,7 @@ public class UserImpl implements User {
                 .put("guild_id", guild.getId())
                 .put("nickname", (s != null ? s : ""))
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME.toFullURL(), body);
     }
 
     @Override
@@ -128,7 +130,7 @@ public class UserImpl implements User {
 
     @Override
     public Collection<Integer> getRoles(Guild guild) {
-        JsonArray array = KBCClient.getInstance().getNetworkClient()
+        JsonArray array = client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s",
                         HttpAPIRoute.USER_WHO.toFullURL(),
                         id,
@@ -159,7 +161,7 @@ public class UserImpl implements User {
             builder.put("quote", quote.getId());
         }
         Map<String, Object> body = builder.build();
-        return KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
+        return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
     }
 
     @Override
@@ -170,7 +172,7 @@ public class UserImpl implements User {
     @Override
     public int getIntimacy() {
         if (intimacy == null) {
-            intimacy = KBCClient.getInstance().getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
+            intimacy = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
         }
         return intimacy;
     }
@@ -183,7 +185,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("score", i)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
         this.intimacy = i;
     }
 
@@ -194,7 +196,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", role.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
     }
 
     @Override
@@ -204,7 +206,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", role.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
     }
 
     @Override
@@ -214,7 +216,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", roleId)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.ROLE_GRANT.toFullURL(), body);
     }
 
     @Override
@@ -224,7 +226,7 @@ public class UserImpl implements User {
                 .put("user_id", getId())
                 .put("role_id", roleId)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.ROLE_REVOKE.toFullURL(), body);
     }
 
     @Override

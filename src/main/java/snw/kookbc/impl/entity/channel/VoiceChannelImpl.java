@@ -37,8 +37,8 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 
-    public VoiceChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
-        super(id, master, guild, permSync, parent, name, rpo, upo, level);
+    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
+        super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;
     }
@@ -50,7 +50,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 
@@ -84,7 +84,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("target", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
         getUsers0().addAll(users);
     }
 

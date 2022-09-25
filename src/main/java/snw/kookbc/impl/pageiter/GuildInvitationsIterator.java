@@ -33,9 +33,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> {
+    private final KBCClient client;
     private final String guildId;
 
-    public GuildInvitationsIterator(Guild guild) {
+    public GuildInvitationsIterator(KBCClient client, Guild guild) {
+        super(client);
+        this.client = client;
         this.guildId = guild.getId();
     }
 
@@ -49,12 +52,12 @@ public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> 
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            Guild guild = KBCClient.getInstance().getStorage().getGuild(rawObj.get("guild_id").getAsString());
+            Guild guild = client.getStorage().getGuild(rawObj.get("guild_id").getAsString());
             String urlCode = rawObj.get("url_code").getAsString();
             String url = rawObj.get("url").getAsString();
-            User master = KBCClient.getInstance().getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
+            User master = client.getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
             object.add(new InvitationImpl(
-                    guild, null, urlCode, url, master
+                    client, guild, null, urlCode, url, master
             ));
         }
     }

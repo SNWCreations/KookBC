@@ -36,7 +36,8 @@ import java.util.Set;
 public class ChannelInvitationIterator extends PageIteratorImpl<Set<Invitation>> {
     private final Channel channel;
 
-    public ChannelInvitationIterator(Channel channel) {
+    public ChannelInvitationIterator(KBCClient client, Channel channel) {
+        super(client);
         this.channel = channel;
     }
 
@@ -50,12 +51,12 @@ public class ChannelInvitationIterator extends PageIteratorImpl<Set<Invitation>>
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            Guild guild = KBCClient.getInstance().getStorage().getGuild(rawObj.get("guild_id").getAsString());
+            Guild guild = client.getStorage().getGuild(rawObj.get("guild_id").getAsString());
             String urlCode = rawObj.get("url_code").getAsString();
             String url = rawObj.get("url").getAsString();
-            User master = KBCClient.getInstance().getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
+            User master = client.getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
             object.add(new InvitationImpl(
-                    guild, channel, urlCode, url, master
+                    client, guild, channel, urlCode, url, master
             ));
         }
     }

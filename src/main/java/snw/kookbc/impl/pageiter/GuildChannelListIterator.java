@@ -31,7 +31,8 @@ import java.util.Set;
 public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     private final String guildId;
 
-    public GuildChannelListIterator(String guildId) {
+    public GuildChannelListIterator(KBCClient client, String guildId) {
+        super(client);
         this.guildId = guildId;
     }
 
@@ -44,7 +45,7 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     protected void processElements(JsonArray array) {
         object = new HashSet<>();
         for (JsonElement element : array) {
-            object.add(KBCClient.getInstance().getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
+            object.add(client.getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
         }
     }
 

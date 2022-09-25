@@ -25,6 +25,7 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.util.PageIterator;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -34,8 +35,8 @@ import java.util.Set;
 public class CategoryImpl extends ChannelImpl implements Category {
     private final Collection<Channel> channels = new HashSet<>();
 
-    public CategoryImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
-        super(id, master, guild, permSync, parent, name, rpo, upo, level);
+    public CategoryImpl(KBCClient client, String id, User master, Guild guild, Category parent, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
+        super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
     }
 
     @Override

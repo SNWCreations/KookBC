@@ -39,13 +39,15 @@ import java.util.Collection;
 import java.util.Map;
 
 public abstract class MessageImpl implements Message {
+    protected final KBCClient client;
     private final String id;
     private final User user;
     private final BaseComponent component;
     private final long timeStamp;
     private final Message quote;
 
-    public MessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote) {
+    public MessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
+        this.client = client;
         this.id = id;
         this.user = user;
         this.component = component;
@@ -82,7 +84,7 @@ public abstract class MessageImpl implements Message {
     public Collection<User> getUserByReaction(CustomEmoji customEmoji) {
         JsonArray array;
         try {
-            String rawStr = KBCClient.getInstance().getNetworkClient().getRawContent(
+            String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
                             "%s?msg_id=%s&emoji=%s",
                             ((this instanceof TextChannelMessage) ?
@@ -107,7 +109,7 @@ public abstract class MessageImpl implements Message {
         }
         Collection<User> result = new ArrayList<>();
         for (JsonElement element : array) {
-            result.add(KBCClient.getInstance().getStorage().getUser(element.getAsJsonObject().get("id").getAsString()));
+            result.add(client.getStorage().getUser(element.getAsJsonObject().get("id").getAsString()));
         }
         return result;
     }
@@ -119,7 +121,7 @@ public abstract class MessageImpl implements Message {
                 .put("msg_id", getId())
                 .put("content", content)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(
+        client.getNetworkClient().post(
                 ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
                 body
         );

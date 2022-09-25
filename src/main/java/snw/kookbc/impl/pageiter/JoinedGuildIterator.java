@@ -31,6 +31,10 @@ import java.util.HashSet;
 
 public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
 
+    public JoinedGuildIterator(KBCClient client) {
+        super(client);
+    }
+
     @Override
     protected String getRequestURL() {
         return HttpAPIRoute.GUILD_JOINED_LIST.toFullURL();
@@ -41,7 +45,7 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            object.add(KBCClient.getInstance().getStorage().getGuild(rawObj.get("id").getAsString(), rawObj));
+            object.add(client.getStorage().getGuild(rawObj.get("id").getAsString(), rawObj));
         }
     }
 

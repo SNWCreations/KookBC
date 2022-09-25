@@ -32,7 +32,8 @@ import java.util.Set;
 public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
     private final Guild guild;
 
-    public GuildRoleListIterator(Guild guild) {
+    public GuildRoleListIterator(KBCClient client, Guild guild) {
+        super(client);
         this.guild = guild;
     }
 
@@ -46,7 +47,7 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            object.add(KBCClient.getInstance().getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));
+            object.add(client.getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));
         }
     }
 

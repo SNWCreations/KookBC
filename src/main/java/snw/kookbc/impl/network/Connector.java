@@ -20,8 +20,6 @@ package snw.kookbc.impl.network;
 
 import okhttp3.Request;
 import okhttp3.WebSocket;
-import snw.jkook.Core;
-import snw.jkook.JKook;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 

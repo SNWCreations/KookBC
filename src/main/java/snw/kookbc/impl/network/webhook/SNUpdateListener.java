@@ -18,8 +18,6 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import snw.jkook.JKook;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;

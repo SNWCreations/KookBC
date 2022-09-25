@@ -55,7 +55,7 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public PageIterator<Collection<Guild>> getJoinedGuilds() {
-        return new JoinedGuildIterator();
+        return new JoinedGuildIterator(client);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public PageIterator<Collection<Game>> getGames() {
-        return new GameIterator();
+        return new GameIterator(client);
     }
 
     @Override
