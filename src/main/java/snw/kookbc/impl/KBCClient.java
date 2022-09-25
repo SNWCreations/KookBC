@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
+    private volatile boolean running = false;
     private final Core core;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
@@ -122,7 +123,7 @@ public class KBCClient {
     }
 
     public boolean isRunning() {
-        return ((CoreImpl) getCore()).isRunning();
+        return running;
     }
 
     // Note for hardcore developers:
@@ -257,7 +258,7 @@ public class KBCClient {
             getCore().getLogger().debug("The client has already stopped");
             return;
         }
-        ((CoreImpl) core).running = false; // make sure the client will shut down if Bot wish the client stop.
+        running = false; // make sure the client will shut down if Bot wish the client stop.
 
         getCore().getLogger().info("Stopping client");
         getCore().getPluginManager().clearPlugins();

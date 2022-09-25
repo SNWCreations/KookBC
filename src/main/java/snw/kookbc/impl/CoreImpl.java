@@ -45,7 +45,6 @@ public class CoreImpl implements Core {
     private EventManagerImpl eventManager;
     private UnsafeImpl unsafe;
     private final Logger logger;
-    volatile boolean running = true;
     private KBCClient client;
     private HttpAPI httpApi;
     private SimplePluginManager pluginManager;
@@ -141,10 +140,6 @@ public class CoreImpl implements Core {
     @Override
     public void shutdown() {
         client.shutdown();
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     void init(KBCClient client, HttpAPIImpl impl) {
