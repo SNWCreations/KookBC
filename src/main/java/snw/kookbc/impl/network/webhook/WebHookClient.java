@@ -53,7 +53,7 @@ public class WebHookClient extends KBCClient {
             throw new IllegalArgumentException("Invalid route path!");
         }
         int port = getConfig().getInt("webhook-port");
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext(String.format("/%s", route), new SimpleHttpHandler(this));
         server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new ThreadFactoryBuilder("Webhook Thread #").build()));
         server.start();
