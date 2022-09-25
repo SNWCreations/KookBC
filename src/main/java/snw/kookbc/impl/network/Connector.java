@@ -38,57 +38,7 @@ public class Connector {
 
     public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
-        new Thread(
-                () -> {
-                    while (kbcClient.isRunning()) {
-                        try {
-                            //noinspection BusyWait
-                            Thread.sleep(TimeUnit.SECONDS.toMillis(30L));
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                        if (!connected) continue;
-                        try {
-                            ping();
-                        } catch (Exception e) {
-                            setTimeout(true);
-                        }
-                        if (isTimeout()) {
-                            int times = 0;
-                            do {
-                                try {
-                                    ping();
-                                } catch (Exception e) {
-                                    times++;
-                                    continue;
-                                }
-                                if (isPingOk()) {
-                                    break; // why should I ping again????
-                                }
-                                times++;
-                            } while (times < 2);
-                            if (Thread.currentThread().isInterrupted()) {
-                                return;
-                            }
-                            if (!isPingOk()) {
-                                kbcClient.getCore().getLogger().warn("PING failed. Attempting to reconnect.");
-                                shutdownWs();
-                                String originalWsLink = wsLink;
-                                wsLink = (String.format("%s&resume=1&sn=%d&sessionId=%s", wsLink, kbcClient.getSession().getSN().get(), kbcClient.getSession().getId()));
-                                start0();
-                                if (!connected) {
-                                    start0();
-                                    if (!connected) {
-                                        requestReconnect();
-                                    }
-                                } else {
-                                    wsLink = originalWsLink;
-                                }
-                            }
-                        }
-                    }
-                }, "Ping Thread"
-        ).start();
+        new PingThread().start();
         new Reconnector(kbcClient, reconnectLock).start();
     }
 
@@ -239,5 +189,63 @@ public class Connector {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    protected class PingThread extends Thread {
+
+        public PingThread() {
+            super("Ping Thread");
+        }
+
+        @Override
+        public void run() {
+            while (kbcClient.isRunning()) {
+                try {
+                    //noinspection BusyWait
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(30L));
+                } catch (InterruptedException e) {
+                    return;
+                }
+                if (!connected) continue;
+                try {
+                    ping();
+                } catch (Exception e) {
+                    setTimeout(true);
+                }
+                if (isTimeout()) {
+                    int times = 0;
+                    do {
+                        try {
+                            ping();
+                        } catch (Exception e) {
+                            times++;
+                            continue;
+                        }
+                        if (isPingOk()) {
+                            break; // why should I ping again????
+                        }
+                        times++;
+                    } while (times < 2);
+                    if (Thread.currentThread().isInterrupted()) {
+                        return;
+                    }
+                    if (!isPingOk()) {
+                        kbcClient.getCore().getLogger().warn("PING failed. Attempting to reconnect.");
+                        shutdownWs();
+                        String originalWsLink = wsLink;
+                        wsLink = (String.format("%s&resume=1&sn=%d&sessionId=%s", wsLink, kbcClient.getSession().getSN().get(), kbcClient.getSession().getId()));
+                        start0();
+                        if (!connected) {
+                            start0();
+                            if (!connected) {
+                                requestReconnect();
+                            }
+                        } else {
+                            wsLink = originalWsLink;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
