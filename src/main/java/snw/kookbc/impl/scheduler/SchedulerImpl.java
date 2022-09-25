@@ -115,12 +115,12 @@ public class SchedulerImpl implements Scheduler {
         scheduledTasks.keySet().forEach(this::cancelTask);
         if (!pool.isShutdown()) {
             pool.shutdownNow();
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                pool.awaitTermination(30, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
-            }
+//            try {
+//                //noinspection ResultOfMethodCallIgnored
+//                pool.awaitTermination(30, TimeUnit.SECONDS);
+//            } catch (InterruptedException e) {
+//                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
+//            }
         }
     }
 }
