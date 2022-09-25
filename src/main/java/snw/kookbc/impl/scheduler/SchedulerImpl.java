@@ -22,7 +22,6 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
-import snw.kookbc.impl.KBCClient;
 import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.util.Map;
@@ -30,21 +29,19 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerImpl implements Scheduler {
-    private final KBCClient client;
     private final ScheduledExecutorService pool;
     private final AtomicInteger ids = new AtomicInteger(1);
     private final Map<Integer, TaskImpl> scheduledTasks = new ConcurrentHashMap<>();
 
-    public SchedulerImpl(KBCClient client) {
-        this(client, new ThreadFactoryBuilder("Scheduler Thread #").build());
+    public SchedulerImpl() {
+        this(new ThreadFactoryBuilder("Scheduler Thread #").build());
     }
 
-    public SchedulerImpl(KBCClient client, ThreadFactory factory) {
-        this(client, 2, factory);
+    public SchedulerImpl(ThreadFactory factory) {
+        this(2, factory);
     }
 
-    public SchedulerImpl(KBCClient client, int corePoolSize, ThreadFactory factory) {
-        this.client = client;
+    public SchedulerImpl(int corePoolSize, ThreadFactory factory) {
         pool = Executors.newScheduledThreadPool(corePoolSize, factory);
     }
 
