@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
-    private volatile boolean running = false;
+    private volatile boolean running = true;
     private final Core core;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
