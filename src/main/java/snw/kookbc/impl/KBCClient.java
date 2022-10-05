@@ -143,7 +143,7 @@ public class KBCClient {
     }
 
     protected void loadAllPlugins() {
-        List<Plugin> plugins = new ArrayList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
+        List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
