@@ -60,7 +60,8 @@ public class SimpleHttpHandler implements HttpHandler {
         client.getCore().getLogger().debug("Got request!");
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             client.getCore().getLogger().debug("Got the request that not using POST. Rejected.");
-            exchange.sendResponseHeaders(405, -1);
+            exchange.sendResponseHeaders(400, -1);
+            // According to RFC2616, we cannot return 405 for GET/HEAD requests.
         } else {
             client.getCore().getLogger().debug("Got POST request");
             String res;
