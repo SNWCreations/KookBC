@@ -46,6 +46,7 @@ public enum HttpAPIRoute {
     CHANNEL_CREATE("/v3/channel/create"),
     CHANNEL_UPDATE("/v3/channel/update"),
     CHANNEL_DELETE("/v3/channel/delete"),
+    CHANNEL_USER_LIST("/v3/channel/user-list"),
     MOVE_USER("/v3/channel/move-user"),
 
     // ------ CHANNEL ROLE (NOT "ROLE") -------

@@ -33,13 +33,11 @@ public class InternalEventListener implements Listener {
 
     @EventHandler(internal = true)
     public void onUserJoinChannel(UserJoinVoiceChannelEvent event) {
-        ((VoiceChannelImpl) event.getChannel()).getUsers0().add(event.getUser());
         ((UserImpl) event.getUser()).setJoinedChannel(event.getChannel());
     }
 
     @EventHandler(internal = true)
     public void onUserLeaveChannel(UserLeaveVoiceChannelEvent event) {
-        ((VoiceChannelImpl) event.getChannel()).getUsers0().remove(event.getUser());
         ((UserImpl) event.getUser()).setJoinedChannel(null);
     }
 
