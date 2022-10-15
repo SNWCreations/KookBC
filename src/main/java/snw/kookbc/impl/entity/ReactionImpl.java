@@ -29,12 +29,14 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ReactionImpl implements Reaction {
+    private final KBCClient client;
     private final String messageId;
     private final CustomEmoji emoji;
     private final User sender;
     private final long timeStamp;
 
-    public ReactionImpl(String messageId, CustomEmoji emoji, User sender, long timeStamp) {
+    public ReactionImpl(KBCClient client, String messageId, CustomEmoji emoji, User sender, long timeStamp) {
+        this.client = client;
         this.messageId = messageId;
         this.emoji = emoji;
         this.sender = sender;
@@ -57,7 +59,7 @@ public class ReactionImpl implements Reaction {
                 .put("msg_id", getMessageId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override

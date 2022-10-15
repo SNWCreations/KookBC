@@ -27,11 +27,13 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Map;
 
 public class GameImpl implements Game {
+    private final KBCClient client;
     private final int id;
     private String name;
     private String icon;
 
-    public GameImpl(int id, String name, String icon) {
+    public GameImpl(KBCClient client, int id, String name, String icon) {
+        this.client = client;
         this.id = id;
         this.name = name;
         this.icon = icon;
@@ -53,7 +55,7 @@ public class GameImpl implements Game {
                 .put("id", id)
                 .put("name", name)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
         setName0(name);
     }
 
@@ -72,7 +74,7 @@ public class GameImpl implements Game {
                 .put("id", id)
                 .put("icon", iconUrl)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
         setIcon0(iconUrl);
     }
 
@@ -87,7 +89,7 @@ public class GameImpl implements Game {
                 .put("name", name)
                 .put("icon", icon)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
         setName0(name);
         setIcon0(icon);
     }

@@ -128,7 +128,7 @@ public class ListenerImpl implements Listener {
     }
 
     protected void event0(Frame frame) {
-        Event event = EventFactory.getEvent(frame.getData());
+        Event event = EventFactory.getEvent(client, frame.getData());
         if (!executeCommand(event)) {
             client.getCore().getEventManager().callEvent(event);
         }
@@ -157,7 +157,7 @@ public class ListenerImpl implements Listener {
         JsonObject object = frame.getData();
         int status = object.get("code").getAsInt();
         if (status == 0) {
-            KBCClient.getInstance().getSession().setId(object.get("session_id").getAsString());
+            client.getSession().setId(object.get("session_id").getAsString());
         } else {
             switch (status) {
                 case 40101:

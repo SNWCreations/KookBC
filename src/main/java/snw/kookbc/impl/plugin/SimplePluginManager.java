@@ -36,11 +36,9 @@ import static snw.kookbc.util.Util.getVersionDifference;
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;
     private final Collection<Plugin> plugins = new ArrayList<>();
-    private final PluginClassLoader pluginClassLoader;
 
     public SimplePluginManager(KBCClient client) {
         this.client = client;
-        pluginClassLoader = new SimplePluginClassLoader(client);
     }
 
     @Override
@@ -69,7 +67,7 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
-        Plugin plugin = pluginClassLoader.loadPlugin(file);
+        Plugin plugin = new SimplePluginManager(client).loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {

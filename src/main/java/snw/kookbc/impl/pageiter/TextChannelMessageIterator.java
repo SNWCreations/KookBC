@@ -40,7 +40,8 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
     private final boolean isPin;
     private final String queryMode;
 
-    public TextChannelMessageIterator(TextChannel channel, String refer, boolean isPin, String queryMode) {
+    public TextChannelMessageIterator(KBCClient client, TextChannel channel, String refer, boolean isPin, String queryMode) {
+        super(client);
         this.channel = channel;
         this.refer = refer;
         this.isPin = isPin;
@@ -67,20 +68,21 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     private TextChannelMessage buildMessage(JsonObject object) {
         String id = object.get("id").getAsString();
-        Message message = KBCClient.getInstance().getStorage().getMessage(id);
+        Message message = client.getStorage().getMessage(id);
         if (message != null) {
             return (TextChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
         }
         long timeStamp = object.get("create_at").getAsLong();
         JsonObject authorObj = object.getAsJsonObject("author");
-        User author = KBCClient.getInstance().getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
-        BaseComponent component = KBCClient.getInstance().getMessageBuilder().buildComponent(object);
+        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
+        BaseComponent component = client.getMessageBuilder().buildComponent(object);
         return new TextChannelMessageImpl(
+                client,
                 id,
                 author,
                 component,
                 timeStamp,
-                KBCClient.getInstance().getMessageBuilder().buildQuote(object.getAsJsonObject("quote")),
+                client.getMessageBuilder().buildQuote(object.getAsJsonObject("quote")),
                 channel
         );
     }

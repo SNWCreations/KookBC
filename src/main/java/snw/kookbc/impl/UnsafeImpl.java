@@ -32,25 +32,30 @@ import snw.kookbc.impl.message.TextChannelMessageImpl;
 // But also, this is useful in some situations.
 // (e.g. Some methods that only need the actual instance but they just need the ID)
 public class UnsafeImpl implements Unsafe {
+    private final KBCClient client;
+
+    public UnsafeImpl(KBCClient client) {
+        this.client = client;
+    }
 
     @Override
     public TextChannelMessage getTextChannelMessage(String id) {
-        return new TextChannelMessageImpl(id, null, null, -1, null, null);
+        return new TextChannelMessageImpl(client, id, null, null, -1, null, null);
     }
 
     @Override
     public PrivateMessage getPrivateMessage(String id) {
-        return new PrivateMessageImpl(id, null, null, -1, null);
+        return new PrivateMessageImpl(client, id, null, null, -1, null);
     }
 
     @Override
     public CustomEmoji getEmoji(String id) {
-        return new CustomEmojiImpl(id, null, null);
+        return new CustomEmojiImpl(client, id, null, null);
     }
 
     @Override
     public Game getGame(int id) {
-        return new GameImpl(id, null, null);
+        return new GameImpl(client, id, null, null);
     }
 
 }

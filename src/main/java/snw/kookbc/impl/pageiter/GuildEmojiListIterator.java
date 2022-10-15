@@ -33,7 +33,8 @@ import java.util.Set;
 public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
     private final Guild guild;
 
-    public GuildEmojiListIterator(Guild guild) {
+    public GuildEmojiListIterator(KBCClient client, Guild guild) {
+        super(client);
         this.guild = guild;
     }
 
@@ -47,7 +48,7 @@ public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
         object = new HashSet<>();
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
-            object.add(KBCClient.getInstance().getStorage().getEmoji(rawObj.get("id").getAsString(), rawObj));
+            object.add(client.getStorage().getEmoji(rawObj.get("id").getAsString(), rawObj));
         }
     }
 

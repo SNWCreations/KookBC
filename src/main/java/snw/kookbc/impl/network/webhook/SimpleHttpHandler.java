@@ -60,19 +60,20 @@ public class SimpleHttpHandler implements HttpHandler {
         client.getCore().getLogger().debug("Got request!");
         if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
             client.getCore().getLogger().debug("Got the request that not using POST. Rejected.");
-            exchange.sendResponseHeaders(405, -1);
+            exchange.sendResponseHeaders(400, -1);
+            // According to RFC2616, we cannot return 405 for GET/HEAD requests.
         } else {
             client.getCore().getLogger().debug("Got POST request");
             String res;
             byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
-            if (client.getConfig().getBoolean("compress")) {
+            if (!exchange.getRequestURI().toString().contains("compress=0")) {
                 res = new String(decompressDeflate(bytes));
             } else {
                 res = new String(bytes);
             }
             client.getCore().getLogger().debug("Got remote request: {}", res);
             JsonObject object = JsonParser.parseString(
-                    EncryptUtils.decrypt(res)
+                    EncryptUtils.decrypt(client, res)
             ).getAsJsonObject();
             Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
             if (!Objects.equals(frame.getData().get("verify_token").getAsString(), client.getConfig().getString("webhook-verify-token"))) {

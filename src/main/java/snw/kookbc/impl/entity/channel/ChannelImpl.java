@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class ChannelImpl implements Channel {
+    protected final KBCClient client;
     private final String id;
     private final User master;
     private final Guild guild;
@@ -47,7 +48,8 @@ public abstract class ChannelImpl implements Channel {
     private String name;
     private int level;
 
-    public ChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+        this.client = client;
         this.id = id;
         this.master = master;
         this.guild = guild;
@@ -89,7 +91,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("channel_id", getId())
                 .put("parent_id", (parent == null) ? 0 : parent.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         setParent0(parent);
     }
 
@@ -103,7 +105,7 @@ public abstract class ChannelImpl implements Channel {
 
     @Override
     public void delete() {
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
                 new MapBuilder()
                         .put("channel_id", getId())
                         .build()
@@ -121,7 +123,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("channel_id", getId())
                 .put("level", level)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         this.level = level;
     }
 
@@ -139,7 +141,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("allow", rawAllow)
                 .put("deny", rawDeny)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
     }
 
     @Override
@@ -151,7 +153,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("allow", rawAllow)
                 .put("deny", rawDeny)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
     }
 
     @Override
@@ -161,7 +163,7 @@ public abstract class ChannelImpl implements Channel {
                 .put("type", "role_id")
                 .put("value", String.valueOf(role.getId()))
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
     }
 
     @Override
@@ -171,12 +173,12 @@ public abstract class ChannelImpl implements Channel {
                 .put("type", "user_id")
                 .put("value", String.valueOf(user.getId()))
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
     }
 
     @Override
     public PageIterator<Set<Invitation>> getInvitations() {
-        return new ChannelInvitationIterator(this);
+        return new ChannelInvitationIterator(client, this);
     }
 
     @Override

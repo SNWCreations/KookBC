@@ -30,8 +30,8 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Map;
 
 public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
-    public PrivateMessageImpl(String id, User user, BaseComponent component, long timeStamp, Message quote) {
-        super(id, user, component, timeStamp, quote);
+    public PrivateMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
+        super(client, id, user, component, timeStamp, quote);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -67,6 +67,6 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
     }
 }

@@ -47,7 +47,7 @@ import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
-import snw.kookbc.impl.plugin.SimplePluginManager;
+import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
 
@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
-    private static KBCClient INSTANCE = null;
+    private volatile boolean running = true;
     private final Core core;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
@@ -81,20 +81,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
-        core.init(new HttpAPIImpl(this, token), new SimplePluginManager(this));
-    }
-
-    // Use this to access the most things in KookBC!
-    public static KBCClient getInstance() {
-        return INSTANCE;
-    }
-
-    public static void setInstance(KBCClient client) {
-        Validate.notNull(client, "You can't define the singleton instance of KBCClient using null.");
-        if (KBCClient.INSTANCE != null) {
-            throw new IllegalStateException("Cannot re-define the singleton instance of KBCClient.");
-        }
-        KBCClient.INSTANCE = client;
+        core.init(this, new HttpAPIImpl(this, token));
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -136,7 +123,7 @@ public class KBCClient {
     }
 
     public boolean isRunning() {
-        return ((CoreImpl) getCore()).isRunning();
+        return running;
     }
 
     // Note for hardcore developers:
@@ -152,11 +139,11 @@ public class KBCClient {
         finishStart();
         getCore().getLogger().info("Done! Type \"help\" for help.");
 
-        getCore().getScheduler().runTask(new UpdateChecker()); // check update. Added since 2022/7/24
+        getCore().getScheduler().runTask(new UpdateChecker(this)); // check update. Added since 2022/7/24
     }
 
     protected void loadAllPlugins() {
-        List<Plugin> plugins = new ArrayList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
+        List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -271,15 +258,15 @@ public class KBCClient {
             getCore().getLogger().debug("The client has already stopped");
             return;
         }
+        running = false; // make sure the client will shut down if Bot wish the client stop.
 
         getCore().getLogger().info("Stopping client");
         getCore().getPluginManager().clearPlugins();
 
         shutdownNetwork();
-
-        if (isRunning()) {
-            getCore().shutdown();
-        }
+        getCore().getLogger().info("Stopping core");
+        getCore().getLogger().info("Stopping scheduler");
+        ((SchedulerImpl) getCore().getScheduler()).shutdown();
         getCore().getLogger().info("Client stopped");
     }
 

@@ -28,11 +28,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public class CustomEmojiImpl implements CustomEmoji {
+    private final KBCClient client;
     private final String id;
     private final Guild guild;
     private String name;
 
-    public CustomEmojiImpl(String id, String name, Guild guild) {
+    public CustomEmojiImpl(KBCClient client, String id, String name, Guild guild) {
+        this.client = client;
         this.id = id;
         this.name = name;
         // optional attributes are following:
@@ -55,7 +57,7 @@ public class CustomEmojiImpl implements CustomEmoji {
                 .put("id", getId())
                 .put("name", name)
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_UPDATE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_UPDATE.toFullURL(), body);
         this.name = name;
     }
 
@@ -69,7 +71,7 @@ public class CustomEmojiImpl implements CustomEmoji {
         Map<String, Object> body = new MapBuilder()
                 .put("id", getId())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
     }
 
     @Override

@@ -18,22 +18,28 @@
 
 package snw.kookbc.impl.event;
 
-import snw.jkook.JKook;
 import snw.jkook.event.*;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 public class EventManagerImpl implements EventManager {
+    private final KBCClient client;
+
+    public EventManagerImpl(KBCClient client) {
+        this.client = client;
+    }
+
     @Override
     public void callEvent(Event event) {
         try {
             ((HandlerList) event.getClass().getMethod("getHandlers").invoke(null)).callAll(event);
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            JKook.getLogger().error("Unable to call event.", e);
+            client.getCore().getLogger().error("Unable to call event.", e);
         }
     }
 

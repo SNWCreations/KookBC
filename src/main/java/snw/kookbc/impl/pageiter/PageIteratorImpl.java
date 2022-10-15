@@ -22,18 +22,23 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Range;
 import snw.jkook.util.PageIterator;
-import snw.kookbc.impl.KBCClient;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class PageIteratorImpl<E> implements PageIterator<E> {
+    protected final KBCClient client;
     protected E object;
     protected final AtomicInteger currentPage = new AtomicInteger(1);
     private int pageSizePerRequest = 20;
     private boolean executedOnce = false;
     private boolean next = true;
+
+    protected PageIteratorImpl(KBCClient client) {
+        this.client = client;
+    }
 
     @Override
     public boolean hasNext() {
@@ -45,7 +50,7 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
             executedOnce = true;
         }
         String reqUrl = getRequestURL();
-        JsonObject object = KBCClient.getInstance().getNetworkClient().get(
+        JsonObject object = client.getNetworkClient().get(
                 reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
         );
         JsonObject meta = object.getAsJsonObject("meta");

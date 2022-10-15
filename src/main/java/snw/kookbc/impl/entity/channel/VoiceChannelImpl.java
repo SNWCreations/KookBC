@@ -18,7 +18,10 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -27,18 +30,14 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
-    private final Collection<User> users = new HashSet<>();
     private boolean passwordProtected;
     private int maxSize;
 
-    public VoiceChannelImpl(String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
-        super(id, master, guild, permSync, parent, name, rpo, upo, level);
+    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
+        super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;
     }
@@ -50,7 +49,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
         return object.get("url").getAsString();
     }
 
@@ -70,12 +69,14 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
 
     @Override
     public Collection<User> getUsers() {
+        String rawContent = client.getNetworkClient().getRawContent(HttpAPIRoute.CHANNEL_USER_LIST.toFullURL() + "?channel_id=" + getId());
+        JsonArray array = JsonParser.parseString(rawContent).getAsJsonObject().getAsJsonArray("data");
+        Set<User> users = new HashSet<>();
+        for (JsonElement element : array) {
+            JsonObject obj = element.getAsJsonObject();
+            users.add(client.getStorage().getUser(obj.get("id").getAsString(), obj));
+        }
         return Collections.unmodifiableCollection(users);
-    }
-
-    // if we need to modify the users, use this method instead of getUsers().
-    public Collection<User> getUsers0() {
-        return users;
     }
 
     @Override
@@ -84,8 +85,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("target", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
-        getUsers0().addAll(users);
+        client.getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
     }
 
     public void setPasswordProtected(boolean passwordProtected) {

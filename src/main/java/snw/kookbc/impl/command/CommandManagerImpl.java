@@ -18,11 +18,11 @@
 
 package snw.kookbc.impl.command;
 
-import snw.jkook.JKook;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +31,12 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManagerImpl implements CommandManager {
+    private final KBCClient client;
     private final ArrayList<JKookCommand> commands = new ArrayList<>();
+
+    public CommandManagerImpl(KBCClient client) {
+        this.client = client;
+    }
 
     @Override
     public void registerCommand(JKookCommand command) {
@@ -57,9 +62,9 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        JKook.getLogger().debug("A command execution request has received. Command line: {}", cmdLine);
+        client.getCore().getLogger().debug("A command execution request has received. Command line: {}", cmdLine);
         if (cmdLine.isEmpty()) {
-            JKook.getLogger().debug("Received empty command!");
+            client.getCore().getLogger().debug("Received empty command!");
             return false;
         }
         long startTimeStamp = System.currentTimeMillis(); // debug
@@ -69,7 +74,7 @@ public class CommandManagerImpl implements CommandManager {
         JKookCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
             if (sender instanceof ConsoleCommandSender) {
-                JKook.getLogger().info("Unknown command. Type \"help\" for help.");
+                client.getCore().getLogger().info("Unknown command. Type \"help\" for help.");
             }
             return false;
         }
@@ -80,18 +85,18 @@ public class CommandManagerImpl implements CommandManager {
         // we will use the "/hello a b" as the example
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
         if (!sub.isEmpty()) { // if the command have subcommand, expect true
-            JKook.getLogger().debug("The subcommand does exists. Attempting to search the final command.");
+            client.getCore().getLogger().debug("The subcommand does exists. Attempting to search the final command.");
             while (!args.isEmpty()) {
                 // get the first argument, so we got "a"
                 String subName = args.get(0);
-                JKook.getLogger().debug("Got temp subcommand root name: {}", subName);
+                client.getCore().getLogger().debug("Got temp subcommand root name: {}", subName);
 
                 boolean found = false; // expect true
                 // then get the command
                 for (JKookCommand s : sub) {
                     // if the root name equals to the sub name
                     if (Objects.equals(s.getRootName(), subName)) { // expect true
-                        JKook.getLogger().debug("Got valid subcommand: {}", subName); // debug
+                        client.getCore().getLogger().debug("Got valid subcommand: {}", subName); // debug
                         // then remove the first argument
                         args.remove(0); // "a" was removed, so we have "b" in next round
                         actualCommand = s; // got "a" subcommand
@@ -100,7 +105,7 @@ public class CommandManagerImpl implements CommandManager {
                     }
                 }
                 if (!found) { // if the subcommand is not found
-                    JKook.getLogger().debug("No subcommand matching current command root name. We will attempt to execute the command currently found."); // debug
+                    client.getCore().getLogger().debug("No subcommand matching current command root name. We will attempt to execute the command currently found."); // debug
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
@@ -118,7 +123,7 @@ public class CommandManagerImpl implements CommandManager {
                     consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
-                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
             }
@@ -130,7 +135,7 @@ public class CommandManagerImpl implements CommandManager {
                     userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
-                    JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
             }
@@ -140,7 +145,7 @@ public class CommandManagerImpl implements CommandManager {
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
             if (sender instanceof ConsoleCommandSender) {
-                JKook.getLogger().info("No executor was registered for provided command line.");
+                client.getCore().getLogger().info("No executor was registered for provided command line.");
             } // do nothing! lol
             else {
                 if (sender instanceof User) {
@@ -158,14 +163,14 @@ public class CommandManagerImpl implements CommandManager {
         try {
             executor.onCommand(sender, args.toArray(new String[0]), msg);
         } catch (Throwable e) {
-            JKook.getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+            client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
             // it is easy to understand. NoClassDefError? NoSuchMethodError?
             // It is OutOfMemoryError? nothing matters lol.
             throw new CommandException("Something unexpected happened.", e);
         }
 
-        JKook.getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
 
         return true; // ok, the command is ok, so we can return true.
     }

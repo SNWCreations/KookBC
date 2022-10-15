@@ -30,6 +30,10 @@ import java.util.Collection;
 
 public class GameIterator extends PageIteratorImpl<Collection<Game>> {
 
+    public GameIterator(KBCClient client) {
+        super(client);
+    }
+
     @Override
     protected String getRequestURL() {
         return HttpAPIRoute.GAME_LIST.toFullURL();
@@ -42,12 +46,12 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             int id = rawObj.get("id").getAsInt();
-            Game game = KBCClient.getInstance().getStorage().getGame(id);
+            Game game = client.getStorage().getGame(id);
             if (game != null) {
-                KBCClient.getInstance().getEntityUpdater().updateGame(rawObj, game);
+                client.getEntityUpdater().updateGame(rawObj, game);
             } else {
-                game = KBCClient.getInstance().getEntityBuilder().buildGame(rawObj);
-                KBCClient.getInstance().getStorage().addGame(game);
+                game = client.getEntityBuilder().buildGame(rawObj);
+                client.getStorage().addGame(game);
             }
             object.add(game);
         }

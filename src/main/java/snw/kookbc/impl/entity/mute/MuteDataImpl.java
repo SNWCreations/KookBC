@@ -20,15 +20,14 @@ package snw.kookbc.impl.entity.mute;
 
 import snw.jkook.entity.User;
 import snw.jkook.entity.mute.MuteData;
-import snw.kookbc.impl.KBCClient;
 
 public class MuteDataImpl implements MuteData {
     private final User user;
     private boolean input = false;
     private boolean output = false;
 
-    public MuteDataImpl(String user) {
-        this.user = KBCClient.getInstance().getStorage().getUser(user);
+    public MuteDataImpl(User user) {
+        this.user = user;
     }
 
     @Override

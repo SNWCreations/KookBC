@@ -29,13 +29,15 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Map;
 
 public class InvitationImpl implements Invitation {
+    private final KBCClient client;
     private final Guild guild;
     private final Channel channel;
     private final String urlCode;
     private final String url;
     private final User master;
 
-    public InvitationImpl(Guild guild, Channel channel, String urlCode, String url, User master) {
+    public InvitationImpl(KBCClient client, Guild guild, Channel channel, String urlCode, String url, User master) {
+        this.client = client;
         this.guild = guild;
         this.channel = channel;
         this.urlCode = urlCode;
@@ -68,7 +70,7 @@ public class InvitationImpl implements Invitation {
         Map<String, Object> body = new MapBuilder()
                 .put("url_code", getUrlCode())
                 .build();
-        KBCClient.getInstance().getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(), body);
 
     }
 

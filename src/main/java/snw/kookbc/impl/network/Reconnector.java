@@ -16,37 +16,37 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.pageiter;
+package snw.kookbc.impl.network;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.User;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.HttpAPIRoute;
 
-import java.util.HashSet;
-import java.util.Set;
+public class Reconnector extends Thread {
+    private final KBCClient client;
+    private final Object lock;
 
-public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
-    private final String guildId;
-
-    public GuildBannedUserIterator(KBCClient client, Guild guild) {
-        super(client);
-        guildId = guild.getId();
+    public Reconnector(KBCClient client, Object lock) {
+        super("Reconnect Thread");
+        this.client = client;
+        this.lock = lock;
     }
 
     @Override
-    protected String getRequestURL() {
-        return String.format("%s?guild_id=%s", HttpAPIRoute.BLACKLIST_LIST.toFullURL(), guildId);
-    }
-
-    @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>();
-        for (JsonElement element : array) {
-            object.add(client.getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
+    public void run() {
+        while (client.isRunning()) {
+            synchronized (lock) {
+                while (!client.getConnector().isRequireReconnect()) {
+                    try {
+                        lock.wait();
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+                if (client.getConnector().isConnected()) {
+                    continue;
+                }
+                client.getConnector().restart();
+                client.getConnector().reconnectOk();
+            }
         }
     }
-
 }

@@ -18,11 +18,11 @@
 
 package snw.kookbc.impl.scheduler;
 
-import snw.jkook.JKook;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.util.Map;
@@ -30,19 +30,21 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerImpl implements Scheduler {
+    private final KBCClient client;
     private final ScheduledExecutorService pool;
     private final AtomicInteger ids = new AtomicInteger(1);
     private final Map<Integer, TaskImpl> scheduledTasks = new ConcurrentHashMap<>();
 
-    public SchedulerImpl() {
-        this(new ThreadFactoryBuilder("Scheduler Thread #").build());
+    public SchedulerImpl(KBCClient client) {
+        this(client, new ThreadFactoryBuilder("Scheduler Thread #").build());
     }
 
-    public SchedulerImpl(ThreadFactory factory) {
-        this(2, factory);
+    public SchedulerImpl(KBCClient client, ThreadFactory factory) {
+        this(client, 2, factory);
     }
 
-    public SchedulerImpl(int corePoolSize, ThreadFactory factory) {
+    public SchedulerImpl(KBCClient client, int corePoolSize, ThreadFactory factory) {
+        this.client = client;
         pool = Executors.newScheduledThreadPool(corePoolSize, factory);
     }
 
@@ -103,6 +105,8 @@ public class SchedulerImpl implements Scheduler {
         return () -> {
             try {
                 runnable.run();
+            } catch (Throwable e) {
+                client.getCore().getLogger().warn("Unexpected exception thrown from task #{}", id, e);
             } finally {
                 scheduledTasks.remove(id);
             }
@@ -113,12 +117,12 @@ public class SchedulerImpl implements Scheduler {
         scheduledTasks.keySet().forEach(this::cancelTask);
         if (!pool.isShutdown()) {
             pool.shutdownNow();
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                pool.awaitTermination(30, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                JKook.getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
-            }
+//            try {
+//                //noinspection ResultOfMethodCallIgnored
+//                pool.awaitTermination(30, TimeUnit.SECONDS);
+//            } catch (InterruptedException e) {
+//                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
+//            }
         }
     }
 }
