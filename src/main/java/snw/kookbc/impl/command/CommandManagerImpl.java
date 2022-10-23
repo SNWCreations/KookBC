@@ -146,7 +146,7 @@ public class CommandManagerImpl implements CommandManager {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 try {
-                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, processArguments(commandObject, args));
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -158,7 +158,7 @@ public class CommandManagerImpl implements CommandManager {
             UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
             if (userCommandExecutor != null) {
                 try {
-                    userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
+                    userCommandExecutor.onCommand((User) sender, processArguments(commandObject, args), msg);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -187,7 +187,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         try {
-            executor.onCommand(sender, args.toArray(new String[0]), msg);
+            executor.onCommand(sender, processArguments(commandObject, args), msg);
         } catch (Throwable e) {
             client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
@@ -223,6 +223,28 @@ public class CommandManagerImpl implements CommandManager {
             }
         }
         return null;
+    }
+    
+    protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
+        if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
+            // Do nothing, but the command executor should turn the Object array into String array manually.
+            return rawArgs.toArray();
+        }
+        List<Object> args = new ArrayList<>(rawArgs.size());
+        Iterator<String> iterator = rawArgs.iterator();
+        while (iterator.hasNext()) {
+            String rawArg = iterator.next();
+            for (Class<?> clazz : command.getArguments()) {
+                Function<String, ?> parser = parsers.get(clazz);
+                args.add(parser.apply(rawArg));
+                iterator.remove();
+            }
+        }
+//        if (!rawArgs.isEmpty()) {
+//            throw new IllegalStateException("Too many arguments.");
+//        }
+        args.addAll(rawArgs); // Add all not parsed strings to the list.
+        return args.toArray();
     }
 
     private void registerInternalParsers() {
