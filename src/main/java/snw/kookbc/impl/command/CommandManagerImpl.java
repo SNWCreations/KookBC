@@ -18,24 +18,28 @@
 
 package snw.kookbc.impl.command;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import snw.jkook.command.*;
+import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
     private final ArrayList<JKookCommand> commands = new ArrayList<>();
+    private final Map<Class<?>, Function<String, ?>> parsers = new HashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this.client = client;
+        registerInternalParsers();
     }
 
     @Override
@@ -49,6 +53,23 @@ public class CommandManagerImpl implements CommandManager {
             throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
         }
         commands.add(command);
+    }
+
+    @Override
+    public void registerCommand(Supplier<JKookCommand> command) throws NullPointerException, IllegalArgumentException {
+        JKookCommand result = command.get();
+        if (result == null) {
+            throw new NullPointerException();
+        }
+        registerCommand(result);
+    }
+
+    @Override
+    public <T> void registerArgumentParser(Class<T> clazz, Function<String, T> parser) throws IllegalStateException {
+        if (parsers.get(clazz) != null) {
+            throw new IllegalStateException();
+        }
+        parsers.put(clazz, parser);
     }
 
     // this method should only be used for executing Bot commands. And the executor is Console.
@@ -197,5 +218,74 @@ public class CommandManagerImpl implements CommandManager {
             }
         }
         return null;
+    }
+
+    private void registerInternalParsers() {
+
+        // Standard data types
+        registerArgumentParser(int.class, s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(double.class, s -> {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(boolean.class, s -> {
+            if (s.equals("true")) {
+                return true;
+            } else if (s.equals("false")) {
+                return false;
+            } else {
+                return null;
+            }
+        });
+
+        // Wrapper types (Maybe someone will use these wrapper types?)
+        registerArgumentParser(Integer.class, s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(Double.class, s -> {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(Boolean.class, s -> {
+            if (s.equals("true")) {
+                return true;
+            } else if (s.equals("false")) {
+                return false;
+            } else {
+                return null;
+            }
+        });
+
+        // JKook entities
+        registerArgumentParser(User.class, s -> {
+            if (s.startsWith("(met)") && s.endsWith("(met)")) {
+                return client.getStorage().getUser(s.substring(5, s.length() - 5));
+            } else {
+                return null;
+            }
+        });
+        registerArgumentParser(TextChannel.class, s -> {
+            if (s.startsWith("(chn)") && s.endsWith("(chn)")) {
+                return (TextChannel) client.getStorage().getChannel(s.substring(5, s.length() - 5));
+            } else {
+                return null;
+            }
+        });
     }
 }
