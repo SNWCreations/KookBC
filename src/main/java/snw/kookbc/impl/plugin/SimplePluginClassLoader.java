@@ -20,6 +20,7 @@ package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import snw.jkook.Core;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
@@ -41,14 +42,15 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         T plugin = cls.newInstance();
         Method initMethod = cls.getMethod(
                 "init",
-                File.class, File.class, PluginDescription.class, File.class, Logger.class
+                File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
         );
         initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
                 new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
-                new PluginLogger(description.getName(), LoggerFactory.getLogger(cls))
+                new PluginLogger(description.getName(), LoggerFactory.getLogger(cls)),
+                client.getCore()
         );
         return plugin;
     }
