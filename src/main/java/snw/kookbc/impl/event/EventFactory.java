@@ -27,6 +27,7 @@ import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.event.Event;
 import snw.jkook.event.channel.*;
 import snw.jkook.event.guild.*;
+import snw.jkook.event.item.ItemConsumedEvent;
 import snw.jkook.event.pm.PrivateMessageDeleteEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.event.pm.PrivateMessageUpdateEvent;
@@ -60,6 +61,13 @@ public class EventFactory {
             messageType = null;
         }
         if (messageType != null) {
+            if (messageType == 12) {
+                JsonObject content = object.getAsJsonObject("content");
+                User consumer = client.getStorage().getUser(content.get("user_id").getAsString());
+                User affected = client.getStorage().getUser(content.get("target_id").getAsString());
+                int itemId = object.get("item_id").getAsInt();
+                return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
+            }
             if (Objects.equals(object.get("channel_type").getAsString(), "PERSON")) {
                 PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
                 client.getStorage().addMessage(pm);
