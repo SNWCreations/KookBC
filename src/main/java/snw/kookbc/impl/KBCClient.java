@@ -50,9 +50,12 @@ import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
+import snw.kookbc.util.ThreadFactoryBuilder;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -69,6 +72,7 @@ public class KBCClient {
     private final YamlConfiguration config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
+    protected final ExecutorService eventExecutor;
     protected Connector connector;
 
     public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
@@ -81,6 +85,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
+        this.eventExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder("Event Executor #").build());
         core.init(this, new HttpAPIImpl(this, token));
     }
 
@@ -139,7 +144,7 @@ public class KBCClient {
         finishStart();
         getCore().getLogger().info("Done! Type \"help\" for help.");
 
-        getCore().getScheduler().runTask(new UpdateChecker(this)); // check update. Added since 2022/7/24
+        new UpdateChecker(this).start(); // check update. Added since 2022/7/24
     }
 
     protected void loadAllPlugins() {
@@ -264,6 +269,7 @@ public class KBCClient {
         getCore().getPluginManager().clearPlugins();
 
         shutdownNetwork();
+        eventExecutor.shutdown();
         getCore().getLogger().info("Stopping core");
         getCore().getLogger().info("Stopping scheduler");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
@@ -302,6 +308,10 @@ public class KBCClient {
 
     public Session getSession() {
         return session;
+    }
+
+    public ExecutorService getEventExecutor() {
+        return eventExecutor;
     }
 
     protected void registerInternal() {
