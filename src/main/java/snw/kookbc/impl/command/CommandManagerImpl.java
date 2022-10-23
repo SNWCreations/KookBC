@@ -43,7 +43,7 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     @Override
-    public void registerCommand(JKookCommand command) {
+    public void registerCommand(JKookCommand command) throws IllegalArgumentException {
         if (getCommand(command.getRootName()) != null
                 ||
                 commands.stream().anyMatch(
@@ -51,6 +51,11 @@ public class CommandManagerImpl implements CommandManager {
                 )
         ) {
             throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
+        }
+        for (Class<?> clazz : command.getArguments()) {
+            if (parsers.get(clazz) == null) {
+                throw new IllegalArgumentException("Unsupported argument type: " + clazz);
+            }
         }
         commands.add(command);
     }
