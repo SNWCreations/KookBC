@@ -251,6 +251,7 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
+        registerArgumentParser(String.class, s -> s);
 
         // Wrapper types (Maybe someone will use these wrapper types?)
         registerArgumentParser(Integer.class, s -> {
