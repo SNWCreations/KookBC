@@ -28,10 +28,11 @@ import snw.kookbc.impl.KBCClient;
 
 import static snw.kookbc.util.Util.getVersionDifference;
 
-public final class UpdateChecker implements Runnable {
+public final class UpdateChecker extends Thread {
     private final KBCClient client;
 
     public UpdateChecker(KBCClient client) {
+        super("Update Checker");
         this.client = client;
     }
 

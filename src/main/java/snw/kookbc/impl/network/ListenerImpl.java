@@ -55,7 +55,7 @@ public class ListenerImpl implements Listener {
         }
         switch (frame.getType()) {
             case EVENT:
-                client.getCore().getScheduler().runTask(() -> event(frame));
+                client.getEventExecutor().execute(() -> event(frame));
                 break;
             case HELLO:
                 hello(frame);
