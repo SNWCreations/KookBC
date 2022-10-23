@@ -50,9 +50,12 @@ public class SchedulerImpl implements Scheduler {
 
 
     @Override
-    public void runTask(Runnable runnable) {
+    public Task runTask(Plugin plugin, Runnable runnable) {
         Validate.notNull(runnable);
-        pool.execute(runnable);
+        int id = nextId();
+        TaskImpl task = new TaskImpl(this, pool.submit(runnable), id, plugin);
+        scheduledTasks.put(id, task);
+        return task;
     }
 
     @Override
