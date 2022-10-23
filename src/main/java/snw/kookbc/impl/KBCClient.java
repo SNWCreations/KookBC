@@ -50,7 +50,7 @@ import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
-import snw.kookbc.util.ThreadFactoryBuilder;
+import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.File;
 import java.util.*;
@@ -85,7 +85,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
-        this.eventExecutor = Executors.newCachedThreadPool(new ThreadFactoryBuilder("Event Executor #").build());
+        this.eventExecutor = Executors.newCachedThreadPool(new PrefixThreadFactory("Event Executor #"));
         core.init(this, new HttpAPIImpl(this, token));
     }
 

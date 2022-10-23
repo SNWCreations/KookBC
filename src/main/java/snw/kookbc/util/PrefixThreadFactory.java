@@ -23,21 +23,16 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ThreadFactoryBuilder {
+public class PrefixThreadFactory implements ThreadFactory {
+    private final AtomicInteger count = new AtomicInteger();
     private final String prefix;
 
-    public ThreadFactoryBuilder(String prefix) {
+    public PrefixThreadFactory(String prefix) {
         this.prefix = prefix;
     }
 
-    public ThreadFactory build() {
-        return new ThreadFactory() {
-            private final AtomicInteger count = new AtomicInteger();
-
-            @Override
-            public Thread newThread(@NotNull Runnable r) {
-                return new Thread(r, prefix + count.addAndGet(1));
-            }
-        };
+    @Override
+    public Thread newThread(@NotNull Runnable r) {
+        return new Thread(r, prefix + count.addAndGet(1));
     }
 }

@@ -22,7 +22,7 @@ import com.sun.net.httpserver.HttpServer;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.ThreadFactoryBuilder;
+import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -55,7 +55,7 @@ public class WebHookClient extends KBCClient {
         int port = getConfig().getInt("webhook-port");
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext(String.format("/%s", route), new SimpleHttpHandler(this));
-        server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new ThreadFactoryBuilder("Webhook Thread #").build()));
+        server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new PrefixThreadFactory("Webhook Thread #")));
         server.start();
         getCore().getLogger().info("Server is listening on port {}", port);
         getCore().getLogger().debug("Initializing SN from local file.");
