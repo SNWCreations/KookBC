@@ -1,4 +1,6 @@
 # KookBC (Kook Bot Client)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSNWCreations%2FKookBC.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FSNWCreations%2FKookBC?ref=badge_shield)
+
 
 这是一个 [JKook API](https://github.com/SNWCreations/JKook) 的标准 Java 客户端实现。
 
@@ -80,3 +82,7 @@ JSON 处理库: Google GSON
 ## 版权
 
 此程序使用 AGPLv3 作为许可证。
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FSNWCreations%2FKookBC.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FSNWCreations%2FKookBC?ref=badge_large)
