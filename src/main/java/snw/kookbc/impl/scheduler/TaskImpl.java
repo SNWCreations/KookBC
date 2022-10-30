@@ -50,7 +50,7 @@ public class TaskImpl implements Task {
     }
 
     public void cancel0() {
-        future.cancel(true);
+        future.cancel(false);
     }
 
     @Override
