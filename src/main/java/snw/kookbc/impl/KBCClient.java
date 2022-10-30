@@ -27,7 +27,7 @@ import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
-import snw.jkook.config.file.YamlConfiguration;
+import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
@@ -69,13 +69,13 @@ public class KBCClient {
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
     private final EntityUpdater entityUpdater;
-    private final YamlConfiguration config;
+    private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
     protected final ExecutorService eventExecutor;
     protected Connector connector;
 
-    public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
+    public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
         Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
         this.core = core;
         this.config = config;
@@ -115,7 +115,7 @@ public class KBCClient {
         };
     }
 
-    public YamlConfiguration getConfig() {
+    public ConfigurationSection getConfig() {
         return config;
     }
 
