@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.command;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import snw.jkook.command.*;
-import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
@@ -141,12 +139,30 @@ public class CommandManagerImpl implements CommandManager {
         // maybe some commands don't have subcommand?
         JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
 
+        Object[] arguments;
+        try {
+            arguments = processArguments(commandObject, args);
+        } catch (NoSuchElementException e) {
+            if (sender instanceof ConsoleCommandSender) {
+                client.getCore().getLogger().info("Unable to execute command: No enough arguments.");
+            } else {
+                if (msg != null) {
+                    msg.reply(new MarkdownComponent("执行命令时失败：参数不足。"));
+                } else {
+                    if (sender instanceof User) {
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令时失败：参数不足。"));
+                    }
+                }
+            }
+            return false;
+        }
+
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 try {
-                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, processArguments(commandObject, args));
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -158,7 +174,7 @@ public class CommandManagerImpl implements CommandManager {
             UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
             if (userCommandExecutor != null) {
                 try {
-                    userCommandExecutor.onCommand((User) sender, processArguments(commandObject, args), msg);
+                    userCommandExecutor.onCommand((User) sender, arguments, msg);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -187,7 +203,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         try {
-            executor.onCommand(sender, processArguments(commandObject, args), msg);
+            executor.onCommand(sender, arguments, msg);
         } catch (Throwable e) {
             client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
@@ -229,6 +245,9 @@ public class CommandManagerImpl implements CommandManager {
         if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
             return rawArgs.toArray();
+        }
+        if (rawArgs.size() < command.getArguments().size()) {
+            throw new NoSuchElementException(); // no enough arguments
         }
         List<Object> args = new ArrayList<>(rawArgs.size());
         Iterator<String> iterator = rawArgs.iterator();
