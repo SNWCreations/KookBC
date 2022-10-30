@@ -23,6 +23,8 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
@@ -32,7 +34,7 @@ import java.util.function.Supplier;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    private final ArrayList<JKookCommand> commands = new ArrayList<>();
+    private final Map<JKookCommand, Plugin> commands = new HashMap<>();
     private final Map<Class<?>, Function<String, ?>> parsers = new HashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
@@ -41,10 +43,11 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     @Override
-    public void registerCommand(JKookCommand command) throws IllegalArgumentException {
+    public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
+        Validate.notNull(plugin); // null plugin is unsupported, but internal commands are allowed.
         if (getCommand(command.getRootName()) != null
                 ||
-                commands.stream().anyMatch(
+                commands.keySet().stream().anyMatch(
                         IT -> IT.getAliases().stream().anyMatch(C -> Objects.equals(C, IT.getRootName()))
                 )
         ) {
@@ -55,16 +58,16 @@ public class CommandManagerImpl implements CommandManager {
                 throw new IllegalArgumentException("Unsupported argument type: " + clazz);
             }
         }
-        commands.add(command);
+        commands.put(command, plugin);
     }
 
     @Override
-    public void registerCommand(Supplier<JKookCommand> command) throws NullPointerException, IllegalArgumentException {
+    public void registerCommand(Plugin plugin, Supplier<JKookCommand> command) throws NullPointerException, IllegalArgumentException {
         JKookCommand result = command.get();
         if (result == null) {
             throw new NullPointerException();
         }
-        registerCommand(result);
+        registerCommand(plugin, result);
     }
 
     @Override
@@ -217,13 +220,17 @@ public class CommandManagerImpl implements CommandManager {
         return true; // ok, the command is ok, so we can return true.
     }
 
-    public ArrayList<JKookCommand> getCommands() {
+    public Set<JKookCommand> getCommandSet() {
+        return commands.keySet();
+    }
+
+    public Map<JKookCommand, Plugin> getCommands() {
         return commands;
     }
 
     public JKookCommand getCommand(String rootName) {
         if (rootName.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
+        for (JKookCommand command : commands.keySet()) {
             if (Objects.equals(command.getRootName(), rootName)) {
                 return command;
             }
@@ -233,7 +240,7 @@ public class CommandManagerImpl implements CommandManager {
 
     protected JKookCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
+        for (JKookCommand command : commands.keySet()) {
             if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
                 return command;
             }
