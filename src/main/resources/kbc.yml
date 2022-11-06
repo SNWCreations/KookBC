@@ -52,6 +52,11 @@ ignore-remote-call-invisible-internal-command: true
 #  and execute time will be stored in the ".console_history" file in KookBC folder.
 save-console-history: true
 
+# UNSAFE! Are you sure? Are you really need this?
+# If true, the event handler will ignore the order of events (SN).
+# But we will do our best to ensure that what has been dealt with will not be dealt with again.
+ignore-sn-order: false
+
 # If true, we will add two lines about KookBC's introduction and the repository link to command help.
 # Please don't set it to false, it won't impact the performance!
 allow-help-ad: true

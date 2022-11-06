@@ -145,13 +145,13 @@ public class SimplePluginManager implements PluginManager {
         } catch (Throwable e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to disable the {} plugin.", plugin.getDescription().getName(), e);
         }
-        if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
-            try {
-                ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
-            } catch (IOException e) {
-                client.getCore().getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
-            }
-        }
+//        if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
+//            try {
+//                ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
+//            } catch (IOException e) {
+//                client.getCore().getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
+//            }
+//        }
     }
 
     @Override

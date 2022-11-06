@@ -32,16 +32,16 @@ import snw.jkook.message.component.TextComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.event.EventFactory;
+import snw.kookbc.impl.network.webhook.WebHookClient;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ListenerImpl implements Listener {
     protected final KBCClient client;
-    private final Object lck = new Object();
+    protected final Object lck = new Object();
 
     public ListenerImpl(KBCClient client) {
         this.client = client;
@@ -55,7 +55,7 @@ public class ListenerImpl implements Listener {
         }
         switch (frame.getType()) {
             case EVENT:
-                client.getCore().getScheduler().runTask(() -> event(frame));
+                client.getEventExecutor().execute(() -> event(frame));
                 break;
             case HELLO:
                 hello(frame);
@@ -96,6 +96,7 @@ public class ListenerImpl implements Listener {
             } else if (expected == actual) {
                 event0(frame);
                 sn.getAndAdd(1);
+                saveSN();
                 if (!buffer.isEmpty()) {
                     int continueId = sn.get() + 1;
                     do {
@@ -108,6 +109,7 @@ public class ListenerImpl implements Listener {
                                 // so we will continue after the frame got processed
                                 event0(bufFrame);
                                 sn.set(continueId); // make sure the SN will update!
+                                saveSN();
                                 continueId++;
                                 bufferIterator.remove(); // we won't need this frame, because it has processed
                                 client.getCore().getLogger().debug("Processed message in buffer with SN {}", bufFrame.getSN());
@@ -129,6 +131,23 @@ public class ListenerImpl implements Listener {
         Event event = EventFactory.getEvent(client, frame.getData());
         if (!executeCommand(event)) {
             client.getCore().getEventManager().callEvent(event);
+        }
+    }
+
+    protected void saveSN() {
+        if (client instanceof WebHookClient) {
+            File snfile = new File(client.getPluginsFolder(), "sn");
+            try {
+                if (!snfile.exists()) {
+                    // noinspection ResultOfMethodCallIgnored
+                    snfile.createNewFile();
+                }
+                FileWriter writer = new FileWriter(snfile, false);
+                writer.write(String.valueOf(client.getSession().getSN().get()));
+                writer.close();
+            } catch (IOException e) {
+                client.getCore().getLogger().warn("Unable to write SN to local.", e);
+            }
         }
     }
 

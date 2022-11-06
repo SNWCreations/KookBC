@@ -27,7 +27,7 @@ import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
-import snw.jkook.config.file.YamlConfiguration;
+import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
@@ -50,9 +50,12 @@ import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.UpdateChecker;
+import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -66,12 +69,13 @@ public class KBCClient {
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
     private final EntityUpdater entityUpdater;
-    private final YamlConfiguration config;
+    private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
+    protected final ExecutorService eventExecutor;
     protected Connector connector;
 
-    public KBCClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
+    public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
         Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
         this.core = core;
         this.config = config;
@@ -81,13 +85,14 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
+        this.eventExecutor = Executors.newCachedThreadPool(new PrefixThreadFactory("Event Executor #"));
         core.init(this, new HttpAPIImpl(this, token));
     }
 
     // The result of this method can prevent the users to execute the console command,
     //  so that some possible problems won't be caused.
     // (e.g. Kook user stopped the client)
-    private CommandExecutor wrapConsoleCmd(Consumer<String[]> reallyThingToRun) {
+    private CommandExecutor wrapConsoleCmd(Consumer<Object[]> reallyThingToRun) {
         return (sender, arguments, message) -> {
             if (sender instanceof User) {
                 if (getConfig().getBoolean("ignore-remote-call-invisible-internal-command", true)) {
@@ -110,7 +115,7 @@ public class KBCClient {
         };
     }
 
-    public YamlConfiguration getConfig() {
+    public ConfigurationSection getConfig() {
         return config;
     }
 
@@ -139,7 +144,7 @@ public class KBCClient {
         finishStart();
         getCore().getLogger().info("Done! Type \"help\" for help.");
 
-        getCore().getScheduler().runTask(new UpdateChecker(this)); // check update. Added since 2022/7/24
+        new UpdateChecker(this).start(); // check update. Added since 2022/7/24
     }
 
     protected void loadAllPlugins() {
@@ -264,6 +269,7 @@ public class KBCClient {
         getCore().getPluginManager().clearPlugins();
 
         shutdownNetwork();
+        eventExecutor.shutdown();
         getCore().getLogger().info("Stopping core");
         getCore().getLogger().info("Stopping scheduler");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
@@ -304,113 +310,120 @@ public class KBCClient {
         return session;
     }
 
+    public ExecutorService getEventExecutor() {
+        return eventExecutor;
+    }
+
     protected void registerInternal() {
-        new JKookCommand("stop")
-                .setDescription("停止 KookBC 实例。")
-                .setExecutor(wrapConsoleCmd((args) -> shutdown()))
-                .register();
+        registerCommand(
+                new JKookCommand("stop")
+                        .setDescription("停止 KookBC 实例。")
+                        .setExecutor(wrapConsoleCmd((args) -> shutdown()))
+        );
         registerHelpCommand();
         registerPluginsCommand();
         ((EventManagerImpl) getCore().getEventManager()).registerHandlers0(null, new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
-        new JKookCommand("plugins")
-                .setDescription("获取已安装到此 KookBC 实例的插件列表。")
-                .setExecutor(
-                        (sender, arguments, message) -> {
-                            String result = String.format(
-                                    "已安装并正在运行的插件 (%s): %s",
-                                    getCore().getPluginManager().getPlugins().length,
-                                    String.join(", ",
-                                            Arrays.stream(getCore().getPluginManager().getPlugins())
-                                                    .map(IT -> IT.getDescription().getName())
-                                                    .collect(Collectors.toSet())
-                                    )
-                            );
-                            if (sender instanceof User) {
-                                if (message instanceof TextChannelMessage) {
-                                    ((TextChannelMessage) message).getChannel().sendComponent(
-                                            new MarkdownComponent(result),
-                                            null,
-                                            (User) sender
+        registerCommand(
+                new JKookCommand("plugins")
+                        .setDescription("获取已安装到此 KookBC 实例的插件列表。")
+                        .setExecutor(
+                                (sender, arguments, message) -> {
+                                    String result = String.format(
+                                            "已安装并正在运行的插件 (%s): %s",
+                                            getCore().getPluginManager().getPlugins().length,
+                                            String.join(", ",
+                                                    Arrays.stream(getCore().getPluginManager().getPlugins())
+                                                            .map(IT -> IT.getDescription().getName())
+                                                            .collect(Collectors.toSet())
+                                            )
                                     );
-                                } else {
-                                    ((User) sender).sendPrivateMessage(new MarkdownComponent(result));
+                                    if (sender instanceof User) {
+                                        if (message instanceof TextChannelMessage) {
+                                            ((TextChannelMessage) message).getChannel().sendComponent(
+                                                    new MarkdownComponent(result),
+                                                    null,
+                                                    (User) sender
+                                            );
+                                        } else {
+                                            ((User) sender).sendPrivateMessage(new MarkdownComponent(result));
+                                        }
+                                    } else {
+                                        getCore().getLogger().info(result);
+                                    }
                                 }
-                            } else {
-                                getCore().getLogger().info(result);
-                            }
-                        }
-                )
-                .register();
+                        )
+        );
     }
 
     protected void registerHelpCommand() {
-        new JKookCommand("help")
-                .setDescription("获取此帮助列表。")
-                .setExecutor(
-                        (commandSender, args, message) -> {
-                            JKookCommand[] result;
-                            if (args.length != 0) {
-                                String helpWanted = args[0];
-                                JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager()).getCommand(helpWanted);
-                                if (command == null) {
-                                    if (commandSender instanceof User) {
-                                        if (message instanceof TextChannelMessage) {
-                                            ((TextChannelMessage) message).getChannel().sendComponent(
-                                                    new MarkdownComponent("找不到命令。"),
-                                                    null,
-                                                    (User) commandSender
-                                            );
-                                        } else {
-                                            ((User) commandSender).sendPrivateMessage(
-                                                    new MarkdownComponent("找不到命令。")
-                                            );
+        registerCommand(
+                new JKookCommand("help")
+                        .setDescription("获取此帮助列表。")
+                        .setExecutor(
+                                (commandSender, args, message) -> {
+                                    JKookCommand[] result;
+                                    if (args.length != 0) {
+                                        String helpWanted = (String) args[0];
+                                        JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager()).getCommand(helpWanted);
+                                        if (command == null) {
+                                            if (commandSender instanceof User) {
+                                                if (message instanceof TextChannelMessage) {
+                                                    ((TextChannelMessage) message).getChannel().sendComponent(
+                                                            new MarkdownComponent("找不到命令。"),
+                                                            null,
+                                                            (User) commandSender
+                                                    );
+                                                } else {
+                                                    ((User) commandSender).sendPrivateMessage(
+                                                            new MarkdownComponent("找不到命令。")
+                                                    );
+                                                }
+                                            } else if (commandSender instanceof ConsoleCommandSender) {
+                                                getCore().getLogger().info("Unknown command.");
+                                            }
+                                            return;
                                         }
-                                    } else if (commandSender instanceof ConsoleCommandSender) {
-                                        getCore().getLogger().info("Unknown command.");
-                                    }
-                                    return;
-                                }
-                                result = new JKookCommand[]{command};
-                            } else {
-                                result = ((CommandManagerImpl) getCore().getCommandManager()).getCommands().toArray(new JKookCommand[0]);
-                            }
-
-                            List<String> helpList = getHelp(result);
-
-                            if (commandSender instanceof ConsoleCommandSender) {
-                                for (String s : helpList) {
-                                    getCore().getLogger().info(s);
-                                }
-                            } else if (commandSender instanceof User) {
-                                helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
-
-                                if (getConfig().getBoolean("allow-help-ad", true)) {
-                                    helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v" + getCore().getImplementationVersion() + " 驱动 - JKook API " + getCore().getAPIVersion());
-                                } else {
-                                    helpList.remove(helpList.size() - 1);
-                                }
-
-                                String finalResult = String.join("\n", helpList.toArray(new String[0]));
-                                if (message != null) {
-                                    if (message instanceof TextChannelMessage) {
-                                        ((TextChannelMessage) message).getChannel().sendComponent(
-                                                new MarkdownComponent(finalResult),
-                                                null,
-                                                (User) commandSender
-                                        );
+                                        result = new JKookCommand[]{command};
                                     } else {
-                                        ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
+                                        result = ((CommandManagerImpl) getCore().getCommandManager()).getCommandSet().toArray(new JKookCommand[0]);
                                     }
-                                } else {
-                                    ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
+
+                                    List<String> helpList = getHelp(result);
+
+                                    if (commandSender instanceof ConsoleCommandSender) {
+                                        for (String s : helpList) {
+                                            getCore().getLogger().info(s);
+                                        }
+                                    } else if (commandSender instanceof User) {
+                                        helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
+
+                                        if (getConfig().getBoolean("allow-help-ad", true)) {
+                                            helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v" + getCore().getImplementationVersion() + " 驱动 - JKook API " + getCore().getAPIVersion());
+                                        } else {
+                                            helpList.remove(helpList.size() - 1);
+                                        }
+
+                                        String finalResult = String.join("\n", helpList.toArray(new String[0]));
+                                        if (message != null) {
+                                            if (message instanceof TextChannelMessage) {
+                                                ((TextChannelMessage) message).getChannel().sendComponent(
+                                                        new MarkdownComponent(finalResult),
+                                                        null,
+                                                        (User) commandSender
+                                                );
+                                            } else {
+                                                ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
+                                            }
+                                        } else {
+                                            ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                )
-                .register();
+                        )
+        );
     }
 
     public static List<String> getHelp(JKookCommand[] commands) {
@@ -447,5 +460,9 @@ public class KBCClient {
         }
         result.add("-------------------------");
         return result;
+    }
+
+    private void registerCommand(JKookCommand command) {
+        ((CommandManagerImpl) getCore().getCommandManager()).getCommands().put(command, null);
     }
 }

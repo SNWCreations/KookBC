@@ -23,15 +23,15 @@ import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
 
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 
 public class TaskImpl implements Task {
     private final Scheduler scheduler;
-    private final ScheduledFuture<?> future;
+    private final Future<?> future;
     private final int id;
     private final Plugin plugin;
 
-    public TaskImpl(Scheduler scheduler, ScheduledFuture<?> future, int id, Plugin plugin) {
+    public TaskImpl(Scheduler scheduler, Future<?> future, int id, Plugin plugin) {
         this.scheduler = scheduler;
         this.future = future;
         this.id = id;
@@ -50,7 +50,7 @@ public class TaskImpl implements Task {
     }
 
     public void cancel0() {
-        future.cancel(true);
+        future.cancel(false);
     }
 
     @Override

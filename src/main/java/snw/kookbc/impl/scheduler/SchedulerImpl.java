@@ -23,7 +23,7 @@ import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.ThreadFactoryBuilder;
+import snw.kookbc.util.PrefixThreadFactory;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -36,7 +36,7 @@ public class SchedulerImpl implements Scheduler {
     private final Map<Integer, TaskImpl> scheduledTasks = new ConcurrentHashMap<>();
 
     public SchedulerImpl(KBCClient client) {
-        this(client, new ThreadFactoryBuilder("Scheduler Thread #").build());
+        this(client, new PrefixThreadFactory("Scheduler Thread #"));
     }
 
     public SchedulerImpl(KBCClient client, ThreadFactory factory) {
@@ -50,9 +50,12 @@ public class SchedulerImpl implements Scheduler {
 
 
     @Override
-    public void runTask(Runnable runnable) {
+    public Task runTask(Plugin plugin, Runnable runnable) {
         Validate.notNull(runnable);
-        pool.execute(runnable);
+        int id = nextId();
+        TaskImpl task = new TaskImpl(this, pool.submit(runnable), id, plugin);
+        scheduledTasks.put(id, task);
+        return task;
     }
 
     @Override

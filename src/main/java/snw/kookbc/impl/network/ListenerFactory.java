@@ -16,28 +16,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.util;
+package snw.kookbc.impl.network;
 
-import org.jetbrains.annotations.NotNull;
+import snw.kookbc.impl.KBCClient;
 
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
+public class ListenerFactory {
 
-public class ThreadFactoryBuilder {
-    private final String prefix;
-
-    public ThreadFactoryBuilder(String prefix) {
-        this.prefix = prefix;
+    public static Listener getListener(KBCClient client) {
+        return client.getConfig().getBoolean("ignore-sn-order", false) ? new IgnoreSNListenerImpl(client) : new ListenerImpl(client);
     }
 
-    public ThreadFactory build() {
-        return new ThreadFactory() {
-            private final AtomicInteger count = new AtomicInteger();
-
-            @Override
-            public Thread newThread(@NotNull Runnable r) {
-                return new Thread(r, prefix + count.addAndGet(1));
-            }
-        };
-    }
 }

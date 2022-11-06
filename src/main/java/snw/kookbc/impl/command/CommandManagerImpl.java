@@ -20,35 +20,62 @@ package snw.kookbc.impl.command;
 
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    private final ArrayList<JKookCommand> commands = new ArrayList<>();
+    private final Map<JKookCommand, Plugin> commands = new HashMap<>();
+    private final Map<Class<?>, Function<String, ?>> parsers = new HashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this.client = client;
+        registerInternalParsers();
     }
 
     @Override
-    public void registerCommand(JKookCommand command) {
+    public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
+        Validate.notNull(plugin); // null plugin is unsupported, but internal commands are allowed.
         if (getCommand(command.getRootName()) != null
                 ||
-                commands.stream().anyMatch(
+                commands.keySet().stream().anyMatch(
                         IT -> IT.getAliases().stream().anyMatch(C -> Objects.equals(C, IT.getRootName()))
                 )
         ) {
             throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
         }
-        commands.add(command);
+        for (Class<?> clazz : command.getArguments()) {
+            if (parsers.get(clazz) == null) {
+                throw new IllegalArgumentException("Unsupported argument type: " + clazz);
+            }
+        }
+        commands.put(command, plugin);
+    }
+
+    @Override
+    public void registerCommand(Plugin plugin, Supplier<JKookCommand> command) throws NullPointerException, IllegalArgumentException {
+        JKookCommand result = command.get();
+        if (result == null) {
+            throw new NullPointerException();
+        }
+        registerCommand(plugin, result);
+    }
+
+    @Override
+    public <T> void registerArgumentParser(Class<T> clazz, Function<String, T> parser) throws IllegalStateException {
+        if (parsers.get(clazz) != null) {
+            throw new IllegalStateException();
+        }
+        parsers.put(clazz, parser);
     }
 
     // this method should only be used for executing Bot commands. And the executor is Console.
@@ -115,12 +142,30 @@ public class CommandManagerImpl implements CommandManager {
         // maybe some commands don't have subcommand?
         JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
 
+        Object[] arguments;
+        try {
+            arguments = processArguments(commandObject, args);
+        } catch (NoSuchElementException e) {
+            if (sender instanceof ConsoleCommandSender) {
+                client.getCore().getLogger().info("Unable to execute command: No enough arguments.");
+            } else {
+                if (msg != null) {
+                    msg.reply(new MarkdownComponent("执行命令时失败：参数不足。"));
+                } else {
+                    if (sender instanceof User) {
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令时失败：参数不足。"));
+                    }
+                }
+            }
+            return false;
+        }
+
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 try {
-                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, args.toArray(new String[0]));
+                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -132,7 +177,7 @@ public class CommandManagerImpl implements CommandManager {
             UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
             if (userCommandExecutor != null) {
                 try {
-                    userCommandExecutor.onCommand((User) sender, args.toArray(new String[0]), msg);
+                    userCommandExecutor.onCommand((User) sender, arguments, msg);
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
                     client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
@@ -161,7 +206,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         try {
-            executor.onCommand(sender, args.toArray(new String[0]), msg);
+            executor.onCommand(sender, arguments, msg);
         } catch (Throwable e) {
             client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
@@ -175,13 +220,17 @@ public class CommandManagerImpl implements CommandManager {
         return true; // ok, the command is ok, so we can return true.
     }
 
-    public ArrayList<JKookCommand> getCommands() {
+    public Set<JKookCommand> getCommandSet() {
+        return commands.keySet();
+    }
+
+    public Map<JKookCommand, Plugin> getCommands() {
         return commands;
     }
 
     public JKookCommand getCommand(String rootName) {
         if (rootName.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
+        for (JKookCommand command : commands.keySet()) {
             if (Objects.equals(command.getRootName(), rootName)) {
                 return command;
             }
@@ -191,11 +240,106 @@ public class CommandManagerImpl implements CommandManager {
 
     protected JKookCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
+        for (JKookCommand command : commands.keySet()) {
             if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
                 return command;
             }
         }
         return null;
+    }
+    
+    protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
+        if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
+            // Do nothing, but the command executor should turn the Object array into String array manually.
+            return rawArgs.toArray();
+        }
+        if (rawArgs.size() < command.getArguments().size()) {
+            throw new NoSuchElementException(); // no enough arguments
+        }
+        List<Object> args = new ArrayList<>(rawArgs.size());
+        Iterator<String> iterator = rawArgs.iterator();
+        while (iterator.hasNext()) {
+            String rawArg = iterator.next();
+            for (Class<?> clazz : command.getArguments()) {
+                Function<String, ?> parser = parsers.get(clazz);
+                args.add(parser.apply(rawArg));
+                iterator.remove();
+            }
+        }
+//        if (!rawArgs.isEmpty()) {
+//            throw new IllegalStateException("Too many arguments.");
+//        }
+        args.addAll(rawArgs); // Add all not parsed strings to the list.
+        return args.toArray();
+    }
+
+    private void registerInternalParsers() {
+
+        // Standard data types
+        registerArgumentParser(int.class, s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(double.class, s -> {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(boolean.class, s -> {
+            if (s.equals("true")) {
+                return true;
+            } else if (s.equals("false")) {
+                return false;
+            } else {
+                return null;
+            }
+        });
+        registerArgumentParser(String.class, s -> s);
+
+        // Wrapper types (Maybe someone will use these wrapper types?)
+        registerArgumentParser(Integer.class, s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(Double.class, s -> {
+            try {
+                return Double.parseDouble(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        });
+        registerArgumentParser(Boolean.class, s -> {
+            if (s.equals("true")) {
+                return true;
+            } else if (s.equals("false")) {
+                return false;
+            } else {
+                return null;
+            }
+        });
+
+        // JKook entities
+        registerArgumentParser(User.class, s -> {
+            if (s.startsWith("(met)") && s.endsWith("(met)")) {
+                return client.getStorage().getUser(s.substring(5, s.length() - 5));
+            } else {
+                return null;
+            }
+        });
+        registerArgumentParser(TextChannel.class, s -> {
+            if (s.startsWith("(chn)") && s.endsWith("(chn)")) {
+                return (TextChannel) client.getStorage().getChannel(s.substring(5, s.length() - 5));
+            } else {
+                return null;
+            }
+        });
     }
 }
