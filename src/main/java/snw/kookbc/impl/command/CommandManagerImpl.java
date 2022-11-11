@@ -150,10 +150,10 @@ public class CommandManagerImpl implements CommandManager {
                 client.getCore().getLogger().info("Unable to execute command: No enough arguments.");
             } else {
                 if (msg != null) {
-                    msg.reply(new MarkdownComponent("执行命令时失败：参数不足。"));
+                    msg.reply(new MarkdownComponent("执行命令失败：参数不足。"));
                 } else {
                     if (sender instanceof User) {
-                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令时失败：参数不足。"));
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令失败：参数不足。"));
                     }
                 }
             }
