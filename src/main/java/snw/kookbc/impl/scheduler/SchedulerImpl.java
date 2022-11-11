@@ -61,7 +61,7 @@ public class SchedulerImpl implements Scheduler {
     @Override
     public Task runTaskLater(Plugin plugin, Runnable runnable, long delay) {
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.schedule(wrap(runnable, id), delay, TimeUnit.MILLISECONDS), id, plugin);
+        TaskImpl task = new TaskImpl(this, pool.schedule(wrap(runnable, id, false), delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }
@@ -69,7 +69,7 @@ public class SchedulerImpl implements Scheduler {
     @Override
     public Task runTaskTimer(Plugin plugin, Runnable runnable, long period, long delay) {
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id), period, delay, TimeUnit.MILLISECONDS), id, plugin);
+        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id, true), period, delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }
@@ -104,14 +104,16 @@ public class SchedulerImpl implements Scheduler {
         return id;
     }
 
-    private Runnable wrap(Runnable runnable, int id) {
+    private Runnable wrap(Runnable runnable, int id, boolean isRepeat) {
         return () -> {
             try {
                 runnable.run();
             } catch (Throwable e) {
                 client.getCore().getLogger().warn("Unexpected exception thrown from task #{}", id, e);
             } finally {
-                scheduledTasks.remove(id);
+                if (isRepeat) { // if this task should be repeated until it cancel itself...
+                    scheduledTasks.remove(id);
+                }
             }
         };
     }
