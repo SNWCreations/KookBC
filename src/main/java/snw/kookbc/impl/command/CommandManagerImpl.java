@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static snw.kookbc.util.Util.toEnglishNumOrder;
+
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
     private final Map<JKookCommand, Plugin> commands = new HashMap<>();
@@ -158,6 +160,19 @@ public class CommandManagerImpl implements CommandManager {
                 }
             }
             return false;
+        } catch (UnknownArgumentException e) {
+            if (sender instanceof ConsoleCommandSender) {
+                client.getCore().getLogger().info("Unable to execute command: unable to parse the " + toEnglishNumOrder(e.argIndex) + " argument.");
+            } else {
+                if (msg != null) {
+                    msg.reply(new MarkdownComponent("执行命令时失败：无法解析第 " + e.argIndex + " 个参数。"));
+                } else {
+                    if (sender instanceof User) {
+                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令时失败：无法解析第 " + e.argIndex + " 个参数。"));
+                    }
+                }
+            }
+            return false;
         }
 
         // region support for the syntax sugar that added in JKook 0.24.0
@@ -258,11 +273,17 @@ public class CommandManagerImpl implements CommandManager {
         }
         List<Object> args = new ArrayList<>(rawArgs.size());
         Iterator<String> iterator = rawArgs.iterator();
+        int index = 0;
         while (iterator.hasNext()) {
+            index++;
             String rawArg = iterator.next();
             for (Class<?> clazz : command.getArguments()) {
                 Function<String, ?> parser = parsers.get(clazz);
-                args.add(parser.apply(rawArg));
+                Object result = parser.apply(rawArg);
+                if (result == null) {
+                    throw new UnknownArgumentException(index); // We can't understand this argument!
+                }
+                args.add(result);
                 iterator.remove();
             }
         }
@@ -341,5 +362,13 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
+    }
+}
+
+final class UnknownArgumentException extends RuntimeException {
+    final int argIndex;
+
+    UnknownArgumentException(int argIndex) {
+        this.argIndex = argIndex;
     }
 }
