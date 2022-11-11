@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SchedulerImpl implements Scheduler {
     private final KBCClient client;
-    private final ScheduledExecutorService pool;
+    public final ScheduledExecutorService pool;
     private final AtomicInteger ids = new AtomicInteger(1);
     private final Map<Integer, TaskImpl> scheduledTasks = new ConcurrentHashMap<>();
 
@@ -121,13 +121,13 @@ public class SchedulerImpl implements Scheduler {
     public void shutdown() {
         scheduledTasks.keySet().forEach(this::cancelTask);
         if (!pool.isShutdown()) {
-            pool.shutdownNow();
-//            try {
-//                //noinspection ResultOfMethodCallIgnored
-//                pool.awaitTermination(30, TimeUnit.SECONDS);
-//            } catch (InterruptedException e) {
-//                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
-//            }
+            pool.shutdown();
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                pool.awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
+            }
         }
     }
 }

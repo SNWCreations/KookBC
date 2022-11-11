@@ -271,7 +271,7 @@ public class KBCClient {
         shutdownNetwork();
         eventExecutor.shutdown();
         getCore().getLogger().info("Stopping core");
-        getCore().getLogger().info("Stopping scheduler");
+        getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
         getCore().getLogger().info("Client stopped");
     }
