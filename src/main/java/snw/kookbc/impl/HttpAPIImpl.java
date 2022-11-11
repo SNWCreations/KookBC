@@ -84,11 +84,12 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public String uploadFile(File file) {
-        RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+        RequestBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
                 .addFormDataPart("file", file.getName(), RequestBody.create(file, MediaType.parse("application/octet-stream")))
                 .build();
         Request request = new Request.Builder()
-                .url("https://www.kookapp.cn/api/v3/asset/create")
+                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(body)
                 .addHeader("Authorization", String.format("Bot %s", token))
                 .build();
