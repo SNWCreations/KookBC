@@ -138,6 +138,7 @@ public class SimplePluginManager implements PluginManager {
     @Override
     public void disablePlugin(Plugin plugin) {
         if (!isPluginEnabled(plugin)) return;
+        client.getCore().getScheduler().cancelTasks(plugin);
         PluginDescription description = plugin.getDescription();
         plugin.getLogger().info("Disabling {} version {}", description.getName(), description.getVersion());
         try {
