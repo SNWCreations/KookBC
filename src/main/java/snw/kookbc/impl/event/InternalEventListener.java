@@ -22,10 +22,7 @@ import snw.jkook.event.EventHandler;
 import snw.jkook.event.Listener;
 import snw.jkook.event.user.UserJoinVoiceChannelEvent;
 import snw.jkook.event.user.UserLeaveVoiceChannelEvent;
-import snw.jkook.event.user.UserOfflineEvent;
-import snw.jkook.event.user.UserOnlineEvent;
 import snw.kookbc.impl.entity.UserImpl;
-import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 // The internal event listener for processing things related to events before the Bot-defined listeners got call.
 // This class won't work in other JKook implementations.
@@ -39,16 +36,6 @@ public class InternalEventListener implements Listener {
     @EventHandler(internal = true)
     public void onUserLeaveChannel(UserLeaveVoiceChannelEvent event) {
         ((UserImpl) event.getUser()).setJoinedChannel(null);
-    }
-
-    @EventHandler(internal = true)
-    public void onUserOnline(UserOnlineEvent event) {
-        ((UserImpl) event.getUser()).setOnline(true);
-    }
-
-    @EventHandler(internal = true)
-    public void onUserOffline(UserOfflineEvent event) {
-        ((UserImpl) event.getUser()).setOnline(false);
     }
 
 }
