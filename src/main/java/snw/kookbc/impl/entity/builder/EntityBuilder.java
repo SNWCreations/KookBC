@@ -48,6 +48,7 @@ public class EntityBuilder {
         String avatar = object.get("avatar").getAsString();
         String vipAvatar = object.get("vip_avatar").getAsString();
         int identify = object.get("identify_num").getAsInt();
+        boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
         return new UserImpl(
@@ -58,6 +59,7 @@ public class EntityBuilder {
                 avatar,
                 vipAvatar,
                 identify,
+                online,
                 ban,
                 vip
         );

@@ -41,6 +41,7 @@ public class UserImpl implements User {
     private String name;
     private int identify;
     private Integer intimacy = null;
+    private boolean online;
     private boolean ban;
     private boolean vip;
     private String avatarUrl;
@@ -53,6 +54,7 @@ public class UserImpl implements User {
                     String avatarUrl,
                     String vipAvatarUrl,
                     int identify,
+                    boolean online,
                     boolean ban,
                     boolean vip) {
         this.client = client;
@@ -62,6 +64,7 @@ public class UserImpl implements User {
         this.avatarUrl = avatarUrl;
         this.vipAvatarUrl = vipAvatarUrl;
         this.identify = identify;
+        this.online = online;
         this.ban = ban;
         this.vip = vip;
     }
@@ -113,7 +116,11 @@ public class UserImpl implements User {
 
     @Override
     public boolean isOnline() {
-        return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)).get("online").getAsBoolean();
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
     }
 
     @Override
