@@ -49,6 +49,7 @@ public class EntityUpdater {
         String avatar = object.get("avatar").getAsString();
         String vipAvatar = object.get("vip_avatar").getAsString();
         int identify = object.get("identify_num").getAsInt();
+        boolean online = object.get("online").getAsBoolean();
         boolean ban = object.get("status").getAsInt() == 10;
         boolean vip = object.get("is_vip").getAsBoolean();
         UserImpl usr = (UserImpl) user;
@@ -56,6 +57,7 @@ public class EntityUpdater {
         usr.setAvatarUrl(avatar);
         usr.setVipAvatarUrl(vipAvatar);
         usr.setIdentify(identify);
+        usr.setOnline(online);
         usr.setBan(ban);
         usr.setVip(vip);
     }
