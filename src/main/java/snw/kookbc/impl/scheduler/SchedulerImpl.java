@@ -108,7 +108,7 @@ public class SchedulerImpl implements Scheduler {
             } catch (Throwable e) {
                 client.getCore().getLogger().warn("Unexpected exception thrown from task #{}", id, e);
             } finally {
-                if (isRepeat) { // if this task should be repeated until it cancel itself...
+                if (!isRepeat) { // if this task should be repeated until it cancel itself...
                     scheduledTasks.remove(id);
                 }
             }
