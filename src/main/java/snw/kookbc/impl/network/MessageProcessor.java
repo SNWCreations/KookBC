@@ -34,10 +34,12 @@ import java.net.ProtocolException;
 import java.util.zip.Inflater;
 
 public class MessageProcessor extends WebSocketListener {
+    private final KBCClient client;
     private final Connector connector;
     private final Listener listener;
 
     public MessageProcessor(KBCClient client) {
+        this.client = client;
         this.connector = client.getConnector();
         listener = ListenerFactory.getListener(client);
     }
@@ -90,9 +92,7 @@ public class MessageProcessor extends WebSocketListener {
         connector.requestReconnect();
     }
 
-    public static byte[] decompressDeflate(byte[] data) {
-        byte[] output = null;
-
+    private byte[] decompressDeflate(byte[] data) {
         Inflater decompressor = new Inflater();
         decompressor.reset();
         decompressor.setInput(data);
@@ -103,13 +103,12 @@ public class MessageProcessor extends WebSocketListener {
                 int i = decompressor.inflate(buf);
                 o.write(buf, 0, i);
             }
-            output = o.toByteArray();
+            return o.toByteArray();
         } catch (Exception e) {
-            JKook.getLogger().error("Unexpected exception happened while we attempting to decompress the ZLIB/DEFLATE compressed data.", e);
+            throw new RuntimeException("Unexpected exception happened while we attempting to decompress the ZLIB/DEFLATE compressed data.", e);
+        } finally {
+            decompressor.end();
         }
-
-        decompressor.end();
-        return output;
     }
 
 }
