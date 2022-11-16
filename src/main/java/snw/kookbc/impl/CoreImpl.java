@@ -139,7 +139,9 @@ public class CoreImpl implements Core {
 
     @Override
     public void shutdown() {
-        client.shutdown();
+        // If we don't use another thread for calling the real shutdown method,
+        //  the client won't be terminated if you called this in a scheduler task.
+        new Thread(client::shutdown, "Shutdown Thread").start();
     }
 
     void init(KBCClient client, HttpAPIImpl impl) {
