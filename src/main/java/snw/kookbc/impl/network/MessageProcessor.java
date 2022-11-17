@@ -64,7 +64,13 @@ public class MessageProcessor extends WebSocketListener {
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
         super.onMessage(webSocket, bytes);
-        String res = new String(decompressDeflate(bytes.toByteArray()));
+        String res;
+        try {
+            res = new String(decompressDeflate(bytes.toByteArray()));
+        } catch (RuntimeException e) {
+            client.getCore().getLogger().error("Unable to decompress data", e);
+            return;
+        }
         connector.getParent().getCore().getLogger().debug("MessageProcessor#onMessage(ByteString) got call. Response: {}", res);
         JsonObject object = JsonParser.parseString(res).getAsJsonObject();
         Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
@@ -92,7 +98,7 @@ public class MessageProcessor extends WebSocketListener {
         connector.requestReconnect();
     }
 
-    private byte[] decompressDeflate(byte[] data) {
+    public static byte[] decompressDeflate(byte[] data) {
         Inflater decompressor = new Inflater();
         decompressor.reset();
         decompressor.setInput(data);
