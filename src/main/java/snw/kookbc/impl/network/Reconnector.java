@@ -41,6 +41,9 @@ public class Reconnector extends Thread {
                         return;
                     }
                 }
+                if (!client.isRunning()) {
+                    return;
+                }
                 if (client.getConnector().isConnected()) {
                     continue;
                 }

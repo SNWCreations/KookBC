@@ -206,6 +206,9 @@ public class Connector {
                 } catch (InterruptedException e) {
                     return;
                 }
+                if (!kbcClient.isRunning()) {
+                    return;
+                }
                 if (!connected) continue;
                 try {
                     ping();
