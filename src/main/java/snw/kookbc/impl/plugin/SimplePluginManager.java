@@ -67,7 +67,7 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
-        Plugin plugin = new SimplePluginManager(client).loadPlugin(file);
+        Plugin plugin = new SimplePluginClassLoader(client).loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
