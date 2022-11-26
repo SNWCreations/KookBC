@@ -18,6 +18,9 @@
 
 package snw.kookbc.util;
 
+import snw.jkook.plugin.Plugin;
+import snw.jkook.util.Validate;
+
 public class Util {
 
     // -1 = Outdated
@@ -61,4 +64,12 @@ public class Util {
         return 1;
     }
 
+    public static void pluginNotNull(Plugin plugin) {
+        Validate.notNull(plugin, "The provided plugin is null");
+    }
+
+    public static void ensurePluginEnabled(Plugin plugin) {
+        pluginNotNull(plugin);
+        Validate.isTrue(plugin.isEnabled(), "The provided plugin is disabled");
+    }
 }

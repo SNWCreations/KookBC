@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static snw.kookbc.util.Util.ensurePluginEnabled;
+import static snw.kookbc.util.Util.pluginNotNull;
+
 public class SchedulerImpl implements Scheduler {
     private final KBCClient client;
     public final ScheduledExecutorService pool;
@@ -57,6 +60,7 @@ public class SchedulerImpl implements Scheduler {
 
     @Override
     public Task runTaskLater(Plugin plugin, Runnable runnable, long delay) {
+        ensurePluginEnabled(plugin);
         int id = nextId();
         TaskImpl task = new TaskImpl(this, pool.schedule(wrap(runnable, id, false), delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
@@ -65,6 +69,7 @@ public class SchedulerImpl implements Scheduler {
 
     @Override
     public Task runTaskTimer(Plugin plugin, Runnable runnable, long period, long delay) {
+        ensurePluginEnabled(plugin);
         int id = nextId();
         TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id, true), period, delay, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
@@ -85,6 +90,7 @@ public class SchedulerImpl implements Scheduler {
 
     @Override
     public void cancelTasks(Plugin plugin) {
+        pluginNotNull(plugin);
         for (TaskImpl task : scheduledTasks.values()) {
             if (task.getPlugin() == plugin) {
                 cancelTask(task.getTaskId());
@@ -102,6 +108,7 @@ public class SchedulerImpl implements Scheduler {
     }
 
     private Runnable wrap(Runnable runnable, int id, boolean isRepeat) {
+        Validate.notNull(runnable, "The runnable is null");
         return () -> {
             try {
                 runnable.run();
