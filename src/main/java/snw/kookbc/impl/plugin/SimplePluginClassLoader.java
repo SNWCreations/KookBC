@@ -39,7 +39,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
         File dataFolder = new File(client.getPluginsFolder(), description.getName());
-        T plugin = cls.newInstance();
+        T plugin = cls.getDeclaredConstructor().newInstance();
         Method initMethod = cls.getMethod(
                 "init",
                 File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
