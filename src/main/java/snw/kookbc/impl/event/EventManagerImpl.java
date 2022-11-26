@@ -27,6 +27,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import static snw.kookbc.util.Util.ensurePluginEnabled;
+
 public class EventManagerImpl implements EventManager {
     private final KBCClient client;
 
@@ -45,7 +47,7 @@ public class EventManagerImpl implements EventManager {
 
     @Override
     public void registerHandlers(Plugin plugin, Listener listener) {
-        Validate.notNull(plugin, "Require a plugin to register the listener.");
+        ensurePluginEnabled(plugin);
         registerHandlers0(plugin, listener);
     }
 
