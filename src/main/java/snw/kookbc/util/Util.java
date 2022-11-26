@@ -20,9 +20,9 @@ package snw.kookbc.util;
 
 public class Util {
 
-    // -1 = 过期
-    // 0 = 最新版
-    // 1 = 未来版
+    // -1 = Outdated
+    // 0 = Latest
+    // 1 = From Future (means this version is not on Github. Development version?)
     public static int getVersionDifference(String current, String versionToCompare) {
         if (current.equals(versionToCompare))
             return 0;
@@ -46,7 +46,7 @@ public class Util {
         if (curMin > relMin)
             return 1;
 
-        // 以下比较是否是 SNAPSHOT 版，虽然我平常不发 SNAPSHOT 。。。但总要考虑
+        // Detect snapshot (if exists)
         int curPatchN = Integer.parseInt(curPatch.split("-")[0]);
         int relPatchN = Integer.parseInt(relPatch.split("-")[0]);
         if (curPatchN < relPatchN)
