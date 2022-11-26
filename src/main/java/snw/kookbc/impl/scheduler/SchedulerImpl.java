@@ -124,7 +124,7 @@ public class SchedulerImpl implements Scheduler {
             pool.shutdown();
             try {
                 //noinspection ResultOfMethodCallIgnored
-                pool.awaitTermination(30, TimeUnit.SECONDS);
+                pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
             }
