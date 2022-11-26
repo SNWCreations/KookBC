@@ -33,6 +33,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static snw.kookbc.util.Util.toEnglishNumOrder;
+import static snw.kookbc.util.Util.ensurePluginEnabled;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
@@ -46,7 +47,7 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
-        Validate.notNull(plugin); // null plugin is unsupported, but internal commands are allowed.
+        ensurePluginEnabled(plugin); // null plugin is unsupported, but internal commands are allowed.
         Validate.isFalse(command.getOptionalArguments().containsKey(Object.class), "Optional arguments cannot contain java.lang.Object class (excluding its subclasses)");
         if (getCommand(command.getRootName()) != null
                 ||
