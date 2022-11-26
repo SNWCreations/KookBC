@@ -18,11 +18,6 @@
 
 package snw.kookbc.impl;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
@@ -34,7 +29,6 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
-import snw.jkook.scheduler.JKookRunnable;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
@@ -49,6 +43,7 @@ import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
+import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.PrefixThreadFactory;
 
@@ -56,7 +51,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -201,47 +195,11 @@ public class KBCClient {
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
         if (rawBotMarketUUID != null) {
             if (!rawBotMarketUUID.isEmpty()) {
-                UUID bmUUID = null;
                 try {
-                    bmUUID = UUID.fromString(rawBotMarketUUID);
+                    UUID.fromString(rawBotMarketUUID);
+                    new BotMarketPingThread(this, rawBotMarketUUID).start();
                 } catch (IllegalArgumentException e) {
                     getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
-                }
-                if (bmUUID != null) {
-                    new JKookRunnable() {
-                        private final Request request =
-                                new Request.Builder()
-                                        .get()
-                                        .url("https://bot.gekj.net/api/v1/online.bot")
-                                        .header("uuid", rawBotMarketUUID)
-                                        .build();
-                        private final OkHttpClient client = new OkHttpClient.Builder()
-                                .connectTimeout(60, TimeUnit.SECONDS)
-                                .callTimeout(60, TimeUnit.SECONDS)
-                                .readTimeout(60, TimeUnit.SECONDS)
-                                .build();
-
-                        @Override
-                        public void run() {
-                            getCore().getLogger().debug("PING BotMarket...");
-                            try (Response response = client.newCall(request).execute()) {
-                                if (response.body() != null) {
-                                    String resStr = response.body().string();
-                                    JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
-                                    int status = object.get("code").getAsInt();
-                                    if (status != 0) {
-                                        throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status, object.get("message").getAsString()));
-                                    }
-                                } else {
-                                    throw new RuntimeException("No response body when we attempting to PING BotMarket.");
-                                }
-                            } catch (Exception e) {
-                                getCore().getLogger().error("Unable to PING BotMarket.", e);
-                                return;
-                            }
-                            getCore().getLogger().debug("PING BotMarket success");
-                        }
-                    }.runTaskTimer(null, 0, TimeUnit.MINUTES.toMillis(5));
                 }
             }
         }
