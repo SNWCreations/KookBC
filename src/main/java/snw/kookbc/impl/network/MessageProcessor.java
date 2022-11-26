@@ -78,15 +78,6 @@ public class MessageProcessor extends WebSocketListener {
     }
 
     @Override
-    public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-        super.onClosed(webSocket, code, reason);
-        if (code == 1002) {
-            connector.getParent().getCore().getLogger().error("Unexpected close response from WebSocket server. We will restart network.");
-            connector.requestReconnect();
-        }
-    }
-
-    @Override
     public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
         super.onFailure(webSocket, t, response);
         if (!(t instanceof ProtocolException)) {
