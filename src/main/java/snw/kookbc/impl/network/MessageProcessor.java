@@ -26,7 +26,6 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import snw.jkook.JKook;
 import snw.kookbc.impl.KBCClient;
 
 import java.io.ByteArrayOutputStream;

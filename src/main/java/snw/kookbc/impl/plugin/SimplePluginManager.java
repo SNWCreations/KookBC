@@ -25,7 +25,6 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -67,6 +66,12 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
+        // We won't close the ClassLoader, because Plugin#getResource need the ClassLoader to keep open.
+        // Otherwise, Plugin#getResource will not work correctly.
+        // If you want to reload an plugin, or fully uninstall an plugin, close the ClassLoader manually.
+        // An example is following:
+        // pluginManager.disablePlugin(plugin);
+        // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
         Plugin plugin = new SimplePluginClassLoader(client).loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
