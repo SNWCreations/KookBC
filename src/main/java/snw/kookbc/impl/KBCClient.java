@@ -76,7 +76,9 @@ public class KBCClient {
     protected Connector connector;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
+        if (pluginsFolder != null) {
+            Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
+        }
         this.core = core;
         this.config = config;
         this.pluginsFolder = pluginsFolder;
@@ -148,6 +150,9 @@ public class KBCClient {
     }
 
     protected void loadAllPlugins() {
+        if (pluginsFolder == null) {
+            return; // If you just want to use JKook API?
+        }
         List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
