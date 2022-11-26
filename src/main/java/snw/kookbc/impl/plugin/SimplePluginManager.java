@@ -128,15 +128,15 @@ public class SimplePluginManager implements PluginManager {
         if (isPluginEnabled(plugin)) return;
         PluginDescription description = plugin.getDescription();
         plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
+        if (!plugin.getDataFolder().exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            plugin.getDataFolder().mkdir();
+        }
         try {
             plugin.setEnabled(true);
         } catch (Throwable e) {
             client.getCore().getLogger().error("Exception occurred while we attempting to enable the {} plugin.", plugin.getDescription().getName(), e);
             disablePlugin(plugin); // make sure the plugin is still disabled
-        }
-        if (!plugin.getDataFolder().exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            plugin.getDataFolder().mkdir();
         }
     }
 
