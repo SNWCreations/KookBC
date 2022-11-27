@@ -252,6 +252,6 @@ public class EventFactory {
                     return new UserLeaveGuildEvent(msgTimeStamp, client.getCore().getUser(), client.getStorage().getGuild(body.get("guild_id").getAsString()));
             }
         }
-        throw new RuntimeException("Unexpected event type");
+        return null; // don't worry, the caller will handle null.
     }
 }
