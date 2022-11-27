@@ -24,11 +24,11 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.plugin.Plugin;
-import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -48,7 +48,6 @@ public class CommandManagerImpl implements CommandManager {
     @Override
     public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
         ensurePluginEnabled(plugin); // null plugin is unsupported, but internal commands are allowed.
-        Validate.isFalse(command.getOptionalArguments().containsKey(Object.class), "Optional arguments cannot contain java.lang.Object class (excluding its subclasses)");
         if (getCommand(command.getRootName()) != null
                 ||
                 commands.keySet().stream().anyMatch(
@@ -273,20 +272,28 @@ public class CommandManagerImpl implements CommandManager {
         if (rawArgs.size() < command.getArguments().size()) {
             throw new NoSuchElementException(); // no enough arguments
         }
+        AtomicInteger index = new AtomicInteger();
         List<Object> args = new ArrayList<>(rawArgs.size());
-        Iterator<String> iterator = rawArgs.iterator();
-        int index = 0;
-        while (iterator.hasNext()) {
-            index++;
-            String rawArg = iterator.next();
-            for (Class<?> clazz : command.getArguments()) {
-                Function<String, ?> parser = parsers.get(clazz);
-                Object result = parser.apply(rawArg);
-                if (result == null) {
-                    throw new UnknownArgumentException(index); // We can't understand this argument!
+        // first stage - non-optional arguments
+        command.getArguments().forEach(i -> processSingleArgument(i, rawArgs.remove(0), args, index.addAndGet(1)));
+        
+        // second stage - optional arguments
+        if (!rawArgs.isEmpty() && command.getOptionalArguments().size() > 0) { // still not empty? yes! optional arguments!
+            int optIndex = 0;
+            for (Class<?> clazz : command.getOptionalArguments().getKeys()) {
+                if (rawArgs.isEmpty()) break; // no more arguments to parse
+                processSingleArgument(clazz, rawArgs.remove(0), args, index.addAndGet(1));
+                optIndex++;
+            }
+            optIndex++; // turn the index into count
+            if (command.getOptionalArguments().size() - optIndex > 0) {
+                // still some default values available?
+                List<Object> defValuesCopy = new ArrayList<>(command.getOptionalArguments().getValues());
+                int a = 0;
+                for (Iterator<Object> iter = defValuesCopy.iterator(); iter.hasNext() && ++a < optIndex;) {
+                    iter.remove();
                 }
-                args.add(result);
-                iterator.remove();
+                args.addAll(defValuesCopy);
             }
         }
 //        if (!rawArgs.isEmpty()) {
@@ -294,6 +301,14 @@ public class CommandManagerImpl implements CommandManager {
 //        }
         args.addAll(rawArgs); // Add all not parsed strings to the list.
         return args.toArray();
+    }
+
+    protected void processSingleArgument(Class<?> clazz, String rawArg, List<Object> saveTo, int index) {
+        Object result = parsers.get(clazz).apply(rawArg);
+        if (result == null) {
+            throw new UnknownArgumentException(index);
+        }
+        saveTo.add(result);
     }
 
     private void registerInternalParsers() {
