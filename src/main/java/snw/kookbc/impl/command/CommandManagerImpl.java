@@ -290,9 +290,8 @@ public class CommandManagerImpl implements CommandManager {
             if (command.getOptionalArguments().size() - optIndex > 0) {
                 // still some default values available?
                 List<Object> defValuesCopy = new ArrayList<>(command.getOptionalArguments().getValues());
-                int a = 0;
-                for (Iterator<Object> iter = defValuesCopy.iterator(); iter.hasNext() && ++a <= optIndex;) {
-                    iter.remove(); // remove already processed items
+                for (int a = 1; a <= optIndex; a++) {
+                    defValuesCopy.remove(0); // remove already processed items
                 }
                 args.addAll(defValuesCopy);
             }
