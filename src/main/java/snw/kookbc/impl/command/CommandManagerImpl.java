@@ -278,20 +278,21 @@ public class CommandManagerImpl implements CommandManager {
         command.getArguments().forEach(i -> processSingleArgument(i, rawArgs.remove(0), args, index.addAndGet(1)));
         
         // second stage - optional arguments
-        if (!rawArgs.isEmpty() && command.getOptionalArguments().size() > 0) { // still not empty? yes! optional arguments!
+        if (!command.getOptionalArguments().isEmpty()) { // still not empty? yes! optional arguments!
             int optIndex = 0;
-            for (Class<?> clazz : command.getOptionalArguments().getKeys()) {
-                if (rawArgs.isEmpty()) break; // no more arguments to parse
-                processSingleArgument(clazz, rawArgs.remove(0), args, index.addAndGet(1));
-                optIndex++;
+            if (!rawArgs.isEmpty()) {
+                for (Class<?> clazz : command.getOptionalArguments().getKeys()) {
+                    if (rawArgs.isEmpty()) break; // no more arguments to parse
+                    processSingleArgument(clazz, rawArgs.remove(0), args, index.addAndGet(1));
+                    optIndex++;
+                }
             }
-            optIndex++; // turn the index into count
             if (command.getOptionalArguments().size() - optIndex > 0) {
                 // still some default values available?
                 List<Object> defValuesCopy = new ArrayList<>(command.getOptionalArguments().getValues());
                 int a = 0;
-                for (Iterator<Object> iter = defValuesCopy.iterator(); iter.hasNext() && ++a < optIndex;) {
-                    iter.remove();
+                for (Iterator<Object> iter = defValuesCopy.iterator(); iter.hasNext() && ++a <= optIndex;) {
+                    iter.remove(); // remove already processed items
                 }
                 args.addAll(defValuesCopy);
             }
