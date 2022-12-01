@@ -175,6 +175,9 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public void addPlugin(Plugin plugin) {
+        if (plugins.stream().anyMatch(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName()))) {
+            throw new IllegalArgumentException("The provided plugin name is already in use.");
+        }
         plugins.add(plugin);
     }
 
