@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
 
 import static snw.kookbc.util.Util.getVersionDifference;
 
@@ -103,10 +103,10 @@ public class SimplePluginManager implements PluginManager {
                     client.getCore().getLogger().error("Unable to load a plugin.", e);
                     continue;
                 }
-                Stream<Plugin> samePluginStream = plugins.stream().filter(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName()));
-                if (samePluginStream.findFirst().isPresent()) {
-                    client.getCore().getLogger().error(String.format("We have found the same plugin name \"%s\" from two plugin files: %s and %s, both of them won't be returned.", plugin.getDescription().getName(), plugin.getFile(), samePluginStream.findFirst().get().getFile()));
-                    plugins.remove(samePluginStream.findFirst().get());
+                Optional<Plugin> samePluginContainer = plugins.stream().filter(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName())).findFirst();
+                if (samePluginContainer.isPresent()) {
+                    client.getCore().getLogger().error(String.format("We have found the same plugin name \"%s\" from two plugin files: %s and %s, both of them won't be returned.", plugin.getDescription().getName(), plugin.getFile(), samePluginContainer.get().getFile()));
+                    plugins.remove(samePluginContainer.get());
                 } else {
                     plugins.add(plugin);
                 }
