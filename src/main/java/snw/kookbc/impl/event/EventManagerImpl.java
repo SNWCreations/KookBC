@@ -20,7 +20,6 @@ package snw.kookbc.impl.event;
 
 import snw.jkook.event.*;
 import snw.jkook.plugin.Plugin;
-import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.lang.reflect.InvocationTargetException;
