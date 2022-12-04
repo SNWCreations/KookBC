@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -79,7 +80,7 @@ public class NetworkClient {
                 JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
                 int status = object.get("code").getAsInt();
                 if (status != 0) {
-                    throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status, object.get("message").getAsString()));
+                    throw new BadResponseException(status, object.get("message").getAsString());
                 }
                 return resStr;
             }
