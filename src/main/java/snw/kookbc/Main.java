@@ -30,6 +30,7 @@ import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.webhook.WebHookClient;
+import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -51,6 +52,8 @@ public class Main {
 
     private static int main0(String[] args) {
         Thread.currentThread().setName("Main Thread");
+        SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
+        SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
 
         // KBC accepts following arguments:
         // --token <tokenValue>   --  Use the tokenValue as the token
