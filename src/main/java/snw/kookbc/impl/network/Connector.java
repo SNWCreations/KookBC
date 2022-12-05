@@ -144,15 +144,6 @@ public class Connector {
         setPingOk(false);
         boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         Validate.isTrue(queued, "Unable to queue ping request");
-        long ts = System.currentTimeMillis();
-        while (System.currentTimeMillis() - ts < 6000L) {
-            if (isPingOk()) {
-                break;
-            }
-        }
-        if (!isPingOk()) {
-            setTimeout(true);
-        }
     }
 
     public void pong() {
@@ -199,56 +190,47 @@ public class Connector {
 
         @Override
         public void run() {
+            try {
+                run0();
+            } catch (InterruptedException ignored) {
+            } catch (Throwable e) {
+                kbcClient.getCore().getLogger().error("PING Thread terminated by critical exception.", e);
+            }
+        }
+
+        private void run0() throws InterruptedException {
             while (kbcClient.isRunning()) {
-                try {
-                    //noinspection BusyWait
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(30L));
-                } catch (InterruptedException e) {
-                    return;
-                }
-                if (!kbcClient.isRunning()) {
-                    return;
-                }
+                sleep(30);
                 if (!connected) continue;
-                try {
-                    ping();
-                } catch (Exception e) {
-                    setTimeout(true);
-                }
+                ping();
+                sleep(6);
                 if (isTimeout()) {
                     int times = 0;
                     do {
-                        try {
-                            ping();
-                        } catch (Exception e) {
-                            times++;
-                            continue;
-                        }
+                        ping();
+                        sleep(times++ == 1 ? 2 : 4);
+                        // todo wait
                         if (isPingOk()) {
                             break; // why should I ping again????
                         }
-                        times++;
                     } while (times < 2);
                     if (Thread.currentThread().isInterrupted()) {
                         return;
                     }
                     if (!isPingOk()) {
                         kbcClient.getCore().getLogger().warn("PING failed. Attempting to reconnect.");
-                        shutdownWs();
-                        String originalWsLink = wsLink;
-                        wsLink = (String.format("%s&resume=1&sn=%d&sessionId=%s", wsLink, kbcClient.getSession().getSN().get(), kbcClient.getSession().getId()));
-                        start0();
-                        if (!connected) {
-                            start0();
-                            if (!connected) {
-                                requestReconnect();
-                            }
-                        } else {
-                            wsLink = originalWsLink;
-                        }
+                        requestReconnect();
+                        // actually, we should try to RESUME at this time.
+                        // but RESUME always fail (e.g. received RECONNECT after RESUME_ACK)
+                        // so we won't support RESUME until the problem be solved.
                     }
                 }
             }
+        }
+    
+        private void sleep(int sec) throws InterruptedException {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(sec));
+            if (!kbcClient.isRunning()) throw new InterruptedException();
         }
     }
 }
