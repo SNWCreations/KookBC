@@ -153,6 +153,6 @@ public enum HttpAPIRoute {
     }
 
     public String toFullURL() {
-        return BASE_URL.getRoute() + this.getRoute();
+        return (this == BASE_URL ? "" : BASE_URL.getRoute()) + this.getRoute();
     }
 }
