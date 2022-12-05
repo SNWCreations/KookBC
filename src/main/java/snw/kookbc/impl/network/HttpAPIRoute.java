@@ -40,7 +40,6 @@ public enum HttpAPIRoute {
 
     // ------ CHANNEL ------
 
-    CHANNEL_MESSAGE("/v3/channel/message"),
     CHANNEL_LIST("/v3/channel/list"),
     CHANNEL_INFO("/v3/channel/view"),
     CHANNEL_CREATE("/v3/channel/create"),
