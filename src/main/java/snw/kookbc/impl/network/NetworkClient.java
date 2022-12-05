@@ -22,14 +22,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
-import snw.jkook.util.Validate;
+
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Map.Entry;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
@@ -40,40 +39,39 @@ public class NetworkClient {
         tokenWithPrefix = "Bot " + token;
     }
 
-    public JsonObject get(HttpAPIRoute route, Map<String, Object> body) {
-        return JsonParser.parseString(getRawContent(route, body)).getAsJsonObject().getAsJsonObject("data");
+    public JsonObject get(String fullUrl) {
+        return JsonParser.parseString(getRawContent(fullUrl)).getAsJsonObject().getAsJsonObject("data");
     }
 
-    public JsonObject post(HttpAPIRoute route, Map<?, ?> body) {
-        return JsonParser.parseString(postContent(route, body)).getAsJsonObject().getAsJsonObject("data");
+    public JsonObject post(String fullUrl, Map<?, ?> body) {
+        return JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject().getAsJsonObject("data");
     }
 
-    public String getRawContent(HttpAPIRoute route, Map<String, Object> body) {
+    public String getRawContent(String fullUrl) {
         Request request = new Request.Builder()
                 .get()
-                .url(route.toFullURL() + buildQueryParam(body))
+                .url(fullUrl)
                 .addHeader("Authorization", tokenWithPrefix)
                 .build();
-        return call(route, request);
+        return call(request);
     }
 
-    public String postContent(HttpAPIRoute route, Map<?, ?> body) {
-        return postContent(route, new Gson().toJson(body), "application/json");
+    public String postContent(String fullUrl, Map<?, ?> body) {
+        return postContent(fullUrl, new Gson().toJson(body), "application/json");
     }
 
-    public String postContent(HttpAPIRoute route, String body, String mediaType) {
+    public String postContent(String fullUrl, String body, String mediaType) {
         Request request = new Request.Builder()
                 .post(
                         RequestBody.create(body, MediaType.parse(mediaType))
                 )
-                .url(route.toFullURL())
+                .url(fullUrl)
                 .addHeader("Authorization", tokenWithPrefix)
                 .build();
-        return call(route, request);
+        return call(request);
     }
 
-    public String call(HttpAPIRoute route, Request request) {
-        // TODO add bucket check at here
+    public String call(Request request) {
         try (Response res = client.newCall(request).execute()) {
             if (res.body() != null) {
                 String resStr = res.body().string();
@@ -93,17 +91,5 @@ public class NetworkClient {
     @NotNull
     public WebSocket newWebSocket(@NotNull Request request, @NotNull WebSocketListener listener) {
         return client.newWebSocket(request, listener);
-    }
-
-    private String buildQueryParam(Map<String, Object> param) {
-        if (param == null || param.isEmpty()) {
-            return "";
-        }
-        Validate.isTrue(param.values().contains(null), "Detected null in query parameyer.");
-        StringBuilder builder = new StringBuilder("?");
-        for (Entry<String, Object> entry : param.entrySet()) {
-            builder.append(entry.getKey() + "=" + String.valueOf(entry.getValue()));
-        }
-        return builder.toString();
     }
 }
