@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.network;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +32,7 @@ import snw.kookbc.impl.scheduler.SchedulerImpl;
 // Not single instance. Created when network call requested.
 // Cached.
 public class Bucket {
+    private static final Map<HttpAPIRoute, String> bucketNameMap = new HashMap<>();
     private static final Map<String, Bucket> map = new ConcurrentHashMap<>();
 
     private final KBCClient client;
@@ -70,5 +72,9 @@ public class Bucket {
 
     public static Bucket get(KBCClient client, String bucketName) {
         return map.computeIfAbsent(bucketName, r -> new Bucket(client, r));
+    }
+
+    static {
+        // TODO put Route->BucketName mapping here.
     }
 }
