@@ -35,7 +35,7 @@ public class Bucket {
 
     private final KBCClient client;
     private final String name; // defined by response header
-    private int availableTimes;
+    int availableTimes = -1;
     private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
@@ -57,9 +57,15 @@ public class Bucket {
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
     public void check() {
-        if (availableTimes-- < 0) {
+        if (availableTimes == -1) {
+            // At this time, we don't know remaining time, so we can't check it
+            // We should set the time after got response
+            return;
+        }
+        if (availableTimes < 0) {
             throw new TooFastException(name);
         }
+        availableTimes--;
     }
 
     public static Bucket get(KBCClient client, String bucketName) {
