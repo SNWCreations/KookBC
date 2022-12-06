@@ -25,7 +25,7 @@ import snw.kookbc.impl.KBCClient;
 
 import java.util.concurrent.TimeUnit;
 
-// The Connector that will communicate with Kook WebSocket Server.
+// The Connector. It will communicate with Kook WebSocket Server.
 public class Connector {
     private final KBCClient kbcClient;
     private String wsLink = "";
