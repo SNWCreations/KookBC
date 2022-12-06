@@ -70,7 +70,13 @@ public class Bucket {
         availableTimes--;
     }
 
-    public static Bucket get(KBCClient client, String bucketName) {
+    public static Bucket get(KBCClient client, HttpAPIRoute route) {
+        String bucketName = bucketNameMap.get(route);
+        if (bucketName == null) {
+            // This should never happen.
+            // Or new API is published.
+            throw new IllegalArgumentException("The bucket name of the provided route is unknown. Report to KookBC authors if you saw this!");
+        }
         return map.computeIfAbsent(bucketName, r -> new Bucket(client, r));
     }
 
