@@ -79,13 +79,13 @@ public class NetworkClient {
         try (Response res = client.newCall(request).execute()) {
 
             // region Bucket post process
-            if (bucket.availableTimes == -1) {
-                bucket.availableTimes = Integer.parseInt(res.header("X-Rate-Limit-Remaining"));
+            if (bucket.availableTimes.get() == -1) {
+                bucket.availableTimes.set(Integer.parseInt(res.header("X-Rate-Limit-Remaining")));
             } else {
                 int limit = Integer.parseInt(res.header("X-Rate-Limit-Limit"));
                 int reset = Integer.parseInt(res.header("X-Rate-Limit-Reset"));
                 if (reset == 0) {
-                    bucket.availableTimes = limit;
+                    bucket.availableTimes.set(limit);
                 } else {
                     bucket.scheduleUpdateAvailableTimes(limit, reset);
                 }

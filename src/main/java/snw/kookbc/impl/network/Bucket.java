@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
@@ -37,7 +38,7 @@ public class Bucket {
 
     private final KBCClient client;
     private final String name; // defined by response header
-    int availableTimes = -1;
+    AtomicInteger availableTimes = new AtomicInteger(-1);
     private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
@@ -51,7 +52,7 @@ public class Bucket {
     public void scheduleUpdateAvailableTimes(int availableTimes, int after) {
         if (!scheduledToUpdate) {
             ((SchedulerImpl) client.getCore().getScheduler()).getPool().schedule(() -> {
-                Bucket.this.availableTimes = availableTimes;
+                Bucket.this.availableTimes.set(availableTimes);
                 Bucket.this.scheduledToUpdate = false;
             }, after, TimeUnit.SECONDS);
         }
@@ -59,15 +60,15 @@ public class Bucket {
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
     public void check() {
-        if (availableTimes == -1) {
+        if (availableTimes.get() == -1) {
             // At this time, we don't know remaining time, so we can't check it
             // We should set the time after got response
             return;
         }
-        if (availableTimes < 0) {
+        if (availableTimes.get() < 0) {
             throw new TooFastException(name);
         }
-        availableTimes--;
+        availableTimes.addAndGet(-1);
     }
 
     public static Bucket get(KBCClient client, HttpAPIRoute route) {
