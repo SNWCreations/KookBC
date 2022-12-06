@@ -22,7 +22,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
-
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,10 +32,12 @@ import java.util.Map;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
+    private final KBCClient kbcClient;
     private final String tokenWithPrefix;
     private final OkHttpClient client = new OkHttpClient();
 
-    public NetworkClient(String token) {
+    public NetworkClient(KBCClient kbcClient, String token) {
+        this.kbcClient = kbcClient;
         tokenWithPrefix = "Bot " + token;
     }
 
@@ -72,7 +74,24 @@ public class NetworkClient {
     }
 
     public String call(Request request) {
+        Bucket bucket = getBucket(request);
+        bucket.check();
         try (Response res = client.newCall(request).execute()) {
+
+            // region Bucket post process
+            if (bucket.availableTimes == -1) {
+                bucket.availableTimes = Integer.parseInt(res.header("X-Rate-Limit-Remaining"));
+            } else {
+                int limit = Integer.parseInt(res.header("X-Rate-Limit-Limit"));
+                int reset = Integer.parseInt(res.header("X-Rate-Limit-Reset"));
+                if (reset == 0) {
+                    bucket.availableTimes = limit;
+                } else {
+                    bucket.scheduleUpdateAvailableTimes(limit, reset);
+                }
+            }
+            // endregion
+
             if (res.body() != null) {
                 String resStr = res.body().string();
                 JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
@@ -91,5 +110,10 @@ public class NetworkClient {
     @NotNull
     public WebSocket newWebSocket(@NotNull Request request, @NotNull WebSocketListener listener) {
         return client.newWebSocket(request, listener);
+    }
+
+    protected Bucket getBucket(Request request) {
+        String path = request.url().url().getPath().substring(4);
+        return Bucket.get(kbcClient, HttpAPIRoute.value(path));
     }
 }
