@@ -208,7 +208,7 @@ public class Connector {
                     int times = 0;
                     do {
                         ping();
-                        sleep(times++ == 1 ? 2 : 4);
+                        sleep(++times == 1 ? 2 : 4);
                         // todo wait
                         if (isPingOk()) {
                             break; // why should I ping again????
