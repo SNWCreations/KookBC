@@ -18,21 +18,18 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.sun.net.httpserver.HttpServer;
+import io.javalin.Javalin;
+import io.javalin.core.util.JavalinException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.PrefixThreadFactory;
-
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 public class WebHookClient extends KBCClient {
-    protected HttpServer server;
+    protected Javalin server;
 
     public WebHookClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
         super(core, config, pluginsFolder, token);
@@ -53,11 +50,9 @@ public class WebHookClient extends KBCClient {
             throw new IllegalArgumentException("No route provided!");
         }
         int port = getConfig().getInt("webhook-port");
-        server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext(String.format("/%s", route), new SimpleHttpHandler(this));
-        server.setExecutor(Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() / 4), new PrefixThreadFactory("Webhook Thread #")));
-        server.start();
-        getCore().getLogger().info("Server is listening on port {}", port);
+        server = Javalin.create()
+                        .post('/' + route, new SimpleHttpHandler(this))
+                        .start(port);
         getCore().getLogger().debug("Initializing SN from local file.");
         int initSN = 0;
         File snfile = new File(getPluginsFolder(), "sn");
@@ -73,8 +68,12 @@ public class WebHookClient extends KBCClient {
     @Override
     protected void shutdownNetwork() {
         if (server != null) {
-            getCore().getLogger().info("Stopping Webhook HTTP server");
-            server.stop(0);
+            try {
+                server.stop();
+            } catch (JavalinException e) {
+                // we should prevent client termination failure
+                e.printStackTrace();
+            }
         }
     }
 }
