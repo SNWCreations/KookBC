@@ -66,6 +66,11 @@ public class SimpleHttpHandler implements HttpHandler {
             client.getCore().getLogger().debug("Got POST request");
             String res;
             byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
+            if (bytes.length == 0) {
+                client.getCore().getLogger().debug("No byte available from the request. Rejected.");
+                exchange.sendResponseHeaders(400, -1);
+                return;
+            }
             if (!exchange.getRequestURI().toString().contains("compress=0")) {
                 res = new String(decompressDeflate(bytes));
             } else {
