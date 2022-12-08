@@ -71,6 +71,8 @@ java -jar kookbc-<version>.jar --help
 
 网络通信库: OkHttp 3
 
+Webhook HTTP 服务器库: Javalin 5
+
 JSON 处理库: Google GSON
 
 控制台功能库: JLine 3, TerminalConsoleAppender

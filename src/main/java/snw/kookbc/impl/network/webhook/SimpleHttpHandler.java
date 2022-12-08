@@ -18,25 +18,25 @@
 
 package snw.kookbc.impl.network.webhook;
 
+import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
+
+import java.util.Objects;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+
+import io.javalin.http.BadRequestResponse;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.http.HttpStatus;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
 import snw.kookbc.impl.network.ListenerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-
-import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
-
-public class SimpleHttpHandler implements HttpHandler {
+public class SimpleHttpHandler implements Handler {
     protected final KBCClient client;
     protected final Listener listener;
 
@@ -46,74 +46,45 @@ public class SimpleHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        try {
-            handle0(exchange);
-        } catch (Exception e) {
-            client.getCore().getLogger().error("Something unexpected occurred while we attempting to process the request from remote.", e);
-            exchange.sendResponseHeaders(500, -1);
-        }
-        exchange.close();
-    }
-
-    public void handle0(HttpExchange exchange) throws Exception {
+    public void handle(Context ctx) throws Exception {
         client.getCore().getLogger().debug("Got request!");
-        if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
-            client.getCore().getLogger().debug("Got the request that not using POST. Rejected.");
-            exchange.sendResponseHeaders(400, -1);
-            // According to RFC2616, we cannot return 405 for GET/HEAD requests.
+        String res;
+        byte[] bytes = ctx.bodyAsBytes();
+        if (bytes.length == 0) {
+            throw new BadRequestResponse();
+        }
+        if (!"0".equals(ctx.queryParam("compress"))) {
+            res = new String(decompressDeflate(bytes));
         } else {
-            client.getCore().getLogger().debug("Got POST request");
-            String res;
-            byte[] bytes = inputStreamToByteArray(exchange.getRequestBody());
-            if (bytes.length == 0) {
-                client.getCore().getLogger().debug("No byte available from the request. Rejected.");
-                exchange.sendResponseHeaders(400, -1);
-                return;
+            res = new String(bytes);
+        }
+        client.getCore().getLogger().debug("Got remote request: {}", res);
+        JsonObject object = JsonParser.parseString(
+                EncryptUtils.decrypt(client, res)).getAsJsonObject();
+        Frame frame = new Frame(
+                object.get("s").getAsInt(),
+                object.has("sn") ? object.get("sn").getAsInt() : -1,
+                object.getAsJsonObject("d"));
+        if (!Objects.equals(
+                frame.getData().get("verify_token").getAsString(),
+                client.getConfig().getString("webhook-verify-token"))) {
+            throw new BadRequestResponse();
+        } else {
+            // challenge part
+            JsonElement channelType = frame.getData().get("channel_type");
+            if (channelType != null && Objects.equals(channelType.getAsString(), "WEBHOOK_CHALLENGE")) {
+                String finalChallengeResponse = frame.getData().get("challenge").getAsString();
+                JsonObject obj = new JsonObject();
+                obj.addProperty("challenge", finalChallengeResponse);
+                String s = new Gson().toJson(obj);
+                ctx.result(s);
             }
-            if (!exchange.getRequestURI().toString().contains("compress=0")) {
-                res = new String(decompressDeflate(bytes));
-            } else {
-                res = new String(bytes);
+            // end challenge part
+            else {
+                listener.executeEvent(frame);
             }
-            client.getCore().getLogger().debug("Got remote request: {}", res);
-            JsonObject object = JsonParser.parseString(
-                    EncryptUtils.decrypt(client, res)
-            ).getAsJsonObject();
-            Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
-            if (!Objects.equals(frame.getData().get("verify_token").getAsString(), client.getConfig().getString("webhook-verify-token"))) {
-                exchange.sendResponseHeaders(403, -1); // illegal access!
-            } else {
-                // challenge part
-                JsonElement channelType = frame.getData().get("channel_type");
-                if (channelType != null && Objects.equals(channelType.getAsString(), "WEBHOOK_CHALLENGE")) {
-                    String finalChallengeResponse = frame.getData().get("challenge").getAsString();
-                    JsonObject obj = new JsonObject();
-                    obj.addProperty("challenge", finalChallengeResponse);
-                    String s = new Gson().toJson(obj);
-                    exchange.sendResponseHeaders(200, 0);
-                    exchange.getResponseBody().write(s.getBytes());
-                    exchange.getResponseBody().flush();
-                }
-                // end challenge part
-                else {
-                    listener.executeEvent(frame);
-                    exchange.sendResponseHeaders(200, -1);
-                }
-            }
+            ctx.status(HttpStatus.OK);
         }
     }
 
-    protected byte[] inputStreamToByteArray(InputStream stream) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-        int nRead;
-        byte[] data = new byte[16384];
-
-        while ((nRead = stream.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-
-        return buffer.toByteArray();
-    }
 }
