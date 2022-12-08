@@ -49,8 +49,8 @@ public class WebHookClient extends KBCClient {
 
     protected void startNetwork0() throws Exception {
         String route = getConfig().getString("webhook-route");
-        if (route == null || route.isEmpty()) {
-            throw new IllegalArgumentException("Invalid route path!");
+        if (route == null) {
+            throw new IllegalArgumentException("No route provided!");
         }
         int port = getConfig().getInt("webhook-port");
         server = HttpServer.create(new InetSocketAddress(port), 0);
