@@ -18,6 +18,9 @@
 
 package snw.kookbc.impl.network;
 
+import java.util.HashMap;
+import java.util.Map;
+
 // Current API version: v3
 public enum HttpAPIRoute {
 
@@ -142,6 +145,13 @@ public enum HttpAPIRoute {
     GAME_DELETE_ACTIVITY("/v3/game/delete-activity")
 
     ;
+    private static final Map<String, HttpAPIRoute> map = new HashMap<>();
+
+    static {
+        for (HttpAPIRoute value : values()) {
+            map.put(value.getRoute(), value);
+        }
+    }
 
     private final String route;
 
@@ -155,5 +165,9 @@ public enum HttpAPIRoute {
 
     public String toFullURL() {
         return (this == BASE_URL ? "" : BASE_URL.getRoute()) + this.getRoute();
+    }
+
+    public static HttpAPIRoute value(String route) {
+        return map.get(route);
     }
 }

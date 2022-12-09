@@ -76,7 +76,7 @@ public class KBCClient {
         this.core = core;
         this.config = config;
         this.pluginsFolder = pluginsFolder;
-        this.networkClient = new NetworkClient(token);
+        this.networkClient = new NetworkClient(this, token);
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
