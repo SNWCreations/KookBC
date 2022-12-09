@@ -32,6 +32,7 @@ public enum HttpAPIRoute {
     GUILD_CHANGE_OTHERS_NICKNAME("/v3/guild/nickname"),
     GUILD_LEAVE("/v3/guild/leave"),
     GUILD_KICK("/v3/guild/kickout"),
+    GUILD_BOOST_HISTORY("/v3/guild-boost/history"),
 
     // mute
     MUTE_LIST("/v3/guild-mute/list"),
