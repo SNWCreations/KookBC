@@ -156,6 +156,6 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE, "game/delete");
         bucketNameMap.put(HttpAPIRoute.GAME_CREATE_ACTIVITY, "game/activity");
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE_ACTIVITY, "game/delete-activity");
-        // bucketNameMap.put(HttpAPIRoute.GUILD_BOOST_HISTORY, "guild-boost/history");
+        bucketNameMap.put(HttpAPIRoute.GUILD_BOOST_HISTORY, "guild-boost/history");
     }
 }
