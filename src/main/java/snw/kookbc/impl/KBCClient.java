@@ -133,6 +133,12 @@ public class KBCClient {
     // WARN: Set the JKook Core by constructing CoreImpl and call getCore().setCore() using it first,
     // or you will get NullPointerException.
     public void start() {
+        core.getLogger().debug("Fetching Bot user object");
+        User botUser = getEntityBuilder().buildUser(
+            getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
+        );
+        getStorage().addUser(botUser);
+        core.setUser(botUser);
         getCore().getLogger().debug("Loading all the plugins from plugins folder.");
         loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
@@ -185,12 +191,6 @@ public class KBCClient {
 
     protected void finishStart() {
         registerInternal();
-        User botUser = getEntityBuilder().buildUser(
-                getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
-        );
-        getStorage().addUser(botUser);
-        core.setUser(botUser);
-
         // region BotMarket support part - 2022/7/28
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
         if (rawBotMarketUUID != null) {
