@@ -71,6 +71,14 @@ public class Bucket {
         availableTimes.addAndGet(-1);
     }
 
+    @Override
+    public String toString() {
+        return "Bucket{" +
+        "name=" + name + "," +
+        "availableTimes=" + availableTimes +
+        "}";
+    }
+
     public static Bucket get(KBCClient client, HttpAPIRoute route) {
         String bucketName = bucketNameMap.get(route);
         if (bucketName == null) {
