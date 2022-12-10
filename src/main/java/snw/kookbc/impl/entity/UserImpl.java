@@ -256,16 +256,4 @@ public class UserImpl implements User {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UserImpl user = (UserImpl) o;
-        return bot == user.bot && id.equals(user.id) && name.equals(user.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, bot);
-    }
 }

@@ -26,7 +26,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class ReactionImpl implements Reaction {
     private final KBCClient client;
@@ -72,16 +71,4 @@ public class ReactionImpl implements Reaction {
         return timeStamp;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ReactionImpl)) return false;
-        ReactionImpl reaction = (ReactionImpl) o;
-        return messageId.equals(reaction.messageId) && emoji.equals(reaction.emoji) && sender.equals(reaction.sender);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(messageId, emoji, sender);
-    }
 }
