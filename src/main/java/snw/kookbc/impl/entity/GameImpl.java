@@ -94,16 +94,4 @@ public class GameImpl implements Game {
         setIcon0(icon);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GameImpl)) return false;
-        GameImpl game = (GameImpl) o;
-        return id == game.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
 }

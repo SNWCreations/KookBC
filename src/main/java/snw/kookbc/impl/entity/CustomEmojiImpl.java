@@ -25,7 +25,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class CustomEmojiImpl implements CustomEmoji {
     private final KBCClient client;
@@ -72,19 +71,6 @@ public class CustomEmojiImpl implements CustomEmoji {
                 .put("id", getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CustomEmojiImpl)) return false;
-        CustomEmojiImpl that = (CustomEmojiImpl) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, guild, name);
     }
 
     public void setName0(String name) {

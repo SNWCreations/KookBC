@@ -26,7 +26,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class RoleImpl implements Role {
     private final KBCClient client;
@@ -143,19 +142,6 @@ public class RoleImpl implements Role {
 
     public Guild getGuild() {
         return guild;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RoleImpl role = (RoleImpl) o;
-        return id == role.id && guild.equals(role.guild);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(guild, id);
     }
 
     public void setPermSum(int permSum) {
