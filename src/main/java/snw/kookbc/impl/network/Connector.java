@@ -150,8 +150,6 @@ public class Connector {
         setPingOk(true);
         if (isTimeout()) {
             setTimeout(false);
-            kbcClient.getCore().getLogger().info("We have recovered from TIMEOUT successfully, attempting to resume.");
-            ws.send(String.format("{\"s\":4,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         }
     }
 
