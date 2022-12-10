@@ -74,9 +74,9 @@ public class Bucket {
     @Override
     public String toString() {
         return "Bucket{" +
-        "name=" + name + "," +
-        "availableTimes=" + availableTimes +
-        "}";
+                "name=" + name + "," +
+                "availableTimes=" + availableTimes +
+                "}";
     }
 
     public static Bucket get(KBCClient client, HttpAPIRoute route) {
