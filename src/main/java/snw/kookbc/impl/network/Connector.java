@@ -209,7 +209,6 @@ public class Connector {
                     do {
                         ping();
                         sleep(++times == 1 ? 2 : 4);
-                        // todo wait
                         if (isPingOk()) {
                             break; // why should I ping again????
                         }
