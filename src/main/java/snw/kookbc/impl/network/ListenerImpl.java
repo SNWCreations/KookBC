@@ -164,16 +164,7 @@ public class ListenerImpl implements Listener {
         if (status == 0) {
             client.getSession().setId(object.get("session_id").getAsString());
         } else {
-            switch (status) {
-                case 40101:
-                    throw new RuntimeException("Invalid Bot Token!");
-                case 40103:
-                    client.getCore().getLogger().debug("WebSocket Token is invalid. Attempting to reconnect.");
-                    client.getConnector().requestReconnect();
-                    break;
-                default:
-                    throw new RuntimeException("Unexpected response code: " + status);
-            }
+            client.getConnector().requestReconnect();
         }
     }
 
