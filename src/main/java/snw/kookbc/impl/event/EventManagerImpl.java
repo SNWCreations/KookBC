@@ -20,27 +20,38 @@ package snw.kookbc.impl.event;
 
 import snw.jkook.event.*;
 import snw.jkook.plugin.Plugin;
-import snw.kookbc.impl.KBCClient;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import net.kyori.event.EventBus;
+import net.kyori.event.PostResult;
+import net.kyori.event.SimpleEventBus;
+import net.kyori.event.PostResult.CompositeException;
+import net.kyori.event.method.MethodSubscriptionAdapter;
+import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
 public class EventManagerImpl implements EventManager {
-    private final KBCClient client;
+    private final EventBus<Event> bus;
+    private final MethodSubscriptionAdapter<Listener> msa;
+    private final Map<Plugin, List<Listener>> listeners = new HashMap<>();
 
-    public EventManagerImpl(KBCClient client) {
-        this.client = client;
+    public EventManagerImpl() {
+        this.bus = new SimpleEventBus<>(Event.class);
+        this.msa = new SimpleMethodSubscriptionAdapter<>(bus, EventExecutorFactoryImpl.INSTANCE, MethodScannerImpl.INSTANCE);
     }
 
     @Override
     public void callEvent(Event event) {
+        PostResult result = bus.post(event);
         try {
-            ((HandlerList) event.getClass().getMethod("getHandlers").invoke(null)).callAll(event);
-        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            client.getCore().getLogger().error("Unable to call event.", e);
+            result.raise();
+        } catch (CompositeException e) {
+            e.printAllStackTraces();
         }
     }
 
@@ -51,15 +62,22 @@ public class EventManagerImpl implements EventManager {
     }
 
     public void registerHandlers0(Plugin plugin, Listener listener) {
-        for (Method method : listener.getClass().getMethods()) {
-            if (method.isAnnotationPresent(EventHandler.class)) {
-                Listener object = (Modifier.isStatic(method.getModifiers())) ? null : listener;
-                try {
-                    ((HandlerList) method.getParameterTypes()[0].getMethod("getHandlers").invoke(null)).add(plugin, method, object);
-                } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
-                    throw new RuntimeException("Unable to register handler.", e);
-                }
-            }
+        if (plugin != null) {
+            getListeners(plugin).add(listener);
         }
+        msa.register(listener);
     }
+
+    public void unregisterHandlers(Plugin plugin) {
+        getListeners(plugin).forEach(this::unregisterHandler);
+    }
+
+    public void unregisterHandler(Listener listener) {
+        msa.unregister(listener);
+    }
+
+    private List<Listener> getListeners(Plugin plugin) {
+        return listeners.computeIfAbsent(plugin, p -> new LinkedList<>());
+    }
+
 }

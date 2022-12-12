@@ -153,7 +153,7 @@ public class CoreImpl implements Core {
         this.pluginManager = new SimplePluginManager(client);
         this.unsafe = new UnsafeImpl(client);
         this.scheduler = new SchedulerImpl(client);
-        this.eventManager = new EventManagerImpl(client);
+        this.eventManager = new EventManagerImpl();
         this.commandManager = new CommandManagerImpl(client);
     }
 }
