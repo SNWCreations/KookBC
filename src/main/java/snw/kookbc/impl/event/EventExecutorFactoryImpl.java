@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.event;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -37,14 +39,15 @@ public final class EventExecutorFactoryImpl implements EventExecutor.Factory<Eve
     @Override
     public @NonNull EventExecutor<Event, Listener> create(@NonNull Object object, @NonNull Method method) throws Exception {
         method.setAccessible(true);
-        Class<? extends Event> actualEventType = method.getParameterTypes()[0].asSubclass(Event.class);
+        final Class<? extends Event> actualEventType = method.getParameterTypes()[0].asSubclass(Event.class);
+        final MethodHandle handle = MethodHandles.lookup().unreflect(method).bindTo(object);
         return new EventExecutor<Event, Listener>() {
 
             @Override
             public void invoke(@NonNull Listener listener, @NonNull Event event) throws Throwable {
                 if (!actualEventType.isInstance(event))
                     return;
-                method.invoke(listener, event);
+                handle.invoke(event);
             }
 
         };
