@@ -20,6 +20,7 @@ package snw.kookbc.impl.event;
 
 import snw.jkook.event.*;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,11 +37,13 @@ import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
 public class EventManagerImpl implements EventManager {
+    private final KBCClient client;
     private final EventBus<Event> bus;
     private final MethodSubscriptionAdapter<Listener> msa;
     private final Map<Plugin, List<Listener>> listeners = new HashMap<>();
 
-    public EventManagerImpl() {
+    public EventManagerImpl(KBCClient client) {
+        this.client = client;
         this.bus = new SimpleEventBus<>(Event.class);
         this.msa = new SimpleMethodSubscriptionAdapter<>(bus, EventExecutorFactoryImpl.INSTANCE, MethodScannerImpl.INSTANCE);
     }
@@ -51,7 +54,10 @@ public class EventManagerImpl implements EventManager {
         try {
             result.raise();
         } catch (CompositeException e) {
-            e.printAllStackTraces();
+            client.getCore().getLogger().error("Unexpected exception while posting event.");
+            for (final Throwable t : e.result().exceptions().values()) {
+                t.printStackTrace();
+            }
         }
     }
 
