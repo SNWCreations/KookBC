@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class CoreImpl implements Core {
+    private boolean init = false;
     private SchedulerImpl scheduler;
     private CommandManagerImpl commandManager;
     private EventManagerImpl eventManager;
@@ -145,7 +146,7 @@ public class CoreImpl implements Core {
     }
 
     void init(KBCClient client, HttpAPIImpl impl) {
-        Validate.isTrue(this.client == null && this.httpApi == null && this.pluginManager == null, "This core implementation has already initialized.");
+        Validate.isTrue(init, "This core implementation has already initialized.");
         Validate.notNull(client);
         Validate.notNull(impl);
         this.client = client;
@@ -155,5 +156,6 @@ public class CoreImpl implements Core {
         this.scheduler = new SchedulerImpl(client);
         this.eventManager = new EventManagerImpl(client);
         this.commandManager = new CommandManagerImpl(client);
+        this.init = true;
     }
 }
