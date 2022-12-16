@@ -32,8 +32,6 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -92,9 +90,7 @@ public abstract class MessageImpl implements Message {
                                     HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
                                     .toFullURL(),
                             getId(),
-                            customEmoji.getId().contains("/") ?
-                                    customEmoji.getId() :
-                                    URLEncoder.encode(customEmoji.getId(), "UTF-8")
+                            customEmoji.getId()
                     )
             );
             array = JsonParser.parseString(rawStr).getAsJsonObject().getAsJsonArray("data");
@@ -104,8 +100,6 @@ public abstract class MessageImpl implements Message {
             } else {
                 throw e;
             }
-        } catch (UnsupportedEncodingException e) {
-            throw new Error("No UTF-8 charset! Please check your JVM installation.", e);
         }
         Collection<User> result = new ArrayList<>();
         for (JsonElement element : array) {
