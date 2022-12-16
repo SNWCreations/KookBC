@@ -125,10 +125,6 @@ public class SchedulerImpl implements Scheduler {
         };
     }
 
-    public ScheduledExecutorService getPool() {
-        return pool;
-    }
-
     public void shutdown() {
         scheduledTasks.keySet().forEach(this::cancelTask);
         if (!pool.isShutdown()) {
