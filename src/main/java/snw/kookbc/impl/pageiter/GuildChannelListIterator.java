@@ -43,7 +43,7 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             object.add(client.getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
         }

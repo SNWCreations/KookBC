@@ -44,7 +44,7 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             object.add(client.getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));

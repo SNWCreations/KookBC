@@ -43,7 +43,7 @@ public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             object.add(client.getStorage().getUser(element.getAsJsonObject().getAsJsonObject("user").get("id").getAsString()));
         }
