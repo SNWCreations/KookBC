@@ -35,12 +35,12 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
-import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.event.InternalEventListener;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
+import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
@@ -284,7 +284,7 @@ public class KBCClient {
                 .register();
         registerHelpCommand();
         registerPluginsCommand();
-        ((EventManagerImpl) getCore().getEventManager()).registerHandlers0(null, new InternalEventListener());
+        getCore().getEventManager().registerHandlers(InternalPlugin.INSTANCE, new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
