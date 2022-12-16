@@ -53,6 +53,7 @@
                         <includeOnlyProperty>^git.commit.id.(abbrev|full)$</includeOnlyProperty>
                     </includeOnlyProperties>
                     <commitIdGenerationMode>full</commitIdGenerationMode>
+                    <dateFormatTimeZone>Asia/Shanghai</dateFormatTimeZone>
                 </configuration>
             </plugin>
             <plugin>
