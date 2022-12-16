@@ -68,10 +68,10 @@ public class EventManagerImpl implements EventManager {
     }
 
     public void registerHandlers0(Plugin plugin, Listener listener) {
+        msa.register(listener);
         if (plugin != null) {
             getListeners(plugin).add(listener);
         }
-        msa.register(listener);
     }
 
     public void unregisterHandlers(Plugin plugin) {
