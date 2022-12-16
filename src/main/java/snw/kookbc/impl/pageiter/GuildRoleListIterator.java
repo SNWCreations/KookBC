@@ -26,6 +26,7 @@ import snw.jkook.entity.Role;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,6 +50,11 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
             JsonObject rawObj = element.getAsJsonObject();
             object.add(client.getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));
         }
+    }
+
+    @Override
+    public Set<Role> next() {
+        return Collections.unmodifiableSet(super.next());
     }
 
 }
