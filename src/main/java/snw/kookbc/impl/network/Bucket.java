@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.TooFastException;
-import snw.kookbc.impl.scheduler.SchedulerImpl;
+import snw.kookbc.impl.plugin.InternalPlugin;
 
 // Represents the Bucket of Rate Limit.
 // Not single instance. Created when network call requested.
@@ -51,10 +51,10 @@ public class Bucket {
 
     public void scheduleUpdateAvailableTimes(int availableTimes, int after) {
         if (!scheduledToUpdate) {
-            ((SchedulerImpl) client.getCore().getScheduler()).getPool().schedule(() -> {
+            client.getCore().getScheduler().runTaskLater(InternalPlugin.INSTANCE, () -> {
                 Bucket.this.availableTimes.set(availableTimes);
                 Bucket.this.scheduledToUpdate = false;
-            }, after, TimeUnit.SECONDS);
+            }, TimeUnit.SECONDS.toMillis(after));
         }
     }
 
