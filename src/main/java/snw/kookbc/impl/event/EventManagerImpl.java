@@ -64,14 +64,8 @@ public class EventManagerImpl implements EventManager {
     @Override
     public void registerHandlers(Plugin plugin, Listener listener) {
         ensurePluginEnabled(plugin);
-        registerHandlers0(plugin, listener);
-    }
-
-    public void registerHandlers0(Plugin plugin, Listener listener) {
         msa.register(listener);
-        if (plugin != null) {
-            getListeners(plugin).add(listener);
-        }
+        getListeners(plugin).add(listener);
     }
 
     public void unregisterHandlers(Plugin plugin) {
