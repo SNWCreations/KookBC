@@ -24,6 +24,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -36,8 +37,12 @@ public class CustomEmojiImpl implements CustomEmoji {
 
     public CustomEmojiImpl(KBCClient client, String id, String name, Guild guild) {
         this.client = client;
-        this.id = URLEncoder.encode(id, StandardCharsets.UTF_8);
         this.name = name;
+        try {
+            this.id = URLEncoder.encode(id, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new Error("No UTF-8 Encoding? Check your system and JVM installation!");
+        }
         // optional attributes are following:
         this.guild = guild;
     }
