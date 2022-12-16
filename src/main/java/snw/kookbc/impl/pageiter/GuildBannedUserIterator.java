@@ -25,6 +25,7 @@ import snw.jkook.entity.User;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,4 +50,8 @@ public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
         }
     }
 
+    @Override
+    public Set<User> next() {
+        return Collections.unmodifiableSet(super.next());
+    }
 }
