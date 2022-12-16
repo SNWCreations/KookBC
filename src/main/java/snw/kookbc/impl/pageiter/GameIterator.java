@@ -41,7 +41,7 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new ArrayList<>();
+        object = new ArrayList<>(array.size());
 
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();

@@ -55,7 +55,7 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             object.add(buildMessage(element.getAsJsonObject()));
         }

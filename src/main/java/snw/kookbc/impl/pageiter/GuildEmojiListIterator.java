@@ -45,7 +45,7 @@ public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             object.add(client.getStorage().getEmoji(rawObj.get("id").getAsString(), rawObj));

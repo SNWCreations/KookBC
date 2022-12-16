@@ -42,7 +42,7 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             object.add(client.getStorage().getGuild(rawObj.get("id").getAsString(), rawObj));

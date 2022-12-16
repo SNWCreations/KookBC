@@ -74,7 +74,7 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             object.add(client.getStorage().getUser(rawObj.get("id").getAsString()));

@@ -49,7 +49,7 @@ public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> 
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>();
+        object = new HashSet<>(array.size());
         for (JsonElement element : array) {
             JsonObject rawObj = element.getAsJsonObject();
             Guild guild = client.getStorage().getGuild(rawObj.get("guild_id").getAsString());
