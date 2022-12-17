@@ -45,12 +45,12 @@ import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
-import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -81,7 +81,14 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
-        this.eventExecutor = Executors.newCachedThreadPool(new PrefixThreadFactory("Event Executor #"));
+        this.eventExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "Event Executor");
+            }
+            
+        });
         core.init(this, new HttpAPIImpl(this, token));
     }
 
