@@ -154,13 +154,6 @@ public class SimplePluginManager implements PluginManager {
         // cancel tasks
         client.getCore().getScheduler().cancelTasks(plugin);
         ((EventManagerImpl) client.getCore().getEventManager()).unregisterHandlers(plugin);
-        // unregister commands
-        for (Iterator<Entry<JKookCommand, Plugin>> iterator = ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().iterator(); iterator.hasNext();) {
-            Entry<JKookCommand, Plugin> next = iterator.next();
-            if (Objects.equals(next.getValue(), plugin)) {
-                iterator.remove();
-            }
-        }
         try {
             plugin.setEnabled(false);
         } catch (Throwable e) {

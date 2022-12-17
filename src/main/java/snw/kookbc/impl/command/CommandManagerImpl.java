@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static snw.kookbc.util.Util.toEnglishNumOrder;
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
 public class CommandManagerImpl implements CommandManager {
@@ -44,8 +43,7 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     @Override
-    public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
-        ensurePluginEnabled(plugin); // null plugin is unsupported, but internal commands are allowed.
+    public void registerCommand(JKookCommand command) throws IllegalArgumentException {
         if (getCommand(command.getRootName()) != null
                 ||
                 commands.stream().anyMatch(

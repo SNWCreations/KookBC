@@ -42,11 +42,6 @@ public final class InternalPlugin implements Plugin {
     }
 
     @Override
-    public Core getCore() {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
-    @Override
     public File getDataFolder() {
         throw new UnsupportedOperationException("Not supported.");
     }
