@@ -153,7 +153,7 @@ public class SimplePluginManager implements PluginManager {
         plugin.getLogger().info("Disabling {} version {}", description.getName(), description.getVersion());
         // cancel tasks
         client.getCore().getScheduler().cancelTasks(plugin);
-        ((EventManagerImpl) client.getCore().getEventManager()).unregisterHandlers(plugin);
+        ((EventManagerImpl) client.getCore().getEventManager()).unregisterAllHandlers(plugin);
         // unregister commands
         for (Iterator<Entry<JKookCommand, Plugin>> iterator = ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().iterator(); iterator.hasNext();) {
             Entry<JKookCommand, Plugin> next = iterator.next();

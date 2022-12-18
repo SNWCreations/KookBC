@@ -68,11 +68,11 @@ public class EventManagerImpl implements EventManager {
         getListeners(plugin).add(listener);
     }
 
-    public void unregisterHandlers(Plugin plugin) {
-        getListeners(plugin).forEach(this::unregisterHandler);
+    public void unregisterAllHandlers(Plugin plugin) {
+        getListeners(plugin).forEach(this::unregisterHandlers);
     }
 
-    public void unregisterHandler(Listener listener) {
+    public void unregisterHandlers(Listener listener) {
         msa.unregister(listener);
     }
 
