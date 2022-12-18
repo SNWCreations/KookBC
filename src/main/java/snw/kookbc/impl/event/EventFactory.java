@@ -60,6 +60,10 @@ public class EventFactory {
             messageType = null;
         }
         if (messageType != null) {
+            if (messageType == 12) {
+                client.getCore().getLogger().warn("snw.jkook.event.item.ItemConsumedEvent is unsupported in this version of JKook.");
+                return null;
+            }
             if (Objects.equals(object.get("channel_type").getAsString(), "PERSON")) {
                 PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
                 client.getStorage().addMessage(pm);
