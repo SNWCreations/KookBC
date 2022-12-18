@@ -28,7 +28,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 public class GameIterator extends PageIteratorImpl<Collection<Game>> {
 

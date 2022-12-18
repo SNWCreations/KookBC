@@ -18,25 +18,24 @@
 
 package snw.kookbc.impl.plugin;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import snw.jkook.command.JKookCommand;
-import snw.jkook.plugin.*;
-import snw.jkook.util.Validate;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.event.EventManagerImpl;
+import static snw.kookbc.util.Util.getVersionDifference;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Map.Entry;
 
-import static snw.kookbc.util.Util.getVersionDifference;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import snw.jkook.plugin.InvalidPluginException;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginDescription;
+import snw.jkook.plugin.PluginManager;
+import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.event.EventManagerImpl;
 
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;

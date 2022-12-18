@@ -29,10 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static snw.kookbc.util.Util.ensurePluginEnabled;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
