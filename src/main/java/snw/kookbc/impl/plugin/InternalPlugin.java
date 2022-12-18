@@ -27,13 +27,19 @@ import snw.jkook.Core;
 import snw.jkook.config.file.FileConfiguration;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
+import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
 
 // A plugin implementation as a placeholder to call methods that require plugin instance.
 // DO NOT USE THIS OUTSIDE snw.kookbc PACKAGE.
 public final class InternalPlugin implements Plugin {
-    public static final InternalPlugin INSTANCE = new InternalPlugin();
+    private final KBCClient client;
 
-    private InternalPlugin() {
+    // DO NOT USE THIS.
+    // IF YOU WANT THE INSTANCE, USE KBCClient#getInternalPlugin instead.
+    public InternalPlugin(KBCClient client) {
+        Validate.notNull(client);
+        this.client = client;
     }
 
     @Override
@@ -43,7 +49,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public Core getCore() {
-        throw new UnsupportedOperationException("Not supported.");
+        return client.getCore();
     }
 
     @Override

@@ -66,6 +66,7 @@ public class KBCClient {
     private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
+    private final InternalPlugin internalPlugin;
     protected final ExecutorService eventExecutor;
     protected Connector connector;
 
@@ -81,6 +82,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
+        this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
             @Override
@@ -251,6 +253,10 @@ public class KBCClient {
         }
     }
 
+    public InternalPlugin getInternalPlugin() {
+        return internalPlugin;
+    }
+
     public EntityStorage getStorage() {
         return storage;
     }
@@ -287,10 +293,10 @@ public class KBCClient {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
-                .register(InternalPlugin.INSTANCE);
+                .register(getInternalPlugin());
         registerHelpCommand();
         registerPluginsCommand();
-        getCore().getEventManager().registerHandlers(InternalPlugin.INSTANCE, new InternalEventListener());
+        getCore().getEventManager().registerHandlers(getInternalPlugin(), new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
@@ -318,7 +324,7 @@ public class KBCClient {
                                 getCore().getLogger().info(result);
                             }
                         })
-                .register(InternalPlugin.INSTANCE);
+                .register(getInternalPlugin());
     }
 
     protected void registerHelpCommand() {
@@ -385,7 +391,7 @@ public class KBCClient {
                                 }
                             }
                         })
-                .register(InternalPlugin.INSTANCE);
+                .register(getInternalPlugin());
     }
 
     public static List<String> getHelp(JKookCommand[] commands) {
