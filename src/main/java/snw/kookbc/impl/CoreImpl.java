@@ -146,7 +146,7 @@ public class CoreImpl implements Core {
     }
 
     void init(KBCClient client, HttpAPIImpl impl) {
-        Validate.isTrue(init, "This core implementation has already initialized.");
+        Validate.isFalse(init, "This core implementation has already initialized.");
         Validate.notNull(client);
         Validate.notNull(impl);
         this.client = client;
