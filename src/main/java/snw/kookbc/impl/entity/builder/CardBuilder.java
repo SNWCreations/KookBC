@@ -58,10 +58,11 @@ public class CardBuilder {
             switch (moduleObj.get("type").getAsString()) {
                 case "section":
                     JsonObject textObject = moduleObj.getAsJsonObject("text");
-                    JsonObject rawAccessory = moduleObj.getAsJsonObject("accessory");
+                    JsonElement rawAccessoryElement = moduleObj.get("accessory");
                     Accessory accessory = null;
                     Accessory.Mode mode = null;
-                    if (rawAccessory != null) {
+                    if (rawAccessoryElement != null) {
+                        JsonObject rawAccessory = rawAccessoryElement.getAsJsonObject();
                         mode = Accessory.Mode.value(moduleObj.get("mode").getAsString());
                         // Validate.notNull(mode, "Unknown accessory mode."); // accessories without mode is allowed in KOOK CardMessage builder.
                         switch (rawAccessory.get("type").getAsString()) {
