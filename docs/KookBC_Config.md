@@ -28,6 +28,8 @@ ignore-remote-call-invisible-internal-command: true
 
 save-console-history: true
 
+ignore-sn-order: false
+
 allow-help-ad: true
 ```
 
@@ -113,6 +115,17 @@ ignore-remote-call-invisible-internal-command: true
 
 ```yaml
 save-console-history: true
+```
+
+## ignore-sn-order
+
+若打开此配置项，KookBC 将忽略事件的顺序，并尽可能保证不处理重复事件。
+
+此配置项推荐在您的机器人所服务的用户量大的时候开启，若后台经常跳 wrong sn 警告，打开这个吧。
+
+示例:
+```yaml
+ignore-sn-order: true
 ```
 
 ## _allow-help-ad_
