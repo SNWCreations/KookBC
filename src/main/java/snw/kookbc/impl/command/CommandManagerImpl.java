@@ -109,6 +109,22 @@ public class CommandManagerImpl implements CommandManager {
             return false;
         }
 
+        // region Plugin.isEnabled check
+        Plugin owner = commands.get(commandObject);
+        if (!owner.isEnabled()) {
+            if (sender instanceof ConsoleCommandSender) {
+                client.getCore().getLogger().info("Unable to execute command: The owner plugin of this command was disabled.");
+            } else {
+                if (msg != null) {
+                    msg.reply(new MarkdownComponent("无法执行命令: 注册此命令的插件现已被禁用。"));
+                } else if (sender instanceof User) {
+                    ((User) sender).sendPrivateMessage(new MarkdownComponent("无法执行命令: 注册此命令的插件现已被禁用。"));
+                }
+                return false;
+            }
+        }
+        // endregion
+
         // first get commands
         List<JKookCommand> sub = (List<JKookCommand>) commandObject.getSubcommands();
         // then we should know the latest command to be executed
