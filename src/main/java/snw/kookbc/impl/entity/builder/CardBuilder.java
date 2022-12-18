@@ -61,7 +61,7 @@ public class CardBuilder {
                     JsonElement rawAccessoryElement = moduleObj.get("accessory");
                     Accessory accessory = null;
                     Accessory.Mode mode = null;
-                    if (rawAccessoryElement != null) {
+                    if (!rawAccessoryElement.isJsonNull()) {
                         JsonObject rawAccessory = rawAccessoryElement.getAsJsonObject();
                         mode = Accessory.Mode.value(moduleObj.get("mode").getAsString());
                         // Validate.notNull(mode, "Unknown accessory mode."); // accessories without mode is allowed in KOOK CardMessage builder.
@@ -160,8 +160,8 @@ public class CardBuilder {
                     for (JsonElement jsonElement : elements) {
                         JsonObject rawButton = jsonElement.getAsJsonObject();
                         Validate.isTrue(Objects.equals(rawButton.get("type").getAsString(), "button"), "Action Group module only accepts button.");
-                        String value = rawButton.get("value") != null ? rawButton.get("value").getAsString() : "";
-                        ButtonElement.EventType type = ButtonElement.EventType.value(rawButton.get("click") != null ? rawButton.get("click").getAsString() : "");
+                        String value = rawButton.has("value") ? rawButton.get("value").getAsString() : "";
+                        ButtonElement.EventType type = ButtonElement.EventType.value(rawButton.has("click") ? rawButton.get("click").getAsString() : "");
                         BaseElement buttonText;
                         Theme buttonTheme = Theme.value(rawButton.get("theme").getAsString());
                         JsonObject rawButtonText = rawButton.getAsJsonObject("text");
