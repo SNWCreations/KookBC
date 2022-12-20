@@ -85,7 +85,7 @@ public class CardBuilder {
                                     default:
                                         throw new IllegalArgumentException("Unknown button text type.");
                                 }
-                                accessory = new ButtonElement(buttonTheme, rawAccessory.has("value") ? rawAccessory.get("value").getAsString() : null, ButtonElement.EventType.NO_ACTION, buttonText);
+                                accessory = new ButtonElement(buttonTheme, (rawAccessory.has("value") && !rawAccessory.get("value").isJsonNull()) ? rawAccessory.get("value").getAsString() : null, ButtonElement.EventType.NO_ACTION, buttonText);
                                 break;
                             default:
                                 throw new IllegalArgumentException("Unknown accessory type.");
@@ -160,8 +160,8 @@ public class CardBuilder {
                     for (JsonElement jsonElement : elements) {
                         JsonObject rawButton = jsonElement.getAsJsonObject();
                         Validate.isTrue(Objects.equals(rawButton.get("type").getAsString(), "button"), "Action Group module only accepts button.");
-                        String value = rawButton.has("value") ? rawButton.get("value").getAsString() : "";
-                        ButtonElement.EventType type = ButtonElement.EventType.value(rawButton.has("click") ? rawButton.get("click").getAsString() : "");
+                        String value = (rawButton.has("value") && !rawButton.get("value").isJsonNull()) ? rawButton.get("value").getAsString() : "";
+                        ButtonElement.EventType type = ButtonElement.EventType.value((rawButton.has("click") && !rawButton.get("click").isJsonNull()) ? rawButton.get("click").getAsString() : "");
                         BaseElement buttonText;
                         Theme buttonTheme = Theme.value(rawButton.get("theme").getAsString());
                         JsonObject rawButtonText = rawButton.getAsJsonObject("text");
@@ -399,7 +399,7 @@ public class CardBuilder {
     private static void addAccessory(Accessory accessory, JsonObject moduleObj) {
         if (accessory == null) return;
         JsonObject accessoryJson = new JsonObject();
-        Accessory.Mode mode = moduleObj.has("mode") ? Accessory.Mode.value(moduleObj.get("mode").getAsString()) : null;
+        Accessory.Mode mode = (moduleObj.has("mode") && !moduleObj.get("mode").isJsonNull()) ? Accessory.Mode.value(moduleObj.get("mode").getAsString()) : null;
         if (accessory instanceof ImageElement) {
             accessoryJson.addProperty("type", "image");
             accessoryJson.addProperty("src", ((ImageElement) accessory).getSource());
