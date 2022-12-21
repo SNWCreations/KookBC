@@ -50,7 +50,6 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -81,14 +80,7 @@ public class KBCClient {
         this.entityBuilder = new EntityBuilder(this);
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
-        this.eventExecutor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, "Event Executor");
-            }
-            
-        });
+        this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         core.init(this, new HttpAPIImpl(this, token));
     }
 
@@ -142,7 +134,7 @@ public class KBCClient {
     public void start() {
         core.getLogger().debug("Fetching Bot user object");
         User botUser = getEntityBuilder().buildUser(
-            getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
+                getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL())
         );
         getStorage().addUser(botUser);
         core.setUser(botUser);
@@ -203,6 +195,7 @@ public class KBCClient {
         if (rawBotMarketUUID != null) {
             if (!rawBotMarketUUID.isEmpty()) {
                 try {
+                    //noinspection ResultOfMethodCallIgnored
                     UUID.fromString(rawBotMarketUUID);
                     new BotMarketPingThread(this, rawBotMarketUUID).start();
                 } catch (IllegalArgumentException e) {

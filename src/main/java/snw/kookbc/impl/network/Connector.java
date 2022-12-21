@@ -224,7 +224,7 @@ public class Connector {
                 }
             }
         }
-    
+
         private void sleep(int sec) throws InterruptedException {
             Thread.sleep(TimeUnit.SECONDS.toMillis(sec));
             if (!kbcClient.isRunning()) throw new InterruptedException();

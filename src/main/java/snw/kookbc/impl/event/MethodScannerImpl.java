@@ -45,5 +45,5 @@ public final class MethodScannerImpl implements MethodScanner<Listener> {
     public boolean consumeCancelledEvents(@NonNull Listener listener, @NonNull Method method) {
         return false;
     }
-    
+
 }
