@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static snw.kookbc.util.Util.toEnglishNumOrder;
 import static snw.kookbc.util.Util.ensurePluginEnabled;
+import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
@@ -279,7 +279,7 @@ public class CommandManagerImpl implements CommandManager {
         }
         return null;
     }
-    
+
     protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
         if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
@@ -292,7 +292,7 @@ public class CommandManagerImpl implements CommandManager {
         List<Object> args = new ArrayList<>(rawArgs.size());
         // first stage - non-optional arguments
         command.getArguments().forEach(i -> processSingleArgument(i, rawArgs.remove(0), args, index.addAndGet(1)));
-        
+
         // second stage - optional arguments
         if (!command.getOptionalArguments().isEmpty()) { // still not empty? yes! optional arguments!
             int optIndex = 0;

@@ -157,7 +157,7 @@ public class EntityUpdater {
         CustomEmojiImpl emojiImpl = (CustomEmojiImpl) emoji;
         emojiImpl.setName0(name);
     }
-    
+
     public void updateGame(JsonObject object, Game game) {
         GameImpl impl = (GameImpl) game;
         String name = object.get("name").getAsString();

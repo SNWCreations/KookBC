@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 public class IgnoreSNListenerImpl extends ListenerImpl {
     private final List<Integer> processedSN = new LinkedList<>();
+
     public IgnoreSNListenerImpl(KBCClient client) {
         super(client);
         new Thread(() -> {

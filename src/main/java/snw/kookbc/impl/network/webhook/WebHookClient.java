@@ -23,6 +23,7 @@ import io.javalin.core.util.JavalinException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -51,8 +52,8 @@ public class WebHookClient extends KBCClient {
         }
         int port = getConfig().getInt("webhook-port");
         server = Javalin.create()
-                        .post('/' + route, new SimpleHttpHandler(this))
-                        .start(port);
+                .post('/' + route, new SimpleHttpHandler(this))
+                .start(port);
         getCore().getLogger().debug("Initializing SN from local file.");
         int initSN = 0;
         File snfile = new File(getPluginsFolder(), "sn");

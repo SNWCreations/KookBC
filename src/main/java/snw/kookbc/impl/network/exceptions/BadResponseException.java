@@ -22,7 +22,7 @@ package snw.kookbc.impl.network.exceptions;
 public class BadResponseException extends RuntimeException {
     private final int code;
     private final String rawMessage;
-    
+
     public BadResponseException(int code, String message) {
         super("Response code: " + code + ", message: " + message);
         this.code = code;

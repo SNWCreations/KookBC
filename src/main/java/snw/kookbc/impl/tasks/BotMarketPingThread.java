@@ -18,15 +18,14 @@
 
 package snw.kookbc.impl.tasks;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.concurrent.TimeUnit;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import snw.kookbc.impl.KBCClient;
 
 public class BotMarketPingThread extends Thread {
     private final KBCClient client;
@@ -58,6 +57,7 @@ public class BotMarketPingThread extends Thread {
 
     public void run0() throws InterruptedException {
         while (client.isRunning()) {
+            //noinspection BusyWait
             Thread.sleep(1000L * 60 * 5);
             if (!client.isRunning()) return;
             client.getCore().getLogger().debug("PING BotMarket...");

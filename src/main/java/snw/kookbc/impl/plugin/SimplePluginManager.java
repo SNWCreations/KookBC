@@ -20,9 +20,10 @@ package snw.kookbc.impl.plugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import snw.jkook.command.JKookCommand;
-import snw.jkook.plugin.*;
+import snw.jkook.plugin.InvalidPluginException;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginDescription;
+import snw.jkook.plugin.PluginManager;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
@@ -31,10 +32,8 @@ import snw.kookbc.impl.event.EventManagerImpl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Map.Entry;
 
 import static snw.kookbc.util.Util.getVersionDifference;
 
@@ -155,12 +154,7 @@ public class SimplePluginManager implements PluginManager {
         client.getCore().getScheduler().cancelTasks(plugin);
         ((EventManagerImpl) client.getCore().getEventManager()).unregisterAllHandlers(plugin);
         // unregister commands
-        for (Iterator<Entry<JKookCommand, Plugin>> iterator = ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().iterator(); iterator.hasNext();) {
-            Entry<JKookCommand, Plugin> next = iterator.next();
-            if (Objects.equals(next.getValue(), plugin)) {
-                iterator.remove();
-            }
-        }
+        ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().removeIf(next -> Objects.equals(next.getValue(), plugin));
         try {
             plugin.setEnabled(false);
         } catch (Throwable e) {

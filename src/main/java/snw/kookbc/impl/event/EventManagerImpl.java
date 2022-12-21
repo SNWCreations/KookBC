@@ -18,7 +18,15 @@
 
 package snw.kookbc.impl.event;
 
-import snw.jkook.event.*;
+import net.kyori.event.EventBus;
+import net.kyori.event.PostResult;
+import net.kyori.event.PostResult.CompositeException;
+import net.kyori.event.SimpleEventBus;
+import net.kyori.event.method.MethodSubscriptionAdapter;
+import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
+import snw.jkook.event.Event;
+import snw.jkook.event.EventManager;
+import snw.jkook.event.Listener;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
@@ -26,13 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import net.kyori.event.EventBus;
-import net.kyori.event.PostResult;
-import net.kyori.event.SimpleEventBus;
-import net.kyori.event.PostResult.CompositeException;
-import net.kyori.event.method.MethodSubscriptionAdapter;
-import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
