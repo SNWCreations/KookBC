@@ -174,13 +174,13 @@ public class EventFactory {
                     );
                 case GUILD_ADD_ROLE:
                     Role role = client.getEntityBuilder().buildRole(
-                            client.getStorage().getGuild(body.get("target_id").getAsString()),
+                            client.getStorage().getGuild(object.get("target_id").getAsString()),
                             body
                     );
                     return new RoleCreateEvent(msgTimeStamp, role);
                 case GUILD_REMOVE_ROLE:
                     Role deletedRole = client.getEntityBuilder().buildRole(
-                            client.getStorage().getGuild(body.get("target_id").getAsString()),
+                            client.getStorage().getGuild(object.get("target_id").getAsString()),
                             body);
                     return new RoleDeleteEvent(msgTimeStamp, deletedRole);
                 case GUILD_UPDATE_ROLE:
