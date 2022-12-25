@@ -9,7 +9,7 @@
 ## 准备
 
 * 一个待嵌入 KookBC 的项目
-* 对 JitPack 连接通畅的网络
+* 对 Maven 中央仓库，以及 JitPack 连接通畅的网络
 
 ## 执行
 
@@ -25,18 +25,18 @@
 <dependency>
     <groupId>com.github.SNWCreations</groupId>
     <artifactId>KookBC</artifactId>
-    <version>0.6.0</version>
+    <version>0.37.0</version>
     <scope>compile</scope>
 </dependency>
 ```
 
-**注意: 本文不会随着 KookBC 的更新而修改 `version` 项，请自行将其替换为最新版本。**
+* **注意: 本文可能不会随着 KookBC 的更新而修改 `version` 项，请自行将其替换为您需要的版本。**
 
 之后，刷新您的项目，等待 KookBC 从 JitPack 下载。
 
 失败了？没关系，那很正常，对于一个从未在 JitPack 编译过的工件，第一次请求总是失败的。 
 
-如果这个情况出现了，请去 JitPack 网站手动启动构建，并在完成后去您的本地 Maven 仓库将 `com\github\SNWCreations\KookBC\<version>` (自行替换 `<version>` 为使用的版本) 文件夹删除，然后再次刷新您的项目，应该就可以了。
+如果这个情况出现了，请去您的本地 Maven 仓库将 `com\github\SNWCreations\KookBC\<version>` (自行替换 `<version>` 为使用的版本) 文件夹删除，然后等待几分钟，再次刷新您的项目，应该就可以了。
 
 如果 JitPack 构建出错，请联系我。
 
@@ -70,7 +70,7 @@
 public class KBCClient {
     public KBCClient(
             snw.kookbc.impl.CoreImpl core,
-            snw.jkook.config.file.YamlConfiguration config,
+            snw.jkook.config.ConfigurationSection config,
             java.io.File pluginsFolder,
             String token
     ) {
@@ -79,13 +79,13 @@ public class KBCClient {
 }
 ```
 
-由此可见，您需要一个 `CoreImpl` 实例，一个 `YamlConfiguration` 实例，和一个 `File` 实例。
+由此可见，您需要一个 `CoreImpl` 实例，一个 `ConfigurationSection` 实例，和一个 `File` 实例。
 
-我需要解释一下这四者的作用:
+解释一下这四者的作用:
 
-* `core`: `Core` 的实例，用于 KookBC 实例的操作。
-* `config`: 即加载了 `kbc.yml` 后得到的结果
-* `pluginsFolder`: 即存放插件的 **文件夹**
+* `core`: 用于 KookBC 实例的操作。在此项目中，通过调用 `JKook.getCore()` (高版本还有 `Plugin#getCore`) 得到的就是这个。
+* `config`: 即此客户端的配置数据。一般是 `kbc.yml` 加载后的结果。(`kbc.yml` 使用 `YamlConfiguration` 类的方法加载)
+* `pluginsFolder`: 即存放插件的 **文件夹**，可以为 `null`，为 `null` 时，KookBC 将不会尝试从任何地方加载插件。
 * `token`: Bot Token
 
 按照这个方法，您应该得到了一个 `KBCClient` 的实例。
@@ -116,24 +116,46 @@ public class KBCClient {
 
 **但请注意，此方法可能会抛出 `RuntimeException` ，请注意捕获并处理。**
 
-## 额外内容
+## 再看 KBCClient
 
-此节介绍额外的 `KBCClient` 内的方法。
+此节介绍 `KBCClient` 类内的部分方法。
 
-## KBCClient#loop
+### KBCClient#loop
 
 此方法会启动控制台并一直循环监听用户输入。
 
 除非 KookBC 实例终止，或此方法执行过程中出现错误，此方法永远不会返回。
 
-## KBCClient#loadAllPlugins
+### KBCClient#loadAllPlugins
 
 此方法会从 pluginsFolder 加载插件。
 
 您可以重写此方法，只需要把您所加载的插件通过 `plugins.add(Plugin)` 添加就可以了。
 
-## KBCClient#startNetwork
+### KBCClient#getCore
+
+此方法获取绑定到此客户端实例的 `CoreImpl` 实例。
+
+### KBCClient#startNetwork
 
 此方法会启动网络模块。
 
 您可以重写此方法，如果您对于 Kook 连接有自己的处理方法。
+
+如果要覆盖此方法，请同时覆盖 `KBCClient#shutdownNetwork` 方法，以便于您可以关闭您自己的网络相关模块。
+
+### KBCClient#registerInternal
+
+此方法会向当前客户端实例注册一些内部命令，如 `/help`，`/plugins`，`/stop`，以及注册一些可以比由插件注册的事件监听器更优先运行的事件监听器。
+
+### KBCClient#registerHelpCommand
+
+此方法会被 `KBCClient#registerInternal` 方法调用，用于向当前客户端注册 `/help` 命令的实现。
+
+如果你需要禁用默认的 `/help` 的实现，请用空方法体覆盖此方法。
+
+### KBCClient#registerPluginsCommand
+
+此方法会被方法调用，用于向当前客户端实例注册 `/plugins` 命令的实现。
+
+如果你需要禁用默认的 `/plugins` 实现，请用空方法体覆盖此方法。
