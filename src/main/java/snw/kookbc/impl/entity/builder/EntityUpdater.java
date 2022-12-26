@@ -80,7 +80,8 @@ public class EntityUpdater {
         // basic information
         Validate.isTrue(Objects.equals(channel.getId(), object.get("id").getAsString()), "You can't update channel by using different data");
         String name = object.get("name").getAsString();
-        boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
+        // Category objects is the top type of Channel, and it can't sync with itself.
+        boolean isPermSync = object.has("permission_sync") ? object.get("permission_sync").getAsInt() != 0 : false;
         // rpo parse
         Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
         for (JsonElement element : object.get("permission_overwrites").getAsJsonArray()) {
