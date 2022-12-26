@@ -416,6 +416,8 @@ public class CardBuilder {
                             ((PlainTextElement) textModule).getContent()
             );
             accessoryJson.add("text", textObj);
+            accessoryJson.addProperty("click", ((ButtonElement) accessory).getEventType().getValue());
+            accessoryJson.addProperty("value", ((ButtonElement) accessory).getValue());
         }
         if (mode != null) {
             moduleObj.addProperty("mode", mode.getValue());
