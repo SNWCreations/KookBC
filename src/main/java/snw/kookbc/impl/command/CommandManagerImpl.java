@@ -40,6 +40,15 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public void registerCommand(JKookCommand command) throws IllegalArgumentException {
+        for (String p : command.getPrefixes()) {
+            for (JKookCommand cmd : commands) {
+                for (String p2 : cmd.getPrefixes()) {
+                    if (Objects.equals(p + command.getRootName(), p2 + cmd.getRootName())) {
+                        throw new IllegalArgumentException(String.format("Conflict rootname-with-prefix detected between registered command %s and incoming %s", cmd.getRootName(), command.getRootName()));
+                    }
+                }
+            }
+        }
         if (getCommand(command.getRootName()) != null
                 ||
                 commands.stream().anyMatch(
