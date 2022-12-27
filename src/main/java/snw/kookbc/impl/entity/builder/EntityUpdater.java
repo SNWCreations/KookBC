@@ -111,7 +111,7 @@ public class EntityUpdater {
         ((ChannelImpl) channel).setOverwrittenRolePermissions(rpo);
         ((ChannelImpl) channel).setOverwrittenUserPermissions(upo);
 
-        if (object.get("is_category").getAsBoolean()) {
+        if (object.get("is_category").getAsInt() == 1) {
             CategoryImpl category = (CategoryImpl) channel;
             category.setName(name);
             category.setPermissionSync(isPermSync);
