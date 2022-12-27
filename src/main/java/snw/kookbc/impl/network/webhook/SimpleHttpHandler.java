@@ -61,6 +61,7 @@ public class SimpleHttpHandler implements Handler {
         client.getCore().getLogger().debug("Got remote request: {}", res);
         JsonObject object = JsonParser.parseString(
                 EncryptUtils.decrypt(client, res)).getAsJsonObject();
+        client.getCore().getLogger().debug("Got DECRYPTED request payload: {}", object);
         Frame frame = new Frame(
                 object.get("s").getAsInt(),
                 object.has("sn") ? object.get("sn").getAsInt() : -1,
