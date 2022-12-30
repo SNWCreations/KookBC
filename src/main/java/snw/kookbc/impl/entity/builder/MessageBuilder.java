@@ -106,8 +106,15 @@ public class MessageBuilder {
         // we use text channel message format
         String content = object.get("content").getAsString();
         switch (object.get("type").getAsInt()) {
-            case 1:
-                return new TextComponent(content);
+            case 9:
+                return new MarkdownComponent(content);
+            case 10:
+                MultipleCardComponent card = CardBuilder.buildCard(JsonParser.parseString(content).getAsJsonArray());
+                if (card.getComponents().size() == 1) {
+                    return card.getComponents().get(0);
+                } else {
+                    return card;
+                }
             case 2:
             case 3:
             case 4:
@@ -141,15 +148,8 @@ public class MessageBuilder {
                         size,
                         type
                 );
-            case 9:
-                return new MarkdownComponent(content);
-            case 10:
-                MultipleCardComponent card = CardBuilder.buildCard(JsonParser.parseString(content).getAsJsonArray());
-                if (card.getComponents().size() == 1) {
-                    return card.getComponents().get(0);
-                } else {
-                    return card;
-                }
+            case 1: // Are you sure? Tbis message type was deprecated. KOOK converts plain text (TextComponent) into KMarkdown (MarkdownComponent)
+                return new TextComponent(content);
         }
         throw new RuntimeException("Unknown component type");
     }
