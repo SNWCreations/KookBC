@@ -128,9 +128,17 @@ public class ListenerImpl implements Listener {
     }
 
     protected void event0(Frame frame) {
-        Event event = EventFactory.getEvent(client, frame.getData());
+        Event event;
+        try {
+            event = EventFactory.getEvent(client, frame.getData());
+        } catch (Exception e) {
+            client.getCore().getLogger().error("Unable to create event from payload.");
+            client.getCore().getLogger().error("Event payload: {}", frame);
+            e.printStackTrace();
+            return;
+        }
         if (event == null) {
-            client.getCore().getLogger().error("Invalid frame, unable to create event.");
+            client.getCore().getLogger().error("We cannot understand the frame.");
             client.getCore().getLogger().error("Frame content: {}", frame);
             return;
         }
