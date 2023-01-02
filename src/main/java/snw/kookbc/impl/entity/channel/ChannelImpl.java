@@ -100,7 +100,9 @@ public abstract class ChannelImpl implements Channel {
             ((CategoryImpl) this.parent).getChannels0().remove(this);
         }
         this.parent = parent;
-        ((CategoryImpl) parent).getChannels0().add(this);
+        if (parent != null) { // if this is on the top level?
+            ((CategoryImpl) parent).getChannels0().add(this);
+        }
     }
 
     @Override
