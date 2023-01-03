@@ -88,6 +88,7 @@ public class UserImpl implements User {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", guild.getId())
                 .put("nickname", (s != null ? s : ""))
+                .put("user_id", getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME.toFullURL(), body);
     }
