@@ -51,10 +51,10 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         }
         String reqUrl = getRequestURL();
         JsonObject object = client.getNetworkClient().get(
-                reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.getAndAdd(1) + "&page_size=" + getPageSize()
+                reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.get() + "&page_size=" + getPageSize()
         );
         JsonObject meta = object.getAsJsonObject("meta");
-        next = currentPage.get() < meta.get("page_total").getAsInt();
+        next = currentPage.getAndAdd(1) <= meta.get("page_total").getAsInt();
         processElements(object.getAsJsonArray("items"));
         return next;
     }
