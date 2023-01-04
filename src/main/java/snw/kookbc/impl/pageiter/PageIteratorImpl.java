@@ -55,7 +55,9 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         );
         JsonObject meta = object.getAsJsonObject("meta");
         next = currentPage.getAndAdd(1) <= meta.get("page_total").getAsInt();
-        processElements(object.getAsJsonArray("items"));
+        if (next) {
+            processElements(object.getAsJsonArray("items"));
+        }
         return next;
     }
 
