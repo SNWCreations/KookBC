@@ -140,6 +140,11 @@ public class Connector {
         if (!kbcClient.isRunning()) {
             throw new RuntimeException("The client is not running! (If you see this when the client is stopping, please ignore this)");
         }
+        if (!connected) { // Let PING Thread wait until the connector success.
+            setTimeout(false);
+            setPingOk(true);
+            return;
+        }
         kbcClient.getCore().getLogger().debug("Attempting to PING.");
         setPingOk(false);
         boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
