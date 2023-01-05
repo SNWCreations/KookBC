@@ -32,6 +32,7 @@ import snw.jkook.message.component.TextComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.event.EventFactory;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.network.webhook.WebHookClient;
 
 import java.io.*;
@@ -214,14 +215,18 @@ public class ListenerImpl implements Listener {
                             "---\n" +
                             strWrt
             );
-            if (event instanceof ChannelMessageEvent) {
-                channel.sendComponent(
-                        markdownComponent,
-                        null,
-                        sender
-                );
-            } else {
-                ((PrivateMessageReceivedEvent) event).getUser().sendPrivateMessage(markdownComponent);
+            try {
+                if (event instanceof ChannelMessageEvent) {
+                    channel.sendComponent(
+                            markdownComponent,
+                            null,
+                            sender
+                    );
+                } else {
+                    sender.sendPrivateMessage(markdownComponent);
+                }
+            } catch (BadResponseException ex) {
+                client.getCore().getLogger().error("Unable to send command failure message.", ex);
             }
             client.getCore().getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
             return true; // Although this failed, but it is a valid command
