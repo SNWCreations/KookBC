@@ -100,7 +100,7 @@ public class EntityBuilder {
         Guild guild = client.getStorage().getGuild(object.get("guild_id").getAsString());
         User master = client.getStorage().getUser(object.get("user_id").getAsString());
         String parentId = object.get("parent_id").getAsString();
-        Category parent = (parentId.isEmpty()) ? null : (Category) client.getStorage().getChannel(parentId);
+        Category parent = "0".equals(parentId) ? null : (Category) client.getStorage().getChannel(parentId);
         boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
         int level = object.get("level").getAsInt();
 
