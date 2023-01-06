@@ -163,6 +163,7 @@ public class Connector {
             synchronized (reconnectLock) {
                 if (!requireReconnect) {
                     requireReconnect = true;
+                    connected = false;
                     reconnectLock.notifyAll();
                 }
             }
