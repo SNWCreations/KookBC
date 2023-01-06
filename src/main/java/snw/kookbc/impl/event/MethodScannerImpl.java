@@ -30,6 +30,9 @@ import java.lang.reflect.Modifier;
 public final class MethodScannerImpl implements MethodScanner<Listener> {
     public static final MethodScannerImpl INSTANCE = new MethodScannerImpl();
 
+    private MethodScannerImpl() {
+    }
+
     @Override
     public boolean shouldRegister(@NonNull Listener listener, @NonNull Method method) {
         return Modifier.isPublic(method.getModifiers()) && method.isAnnotationPresent(EventHandler.class) && method.getParameterCount() == 1 && !Modifier.isAbstract(method.getParameterTypes()[0].getModifiers());
