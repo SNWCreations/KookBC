@@ -30,7 +30,7 @@ import snw.kookbc.impl.message.TextChannelMessageImpl;
 
 // Wait! Are you sure you want to this? This can cause RESOURCE LEAK! Beware.
 // But also, this is useful in some situations.
-// (e.g. Some methods that only need the actual instance but they just need the ID)
+// (e.g. Some methods that only need the actual instance, but they just need the ID)
 public class UnsafeImpl implements Unsafe {
     private final KBCClient client;
 
