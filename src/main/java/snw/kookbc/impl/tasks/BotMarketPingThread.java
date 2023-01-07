@@ -1,6 +1,6 @@
 /*
  *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
- *     Copyright (C) 2022 KookBC contributors
+ *     Copyright (C) 2022 - 2023 KookBC contributors
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as published
@@ -13,20 +13,19 @@
  *     GNU Affero General Public License for more details.
  *
  *     You should have received a copy of the GNU Affero General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>;.
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package snw.kookbc.impl.tasks;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.concurrent.TimeUnit;
-
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import snw.kookbc.impl.KBCClient;
 
 public class BotMarketPingThread extends Thread {
     private final KBCClient client;

@@ -1,6 +1,6 @@
 /*
  *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
- *     Copyright (C) 2022 KookBC contributors
+ *     Copyright (C) 2022 - 2023 KookBC contributors
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU Affero General Public License as published
@@ -18,15 +18,10 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
-
-import java.util.Objects;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
@@ -35,6 +30,10 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.Listener;
 import snw.kookbc.impl.network.ListenerFactory;
+
+import java.util.Objects;
+
+import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
 
 public class SimpleHttpHandler implements Handler {
     protected final KBCClient client;
