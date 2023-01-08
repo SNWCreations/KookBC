@@ -18,15 +18,14 @@
 
 package snw.kookbc.impl.event;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import net.kyori.event.PostOrders;
 import net.kyori.event.method.MethodScanner;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import snw.jkook.event.EventHandler;
 import snw.jkook.event.Listener;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public final class MethodScannerImpl implements MethodScanner<Listener> {
     public static final MethodScannerImpl INSTANCE = new MethodScannerImpl();

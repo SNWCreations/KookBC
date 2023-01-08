@@ -18,14 +18,13 @@
 
 package snw.kookbc.impl.plugin;
 
-import java.io.File;
-import java.io.InputStream;
-
 import org.slf4j.Logger;
-
 import snw.jkook.config.file.FileConfiguration;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
+
+import java.io.File;
+import java.io.InputStream;
 
 // A plugin implementation as a placeholder to call methods that require plugin instance.
 // DO NOT USE THIS OUTSIDE snw.kookbc PACKAGE.

@@ -18,17 +18,8 @@
 
 package snw.kookbc.impl.plugin;
 
-import static snw.kookbc.util.Util.getVersionDifference;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
@@ -36,6 +27,14 @@ import snw.jkook.plugin.PluginManager;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.event.EventManagerImpl;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
+
+import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;
@@ -77,6 +76,7 @@ public class SimplePluginManager implements PluginManager {
         // An example is following:
         // pluginManager.disablePlugin(plugin);
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
+        @SuppressWarnings("resource")
         Plugin plugin = new SimplePluginClassLoader(client).loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());

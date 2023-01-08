@@ -18,16 +18,16 @@
 
 package snw.kookbc.impl.network;
 
+import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.exceptions.TooFastException;
+import snw.kookbc.impl.plugin.InternalPlugin;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import snw.jkook.util.Validate;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.exceptions.TooFastException;
-import snw.kookbc.impl.plugin.InternalPlugin;
 
 // Represents the Bucket of Rate Limit.
 // Not single instance. Created when network call requested.
