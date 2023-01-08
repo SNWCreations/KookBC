@@ -60,23 +60,23 @@ public final class UpdateChecker extends Thread {
             resObj = JsonParser.parseString(rawResponse).getAsJsonObject();
         }
 
-        String recievedVersion = resObj.get("tag_name").getAsString();
+        String receivedVersion = resObj.get("tag_name").getAsString();
 
-        if (recievedVersion.startsWith("v")) { // normally I won't add "v" prefix.
-            recievedVersion = recievedVersion.substring(1);
+        if (receivedVersion.startsWith("v")) { // normally I won't add "v" prefix.
+            receivedVersion = receivedVersion.substring(1);
         }
 
-        int versionDifference = getVersionDifference(JKook.getImplementationVersion(), recievedVersion);
+        int versionDifference = getVersionDifference(JKook.getImplementationVersion(), receivedVersion);
         if (versionDifference == -1) {
             client.getCore().getLogger().info("Update available! Information is following:");
-            client.getCore().getLogger().info("New Version: {}, Currently on: {}", recievedVersion, JKook.getImplementationVersion());
+            client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, JKook.getImplementationVersion());
             client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
             client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
             client.getCore().getLogger().info("Release message is following:");
             for (String body : resObj.get("body").getAsString().split("\r\n")) {
                 client.getCore().getLogger().info(body);
             }
-            client.getCore().getLogger().info("You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}", recievedVersion);
+            client.getCore().getLogger().info("You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}", receivedVersion);
         } else if (versionDifference == 0) {
             client.getCore().getLogger().info("You are using the latest version! :)");
         } else if (versionDifference == 1) {

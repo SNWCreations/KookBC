@@ -101,6 +101,7 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.GUILD_CHANGE_OTHERS_NICKNAME, "guild/nickname");
         bucketNameMap.put(HttpAPIRoute.GUILD_LEAVE, "guild/leave");
         bucketNameMap.put(HttpAPIRoute.GUILD_KICK, "guild/kickout");
+        bucketNameMap.put(HttpAPIRoute.GUILD_BOOST_HISTORY, "guild-boost/history");
         bucketNameMap.put(HttpAPIRoute.MUTE_LIST, "guild-mute/list");
         bucketNameMap.put(HttpAPIRoute.MUTE_ADD, "guild-mute/create");
         bucketNameMap.put(HttpAPIRoute.MUTE_REMOVE, "guild-mute/delete");
@@ -163,6 +164,5 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE, "game/delete");
         bucketNameMap.put(HttpAPIRoute.GAME_CREATE_ACTIVITY, "game/activity");
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE_ACTIVITY, "game/delete-activity");
-        bucketNameMap.put(HttpAPIRoute.GUILD_BOOST_HISTORY, "guild-boost/history");
     }
 }
