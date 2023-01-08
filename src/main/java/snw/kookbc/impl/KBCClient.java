@@ -160,7 +160,7 @@ public class KBCClient {
                 (o1, o2) ->
                         (o1.getDescription().getDepend().contains(o2.getDescription().getName())
                                 ||
-                         o1.getDescription().getSoftDepend().contains(o2.getDescription().getName()))
+                                o1.getDescription().getSoftDepend().contains(o2.getDescription().getName()))
                                 ? 1 : -1
         );
 

@@ -64,7 +64,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             for (Plugin plugin : client.getCore().getPluginManager().getPlugins()) {
                 try {
                     return plugin.getClass().getClassLoader().loadClass(name);
-                } catch (ClassNotFoundException ignored) {}
+                } catch (ClassNotFoundException ignored) {
+                }
             }
         }
         throw new ClassNotFoundException(name);

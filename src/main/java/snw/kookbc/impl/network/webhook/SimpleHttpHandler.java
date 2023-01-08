@@ -58,16 +58,17 @@ public class SimpleHttpHandler implements Handler {
             res = new String(bytes);
         }
         client.getCore().getLogger().debug("Got remote request: {}", res);
-        JsonObject object = JsonParser.parseString(
-                EncryptUtils.decrypt(client, res)).getAsJsonObject();
+        JsonObject object = JsonParser.parseString(EncryptUtils.decrypt(client, res)).getAsJsonObject();
         client.getCore().getLogger().debug("Got DECRYPTED request payload: {}", object);
         Frame frame = new Frame(
                 object.get("s").getAsInt(),
                 object.has("sn") ? object.get("sn").getAsInt() : -1,
-                object.getAsJsonObject("d"));
+                object.getAsJsonObject("d")
+        );
         if (!Objects.equals(
                 frame.getData().get("verify_token").getAsString(),
-                client.getConfig().getString("webhook-verify-token"))) {
+                client.getConfig().getString("webhook-verify-token"))
+        ) {
             throw new BadRequestResponse();
         } else {
             // challenge part
