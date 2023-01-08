@@ -45,8 +45,13 @@ import java.util.Collection;
 import java.util.Map;
 
 public class HttpAPIImpl implements HttpAPI {
+    private static final MediaType OCTET_STREAM;
     private final KBCClient client;
     private final String token;
+
+    static {
+        OCTET_STREAM = MediaType.parse("application/octet-stream");
+    }
 
     public HttpAPIImpl(KBCClient client, String token) {
         this.client = client;
@@ -86,7 +91,7 @@ public class HttpAPIImpl implements HttpAPI {
     public String uploadFile(File file) {
         RequestBody body = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(), RequestBody.create(file, MediaType.parse("application/octet-stream")))
+                .addFormDataPart("file", file.getName(), RequestBody.create(file, OCTET_STREAM))
                 .build();
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
@@ -100,7 +105,7 @@ public class HttpAPIImpl implements HttpAPI {
     public String uploadFile(String binary) {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", "114514", RequestBody.create(binary, MediaType.parse("application/octet-stream")))
+                .addFormDataPart("file", "114514", RequestBody.create(binary, OCTET_STREAM))
                 .build();
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
