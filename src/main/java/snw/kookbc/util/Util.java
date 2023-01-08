@@ -25,7 +25,7 @@ public class Util {
 
     // -1 = Outdated
     // 0 = Latest
-    // 1 = From Future (means this version is not on Github. Development version?)
+    // 1 = From Future (means this version is not on GitHub. Development version?)
     public static int getVersionDifference(String current, String versionToCompare) {
         if (current.equals(versionToCompare))
             return 0;

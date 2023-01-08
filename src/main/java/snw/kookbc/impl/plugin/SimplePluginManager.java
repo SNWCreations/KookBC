@@ -73,7 +73,7 @@ public class SimplePluginManager implements PluginManager {
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
         // We won't close the ClassLoader, because Plugin#getResource need the ClassLoader to keep open.
         // Otherwise, Plugin#getResource will not work correctly.
-        // If you want to reload an plugin, or fully uninstall an plugin, close the ClassLoader manually.
+        // If you want to reload a plugin, or fully uninstall a plugin, close the ClassLoader manually.
         // An example is following:
         // pluginManager.disablePlugin(plugin);
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
@@ -162,7 +162,7 @@ public class SimplePluginManager implements PluginManager {
 //            try {
 //                ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
 //            } catch (IOException e) {
-//                client.getCore().getLogger().error("Unexpected IOException while we attempting to close the PluginClassLoader.", e);
+//                client.getCore().getLogger().error("Unexpected IOException while we're attempting to close the PluginClassLoader.", e);
 //            }
 //        }
     }
