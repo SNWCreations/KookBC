@@ -54,4 +54,19 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         );
         return plugin;
     }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            return super.findClass(name);
+        } catch (ClassNotFoundException e) {
+            // Try to load class from other known plugin
+            for (Plugin plugin : client.getCore().getPluginManager().getPlugins()) {
+                try {
+                    return plugin.getClass().getClassLoader().loadClass(name);
+                } catch (ClassNotFoundException ignored) {}
+            }
+        }
+        throw new ClassNotFoundException(name);
+    }
 }

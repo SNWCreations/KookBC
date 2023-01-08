@@ -94,7 +94,7 @@ public class EventFactory {
                             msgTimeStamp,
                             user,
                             body.get("msg_id").getAsString(),
-                            emoji
+                            reaction
                     );
                 case PM_REMOVE_REACTION:
                 case CHANNEL_USER_REMOVE_REACTION:

@@ -111,6 +111,20 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     @Override
+    public String uploadFile(String filename, byte[] content) {
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", filename, RequestBody.create(content, MediaType.parse("application/octet-stream")))
+                .build();
+        Request request = new Request.Builder()
+                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
+                .post(requestBody)
+                .addHeader("Authorization", String.format("Bot %s", token))
+                .build();
+        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+    }
+
+    @Override
     public void removeInvite(String urlCode) {
         client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
                 new MapBuilder()

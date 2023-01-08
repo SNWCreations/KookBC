@@ -37,6 +37,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
 import snw.kookbc.util.MapBuilder;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,7 +81,7 @@ public class GuildImpl implements Guild {
     }
 
     @Override
-    public PageIterator<Set<User>> getUsers(String keyword, int roleId, boolean isMobileVerified, boolean isActiveTimeFirst, boolean isJoinedTimeFirst) {
+    public PageIterator<Set<User>> getUsers(String keyword, @Nullable Integer roleId, @Nullable Boolean isMobileVerified, @Nullable Boolean isActiveTimeFirst, @Nullable Boolean isJoinedTimeFirst) {
         return new GuildUserListIterator(client, getId(), keyword, roleId, isMobileVerified, isActiveTimeFirst, isJoinedTimeFirst);
     }
 
@@ -275,6 +276,11 @@ public class GuildImpl implements Guild {
     }
 
     @Override
+    public Collection<BoostInfo> getBoostInfo(int start, int end) throws IllegalArgumentException {
+        return null;
+    }
+
+    @Override
     public PageIterator<Set<Invitation>> getInvitations() {
         return new GuildInvitationsIterator(client, this);
     }
@@ -310,5 +316,34 @@ public class GuildImpl implements Guild {
 
     public void setAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+}
+
+// Just a JavaBean that contains the boost information.
+// See Guild#getBoostInfo.
+final class BoostInfoImpl implements Guild.BoostInfo {
+    private final User booster;
+    private final int startTime;
+    private final int endTime;
+
+    BoostInfoImpl(User booster, int startTime, int endTime) {
+        this.booster = booster;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    @Override
+    public User getBooster() {
+        return booster;
+    }
+
+    @Override
+    public int getStartTime() {
+        return startTime;
+    }
+
+    @Override
+    public int getEndTime() {
+        return endTime;
     }
 }

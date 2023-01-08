@@ -25,6 +25,7 @@ import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
@@ -69,6 +70,20 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     @Override
     public String sendToSourceTemp(BaseComponent component) {
         return getChannel().sendComponent(component, null, getSender());
+    }
+
+    @Override
+    public void setComponentTemp(User user, BaseComponent component) {
+        Object content = MessageBuilder.serialize(component)[1];
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("content", content)
+                .put("temp_target_id", user.getId())
+                .build();
+        client.getNetworkClient().post(
+                HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
+                body
+        );
     }
 
     @Override

@@ -29,6 +29,7 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
+import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
@@ -154,6 +155,15 @@ public class KBCClient {
             return; // If you just want to use JKook API?
         }
         List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
+        //noinspection ComparatorMethodParameterNotUsed
+        plugins.sort(
+                (o1, o2) ->
+                        (o1.getDescription().getDepend().contains(o2.getDescription().getName())
+                                ||
+                         o1.getDescription().getSoftDepend().contains(o2.getDescription().getName()))
+                                ? 1 : -1
+        );
+
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -175,13 +185,21 @@ public class KBCClient {
             plugin.reloadConfig(); // ensure the default configuration will be loaded
 
             // onEnable
-            getCore().getPluginManager().enablePlugin(plugin);
+            try {
+                getCore().getPluginManager().enablePlugin(plugin);
+            } catch (UnknownDependencyException e) {
+                getCore().getLogger().error("Unable to enable plugin {} because unknown dependency detected.", plugin.getDescription().getName(), e);
+                iterator.remove();
+                continue;
+            }
             if (!plugin.isEnabled()) {
                 iterator.remove();
+            } else {
+                // Add the plugin into the known list to ensure the dependency system will work correctly
+                getCore().getPluginManager().addPlugin(plugin);
             }
             // end onEnable
         }
-        plugins.forEach(getCore().getPluginManager()::addPlugin);
     }
 
     protected void startNetwork() {

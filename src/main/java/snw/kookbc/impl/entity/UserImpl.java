@@ -167,6 +167,11 @@ public class UserImpl implements User {
     }
 
     @Override
+    public Collection<VoiceChannel> getJoinedVoiceChannel(Guild guild) {
+        return null;
+    }
+
+    @Override
     public int getIntimacy() {
         if (intimacy == null) {
             intimacy = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();

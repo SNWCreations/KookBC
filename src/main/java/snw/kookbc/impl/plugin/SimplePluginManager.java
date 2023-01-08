@@ -20,14 +20,10 @@ package snw.kookbc.impl.plugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import snw.jkook.plugin.InvalidPluginException;
-import snw.jkook.plugin.Plugin;
-import snw.jkook.plugin.PluginDescription;
-import snw.jkook.plugin.PluginManager;
+import snw.jkook.plugin.*;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.event.EventManagerImpl;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -77,6 +73,7 @@ public class SimplePluginManager implements PluginManager {
         // An example is following:
         // pluginManager.disablePlugin(plugin);
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
+        @SuppressWarnings("resource")
         Plugin plugin = new SimplePluginClassLoader(client).loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
@@ -129,13 +126,18 @@ public class SimplePluginManager implements PluginManager {
     }
 
     @Override
-    public void enablePlugin(Plugin plugin) {
+    public void enablePlugin(Plugin plugin) throws UnknownDependencyException {
         if (isPluginEnabled(plugin)) return;
         PluginDescription description = plugin.getDescription();
         plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
         if (!plugin.getDataFolder().exists()) {
             //noinspection ResultOfMethodCallIgnored
             plugin.getDataFolder().mkdir();
+        }
+        for (String dep : description.getDepend()) {
+            if (getPlugin(dep) == null) {
+                throw new UnknownDependencyException(String.format("Detected unknown dependency '%s' from plugin '%s'", dep, description.getName()));
+            }
         }
         try {
             plugin.setEnabled(true);
@@ -152,7 +154,7 @@ public class SimplePluginManager implements PluginManager {
         plugin.getLogger().info("Disabling {} version {}", description.getName(), description.getVersion());
         // cancel tasks
         client.getCore().getScheduler().cancelTasks(plugin);
-        ((EventManagerImpl) client.getCore().getEventManager()).unregisterAllHandlers(plugin);
+        client.getCore().getEventManager().unregisterAllHandlers(plugin);
         // unregister commands
         ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().removeIf(next -> Objects.equals(next.getValue(), plugin));
         try {
