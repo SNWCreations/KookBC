@@ -65,7 +65,12 @@ public class EventManagerImpl implements EventManager {
     @Override
     public void registerHandlers(Plugin plugin, Listener listener) {
         ensurePluginEnabled(plugin);
-        msa.register(listener);
+        try {
+            msa.register(listener);
+        } catch (SimpleMethodSubscriptionAdapter.SubscriberGenerationException e) {
+            msa.unregister(listener); // rollback
+            throw e; // rethrow
+        }
         getListeners(plugin).add(listener);
     }
 

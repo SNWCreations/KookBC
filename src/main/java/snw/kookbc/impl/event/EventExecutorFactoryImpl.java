@@ -26,6 +26,7 @@ import snw.jkook.event.Listener;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public final class EventExecutorFactoryImpl implements EventExecutor.Factory<Event, Listener> {
     public static final EventExecutorFactoryImpl INSTANCE = new EventExecutorFactoryImpl();
@@ -36,6 +37,9 @@ public final class EventExecutorFactoryImpl implements EventExecutor.Factory<Eve
     @Override
     public @NonNull EventExecutor<Event, Listener> create(@NonNull Object object, @NonNull Method method) throws Exception {
         final Class<? extends Event> actualEventType = method.getParameterTypes()[0].asSubclass(Event.class);
+        if (Modifier.isAbstract(actualEventType.getModifiers())) {
+            throw new IllegalArgumentException("You cannot create listener for an abstract event type.");
+        }
         final MethodHandle handle = MethodHandles.lookup().unreflect(method).bindTo(object);
         return (listener, event) -> {
             if (!actualEventType.isInstance(event))

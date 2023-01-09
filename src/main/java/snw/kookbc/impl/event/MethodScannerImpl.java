@@ -35,7 +35,7 @@ public final class MethodScannerImpl implements MethodScanner<Listener> {
 
     @Override
     public boolean shouldRegister(@NonNull Listener listener, @NonNull Method method) {
-        return Modifier.isPublic(method.getModifiers()) && method.isAnnotationPresent(EventHandler.class) && method.getParameterCount() == 1 && !Modifier.isAbstract(method.getParameterTypes()[0].getModifiers());
+        return Modifier.isPublic(method.getModifiers()) && method.isAnnotationPresent(EventHandler.class);
     }
 
     @Override
