@@ -37,9 +37,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GuildImpl implements Guild {
     private final KBCClient client;
@@ -277,7 +275,21 @@ public class GuildImpl implements Guild {
 
     @Override
     public Collection<BoostInfo> getBoostInfo(int start, int end) throws IllegalArgumentException {
-        return null;
+        JsonObject object = client.getNetworkClient().get(
+                String.format("%s?guild_id=%s&start_time=%s&end_time=%s", HttpAPIRoute.GUILD_BOOST_HISTORY.toFullURL(), getId(), start, end)
+        );
+        Collection<BoostInfo> result = new HashSet<>();
+        for (JsonElement item : object.getAsJsonArray("items")) {
+            JsonObject data = item.getAsJsonObject();
+            result.add(
+                    new BoostInfoImpl(
+                            client.getStorage().getUser(data.get("user_id").getAsString()),
+                            data.get("start_time").getAsInt(),
+                            data.get("end_time").getAsInt()
+                    )
+            );
+        }
+        return Collections.unmodifiableCollection(result);
     }
 
     @Override
