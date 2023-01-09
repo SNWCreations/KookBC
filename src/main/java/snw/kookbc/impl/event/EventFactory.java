@@ -40,6 +40,8 @@ import snw.jkook.message.TextChannelMessage;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.network.Frame;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +51,8 @@ import java.util.Objects;
 public class EventFactory {
 
     // the object should be provided from snw.kbc.impl.network.Frame#getData.
-    public static Event getEvent(@NotNull KBCClient client, @NotNull JsonObject object) {
+    public static Event getEvent(@NotNull KBCClient client, @NotNull Frame frame) {
+        JsonObject object = frame.getData();
         long msgTimeStamp = object.get("msg_timestamp").getAsLong();
 
         JsonObject extra = object.getAsJsonObject("extra");
@@ -136,7 +139,13 @@ public class EventFactory {
                     client.getStorage().addChannel(newChannel);
                     return new ChannelCreateEvent(msgTimeStamp, newChannel);
                 case CHANNEL_UPDATE:
-                    Channel channel = client.getStorage().getChannel(body.get("id").getAsString());
+                    Channel channel;
+                    try {
+                        channel = client.getStorage().getChannel(body.get("id").getAsString());
+                    } catch (BadResponseException e) {
+                        client.getCore().getLogger().warn("Detected snw.jkook.event.channel.ChannelInfoUpdateEvent, but we are unable to fetch channel (id {}).", body.get("id").getAsString());
+                        return null;
+                    }
                     client.getEntityUpdater().updateChannel(body, channel);
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
@@ -260,6 +269,8 @@ public class EventFactory {
                     return new UserLeaveGuildEvent(msgTimeStamp, client.getCore().getUser(), client.getStorage().getGuild(body.get("guild_id").getAsString()));
             }
         }
+        client.getCore().getLogger().error("We cannot understand the frame.");
+        client.getCore().getLogger().error("Frame content: {}", frame);
         return null; // don't worry, the caller will handle null.
     }
 }
