@@ -275,6 +275,9 @@ public class GuildImpl implements Guild {
 
     @Override
     public Collection<BoostInfo> getBoostInfo(int start, int end) throws IllegalArgumentException {
+        Validate.isTrue(start >= 0, "The paramater 'start' cannot be negative");
+        Validate.isTrue(end > 0, "The parameter 'end' cannot be negative");
+        Validate.isTrue(start < end, "The parameter 'start' cannot be greater than the parameter 'end'");
         JsonObject object = client.getNetworkClient().get(
                 String.format("%s?guild_id=%s&start_time=%s&end_time=%s", HttpAPIRoute.GUILD_BOOST_HISTORY.toFullURL(), getId(), start, end)
         );
