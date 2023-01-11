@@ -278,13 +278,17 @@ public class KBCClient {
     }
 
     protected void registerInternal() {
+        registerStopCommand();
+        registerHelpCommand();
+        registerPluginsCommand();
+        getCore().getEventManager().registerHandlers(InternalPlugin.INSTANCE, new InternalEventListener());
+    }
+
+    protected void registerStopCommand() {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register();
-        registerHelpCommand();
-        registerPluginsCommand();
-        getCore().getEventManager().registerHandlers(InternalPlugin.INSTANCE, new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
@@ -369,8 +373,6 @@ public class KBCClient {
                                 String finalResult = String.join("\n", helpList.toArray(new String[0]));
                                 if (message != null) {
                                     message.sendToSource(new MarkdownComponent(finalResult));
-                                } else {
-                                    ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
                                 }
                             }
                         }
