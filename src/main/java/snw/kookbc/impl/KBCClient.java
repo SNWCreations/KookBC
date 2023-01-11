@@ -128,6 +128,7 @@ public class KBCClient {
         );
         getStorage().addUser(botUser);
         core.setUser(botUser);
+        registerInternal();
         getCore().getLogger().debug("Loading all the plugins from plugins folder.");
         loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
@@ -179,7 +180,6 @@ public class KBCClient {
     }
 
     protected void finishStart() {
-        registerInternal();
         // region BotMarket support part - 2022/7/28
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
         if (rawBotMarketUUID != null) {
