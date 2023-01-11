@@ -50,8 +50,9 @@ public class ListenerImpl implements Listener {
 
     @Override
     public void executeEvent(Frame frame) {
+        client.getCore().getLogger().debug("Got payload frame: {}", frame);
         if (frame.getType() == null) {
-            client.getCore().getLogger().warn("Unknown event type! The raw frame content: {}", frame);
+            client.getCore().getLogger().warn("Unknown event type!");
             return;
         }
         switch (frame.getType()) {
