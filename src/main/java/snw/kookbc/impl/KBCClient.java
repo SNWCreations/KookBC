@@ -393,7 +393,8 @@ public class KBCClient {
                                         ((TextChannelMessage) message).getChannel().sendComponent(
                                                 new MarkdownComponent(finalResult),
                                                 null,
-                                                (User) commandSender);
+                                                null
+                                        );
                                     } else {
                                         ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
                                     }
