@@ -131,7 +131,7 @@ public class KBCClient {
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
-        getCore().getLogger().debug("Loading all the plugins from plugins folder.");
+        getCore().getLogger().debug("Loading all the plugins from plugins folder");
         loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
@@ -165,7 +165,7 @@ public class KBCClient {
             try {
                 plugin.onLoad();
             } catch (Exception e) {
-                getCore().getLogger().error("Unable to call Plugin#onLoad for a plugin.", e);
+                plugin.getLogger().error("Unable to load this plugin", e);
                 iterator.remove();
             }
             // end onLoad
