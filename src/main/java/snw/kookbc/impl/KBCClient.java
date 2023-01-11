@@ -24,9 +24,7 @@ import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
-import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.message.component.TextComponent;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.util.Validate;
@@ -93,16 +91,8 @@ public class KBCClient {
                 if (getConfig().getBoolean("ignore-remote-call-invisible-internal-command", true)) {
                     return;
                 }
-                if (message instanceof TextChannelMessage) {
-                    ((TextChannelMessage) message).getChannel().sendComponent(
-                            new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。"),
-                            null,
-                            message.getSender()
-                    );
-                } else {
-                    ((User) sender).sendPrivateMessage(
-                            new TextComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。")
-                    );
+                if (message != null) {
+                    message.sendToSource(new MarkdownComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。"));
                 }
             } else {
                 reallyThingToRun.accept(arguments);
@@ -296,6 +286,9 @@ public class KBCClient {
                 .setDescription("获取已安装到此 KookBC 实例的插件列表。")
                 .setExecutor(
                         (sender, arguments, message) -> {
+                            if (message == null) { // maybe triggered by CommandManager#executeCommand?
+                                return;
+                            }
                             String result = String.format(
                                     "已安装并正在运行的插件 (%s): %s",
                                     getCore().getPluginManager().getPlugins().length,
@@ -306,15 +299,7 @@ public class KBCClient {
                                     )
                             );
                             if (sender instanceof User) {
-                                if (message instanceof TextChannelMessage) {
-                                    ((TextChannelMessage) message).getChannel().sendComponent(
-                                            new MarkdownComponent(result),
-                                            null,
-                                            (User) sender
-                                    );
-                                } else {
-                                    ((User) sender).sendPrivateMessage(new MarkdownComponent(result));
-                                }
+                                message.sendToSource(new MarkdownComponent(result));
                             } else {
                                 getCore().getLogger().info(result);
                             }
@@ -328,23 +313,16 @@ public class KBCClient {
                 .setDescription("获取此帮助列表。")
                 .setExecutor(
                         (commandSender, args, message) -> {
+                            if (message == null) { // maybe triggered by CommandManager#executeCommand?
+                                return;
+                            }
                             JKookCommand[] result;
                             if (args.length != 0) {
                                 String helpWanted = args[0];
                                 JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager()).getCommand(helpWanted);
                                 if (command == null) {
                                     if (commandSender instanceof User) {
-                                        if (message instanceof TextChannelMessage) {
-                                            ((TextChannelMessage) message).getChannel().sendComponent(
-                                                    new MarkdownComponent("找不到命令。"),
-                                                    null,
-                                                    (User) commandSender
-                                            );
-                                        } else {
-                                            ((User) commandSender).sendPrivateMessage(
-                                                    new MarkdownComponent("找不到命令。")
-                                            );
-                                        }
+                                        message.sendToSource(new MarkdownComponent("找不到命令。"));
                                     } else if (commandSender instanceof ConsoleCommandSender) {
                                         getCore().getLogger().info("Unknown command.");
                                     }
@@ -371,9 +349,7 @@ public class KBCClient {
                                 }
 
                                 String finalResult = String.join("\n", helpList.toArray(new String[0]));
-                                if (message != null) {
-                                    message.sendToSource(new MarkdownComponent(finalResult));
-                                }
+                                message.sendToSource(new MarkdownComponent(finalResult));
                             }
                         }
                 )
