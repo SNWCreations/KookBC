@@ -301,13 +301,17 @@ public class KBCClient {
     }
 
     protected void registerInternal() {
+        registerStopCommand();
+        registerHelpCommand();
+        registerPluginsCommand();
+        getCore().getEventManager().registerHandlers(getInternalPlugin(), new InternalEventListener());
+    }
+
+    protected void registerStopCommand() {
         new JKookCommand("stop")
                 .setDescription("停止 KookBC 实例。")
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register(getInternalPlugin());
-        registerHelpCommand();
-        registerPluginsCommand();
-        getCore().getEventManager().registerHandlers(getInternalPlugin(), new InternalEventListener());
     }
 
     protected void registerPluginsCommand() {
