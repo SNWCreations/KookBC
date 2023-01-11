@@ -27,11 +27,12 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.Util;
 
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.zip.DataFormatException;
+
+import static snw.kookbc.util.Util.decompressDeflate;
 
 public class MessageProcessor extends WebSocketListener {
     private final KBCClient client;
@@ -65,7 +66,7 @@ public class MessageProcessor extends WebSocketListener {
         super.onMessage(webSocket, bytes);
         String res;
         try {
-            res = new String(Util.decompressDeflate(bytes.toByteArray()));
+            res = new String(decompressDeflate(bytes.toByteArray()));
         } catch (DataFormatException | IOException e) {
             client.getCore().getLogger().error("Unable to decompress data", e);
             return;
