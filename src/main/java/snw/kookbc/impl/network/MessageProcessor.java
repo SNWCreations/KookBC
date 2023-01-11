@@ -29,7 +29,9 @@ import org.jetbrains.annotations.Nullable;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.util.Util;
 
+import java.io.IOException;
 import java.net.ProtocolException;
+import java.util.zip.DataFormatException;
 
 public class MessageProcessor extends WebSocketListener {
     private final KBCClient client;
@@ -64,7 +66,7 @@ public class MessageProcessor extends WebSocketListener {
         String res;
         try {
             res = new String(Util.decompressDeflate(bytes.toByteArray()));
-        } catch (RuntimeException e) {
+        } catch (DataFormatException | IOException e) {
             client.getCore().getLogger().error("Unable to decompress data", e);
             return;
         }

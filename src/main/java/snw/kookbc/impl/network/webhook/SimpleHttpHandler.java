@@ -45,7 +45,7 @@ public class SimpleHttpHandler implements Handler {
     }
 
     @Override
-    public void handle(Context ctx) {
+    public void handle(Context ctx) throws Exception {
         client.getCore().getLogger().debug("Got request!");
         String res;
         byte[] bytes = ctx.bodyAsBytes();

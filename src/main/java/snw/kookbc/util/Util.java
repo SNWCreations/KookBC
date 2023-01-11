@@ -22,6 +22,8 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.util.Validate;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 public class Util {
@@ -96,7 +98,7 @@ public class Util {
         Validate.isTrue(plugin.isEnabled(), "The plugin is disabled");
     }
 
-    public static byte[] decompressDeflate(byte[] data) {
+    public static byte[] decompressDeflate(byte[] data) throws IOException, DataFormatException {
         Inflater decompressor = new Inflater();
         decompressor.reset();
         decompressor.setInput(data);
@@ -108,8 +110,6 @@ public class Util {
                 o.write(buf, 0, i);
             }
             return o.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to decompress deflate data", e);
         } finally {
             decompressor.end();
         }
