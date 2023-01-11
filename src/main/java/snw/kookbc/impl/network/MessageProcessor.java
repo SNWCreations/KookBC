@@ -27,10 +27,9 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.Util;
 
-import java.io.ByteArrayOutputStream;
 import java.net.ProtocolException;
-import java.util.zip.Inflater;
 
 public class MessageProcessor extends WebSocketListener {
     private final KBCClient client;
@@ -65,7 +64,7 @@ public class MessageProcessor extends WebSocketListener {
         super.onMessage(webSocket, bytes);
         String res;
         try {
-            res = new String(decompressDeflate(bytes.toByteArray()));
+            res = new String(Util.decompressDeflate(bytes.toByteArray()));
         } catch (RuntimeException e) {
             client.getCore().getLogger().error("Unable to decompress data", e);
             return;
@@ -86,25 +85,6 @@ public class MessageProcessor extends WebSocketListener {
         }
         webSocket.close(1000, "User Closed Service");
         connector.requestReconnect();
-    }
-
-    public static byte[] decompressDeflate(byte[] data) {
-        Inflater decompressor = new Inflater();
-        decompressor.reset();
-        decompressor.setInput(data);
-
-        try (ByteArrayOutputStream o = new ByteArrayOutputStream(data.length)) {
-            byte[] buf = new byte[1024];
-            while (!decompressor.finished()) {
-                int i = decompressor.inflate(buf);
-                o.write(buf, 0, i);
-            }
-            return o.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected exception happened while we attempting to decompress the ZLIB/DEFLATE compressed data.", e);
-        } finally {
-            decompressor.end();
-        }
     }
 
 }

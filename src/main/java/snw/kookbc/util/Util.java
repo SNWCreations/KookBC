@@ -21,6 +21,9 @@ package snw.kookbc.util;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.util.Validate;
 
+import java.io.ByteArrayOutputStream;
+import java.util.zip.Inflater;
+
 public class Util {
 
     // -1 = Outdated
@@ -91,5 +94,24 @@ public class Util {
     public static void ensurePluginEnabled(Plugin plugin) {
         pluginNotNull(plugin);
         Validate.isTrue(plugin.isEnabled(), "The plugin is disabled");
+    }
+
+    public static byte[] decompressDeflate(byte[] data) {
+        Inflater decompressor = new Inflater();
+        decompressor.reset();
+        decompressor.setInput(data);
+
+        try (ByteArrayOutputStream o = new ByteArrayOutputStream(data.length)) {
+            byte[] buf = new byte[1024];
+            while (!decompressor.finished()) {
+                int i = decompressor.inflate(buf);
+                o.write(buf, 0, i);
+            }
+            return o.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to decompress deflate data", e);
+        } finally {
+            decompressor.end();
+        }
     }
 }
