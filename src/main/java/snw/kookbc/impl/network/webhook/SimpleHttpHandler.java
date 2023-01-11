@@ -33,7 +33,7 @@ import snw.kookbc.impl.network.ListenerFactory;
 
 import java.util.Objects;
 
-import static snw.kookbc.impl.network.MessageProcessor.decompressDeflate;
+import static snw.kookbc.util.Util.decompressDeflate;
 
 public class SimpleHttpHandler implements Handler {
     protected final KBCClient client;
@@ -45,7 +45,7 @@ public class SimpleHttpHandler implements Handler {
     }
 
     @Override
-    public void handle(Context ctx) {
+    public void handle(Context ctx) throws Exception {
         client.getCore().getLogger().debug("Got request!");
         String res;
         byte[] bytes = ctx.bodyAsBytes();
