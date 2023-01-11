@@ -140,7 +140,7 @@ public class SimplePluginManager implements PluginManager {
         try {
             plugin.setEnabled(true);
         } catch (Throwable e) {
-            client.getCore().getLogger().error("Exception occurred while we attempting to enable the {} plugin.", plugin.getDescription().getName(), e);
+            plugin.getLogger().error("Unable to enable this plugin", e);
             disablePlugin(plugin); // make sure the plugin is still disabled
         }
     }
@@ -156,7 +156,7 @@ public class SimplePluginManager implements PluginManager {
         try {
             plugin.setEnabled(false);
         } catch (Throwable e) {
-            client.getCore().getLogger().error("Exception occurred while we attempting to disable the {} plugin.", plugin.getDescription().getName(), e);
+            plugin.getLogger().error("Exception occurred when we are disabling this plugin", e);
         }
 //        if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
 //            try {
