@@ -309,6 +309,10 @@ public class KBCClient {
                 .setDescription("获取已安装到此 KookBC 实例的插件列表。")
                 .setExecutor(
                         (sender, arguments, message) -> {
+                            if (sender instanceof User && message == null) {
+                                // executed by CommandManager#executeCommand?
+                                return;
+                            }
                             String result = String.format(
                                     "已安装并正在运行的插件 (%s): %s",
                                     getCore().getPluginManager().getPlugins().length,
@@ -317,9 +321,7 @@ public class KBCClient {
                                                     .map(IT -> IT.getDescription().getName())
                                                     .collect(Collectors.toSet())));
                             if (sender instanceof User) {
-                                if (message != null) {
-                                    message.sendToSource(new MarkdownComponent(result));
-                                }
+                                message.sendToSource(new MarkdownComponent(result));
                             } else {
                                 getCore().getLogger().info(result);
                             }
@@ -332,6 +334,10 @@ public class KBCClient {
                 .setDescription("获取此帮助列表。")
                 .setExecutor(
                         (commandSender, args, message) -> {
+                            if (commandSender instanceof User && message == null) {
+                                // executed by CommandManager#executeCommand?
+                                return;
+                            }
                             JKookCommand[] result;
                             if (args.length != 0) {
                                 String helpWanted = (String) args[0];
@@ -339,9 +345,7 @@ public class KBCClient {
                                         .getCommand(helpWanted);
                                 if (command == null) {
                                     if (commandSender instanceof User) {
-                                        if (message != null) {
-                                            message.sendToSource(new MarkdownComponent("找不到命令。"));
-                                        }
+                                        message.sendToSource(new MarkdownComponent("找不到命令。"));
                                     } else if (commandSender instanceof ConsoleCommandSender) {
                                         getCore().getLogger().info("Unknown command.");
                                     }
@@ -371,11 +375,7 @@ public class KBCClient {
                                 }
 
                                 String finalResult = String.join("\n", helpList.toArray(new String[0]));
-                                if (message != null) {
-                                    message.sendToSource(new MarkdownComponent(finalResult));
-                                } else {
-                                    ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
-                                }
+                                message.sendToSource(new MarkdownComponent(finalResult));
                             }
                         })
                 .register(getInternalPlugin());
