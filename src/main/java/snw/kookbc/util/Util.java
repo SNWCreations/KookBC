@@ -23,8 +23,9 @@ import snw.jkook.util.Validate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.zip.DataFormatException;
+import java.io.InputStream;
 import java.util.zip.Inflater;
+import java.util.zip.DataFormatException;
 
 public class Util {
 
@@ -93,5 +94,15 @@ public class Util {
         } finally {
             decompressor.end();
         }
+    }
+
+    public static byte[] inputStreamToByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int n;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        return output.toByteArray();
     }
 }

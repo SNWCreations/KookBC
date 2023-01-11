@@ -18,19 +18,20 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import io.javalin.Javalin;
-import io.javalin.core.util.JavalinException;
+import net.freeutils.httpserver.HTTPServer;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class WebHookClient extends KBCClient {
-    protected Javalin server;
+    protected HTTPServer server;
 
     public WebHookClient(CoreImpl core, YamlConfiguration config, File pluginsFolder, String token) {
         super(core, config, pluginsFolder, token);
@@ -51,9 +52,16 @@ public class WebHookClient extends KBCClient {
             throw new IllegalArgumentException("No route provided!");
         }
         int port = getConfig().getInt("webhook-port");
-        server = Javalin.create()
-                .post('/' + route, new SimpleHttpHandler(this))
-                .start(port);
+
+        // Initialize server
+        server = new HTTPServer(port);
+        server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
+        HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
+        virtualHost.addContext('/' + route, new SimpleHttpHandler(this), "POST");
+        server.start(); // throws IOException
+        getCore().getLogger().info("HTTP Server is listening on port {}", port);
+        // end Initialize server
+
         getCore().getLogger().debug("Initializing SN from local file.");
         int initSN = 0;
         File snfile = new File(getPluginsFolder(), "sn");
@@ -69,12 +77,8 @@ public class WebHookClient extends KBCClient {
     @Override
     protected void shutdownNetwork() {
         if (server != null) {
-            try {
-                server.stop();
-            } catch (JavalinException e) {
-                // we should prevent client termination failure
-                e.printStackTrace();
-            }
+            getCore().getLogger().info("Stopping HTTP Server");
+            server.stop();
         }
     }
 }
