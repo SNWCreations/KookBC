@@ -368,15 +368,7 @@ public class KBCClient {
 
                                 String finalResult = String.join("\n", helpList.toArray(new String[0]));
                                 if (message != null) {
-                                    if (message instanceof TextChannelMessage) {
-                                        ((TextChannelMessage) message).getChannel().sendComponent(
-                                                new MarkdownComponent(finalResult),
-                                                null,
-                                                (User) commandSender
-                                        );
-                                    } else {
-                                        ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
-                                    }
+                                    message.sendToSource(new MarkdownComponent(finalResult));
                                 } else {
                                     ((User) commandSender).sendPrivateMessage(new MarkdownComponent(finalResult));
                                 }
