@@ -30,6 +30,7 @@ import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
@@ -168,7 +169,12 @@ public class UserImpl implements User {
 
     @Override
     public Collection<VoiceChannel> getJoinedVoiceChannel(Guild guild) {
-        return null;
+        Collection<VoiceChannel> result = new HashSet<>();
+        UserJoinedVoiceChannelIterator iter = new UserJoinedVoiceChannelIterator(client, this, guild);
+        while (iter.hasNext()) {
+            result.addAll(iter.next());
+        }
+        return Collections.unmodifiableCollection(result);
     }
 
     @Override
