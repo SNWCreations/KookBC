@@ -154,6 +154,12 @@ public class KBCClient {
 
 如果你需要禁用默认的 `/help` 的实现，请用空方法体覆盖此方法。
 
+### KBCClient#registerStopCommand
+
+此方法会被 `KBCClient#registerInternal` 方法调用，用于向当前客户端注册 `/stop` 命令的实现。
+
+如果你需要禁用默认的 `/stop` 的实现，请用空方法体覆盖此方法。
+
 ### KBCClient#registerPluginsCommand
 
 此方法会被方法调用，用于向当前客户端实例注册 `/plugins` 命令的实现。
