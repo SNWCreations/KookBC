@@ -102,20 +102,6 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     @Override
-    public String uploadFile(String binary) {
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", "114514", RequestBody.create(binary, OCTET_STREAM))
-                .build();
-        Request request = new Request.Builder()
-                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(requestBody)
-                .addHeader("Authorization", String.format("Bot %s", token))
-                .build();
-        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
-    }
-
-    @Override
     public String uploadFile(String filename, byte[] content) {
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)

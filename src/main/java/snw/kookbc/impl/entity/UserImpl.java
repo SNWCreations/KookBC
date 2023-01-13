@@ -27,6 +27,7 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -49,7 +50,6 @@ public class UserImpl implements User {
     private boolean vip;
     private String avatarUrl;
     private String vipAvatarUrl;
-    private VoiceChannel joinedChannel; // set by using setJoinedChannel()
 
     public UserImpl(KBCClient client, String id,
                     boolean bot,
@@ -163,18 +163,8 @@ public class UserImpl implements User {
     }
 
     @Override
-    public @Nullable VoiceChannel getJoinedVoiceChannel() {
-        return joinedChannel;
-    }
-
-    @Override
-    public Collection<VoiceChannel> getJoinedVoiceChannel(Guild guild) {
-        Collection<VoiceChannel> result = new HashSet<>();
-        UserJoinedVoiceChannelIterator iter = new UserJoinedVoiceChannelIterator(client, this, guild);
-        while (iter.hasNext()) {
-            result.addAll(iter.next());
-        }
-        return Collections.unmodifiableCollection(result);
+    public PageIterator<Collection<VoiceChannel>> getJoinedVoiceChannel(Guild guild) {
+        return new UserJoinedVoiceChannelIterator(client, this, guild);
     }
 
     @Override
@@ -249,10 +239,6 @@ public class UserImpl implements User {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setJoinedChannel(VoiceChannel joinedChannel) {
-        this.joinedChannel = joinedChannel;
     }
 
     public void setIdentify(int identify) {
