@@ -42,6 +42,8 @@ java -jar kookbc-<version>.jar --help
 
 更详细的命令行选项见 [KookBC 命令行](docs/KookBC_CommandLine.md) 。
 
+我们在本仓库的 docs 文件夹下放了一些 KookBC 的相关文档，善用它们会帮助您！
+
 ## 贡献
 
 很感谢您愿意帮助我们改进 KookBC ！
