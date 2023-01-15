@@ -153,7 +153,7 @@ public class KBCClient {
             plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
             try {
                 plugin.onLoad();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 plugin.getLogger().error("Unable to load this plugin", e);
                 iterator.remove();
             }
