@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
@@ -49,6 +50,7 @@ public class NetworkClient {
     }
 
     public String getRawContent(String fullUrl) {
+        logRequest("GET", fullUrl, null);
         Request request = new Request.Builder()
                 .get()
                 .url(fullUrl)
@@ -62,6 +64,7 @@ public class NetworkClient {
     }
 
     public String postContent(String fullUrl, String body, String mediaType) {
+        logRequest("POST", fullUrl, body);
         Request request = new Request.Builder()
                 .post(
                         RequestBody.create(body, MediaType.parse(mediaType))
@@ -114,5 +117,9 @@ public class NetworkClient {
     protected Bucket getBucket(Request request) {
         String path = request.url().url().getPath().substring(4);
         return Bucket.get(kbcClient, HttpAPIRoute.value(path));
+    }
+
+    protected void logRequest(String method, String fullUrl, @Nullable String postBodyJson) {
+        kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}", method, fullUrl, postBodyJson);
     }
 }
