@@ -283,7 +283,7 @@ public class CommandManagerImpl implements CommandManager {
     protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
         if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
-            return rawArgs.toArray();
+            return rawArgs.toArray(new String[0]);
         }
         if (rawArgs.size() < command.getArguments().size()) {
             throw new NoSuchElementException(); // no enough arguments
