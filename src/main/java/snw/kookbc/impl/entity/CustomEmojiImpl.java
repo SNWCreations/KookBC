@@ -39,7 +39,7 @@ public class CustomEmojiImpl implements CustomEmoji {
         this.client = client;
         this.name = name;
         try {
-            this.id = URLEncoder.encode(id, StandardCharsets.UTF_8.name());
+            this.id = URLEncoder.encode(id, StandardCharsets.UTF_8.name()).replace("%2F", "/");
         } catch (UnsupportedEncodingException e) {
             throw new Error("No UTF-8 Encoding? Check your system and JVM installation!");
         }
