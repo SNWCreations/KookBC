@@ -136,7 +136,9 @@ public class KBCClient {
         finishStart();
         getCore().getLogger().info("Done! Type \"help\" for help.");
 
-        new UpdateChecker(this).start(); // check update. Added since 2022/7/24
+        if (getConfig().getBoolean("check-update", true)) {
+            new UpdateChecker(this).start(); // check update. Added since 2022/7/24
+        }
     }
 
     protected void loadAllPlugins() {
