@@ -29,6 +29,7 @@ import snw.kookbc.impl.entity.*;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -198,7 +199,7 @@ public class EntityBuilder {
         if (id.contains("/")) {
             try {
                 guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
-            } catch (RuntimeException ignored) {
+            } catch (BadResponseException ignored) {
             } // you don't have permission to access it!
         }
         String name = object.get("name").getAsString();
