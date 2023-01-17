@@ -59,14 +59,21 @@ public class MessageBuilder {
             return new Object[]{10, new Gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
-            MultipleCardComponent fileCard = new snw.jkook.message.component.card.CardBuilder()
-                    .setTheme(Theme.NONE)
-                    .setSize(Size.LG)
-                    .addModule(
-                            new FileModule(fileComponent.getType() != FileComponent.Type.IMAGE ? fileComponent.getType() : FileComponent.Type.FILE, fileComponent.getUrl(), fileComponent.getTitle(), null)
-                    )
-                    .build();
-            return serialize(fileCard); // actually, this is not a loop call
+            MultipleCardComponent fileCard;
+            if (fileComponent.getType() == FileComponent.Type.IMAGE) { // special condition for better performance
+                return new Object[]{2, fileComponent.getUrl()};
+            } else if (fileComponent.getType() == FileComponent.Type.VIDEO) { // special condition for better performance
+                return new Object[]{3, fileComponent.getUrl()};
+            } else {
+                fileCard = new snw.jkook.message.component.card.CardBuilder()
+                        .setTheme(Theme.NONE)
+                        .setSize(Size.LG)
+                        .addModule(
+                                new FileModule(fileComponent.getType(), fileComponent.getUrl(), fileComponent.getTitle(), null)
+                        )
+                        .build();
+                return serialize(fileCard); // actually, this is not a loop call
+            }
         }
         throw new RuntimeException("Unsupported component");
     }
