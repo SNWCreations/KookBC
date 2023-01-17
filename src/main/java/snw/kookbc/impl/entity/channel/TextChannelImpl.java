@@ -31,6 +31,7 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.TextChannelMessageIterator;
 import snw.kookbc.util.MapBuilder;
 
@@ -98,7 +99,17 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
             builder.put("temp_target_id", tempTarget.getId());
         }
         Map<String, Object> body = builder.build();
-        return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
+        try {
+            return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
+        } catch (BadResponseException e) {
+            if ("资源不存在".equals(e.getRawMessage())) {
+                // 2023/1/17: special case for the resources that aren't created by Bots.
+                // Thanks: Edint386@Github
+                throw new IllegalArgumentException("Unable to send component. Is the resource created by Bot?", e);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
