@@ -30,10 +30,15 @@ import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 public abstract class MessageImpl implements Message {
@@ -90,22 +95,25 @@ public abstract class MessageImpl implements Message {
                                     HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
                                     .toFullURL(),
                             getId(),
-                            customEmoji.getId()
+                            URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())
                     )
             );
             array = JsonParser.parseString(rawStr).getAsJsonObject().getAsJsonArray("data");
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("40300")) { // 40300, so we should throw IllegalStateException
-                throw new IllegalStateException();
+        } catch (BadResponseException e) {
+            if (e.getCode() == 40300) { // 40300, so we should throw IllegalStateException
+                throw new IllegalStateException(e);
             } else {
                 throw e;
             }
+        } catch (UnsupportedEncodingException e) {
+            // should never happen
+            throw new Error("No UTF-8 encoding?");
         }
-        Collection<User> result = new ArrayList<>();
+        Collection<User> result = new ArrayList<>(array.size());
         for (JsonElement element : array) {
             result.add(client.getStorage().getUser(element.getAsJsonObject().get("id").getAsString()));
         }
-        return result;
+        return Collections.unmodifiableCollection(result);
     }
 
     @Override
