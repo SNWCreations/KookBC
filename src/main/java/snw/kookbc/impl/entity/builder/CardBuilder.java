@@ -249,6 +249,9 @@ public class CardBuilder {
         object.addProperty("type", "card");
         object.addProperty("theme", component.getTheme().getValue());
         object.addProperty("size", component.getSize().getValue());
+        if (component.getColor() != null && component.getColor().isEmpty()) {
+            object.addProperty("color", component.getColor());
+        }
         JsonArray modules = new JsonArray();
         for (BaseModule module : component.getModules()) {
             JsonObject moduleObj = new JsonObject();

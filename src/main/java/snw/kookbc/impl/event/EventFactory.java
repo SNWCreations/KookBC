@@ -256,7 +256,7 @@ public class EventFactory {
                             Objects.equals(
                                     body.get("user_id").getAsString(),
                                     body.get("target_id").getAsString()
-                            ) ? null : client.getStorage().getChannel(body.get("target_id").getAsString())
+                            ) ? null : (TextChannel) client.getStorage().getChannel(body.get("target_id").getAsString())
                     );
                 case USER_UPDATE:
                     UserImpl updatedUser = ((UserImpl) client.getStorage().getUser(body.get("body_id").getAsString()));

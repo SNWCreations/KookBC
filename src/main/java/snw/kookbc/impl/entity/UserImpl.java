@@ -20,6 +20,7 @@ package snw.kookbc.impl.entity;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -34,10 +35,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class UserImpl implements User {
     private final KBCClient client;
@@ -45,7 +43,6 @@ public class UserImpl implements User {
     private final boolean bot;
     private String name;
     private int identify;
-    private Integer intimacy = null;
     private boolean ban;
     private boolean vip;
     private String avatarUrl;
@@ -169,10 +166,27 @@ public class UserImpl implements User {
 
     @Override
     public int getIntimacy() {
-        if (intimacy == null) {
-            intimacy = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
+        return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
+    }
+
+    @Override
+    public IntimacyInfo getIntimacyInfo() {
+        JsonObject object = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
+        String socialImage = object.get("img_url").getAsString();
+        String socialInfo = object.get("social_info").getAsString();
+        int lastRead = object.get("last_read").getAsInt();
+        int score = object.get("score").getAsInt();
+        JsonArray socialImageListRaw = object.get("img_list").getAsJsonArray();
+        Collection<IntimacyInfo.SocialImage> socialImages = new ArrayList<>(socialImageListRaw.size());
+        for (JsonElement element : socialImageListRaw) {
+            JsonObject obj = element.getAsJsonObject();
+            String id = obj.get("id").getAsString();
+            String url = obj.get("url").getAsString();
+            socialImages.add(
+                    new SocialImageImpl(id, url)
+            );
         }
-        return intimacy;
+        return new IntimacyInfoImpl(socialImage, socialInfo, lastRead, score, socialImages);
     }
 
     @Override
@@ -184,7 +198,21 @@ public class UserImpl implements User {
                 .put("score", i)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
-        this.intimacy = i;
+    }
+
+    @Override
+    public void setIntimacy(int i, String s, @Nullable Integer imageId) {
+        MapBuilder builder = new MapBuilder()
+                .put("user_id", getId())
+                .put("score", i);
+        if (s != null) {
+            builder.put("social_info", s);
+        }
+        if (imageId != null) {
+            builder.put("img_id", imageId);
+        }
+        Map<String, Object> body = builder.build();
+        client.getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
     }
 
     @Override
@@ -257,4 +285,65 @@ public class UserImpl implements User {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
+}
+
+class IntimacyInfoImpl implements User.IntimacyInfo {
+    private final String socialImage;
+    private final String socialInfo;
+    private final int lastRead;
+    private final int score;
+    private final Collection<SocialImage> socialImages;
+
+    IntimacyInfoImpl(String socialImage, String socialInfo, int lastRead, int score, Collection<SocialImage> socialImages) {
+        this.socialImage = socialImage;
+        this.socialInfo = socialInfo;
+        this.lastRead = lastRead;
+        this.score = score;
+        this.socialImages = Collections.unmodifiableCollection(socialImages);
+    }
+
+    @Override
+    public String getSocialImage() {
+        return socialImage;
+    }
+
+    @Override
+    public String getSocialInfo() {
+        return socialInfo;
+    }
+
+    @Override
+    public int getLastRead() {
+        return lastRead;
+    }
+
+    @Override
+    public int getScore() {
+        return score;
+    }
+
+    @Override
+    public Collection<SocialImage> getSocialImages() {
+        return socialImages;
+    }
+}
+
+class SocialImageImpl implements User.IntimacyInfo.SocialImage {
+    private final String id;
+    private final String url;
+
+    SocialImageImpl(String id, String url) {
+        this.id = id;
+        this.url = url;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public String getUrl() {
+        return url;
+    }
 }
