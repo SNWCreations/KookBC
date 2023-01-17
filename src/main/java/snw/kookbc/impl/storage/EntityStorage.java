@@ -24,6 +24,7 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.lang.ref.SoftReference;
 import java.util.*;
@@ -85,8 +86,8 @@ public class EntityStorage {
                         client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
                 );
                 addGuild(result);
-            } catch (RuntimeException e) {
-                if (!e.getMessage().contains("403")) throw e; // 403 maybe happened?
+            } catch (BadResponseException e) {
+                if (!(e.getCode() == 403)) throw e; // 403 maybe happened?
             }
         }
         return result;
