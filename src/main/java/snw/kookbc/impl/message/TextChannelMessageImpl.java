@@ -42,7 +42,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     public void sendReaction(CustomEmoji emoji) {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
+                .put("emoji", emoji.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
@@ -51,7 +51,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     public void removeReaction(CustomEmoji emoji) {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
+                .put("emoji", emoji.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
