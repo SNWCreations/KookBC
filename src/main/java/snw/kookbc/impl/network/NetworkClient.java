@@ -114,6 +114,10 @@ public class NetworkClient {
         return client.newWebSocket(request, listener);
     }
 
+    public String getTokenWithPrefix() {
+        return tokenWithPrefix;
+    }
+
     protected Bucket getBucket(Request request) {
         String path = request.url().url().getPath().substring(4);
         return Bucket.get(kbcClient, HttpAPIRoute.value(path));

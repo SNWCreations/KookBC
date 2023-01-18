@@ -46,16 +46,15 @@ import java.util.Map;
 
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
-    private final KBCClient client;
-    private final String token;
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
     }
 
-    public HttpAPIImpl(KBCClient client, String token) {
+    private final KBCClient client;
+
+    public HttpAPIImpl(KBCClient client) {
         this.client = client;
-        this.token = token;
     }
 
     @Override
@@ -96,7 +95,7 @@ public class HttpAPIImpl implements HttpAPI {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(body)
-                .addHeader("Authorization", String.format("Bot %s", token))
+                .addHeader("Authorization", String.format("Bot %s", client.getNetworkClient().getTokenWithPrefix()))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
@@ -110,7 +109,7 @@ public class HttpAPIImpl implements HttpAPI {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(requestBody)
-                .addHeader("Authorization", String.format("Bot %s", token))
+                .addHeader("Authorization", String.format("Bot %s", client.getNetworkClient().getTokenWithPrefix()))
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
