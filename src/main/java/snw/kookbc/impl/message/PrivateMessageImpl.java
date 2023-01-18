@@ -18,15 +18,38 @@
 
 package snw.kookbc.impl.message;
 
+import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.util.MapBuilder;
+
+import java.util.Map;
 
 public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
     public PrivateMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
         super(client, id, user, component, timeStamp, quote);
+    }
+
+    @Override
+    public void sendReaction(CustomEmoji emoji) {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("emoji_id", emoji.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
+    }
+
+    @Override
+    public void removeReaction(CustomEmoji emoji) {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("emoji_id", emoji.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -39,4 +62,11 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         return getSender().sendPrivateMessage(component);
     }
 
+    @Override
+    public void delete() {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
+    }
 }
