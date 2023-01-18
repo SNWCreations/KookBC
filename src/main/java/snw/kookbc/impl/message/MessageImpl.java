@@ -128,4 +128,30 @@ public abstract class MessageImpl implements Message {
                 body
         );
     }
+
+    @Override
+    public void sendReaction(CustomEmoji emoji) {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("emoji", emoji.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
+    }
+
+    @Override
+    public void removeReaction(CustomEmoji emoji) {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("emoji", emoji.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+    }
+
+    @Override
+    public void delete() {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .build();
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
+    }
 }

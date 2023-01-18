@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.message;
 
-import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
@@ -36,24 +35,6 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
         super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
-    }
-
-    @Override
-    public void sendReaction(CustomEmoji emoji) {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
-    }
-
-    @Override
-    public void removeReaction(CustomEmoji emoji) {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .put("emoji_id", emoji.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
