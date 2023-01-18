@@ -126,7 +126,7 @@ public class CommandManagerImpl implements CommandManager {
         // endregion
 
         // first get commands
-        List<JKookCommand> sub = (List<JKookCommand>) commandObject.getSubcommands();
+        Collection<JKookCommand> sub = commandObject.getSubcommands();
         // then we should know the latest command to be executed
         // we will use the "/hello a b" as the example
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
