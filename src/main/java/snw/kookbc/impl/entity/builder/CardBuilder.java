@@ -50,6 +50,7 @@ public class CardBuilder {
         Validate.isTrue(Objects.equals(object.get("type").getAsString(), "card"), "The provided element is not a card.");
         Theme theme = Theme.value(object.get("theme").getAsString());
         Size size = Size.value(object.get("size").getAsString());
+        String color = object.has("color") && !object.get("color").isJsonNull() ? object.get("color").getAsString() : null;
 
         List<BaseModule> moduleList = new LinkedList<>();
         JsonArray modules = object.getAsJsonArray("modules");
@@ -227,7 +228,7 @@ public class CardBuilder {
                     break;
             }
         }
-        return new CardComponent(moduleList, size, theme);
+        return new CardComponent(moduleList, size, theme, color);
     }
 
     public static JsonArray serialize(CardComponent component) {
