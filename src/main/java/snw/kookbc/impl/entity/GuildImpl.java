@@ -254,6 +254,7 @@ public class GuildImpl implements Guild {
         return uploadEmoji(s.getBytes(StandardCharsets.ISO_8859_1), "image/png", name);
     }
 
+    @Override
     public CustomEmoji uploadEmoji(byte[] content, String type, @Nullable String name) {
         MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)

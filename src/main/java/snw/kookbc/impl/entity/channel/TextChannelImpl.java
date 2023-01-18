@@ -86,6 +86,11 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     }
 
     @Override
+    public String sendComponent(BaseComponent baseComponent) {
+        return sendComponent(baseComponent, null, null);
+    }
+
+    @Override
     public String sendComponent(BaseComponent component, @Nullable TextChannelMessage quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
         MapBuilder builder = new MapBuilder()

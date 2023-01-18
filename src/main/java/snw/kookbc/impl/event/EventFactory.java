@@ -218,6 +218,16 @@ public class EventFactory {
                             IT -> unbanned.add(client.getStorage().getUser(IT.getAsString()))
                     );
                     return new GuildUnbanUserEvent(msgTimeStamp, client.getStorage().getGuild(object.get("target_id").getAsString()), unbanned, client.getStorage().getUser(body.get("operator_id").getAsString()));
+                case ADD_EMOJI:
+                    CustomEmoji emoji1 = client.getEntityBuilder().buildEmoji(body);
+                    return new GuildAddEmojiEvent(msgTimeStamp, emoji1.getGuild(), emoji1);
+                case DELETE_EMOJI:
+                    CustomEmoji emoji2 = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+                    return new GuildRemoveEmojiEvent(msgTimeStamp, emoji2.getGuild(), emoji2);
+                case UPDATE_EMOJI:
+                    CustomEmoji emoji3 = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+                    client.getEntityUpdater().updateEmoji(body, emoji3);
+                    return new GuildUpdateEmojiEvent(msgTimeStamp, emoji3.getGuild(), emoji3);
                 case PM_UPDATE:
                     return new PrivateMessageUpdateEvent(msgTimeStamp, body.get("msg_id").getAsString(), body.get("content").getAsString());
                 case PM_DELETE:
