@@ -79,7 +79,7 @@ public class KBCClient {
         this.msgBuilder = new MessageBuilder(this);
         this.entityUpdater = new EntityUpdater(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
-        core.init(this, new HttpAPIImpl(this, token));
+        core.init(this, new HttpAPIImpl(this));
     }
 
     // The result of this method can prevent the users to execute the console command,

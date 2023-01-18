@@ -20,6 +20,11 @@ package snw.kookbc.impl.entity;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 import snw.jkook.entity.*;
@@ -37,6 +42,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
 import snw.kookbc.util.MapBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
@@ -245,14 +251,32 @@ public class GuildImpl implements Guild {
     }
 
     @Override
-    public CustomEmoji uploadEmoji(String s, @Nullable String s1) {
-        MapBuilder builder = new MapBuilder()
-                .put("guild_id", getId())
-                .put("emoji", s);
-        if (s1 != null) {
-            builder.put("name", s1);
+    public CustomEmoji uploadEmoji(String s, @Nullable String name) {
+        return uploadEmoji(s.getBytes(StandardCharsets.ISO_8859_1), "image/png", name);
+    }
+
+    public CustomEmoji uploadEmoji(byte[] content, String type, @Nullable String name) {
+        MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("guild_id", getId())
+                .addFormDataPart(
+                        "emoji",
+                        "114514",
+                        RequestBody.create(content, MediaType.parse(type))
+                );
+        if (name != null) {
+            if (name.length() < 2) {
+                throw new IllegalArgumentException("The emoji name should be greater or equals 2.");
+            }
+            requestBodyBuilder.addFormDataPart("name", name);
         }
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_CREATE.toFullURL(), builder.build());
+        MultipartBody requestBody = requestBodyBuilder.build();
+        Request request = new Request.Builder()
+                .url(HttpAPIRoute.GUILD_EMOJI_CREATE.toFullURL())
+                .post(requestBody)
+                .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
+                .build();
+        JsonObject object = JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data");
         CustomEmoji emoji = client.getEntityBuilder().buildEmoji(object);
         client.getStorage().addEmoji(emoji);
         return emoji;
