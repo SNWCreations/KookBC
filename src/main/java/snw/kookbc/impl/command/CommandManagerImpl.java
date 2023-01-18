@@ -24,10 +24,7 @@ import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManagerImpl implements CommandManager {
@@ -89,7 +86,7 @@ public class CommandManagerImpl implements CommandManager {
         }
 
         // first get commands
-        List<JKookCommand> sub = (List<JKookCommand>) commandObject.getSubcommands();
+        Collection<JKookCommand> sub = commandObject.getSubcommands();
         // then we should know the latest command to be executed
         // we will use the "/hello a b" as the example
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
