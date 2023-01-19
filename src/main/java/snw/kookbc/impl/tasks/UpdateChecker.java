@@ -66,7 +66,7 @@ public final class UpdateChecker extends Thread {
             receivedVersion = receivedVersion.substring(1);
         }
 
-        int versionDifference = getVersionDifference(JKook.getImplementationVersion(), receivedVersion);
+        int versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
         if (versionDifference == -1) {
             client.getCore().getLogger().info("Update available! Information is following:");
             client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, JKook.getImplementationVersion());
