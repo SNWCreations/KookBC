@@ -175,7 +175,11 @@ public class KBCClient {
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
-            plugin.reloadConfig(); // ensure the default configuration will be loaded
+            try {
+                plugin.reloadConfig(); // ensure the default configuration will be loaded
+            } catch (Exception e) {
+                plugin.getLogger().error("Unable to load configuration", e);
+            }
 
             // onEnable
             try {
