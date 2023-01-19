@@ -253,7 +253,7 @@ public class EntityStorage {
             return null;
         }
         if (object.get() == null) {
-            users.remove(id); // clean invalid ref
+            map.remove(id); // clean invalid ref
         }
         return object.get();
     }
