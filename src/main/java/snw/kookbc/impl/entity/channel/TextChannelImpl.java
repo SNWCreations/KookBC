@@ -26,6 +26,7 @@ import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
@@ -83,6 +84,16 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     public PageIterator<Collection<TextChannelMessage>> getMessages(@Nullable String refer, boolean isPin, String queryMode) {
         Validate.isTrue(Objects.equals(queryMode, "before") || Objects.equals(queryMode, "around") || Objects.equals(queryMode, "after"), "Invalid queryMode");
         return new TextChannelMessageIterator(client, this, refer, isPin, queryMode);
+    }
+
+    @Override
+    public String sendComponent(String message) {
+        return sendComponent(new MarkdownComponent(message));
+    }
+
+    @Override
+    public String sendComponent(String message, @Nullable TextChannelMessage quote, @Nullable User tempTarget) {
+        return sendComponent(new MarkdownComponent(message), quote, tempTarget);
     }
 
     @Override

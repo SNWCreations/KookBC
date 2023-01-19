@@ -72,6 +72,16 @@ public class QuoteImpl implements Message {
     }
 
     @Override
+    public String reply(String message) {
+        return null;
+    }
+
+    @Override
+    public String sendToSource(String message) {
+        return null;
+    }
+
+    @Override
     public String reply(BaseComponent component) {
         return null;
     }

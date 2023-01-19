@@ -23,6 +23,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
@@ -50,6 +51,16 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("emoji", emoji.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+    }
+
+    @Override
+    public String reply(String message) {
+        return reply(new MarkdownComponent(message));
+    }
+
+    @Override
+    public String sendToSource(String message) {
+        return sendToSource(new MarkdownComponent(message));
     }
 
     @Override

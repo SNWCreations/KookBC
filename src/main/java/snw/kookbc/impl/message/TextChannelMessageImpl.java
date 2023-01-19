@@ -24,6 +24,7 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -58,8 +59,28 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     }
 
     @Override
+    public void removeReaction(CustomEmoji emoji, User user) {
+        Map<String, Object> body = new MapBuilder()
+                .put("msg_id", getId())
+                .put("emoji", emoji.getId())
+                .put("user_id", user.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+    }
+
+    @Override
     public TextChannel getChannel() {
         return channel;
+    }
+
+    @Override
+    public String replyTemp(String message) {
+        return replyTemp(new MarkdownComponent(message));
+    }
+
+    @Override
+    public String sendToSourceTemp(String message) {
+        return sendToSourceTemp(new MarkdownComponent(message));
     }
 
     @Override
@@ -84,6 +105,16 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
                 body
         );
+    }
+
+    @Override
+    public String reply(String message) {
+        return reply(new MarkdownComponent(message));
+    }
+
+    @Override
+    public String sendToSource(String message) {
+        return sendToSource(new MarkdownComponent(message));
     }
 
     @Override
