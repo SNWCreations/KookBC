@@ -24,7 +24,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import snw.jkook.JKook;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
+
+import java.util.Objects;
 
 import static snw.kookbc.util.Util.getVersionDifference;
 
@@ -47,6 +50,11 @@ public final class UpdateChecker extends Thread {
 
     private void run0() throws Exception {
         client.getCore().getLogger().info("Checking updates...");
+
+        if (!Objects.equals(SharedConstants.REPO_URL, "https://github.com/SNWCreations/KookBC")) {
+            client.getCore().getLogger().warn("Not Official KookBC! We cannot check updates for you. Is this a fork version?");
+            return;
+        }
 
         JsonObject resObj;
         try (Response response = new OkHttpClient().newCall(

@@ -30,6 +30,7 @@ import snw.jkook.event.EventManager;
 import snw.jkook.plugin.PluginManager;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.util.Validate;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
@@ -59,11 +60,11 @@ public class CoreImpl implements Core {
 
     public CoreImpl(Logger logger) {
         this.logger = logger;
-        getLogger().info("Starting KookBC version {}", KBCClient.class.getPackage().getImplementationVersion());
+        getLogger().info("Starting {} version {}", getImplementationName(), getImplementationVersion());
         getLogger().info("This VM is running {} version {} (Implementing API version {})", getImplementationName(), getImplementationVersion(), getAPIVersion());
         Properties gitProperties = new Properties();
         try {
-            gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("git.properties"));
+            gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
             getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
         } catch (IOException e) {
             getLogger().warn("Unable to read Git commit information. :(", e);
@@ -77,17 +78,17 @@ public class CoreImpl implements Core {
 
     @Override
     public String getAPIVersion() {
-        return CoreImpl.class.getPackage().getSpecificationVersion();
+        return SharedConstants.SPEC_VERSION;
     }
 
     @Override
     public String getImplementationName() {
-        return CoreImpl.class.getPackage().getImplementationTitle();
+        return SharedConstants.IMPL_NAME;
     }
 
     @Override
     public String getImplementationVersion() {
-        return CoreImpl.class.getPackage().getImplementationVersion();
+        return SharedConstants.IMPL_VERSION;
     }
 
     @Override

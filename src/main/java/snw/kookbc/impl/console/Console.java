@@ -22,6 +22,7 @@ import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import snw.jkook.JKook;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 
@@ -57,7 +58,7 @@ public class Console extends SimpleTerminalConsole {
 
     @Override
     protected LineReader buildReader(LineReaderBuilder builder) {
-        builder.appName("KookBC");
+        builder.appName(SharedConstants.IMPL_NAME);
         if (client.getConfig().getBoolean("save-console-history", true)) {
             builder.variable("history-file", Paths.get(".console_history"));
         }

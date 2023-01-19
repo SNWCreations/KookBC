@@ -28,6 +28,7 @@ import snw.jkook.message.component.card.element.*;
 import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
 import snw.jkook.util.Validate;
+import snw.kookbc.SharedConstants;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -322,7 +323,7 @@ public class CardBuilder {
                 JsonArray elements = new JsonArray();
                 for (InteractElement actionModule : ((ActionGroupModule) module).getButtons()) {
                     // I think the following line maybe throw an exception in the future.
-                    Validate.isTrue(actionModule instanceof ButtonElement, "If this has error, please tell the author of KookBC! Maybe Kook updated the action module?");
+                    Validate.isTrue(actionModule instanceof ButtonElement, "If this has error, please tell the author of " + SharedConstants.SPEC_NAME + "! Maybe Kook updated the action module?");
                     ButtonElement button = ((ButtonElement) actionModule);
                     JsonObject rawButton = new JsonObject();
                     rawButton.addProperty("type", "button");

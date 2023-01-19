@@ -29,6 +29,7 @@ import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.event.EventFactory;
@@ -209,7 +210,7 @@ public class ListenerImpl implements Listener {
             // remove CommandException stacktrace to make the stacktrace smaller
             (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
             markdownComponent = new MarkdownComponent(
-                    "执行命令时发生异常，请联系 Bot 的开发者和 KookBC 的开发者！\n" +
+                    "执行命令时发生异常，请联系 Bot 的开发者和 " + SharedConstants.IMPL_NAME + " 的开发者！\n" +
                             "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
                             "---\n" +
                             strWrt
