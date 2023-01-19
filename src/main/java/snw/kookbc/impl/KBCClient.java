@@ -29,6 +29,7 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
@@ -299,14 +300,14 @@ public class KBCClient {
 
     protected void registerStopCommand() {
         new JKookCommand("stop")
-                .setDescription("停止 KookBC 实例。")
+                .setDescription("停止 " + SharedConstants.IMPL_NAME + " 实例。")
                 .setExecutor(wrapConsoleCmd((args) -> shutdown()))
                 .register(getInternalPlugin());
     }
 
     protected void registerPluginsCommand() {
         new JKookCommand("plugins")
-                .setDescription("获取已安装到此 KookBC 实例的插件列表。")
+                .setDescription("获取已安装到此 " + SharedConstants.IMPL_NAME + " 实例的插件列表。")
                 .setExecutor(
                         (sender, arguments, message) -> {
                             if (sender instanceof User && message == null) {
@@ -367,9 +368,16 @@ public class KBCClient {
                                 helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
 
                                 if (getConfig().getBoolean("allow-help-ad", true)) {
-                                    helpList.add("由 [KookBC](https://github.com/SNWCreations/KookBC) v"
-                                            + getCore().getImplementationVersion() + " 驱动 - JKook API "
-                                            + getCore().getAPIVersion());
+                                    helpList.add(
+                                            String.format(
+                                                    "由 [%s](%s) v%s 驱动 - %s API %s",
+                                                    SharedConstants.IMPL_NAME,
+                                                    SharedConstants.REPO_URL,
+                                                    SharedConstants.IMPL_VERSION,
+                                                    SharedConstants.SPEC_NAME,
+                                                    getCore().getAPIVersion()
+                                            )
+                                    );
                                 } else {
                                     helpList.remove(helpList.size() - 1);
                                 }
@@ -383,7 +391,7 @@ public class KBCClient {
 
     public static List<String> getHelp(JKookCommand[] commands) {
         if (commands.length <= 0) { // I think this is impossible to happen!
-            return Collections.singletonList("无法提供命令帮助。因为此 KookBC 实例没有注册任何命令。");
+            return Collections.singletonList("无法提供命令帮助。因为此 " + SharedConstants.IMPL_NAME + " 实例没有注册任何命令。");
         }
         List<String> result = new LinkedList<>();
         result.add("-------- 命令帮助 --------");

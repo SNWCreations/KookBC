@@ -19,6 +19,7 @@
 package snw.kookbc.impl.network;
 
 import snw.jkook.util.Validate;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.TooFastException;
 
@@ -83,7 +84,7 @@ public class Bucket {
         if (bucketName == null) {
             // This should never happen.
             // Or new API is published.
-            throw new IllegalArgumentException("The bucket name of the provided route is unknown. Report to KookBC authors if you saw this!");
+            throw new IllegalArgumentException("The bucket name of the provided route is unknown. Report to " + SharedConstants.IMPL_NAME + " authors if you saw this!");
         }
         return map.computeIfAbsent(bucketName, r -> new Bucket(client, r));
     }
