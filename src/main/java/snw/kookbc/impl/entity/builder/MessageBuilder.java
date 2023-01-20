@@ -125,29 +125,37 @@ public class MessageBuilder {
             case 2:
             case 3:
             case 4:
-                JsonObject attachment = object.getAsJsonObject("extra").getAsJsonObject("attachments");
-                String url = attachment.get("url").getAsString();
-                String title = attachment.get("name").getAsString();
-                // -1 for image files, because Kook does not provide size for image files.
-                int size = attachment.get("size") != null ? attachment.get("size").getAsInt() : -1;
-                FileComponent.Type type;
-                String ftype = attachment.get("type").getAsString();
-                switch (ftype) {
-                    case "file":
-                        type = FileComponent.Type.FILE;
-                        break;
-                    case "video":
-                        type = FileComponent.Type.VIDEO;
-                        break;
-                    case "image":
-                        type = FileComponent.Type.IMAGE;
-                        break;
-                    default:
-                        if (attachment.get("file_type").getAsString().startsWith("audio")) {
-                            type = FileComponent.Type.AUDIO;
-                        } else {
-                            throw new RuntimeException("Unexpected file_type");
-                        }
+                String url;
+                String title = "";
+                int size = -1;
+                FileComponent.Type type = FileComponent.Type.FILE;
+                if (object.has("extra")) { // standard component format
+                    JsonObject attachment = object.getAsJsonObject("extra").getAsJsonObject("attachments");
+                    url = attachment.get("url").getAsString();
+                    title = attachment.get("name").getAsString();
+                    // -1 for image files, because Kook does not provide size for image files.
+                    if (attachment.has("size") && !attachment.get("size").isJsonNull()) {
+                        size = attachment.get("size").getAsInt();
+                    }
+                    String ftype = attachment.get("type").getAsString();
+                    switch (ftype) {
+                        case "file":
+                            break;
+                        case "video":
+                            type = FileComponent.Type.VIDEO;
+                            break;
+                        case "image":
+                            type = FileComponent.Type.IMAGE;
+                            break;
+                        default:
+                            if (attachment.get("file_type").getAsString().startsWith("audio")) {
+                                type = FileComponent.Type.AUDIO;
+                            } else {
+                                throw new RuntimeException("Unexpected file_type");
+                            }
+                    }
+                } else { // quote object?
+                    url = content;
                 }
                 return new FileComponent(
                         url,
