@@ -155,7 +155,7 @@ public class MessageBuilder {
                         size,
                         type
                 );
-            case 1: // Are you sure? Tbis message type was deprecated. KOOK converts plain text (TextComponent) into KMarkdown (MarkdownComponent)
+            case 1: // Are you sure? This message type was deprecated. KOOK converts plain text (TextComponent) into KMarkdown (MarkdownComponent)
                 return new TextComponent(content);
         }
         throw new RuntimeException("Unknown component type");
