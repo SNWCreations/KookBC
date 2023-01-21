@@ -95,7 +95,7 @@ public class HttpAPIImpl implements HttpAPI {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(body)
-                .addHeader("Authorization", String.format("Bot %s", client.getNetworkClient().getTokenWithPrefix()))
+                .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
@@ -109,7 +109,7 @@ public class HttpAPIImpl implements HttpAPI {
         Request request = new Request.Builder()
                 .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
                 .post(requestBody)
-                .addHeader("Authorization", String.format("Bot %s", client.getNetworkClient().getTokenWithPrefix()))
+                .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
     }
