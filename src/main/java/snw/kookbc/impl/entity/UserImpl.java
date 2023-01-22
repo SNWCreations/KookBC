@@ -28,6 +28,7 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
@@ -85,6 +86,11 @@ public class UserImpl implements User {
     }
 
     @Override
+    public String getFullName(@Nullable Guild guild) {
+        return (guild != null ? getNickName(guild) : getName()) + "#" + getIdentifyNumber();
+    }
+
+    @Override
     public void setNickName(Guild guild, String s) {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", guild.getId())
@@ -136,6 +142,16 @@ public class UserImpl implements User {
             result.add(element.getAsInt());
         }
         return Collections.unmodifiableSet(result);
+    }
+
+    @Override
+    public String sendPrivateMessage(String s) {
+        return sendPrivateMessage(new MarkdownComponent(s));
+    }
+
+    @Override
+    public String sendPrivateMessage(String s, PrivateMessage privateMessage) {
+        return sendPrivateMessage(new MarkdownComponent(s), privateMessage);
     }
 
     @Override

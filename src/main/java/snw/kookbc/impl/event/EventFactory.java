@@ -150,7 +150,7 @@ public class EventFactory {
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
                     client.getStorage().removeChannel(body.get("id").getAsString());
-                    return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString());
+                    return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString(), client.getStorage().getGuild(object.get("target_id").getAsString()));
                 case CHANNEL_MESSAGE_PINNED:
                     return new ChannelMessagePinEvent(
                             msgTimeStamp,
