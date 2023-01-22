@@ -36,6 +36,7 @@ public final class EventExecutorFactoryImpl implements EventExecutor.Factory<Eve
 
     @Override
     public @NonNull EventExecutor<Event, Listener> create(@NonNull Object object, @NonNull Method method) throws Exception {
+        method.setAccessible(true);
         final Class<? extends Event> actualEventType = method.getParameterTypes()[0].asSubclass(Event.class);
         if (Modifier.isAbstract(actualEventType.getModifiers())) {
             throw new IllegalArgumentException("You cannot create listener for an abstract event type.");
