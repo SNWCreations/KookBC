@@ -20,19 +20,35 @@ package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 import snw.jkook.Core;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.launch.Launch;
 
 import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class SimplePluginClassLoader extends PluginClassLoader {
     private final KBCClient client;
+    private PluginDescription description;
+    private File file;
 
-    public SimplePluginClassLoader(KBCClient client) {
+    public SimplePluginClassLoader(KBCClient client, File file, ClassLoader classLoader) throws MalformedURLException {
+        super(new URL[]{file.toURI().toURL()}, classLoader);
+        this.file = file;
         this.client = client;
     }
 
@@ -48,7 +64,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
-                new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
+                file,
                 new PluginLogger(description.getName(), LoggerFactory.getLogger(cls)),
                 client.getCore()
         );
@@ -56,7 +72,72 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     @Override
+    protected Plugin loadPlugin0(File file) throws Exception {
+        Validate.isTrue(file.exists(), "The Plugin file does not exists.");
+        Validate.isTrue(file.isFile(), "The Plugin file is invalid.");
+        Validate.isTrue(file.canRead(), "The Plugin file does not accessible. (We can't read it!)");
+
+        // load the given file as JarFile
+        try (final JarFile jar = new JarFile(file)) { // try-with-resources!
+            // try to find plugin.yml
+            JarEntry entry = jar.getJarEntry("plugin.yml");
+            if (entry == null) {
+                throw new IllegalArgumentException("We cannot find plugin.yml ."); // plugin.yml is not found, so we don't know where is the main class
+            }
+            // or we should read the plugin.yml and parse it to get information
+            final InputStream plugin = jar.getInputStream(entry);
+            final Yaml parser = new Yaml();
+
+            try {
+                final Map<String, Object> ymlContent = parser.load(plugin);
+                // noinspection unchecked
+                description = new PluginDescription(
+                        Objects.requireNonNull(ymlContent.get("name"), "name is missing").toString(),
+                        Objects.requireNonNull(ymlContent.get("version"), "version is missing").toString(),
+                        Objects.requireNonNull(ymlContent.get("api-version"), "api-version is missing").toString(),
+                        ymlContent.getOrDefault("description", "").toString(),
+                        ymlContent.getOrDefault("website", "").toString(),
+                        Objects.requireNonNull(ymlContent.get("main"), "main is missing").toString(),
+                        (List<String>) ymlContent.getOrDefault("authors", Collections.emptyList()),
+                        (List<String>) ymlContent.getOrDefault("depend", Collections.emptyList()),
+                        (List<String>) ymlContent.getOrDefault("softdepend", Collections.emptyList())
+                );
+            } catch (ClassCastException e) {
+                throw new IllegalArgumentException("Invalid plugin.yml", e);
+            }
+
+            // if the class has already loaded, a conflict has been found.
+            // so many things can cause the conflict, such as a class with the same binary name, or the Plugin author trying to use internal classes (e.g. java.lang.Object)
+            if (findLoadedClass(description.getMainClassName()) != null) {
+                throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
+            }
+
+            return loadPlugin1(file, description);
+        }
+    }
+
+    @Override
+    protected Plugin loadPlugin1(File file, PluginDescription description) throws Exception {
+        // No check, because the Exception will be handled by the caller
+        Class<? extends Plugin> main = loadClass0(description.getMainClassName(), true).asSubclass(Plugin.class);
+
+        if (main.getDeclaredConstructors().length != 1) {
+            throw new IllegalAccessException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
+        }
+
+        return construct(main, description);
+    }
+
+    protected Class<?> loadClass0(String name, boolean resolve) throws ClassNotFoundException {
+        return Launch.classLoader.findClass(name);
+    }
+
+    @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            return Launch.classLoader.findClass(name);
+        } catch (ClassNotFoundException ignored) {
+        }
         try {
             return super.findClass(name);
         } catch (ClassNotFoundException e) {

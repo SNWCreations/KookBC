@@ -14,44 +14,45 @@
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="5 MB" />
+                <SizeBasedTriggeringPolicy size="5 MB"/>
             </Policies>
             <DefaultRolloverStrategy max="1000">
                 <Delete basePath="logs/" maxDepth="2">
                     <IfFileName glob="*.log.gz">
                         <IfLastModified age="7d">
                             <IfAny>
-                                <IfAccumulatedFileSize exceeds="10 MB" />
-                                <IfAccumulatedFileCount exceeds="1000" />
+                                <IfAccumulatedFileSize exceeds="10 MB"/>
+                                <IfAccumulatedFileCount exceeds="1000"/>
                             </IfAny>
                         </IfLastModified>
                     </IfFileName>
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="DebugFile" fileName="logs/debug.log" filePattern="logs/debug-%d{yyyy-MM-dd}-%i.log.gz">
+        <RollingRandomAccessFile name="DebugFile" fileName="logs/debug.log"
+                                 filePattern="logs/debug-%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="5 MB" />
+                <SizeBasedTriggeringPolicy size="5 MB"/>
             </Policies>
             <DefaultRolloverStrategy max="1000">
                 <Delete basePath="logs/" maxDepth="2">
                     <IfFileName glob="debug-*.log.gz">
                         <IfLastModified age="7d">
                             <IfAny>
-                                <IfAccumulatedFileSize exceeds="10 MB" />
-                                <IfAccumulatedFileCount exceeds="1000" />
+                                <IfAccumulatedFileSize exceeds="10 MB"/>
+                                <IfAccumulatedFileCount exceeds="1000"/>
                             </IfAny>
                         </IfLastModified>
                     </IfFileName>
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
-<!--        <File name="DebugFile" fileName="logs/debug.log" append="false">-->
-<!--            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>-->
-<!--        </File>-->
+        <!--        <File name="DebugFile" fileName="logs/debug.log" append="false">-->
+        <!--            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>-->
+        <!--        </File>-->
     </appenders>
     <loggers>
         <root level="all">

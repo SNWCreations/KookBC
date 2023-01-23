@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl;
 
+import org.apache.logging.log4j.Level;
+import org.spongepowered.asm.mixin.Mixins;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
@@ -25,6 +27,7 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -35,6 +38,8 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.launch.Launch;
+import snw.kookbc.impl.launch.LogWrapper;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
@@ -46,10 +51,13 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 // The client representation.
@@ -75,6 +83,7 @@ public class KBCClient {
         this.core = core;
         this.config = config;
         this.pluginsFolder = pluginsFolder;
+        loadAllPluginsMixin();
         this.networkClient = new NetworkClient(this, token);
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
@@ -140,6 +149,37 @@ public class KBCClient {
 
         if (getConfig().getBoolean("check-update", true)) {
             new UpdateChecker(this).start(); // check update. Added since 2022/7/24
+        }
+    }
+
+    protected void loadAllPluginsMixin() {
+        if (pluginsFolder == null) {
+            return;
+        }
+        for (File file : Objects.requireNonNull(pluginsFolder.listFiles(file -> {
+            System.out.println(file.getName());
+            return file.getName().endsWith(".jar");
+        }))) {
+            {
+                LogWrapper.log(Level.DEBUG, "Scanning " + file + "#");
+                try (JarFile jarFile = new JarFile(file)) {
+                    if (jarFile.getJarEntry("plugin.yml") == null) {
+                        // 没有 plugin.yml 则跳过
+                        continue;
+                    }
+                    Enumeration<JarEntry> enumeration = jarFile.entries();
+                    Launch.classLoader.addURL(file.toURI().toURL());
+                    while (enumeration.hasMoreElements()) {
+                        JarEntry jarEntry = enumeration.nextElement();
+                        String name = jarEntry.getName();
+                        if (name.startsWith("mixin.") && name.endsWith(".json")) {
+                            Mixins.addConfiguration(jarEntry.getName());
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new InvalidPluginException(e);
+                }
+            }
         }
     }
 

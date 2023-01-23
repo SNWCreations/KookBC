@@ -66,8 +66,8 @@ public class CoreImpl implements Core {
         try {
             gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
             getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
-        } catch (IOException e) {
-            getLogger().warn("Unable to read Git commit information. :(", e);
+        } catch (NullPointerException | IOException e) {
+            getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
         }
     }
 
