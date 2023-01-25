@@ -34,7 +34,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <log4j2.version>2.19.0</log4j2.version>
-        <jkook.version>0.47.0</jkook.version>
+        <jkook.version>0.48.0</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mixin.version>0.8.5</mixin.version>
         <asm.version>9.3</asm.version>
@@ -160,14 +160,9 @@
     </repositories>
 
     <dependencies>
-        <!--<dependency>
+        <dependency>
             <groupId>com.github.SNWCreations</groupId>
             <artifactId>JKook</artifactId>
-            <version>${jkook.version}</version>
-        </dependency>-->
-        <dependency>
-            <groupId>snw</groupId>
-            <artifactId>jkook</artifactId>
             <version>${jkook.version}</version>
         </dependency>
 
