@@ -74,7 +74,7 @@ public class CommandManagerImpl implements CommandManager {
         }
         client.getCore().getLogger().info(
                 "{} issued command: {}",
-                (sender instanceof User ? ((User) sender).getId() : (sender instanceof ConsoleCommandSender ? "Console" : "UNKNOWN")),
+                (sender instanceof User ? ((User) sender).getName() : (sender instanceof ConsoleCommandSender ? "Console" : "UNKNOWN")),
                 cmdLine
         );
         if (sender == client.getCore().getUser()) {
