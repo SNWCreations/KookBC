@@ -190,6 +190,7 @@ public class Connector {
 
         public PingThread() {
             super("Ping Thread");
+            this.setDaemon(true);
         }
 
         @Override

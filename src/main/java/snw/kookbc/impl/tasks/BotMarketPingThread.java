@@ -43,6 +43,7 @@ public class BotMarketPingThread extends Thread {
                 .url("https://bot.gekj.net/api/v1/online.bot")
                 .header("uuid", rawBotMarketUUID)
                 .build();
+        this.setDaemon(true);
     }
 
     @Override
