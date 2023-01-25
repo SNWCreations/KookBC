@@ -68,11 +68,16 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        client.getCore().getLogger().debug("A command execution request has received. Command line: {}", cmdLine);
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
         }
+        client.getCore().getLogger().info(
+                "{} issued command: {}",
+                (sender instanceof User ? ((User) sender).getId() : (sender instanceof ConsoleCommandSender ? "Console" : "UNKNOWN")),
+                cmdLine
+        );
+
         long startTimeStamp = System.currentTimeMillis(); // debug
 
         List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
