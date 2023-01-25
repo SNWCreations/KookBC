@@ -3,12 +3,6 @@ package snw.kookbc.impl.mixin;
 import org.spongepowered.asm.service.IMixinServiceBootstrap;
 import snw.kookbc.impl.launch.Launch;
 
-/**
- * 2023/1/23<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class KookBCServiceBootstrap implements IMixinServiceBootstrap {
 
     private static final String SERVICE_PACKAGE = "org.spongepowered.asm.service.";
