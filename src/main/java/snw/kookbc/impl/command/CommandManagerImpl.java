@@ -92,11 +92,11 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        client.getCore().getLogger().debug("A command execution request has received. Command line: {}", cmdLine);
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
         }
+
         long startTimeStamp = System.currentTimeMillis(); // debug
 
         List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
@@ -155,6 +155,18 @@ public class CommandManagerImpl implements CommandManager {
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
+            }
+        }
+
+        if (sender instanceof User) {
+            client.getCore().getLogger().info(
+                    "{}(User ID: {}) issued command: {}",
+                    ((User) sender).getName(),
+                    ((User) sender).getId(),
+                    cmdLine
+            );
+            if (sender == client.getCore().getUser()) {
+                client.getCore().getLogger().warn("Running a command as the bot in this client instance. It is impossible.");
             }
         }
 

@@ -18,6 +18,9 @@
 
 package snw.kookbc.impl.storage;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
@@ -26,109 +29,91 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
-import java.lang.ref.SoftReference;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class EntityStorage {
     private final KBCClient client;
 
-    private final Map<String, SoftReference<User>> users = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<Guild>> guilds = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<Channel>> channels = new ConcurrentHashMap<>();
-    // String key of "roles" is guild ID.
-    private final Map<String, Collection<SoftReference<Role>>> roles = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<CustomEmoji>> emojis = new ConcurrentHashMap<>();
-    private final Map<String, SoftReference<Message>> msg = new ConcurrentHashMap<>();
-    private final Set<SoftReference<Reaction>> reactions = new HashSet<>();
-    private final Set<SoftReference<Game>> games = new HashSet<>();
+    // See the notes of these member variables in the constructor.
+    private final LoadingCache<String, User> users;
+    private final LoadingCache<String, Guild> guilds;
+    private final LoadingCache<String, Channel> channels;
+
+    // The following data types can be loaded manually, but it costs too many network resource.
+    // So we won't remove them if the memory is enough.
+    private final Cache<String, Role> roles;
+    private final Cache<String, CustomEmoji> emojis;
+    private final Cache<String, Message> msgs;
+    private final Cache<String, Reaction> reactions;
+    private final Cache<Integer, Game> games;
 
     public EntityStorage(KBCClient client) {
         this.client = client;
+        this.users = newCaffeineBuilderWithWeakRef()
+                .build(id ->
+                        client.getEntityBuilder().buildUser(
+                                client.getNetworkClient().get(
+                                        String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
+                                )
+                        )
+                );
+        this.guilds = newCaffeineBuilderWithWeakRef()
+                .build(id -> {
+                    try {
+                        return client.getEntityBuilder().buildGuild(
+                                client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
+                        );
+                    } catch (BadResponseException e) {
+                        if (!(e.getCode() == 403)) throw e; // 403 maybe happened?
+                    }
+                    return null;
+                });
+        this.channels = newCaffeineBuilderWithWeakRef()
+                .build(id ->
+                        client.getEntityBuilder().buildChannel(
+                                client.getNetworkClient().get(
+                                        String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
+                                )
+                        )
+                );
+        this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
+        this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
+        this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
+        this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
+        this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
     }
 
     public Game getGame(int id) {
-        Iterator<SoftReference<Game>> iterator = games.iterator();
-        while (iterator.hasNext()) {
-            SoftReference<Game> ref = iterator.next();
-            Game game = ref.get();
-            if (game != null) {
-                if (game.getId() == id) {
-                    return game;
-                }
-            } else {
-                iterator.remove();
-            }
-        }
-        return null;
+        return games.getIfPresent(id);
     }
 
     public Message getMessage(String id) {
-        return get(id, msg);
+        return msgs.getIfPresent(id);
     }
 
     public User getUser(String id) {
-        User result = get(id, users);
-        if (result == null) {
-            result = client.getEntityBuilder().buildUser(client.getNetworkClient().get(
-                    String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
-            ));
-            addUser(result);
-        }
-        return result;
+        return users.get(id);
     }
 
     public Guild getGuild(String id) {
-        Guild result = get(id, guilds);
-        if (result == null) {
-            try {
-                result = client.getEntityBuilder().buildGuild(
-                        client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
-                );
-                addGuild(result);
-            } catch (BadResponseException e) {
-                if (!(e.getCode() == 403)) throw e; // 403 maybe happened?
-            }
-        }
-        return result;
+        return guilds.get(id);
     }
 
     public Channel getChannel(String id) {
-        Channel result = get(id, channels);
-        if (result == null) {
-            result = client.getEntityBuilder().buildChannel(
-                    client.getNetworkClient().get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id))
-            );
-            addChannel(result);
-        }
-        return result;
+        return channels.get(id);
     }
 
     public Role getRole(Guild guild, int id) {
-        Collection<SoftReference<Role>> list = roles.get(guild.getId());
-        if (list != null) {
-            Iterator<SoftReference<Role>> iter = list.iterator();
-            while (iter.hasNext()) {
-                SoftReference<Role> ref = iter.next();
-                Role refTarget = ref.get();
-                if (refTarget != null) {
-                    if (refTarget.getId() == id) {
-                        return refTarget;
-                    }
-                } else {
-                    iter.remove();
-                }
-            }
-        }
-        return null;
+        return roles.getIfPresent(guild.getId() + "#" + id);
     }
 
     public CustomEmoji getEmoji(String id) {
-        return get(id, emojis);
+        return emojis.getIfPresent(id);
     }
 
     public User getUser(String id, JsonObject def) {
-        User result = getUser(id);
+        // use getIfPresent, because the def should not be wasted
+        User result = users.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildUser(def);
             addUser(result);
@@ -139,7 +124,7 @@ public class EntityStorage {
     }
 
     public Guild getGuild(String id, JsonObject def) {
-        Guild result = getGuild(id);
+        Guild result = guilds.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildGuild(def);
             addGuild(result);
@@ -150,7 +135,7 @@ public class EntityStorage {
     }
 
     public Channel getChannel(String id, JsonObject def) {
-        Channel result = getChannel(id);
+        Channel result = channels.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildChannel(def);
             addChannel(result);
@@ -161,6 +146,7 @@ public class EntityStorage {
     }
 
     public Role getRole(Guild guild, int id, JsonObject def) {
+        // getRole is Nullable
         Role result = getRole(guild, id);
         if (result == null) {
             result = client.getEntityBuilder().buildRole(guild, def);
@@ -183,78 +169,67 @@ public class EntityStorage {
     }
 
     public Reaction getReaction(String msgId, CustomEmoji emoji, User sender) {
-        Iterator<SoftReference<Reaction>> iterator = reactions.iterator();
-        while (iterator.hasNext()) {
-            SoftReference<Reaction> next = iterator.next();
-            Reaction reaction = next.get();
-            if (reaction == null) {
-                iterator.remove();
-            } else {
-                if (Objects.equals(reaction.getMessageId(), msgId) && reaction.getEmoji() == emoji && reaction.getSender() == sender) {
-                    return reaction;
-                }
-            }
-        }
-        return null;
+        return reactions.getIfPresent(msgId + "#" + emoji.getId() + "#" + sender.getId());
     }
 
     public void addGame(Game game) {
-        games.add(new SoftReference<>(game));
+        games.put(game.getId(), game);
     }
 
     public void addReaction(Reaction reaction) {
-        reactions.add(new SoftReference<>(reaction));
+        reactions.put(reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId(), reaction);
     }
 
     public void addMessage(Message message) {
-        msg.put(message.getId(), new SoftReference<>(message));
+        msgs.put(message.getId(), message);
     }
 
     public void addEmoji(CustomEmoji emoji) {
-        emojis.put(emoji.getId(), new SoftReference<>(emoji));
+        emojis.put(emoji.getId(), emoji);
     }
 
     public void addUser(User user) {
-        users.put(user.getId(), new SoftReference<>(user));
+        users.put(user.getId(), user);
     }
 
     public void addGuild(Guild guild) {
-        guilds.put(guild.getId(), new SoftReference<>(guild));
+        guilds.put(guild.getId(), guild);
     }
 
     public void addChannel(Channel channel) {
-        channels.put(channel.getId(), new SoftReference<>(channel));
+        channels.put(channel.getId(), channel);
     }
 
     public void addRole(Guild guild, Role role) {
-        Collection<SoftReference<Role>> list = roles.computeIfAbsent(guild.getId(), k -> new HashSet<>());
-        list.add(new SoftReference<>(role));
+        roles.put(guild.getId() + "#" + role.getId(), role);
     }
 
     public void removeReaction(Reaction reaction) {
-        reactions.removeIf(reference -> reference.get() == reaction);
+        reactions.invalidate(reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId());
     }
 
+    // Only called when the message is invalid
     public void removeMessage(String id) {
-        msg.remove(id);
+        msgs.invalidate(id);
+        reactions.asMap().keySet().removeIf(i -> i.startsWith(id));
     }
 
     public void removeChannel(String id) {
-        channels.remove(id);
+        channels.invalidate(id);
     }
 
     public void removeGuild(String id) {
-        guilds.remove(id);
+        guilds.invalidate(id);
     }
 
-    private <T> T get(String id, Map<String, SoftReference<T>> map) {
-        SoftReference<T> object = map.get(id);
-        if (object == null) {
-            return null;
-        }
-        if (object.get() == null) {
-            map.remove(id); // clean invalid ref
-        }
-        return object.get();
+    private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
+        return Caffeine.newBuilder()
+                .weakValues()
+                .expireAfterAccess(10, TimeUnit.MINUTES);
+    }
+
+    private static Caffeine<Object, Object> newCaffeineBuilderWithSoftRef() {
+        return Caffeine.newBuilder()
+                .softValues();
     }
 }
