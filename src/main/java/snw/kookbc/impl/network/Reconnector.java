@@ -28,6 +28,7 @@ public class Reconnector extends Thread {
         super("Reconnect Thread");
         this.client = client;
         this.lock = lock;
+        this.setDaemon(true);
     }
 
     @Override
