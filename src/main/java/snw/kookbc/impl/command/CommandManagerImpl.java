@@ -96,15 +96,6 @@ public class CommandManagerImpl implements CommandManager {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
         }
-        client.getCore().getLogger().info(
-                "{}{} issued command: {}",
-                (sender instanceof User ? ((User) sender).getName() : (sender instanceof ConsoleCommandSender ? "Console" : "UNKNOWN")),
-                (sender instanceof User ? "(User ID: " + ((User) sender).getId() + ")" : ""),
-                cmdLine
-        );
-        if (sender == client.getCore().getUser()) {
-            client.getCore().getLogger().warn("Running a command as the bot in this client instance. It is impossible.");
-        }
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
@@ -164,6 +155,18 @@ public class CommandManagerImpl implements CommandManager {
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
+            }
+        }
+
+        if (sender instanceof User) {
+            client.getCore().getLogger().info(
+                    "{}(User ID: {}) issued command: {}",
+                    ((User) sender).getName(),
+                    ((User) sender).getId(),
+                    cmdLine
+            );
+            if (sender == client.getCore().getUser()) {
+                client.getCore().getLogger().warn("Running a command as the bot in this client instance. It is impossible.");
             }
         }
 
