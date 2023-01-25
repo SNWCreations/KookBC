@@ -23,7 +23,6 @@ import com.google.gson.JsonParser;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import snw.jkook.JKook;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 
@@ -77,7 +76,7 @@ public final class UpdateChecker extends Thread {
         int versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
         if (versionDifference == -1) {
             client.getCore().getLogger().info("Update available! Information is following:");
-            client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, JKook.getImplementationVersion());
+            client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, client.getCore().getImplementationVersion());
             client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
             client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
             client.getCore().getLogger().info("Release message is following:");
