@@ -41,6 +41,7 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 public class SimplePluginClassLoader extends PluginClassLoader {
     private final KBCClient client;
@@ -60,14 +61,14 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     private void initMixins() {
-        Map<String, InputStream> map = new HashMap<>();
+        Map<String, File> map = new HashMap<>();
         try (JarFile jarFile = new JarFile(file)) {
             Enumeration<JarEntry> enumeration = jarFile.entries();
             while (enumeration.hasMoreElements()) {
                 JarEntry jarEntry = enumeration.nextElement();
                 String name = jarEntry.getName();
                 if (name.startsWith("mixin.") && name.endsWith(".json")) {
-                    map.put(name, jarFile.getInputStream(jarEntry));
+                    map.put(name, file);
                 }
             }
         } catch (IOException e) {
@@ -82,9 +83,16 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 );
                 return;
             }
-            for (Map.Entry<String, InputStream> entry : map.entrySet()) {
-                String name = entry.getKey();
-                client.getPluginMixinConfigManager().add(description, name, entry.getValue());
+            try {
+                for (Map.Entry<String, File> entry : map.entrySet()) {
+                    String name = entry.getKey();
+                    try (JarFile jarFile = new JarFile(file)) {
+                        ZipEntry zipEntry = jarFile.getEntry(name);
+                        client.getPluginMixinConfigManager().add(description, name, jarFile.getInputStream(zipEntry));
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }

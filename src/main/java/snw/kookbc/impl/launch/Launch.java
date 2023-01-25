@@ -3,7 +3,6 @@ package snw.kookbc.impl.launch;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -24,7 +23,7 @@ public class Launch {
     public static LaunchClassLoader classLoader;
 
     private Launch() {
-        //Get classpath
+        // Get classpath
         List<URL> urls = new ArrayList<>();
         if (getClass().getClassLoader() instanceof URLClassLoader) {
             Collections.addAll(urls, ((URLClassLoader) getClass().getClassLoader()).getURLs());
@@ -83,14 +82,14 @@ public class Launch {
                     final String tweakName = it.next();
                     // Safety check - don't reprocess something we've already visited
                     if (allTweakerNames.contains(tweakName)) {
-                        LogWrapper.log(Level.WARN, "Tweak class name %s has already been visited -- skipping", tweakName);
+                        LogWrapper.log.warn("Tweak class name {} has already been visited -- skipping", tweakName);
                         // remove the tweaker from the stack otherwise it will create an infinite loop
                         it.remove();
                         continue;
                     } else {
                         allTweakerNames.add(tweakName);
                     }
-                    LogWrapper.log(Level.INFO, "Loading tweak class name %s", tweakName);
+                    LogWrapper.log.info("Loading tweak class name {}", tweakName);
 
                     // Ensure we allow the tweak class to load with the parent classloader
                     classLoader.addClassLoaderExclusion(tweakName.substring(0, tweakName.lastIndexOf('.')));
@@ -101,7 +100,7 @@ public class Launch {
                     it.remove();
                     // If we haven't visited a tweaker yet, the first will become the 'primary' tweaker
                     if (primaryTweaker == null) {
-                        LogWrapper.log(Level.INFO, "Using primary tweak class name %s", tweakName);
+                        LogWrapper.log.info("Using primary tweak class name {}", tweakName);
                         primaryTweaker = tweaker;
                     }
                 }
@@ -109,7 +108,7 @@ public class Launch {
                 // Now, iterate all the tweakers we just instantiated
                 for (final Iterator<ITweaker> it = tweakers.iterator(); it.hasNext(); ) {
                     final ITweaker tweaker = it.next();
-                    LogWrapper.log(Level.INFO, "Calling tweak class %s", tweaker.getClass().getName());
+                    LogWrapper.log.info("Calling tweak class {}", tweaker.getClass().getName());
                     tweaker.acceptOptions(options.valuesOf(nonOption));
                     tweaker.injectIntoClassLoader(classLoader);
                     allTweakers.add(tweaker);
@@ -134,7 +133,7 @@ public class Launch {
                 mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
             }
         } catch (Exception e) {
-            LogWrapper.log(Level.ERROR, e, "Unable to launch");
+            LogWrapper.log.error("Unable to launch", e);
             System.exit(1);
         }
     }
