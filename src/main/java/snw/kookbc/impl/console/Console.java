@@ -21,7 +21,6 @@ package snw.kookbc.impl.console;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
-import snw.jkook.JKook;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
@@ -42,7 +41,6 @@ public class Console extends SimpleTerminalConsole {
 
     @Override
     protected void runCommand(String s) {
-        JKook.getLogger().info("Console issued command: {}", s);
         try {
             client.getCore().getCommandManager().executeCommand(ConsoleCommandSenderImpl.INSTANCE, s);
         } catch (Exception e) {
