@@ -83,4 +83,9 @@ JSON 处理库: Google GSON
 
 ## 版权
 
+Copyright (C) 2022 - 2023 KookBC contributors
+
 此程序使用 AGPLv3 作为许可证。
+
+对于仅将此程序作为依赖项的，可以适用 LGPLv3 许可证的条款，
+详见本仓库 COPYING.LESSER 文件。
