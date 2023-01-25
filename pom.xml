@@ -36,6 +36,8 @@
         <log4j2.version>2.19.0</log4j2.version>
         <jkook.version>0.47.0</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mixin.version>0.8.5</mixin.version>
+        <asm.version>9.3</asm.version>
     </properties>
 
     <build>
@@ -250,6 +252,38 @@
             <artifactId>annotations</artifactId>
             <version>23.1.0</version>
             <scope>provided</scope>
+        </dependency>
+
+
+        <!--Mixin-->
+        <dependency>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>mixin</artifactId>
+            <version>${mixin.version}</version>
+        </dependency>
+
+        <!--ASM-->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+
+        <!--Guava-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
         </dependency>
     </dependencies>
 </project>
