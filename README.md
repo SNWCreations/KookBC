@@ -73,7 +73,7 @@ java -jar kookbc-<version>.jar --help
 
 网络通信库: OkHttp 3
 
-Webhook HTTP 服务器库: Javalin 4
+Webhook HTTP 服务器库: [JLHTTP](http://www.freeutils.net/source/jlhttp/)
 
 JSON 处理库: Google GSON
 
