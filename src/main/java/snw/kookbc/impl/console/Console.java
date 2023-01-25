@@ -41,6 +41,7 @@ public class Console extends SimpleTerminalConsole {
 
     @Override
     protected void runCommand(String s) {
+        client.getCore().getLogger().info("Console issued command: {}", s);
         try {
             client.getCore().getCommandManager().executeCommand(ConsoleCommandSenderImpl.INSTANCE, s);
         } catch (Exception e) {
