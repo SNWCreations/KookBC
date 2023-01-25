@@ -25,9 +25,11 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.launch.Launch;
+import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -77,7 +79,8 @@ public class SimplePluginManager implements PluginManager {
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
         Plugin plugin;
         try {
-            plugin = new SimplePluginClassLoader(client, file, Launch.classLoader).loadPlugin(file);
+            URLClassLoader classLoader = Util.isStartByLaunch() ? Launch.classLoader : (URLClassLoader) getClass().getClassLoader();
+            plugin = new SimplePluginClassLoader(client, file, classLoader).loadPlugin(file);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

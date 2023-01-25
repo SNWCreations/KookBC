@@ -32,7 +32,7 @@ public class MixinTweaker implements ITweaker {
 
     @Override
     public String getLaunchTarget() {
-        return "snw.kookbc.Main$Main0";
+        return "snw.kookbc.Main";
     }
 
     @Override

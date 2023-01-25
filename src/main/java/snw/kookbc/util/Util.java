@@ -24,8 +24,8 @@ import snw.jkook.util.Validate;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.Inflater;
 import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 public class Util {
 
@@ -124,5 +124,9 @@ public class Util {
             output.write(buffer, 0, n);
         }
         return output.toByteArray();
+    }
+
+    public static boolean isStartByLaunch() {
+        return Boolean.getBoolean("kookbc.launch");
     }
 }

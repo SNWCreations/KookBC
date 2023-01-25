@@ -18,8 +18,6 @@
 
 package snw.kookbc.impl;
 
-import org.apache.logging.log4j.Level;
-import org.spongepowered.asm.mixin.Mixins;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.ConsoleCommandSender;
@@ -27,7 +25,6 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
 import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -38,17 +35,17 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
-import snw.kookbc.impl.launch.Launch;
-import snw.kookbc.impl.launch.LogWrapper;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.plugin.InternalPlugin;
+import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
+import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,14 +53,12 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
-    private final Core core;
+    private final CoreImpl core;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
@@ -75,6 +70,8 @@ public class KBCClient {
     private final InternalPlugin internalPlugin;
     protected final ExecutorService eventExecutor;
     protected Connector connector;
+    protected List<Plugin> plugins;
+    protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
         if (pluginsFolder != null) {
@@ -83,7 +80,14 @@ public class KBCClient {
         this.core = core;
         this.config = config;
         this.pluginsFolder = pluginsFolder;
-        loadAllPluginsMixin();
+        try {
+            if (Util.isStartByLaunch()) {
+                this.pluginMixinConfigManager = new PluginMixinConfigManager();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        this.core.init(this, new HttpAPIImpl(this));
         this.networkClient = new NetworkClient(this, token);
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
@@ -91,7 +95,6 @@ public class KBCClient {
         this.entityUpdater = new EntityUpdater(this);
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
-        core.init(this, new HttpAPIImpl(this));
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -140,8 +143,8 @@ public class KBCClient {
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
+        enablePlugins(plugins);
         getCore().getLogger().debug("Loading all the plugins from plugins folder");
-        loadAllPlugins();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
@@ -152,40 +155,12 @@ public class KBCClient {
         }
     }
 
-    protected void loadAllPluginsMixin() {
+    protected List<Plugin> loadAllPlugins() {
         if (pluginsFolder == null) {
-            return;
+            return Collections.emptyList(); // If you just want to use JKook API?
         }
-        for (File file : Objects.requireNonNull(pluginsFolder.listFiles(file -> {
-            System.out.println(file.getName());
-            return file.getName().endsWith(".jar");
-        }))) {
-            {
-                LogWrapper.log(Level.DEBUG, "Scanning " + file + "#");
-                try (JarFile jarFile = new JarFile(file)) {
-                    if (jarFile.getJarEntry("plugin.yml") == null) {
-                        // 没有 plugin.yml 则跳过
-                        continue;
-                    }
-                    Enumeration<JarEntry> enumeration = jarFile.entries();
-                    Launch.classLoader.addURL(file.toURI().toURL());
-                    while (enumeration.hasMoreElements()) {
-                        JarEntry jarEntry = enumeration.nextElement();
-                        String name = jarEntry.getName();
-                        if (name.startsWith("mixin.") && name.endsWith(".json")) {
-                            Mixins.addConfiguration(jarEntry.getName());
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new InvalidPluginException(e);
-                }
-            }
-        }
-    }
-
-    protected void loadAllPlugins() {
-        if (pluginsFolder == null) {
-            return; // If you just want to use JKook API?
+        if (plugins != null) {
+            return plugins;
         }
         List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         //noinspection ComparatorMethodParameterNotUsed
@@ -212,6 +187,10 @@ public class KBCClient {
             }
             // end onLoad
         }
+        return this.plugins = plugins;
+    }
+
+    protected final void enablePlugins(List<Plugin> plugins) {
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
@@ -334,6 +313,10 @@ public class KBCClient {
 
     public ExecutorService getEventExecutor() {
         return eventExecutor;
+    }
+
+    public PluginMixinConfigManager getPluginMixinConfigManager() {
+        return pluginMixinConfigManager;
     }
 
     protected void registerInternal() {

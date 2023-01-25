@@ -127,7 +127,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
             CodeSigner[] signers = null;
 
-            if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.")) {
+            if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.launch")) {
                 if (urlConnection instanceof JarURLConnection) {
                     final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
                     final JarFile jarFile = jarURLConnection.getJarFile();

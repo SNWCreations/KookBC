@@ -22,34 +22,71 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import snw.jkook.Core;
+import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.launch.Launch;
+import snw.kookbc.impl.launch.LaunchClassLoader;
+import snw.kookbc.util.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.net.URLClassLoader;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class SimplePluginClassLoader extends PluginClassLoader {
     private final KBCClient client;
     private PluginDescription description;
-    private File file;
+    private final File file;
 
-    public SimplePluginClassLoader(KBCClient client, File file, ClassLoader classLoader) throws MalformedURLException {
+    private final URLClassLoader parent;
+
+    public SimplePluginClassLoader(KBCClient client, File file, URLClassLoader classLoader) throws MalformedURLException {
         super(new URL[]{file.toURI().toURL()}, classLoader);
         this.file = file;
         this.client = client;
+        this.parent = classLoader;
+        if (this.parent instanceof LaunchClassLoader) {
+            ((LaunchClassLoader) this.parent).addURL(file.toURI().toURL());
+        }
+    }
+
+    private void initMixins() {
+        Map<String, InputStream> map = new HashMap<>();
+        try (JarFile jarFile = new JarFile(file)) {
+            Enumeration<JarEntry> enumeration = jarFile.entries();
+            while (enumeration.hasMoreElements()) {
+                JarEntry jarEntry = enumeration.nextElement();
+                String name = jarEntry.getName();
+                if (name.startsWith("mixin.") && name.endsWith(".json")) {
+                    map.put(name, jarFile.getInputStream(jarEntry));
+                }
+            }
+        } catch (IOException e) {
+            throw new InvalidPluginException(e);
+        }
+        if (!map.isEmpty()) {
+            if (!Util.isStartByLaunch()) {
+                client.getCore().getLogger().warn(
+                        "{} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
+                        description.getName(),
+                        description.getVersion()
+                );
+                return;
+            }
+            for (Map.Entry<String, InputStream> entry : map.entrySet()) {
+                String name = entry.getKey();
+                client.getPluginMixinConfigManager().add(description, name, entry.getValue());
+            }
+        }
     }
 
     @Override
@@ -105,6 +142,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             } catch (ClassCastException e) {
                 throw new IllegalArgumentException("Invalid plugin.yml", e);
             }
+            initMixins();
 
             // if the class has already loaded, a conflict has been found.
             // so many things can cause the conflict, such as a class with the same binary name, or the Plugin author trying to use internal classes (e.g. java.lang.Object)
@@ -119,7 +157,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     @Override
     protected Plugin loadPlugin1(File file, PluginDescription description) throws Exception {
         // No check, because the Exception will be handled by the caller
-        Class<? extends Plugin> main = loadClass0(description.getMainClassName(), true).asSubclass(Plugin.class);
+        Class<? extends Plugin> main = loadClass(description.getMainClassName(), true).asSubclass(Plugin.class);
 
         if (main.getDeclaredConstructors().length != 1) {
             throw new IllegalAccessException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
@@ -128,16 +166,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         return construct(main, description);
     }
 
-    protected Class<?> loadClass0(String name, boolean resolve) throws ClassNotFoundException {
-        return Launch.classLoader.findClass(name);
-    }
-
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        try {
-            return Launch.classLoader.findClass(name);
-        } catch (ClassNotFoundException ignored) {
-        }
         try {
             return super.findClass(name);
         } catch (ClassNotFoundException e) {
