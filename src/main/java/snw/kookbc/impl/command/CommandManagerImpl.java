@@ -101,6 +101,9 @@ public class CommandManagerImpl implements CommandManager {
                 (sender instanceof User ? ((User) sender).getId() : (sender instanceof ConsoleCommandSender ? "Console" : "UNKNOWN")),
                 cmdLine
         );
+        if (sender == client.getCore().getUser()) {
+            client.getCore().getLogger().warn("Running a command as the bot in this client instance. It is impossible.");
+        }
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
