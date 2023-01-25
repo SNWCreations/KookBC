@@ -30,6 +30,7 @@ public class Connector {
     private final KBCClient kbcClient;
     private String wsLink = "";
     private WebSocket ws;
+    private volatile boolean firstConnected = false; // sub-threads should not work on startup
     private volatile boolean connected = false;
     private volatile boolean timeout = false;
     private volatile boolean pingOk = false;
@@ -42,12 +43,18 @@ public class Connector {
         new Reconnector(kbcClient, reconnectLock).start();
     }
 
+    // should only be called on startup
     public void start() {
-        getGateway();
         start0();
+        firstConnected = true;
     }
 
-    public void start0() {
+    private void start0() {
+        getGateway();
+        start1();
+    }
+
+    private void start1() {
         do {
             connected = false;
             // if self connected is true, call shutdownHttp()
@@ -110,7 +117,7 @@ public class Connector {
         shutdown();
         kbcClient.getSession().getSN().set(0);
         kbcClient.getSession().getBuffer().clear();
-        start();
+        start0();
     }
 
     public void setConnected(boolean connected) {
@@ -179,7 +186,7 @@ public class Connector {
     }
 
     public boolean isRequireReconnect() {
-        return requireReconnect;
+        return requireReconnect && firstConnected;
     }
 
     public boolean isConnected() {
