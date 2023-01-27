@@ -150,7 +150,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             } catch (ClassCastException e) {
                 throw new IllegalArgumentException("Invalid plugin.yml", e);
             }
-            initMixins();
+            
+            initMixins(); // Mixin support - Init mixins
 
             // if the class has already loaded, a conflict has been found.
             // so many things can cause the conflict, such as a class with the same binary name, or the Plugin author trying to use internal classes (e.g. java.lang.Object)
