@@ -13,7 +13,12 @@ import java.util.List;
  * @author huanmeng_qwq
  */
 public class LaunchMain {
+    // We won't use Main#MAIN_THREAD_NAME
+    // The Main class should not be loaded at this time
+    private static final String MAIN_THREAD_NAME = "Main Thread";
+
     public static void main(String[] args) {
+        Thread.currentThread().setName(MAIN_THREAD_NAME);
         launch(Arrays.asList(args), true);
     }
 
