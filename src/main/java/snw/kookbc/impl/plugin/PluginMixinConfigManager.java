@@ -3,7 +3,6 @@ package snw.kookbc.impl.plugin;
 import org.spongepowered.asm.mixin.Mixins;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.launch.Launch;
-import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,14 +24,12 @@ public class PluginMixinConfigManager {
         Launch.classLoader.addURL(tempDir.toURI().toURL());
     }
 
-    public void add(PluginDescription description, String name, InputStream stream) {
+    public void add(PluginDescription description, String name, InputStream stream) throws IOException {
         String fullName = description.getName() + "-" + name;
         File target = new File(tempDir, fullName);
         try (InputStream inputStream = stream) {
             Files.copy(inputStream, target.toPath());
             Mixins.addConfiguration(fullName);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }
