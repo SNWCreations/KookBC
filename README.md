@@ -81,7 +81,7 @@ JSON 处理库: Google GSON
 
 日志库: Apache Log4j2
 
-此程序提供了对 [SpongePowered Mixin](https://github.com/SpongePowered/Mixin) 的支持。
+此程序提供了对 [SpongePowered Mixin](https://github.com/SpongePowered/Mixin)([FabricMC Mixin](https://github.com/FabricMC/Mixin)) 的支持。
 
 ## 版权
 

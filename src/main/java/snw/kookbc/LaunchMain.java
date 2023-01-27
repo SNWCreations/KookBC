@@ -20,15 +20,15 @@ public class LaunchMain {
         Thread.currentThread().setName(MAIN_THREAD_NAME);
         LogWrapper.LOGGER.info("Launching KookBC with Mixin support");
         LogWrapper.LOGGER.info("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
-        // Turn to true if you are debugging and want to see the full verbose log from Mixin
+        // Turn to true if you are debugging and want to see the full debug log from Mixin
         // After that, add -Dlog4j2.log.level=debug to VM options for full debug log!
-        launch(Arrays.asList(args), false);
+        launch(Arrays.asList(args), true);
     }
 
-    public static void launch(List<String> args, boolean verbose) {
+    public static void launch(List<String> args, boolean fullDebug) {
         System.setProperty("kookbc.launch", "true");
-        if (verbose) {
-            System.setProperty("mixin.debug.verbose", "true");
+        if (fullDebug) {
+            System.setProperty("mixin.debug", "true");
         }
         if (args.stream().noneMatch(e -> e.contains("--tweakClass"))) {
             args = new ArrayList<>(args);

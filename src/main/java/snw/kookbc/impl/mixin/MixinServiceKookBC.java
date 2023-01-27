@@ -24,11 +24,6 @@
  */
 package snw.kookbc.impl.mixin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
@@ -49,6 +44,10 @@ import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.Files;
 import org.spongepowered.asm.util.perf.Profiler;
 import org.spongepowered.asm.util.perf.Profiler.Section;
+import org.spongepowered.include.com.google.common.collect.ImmutableList;
+import org.spongepowered.include.com.google.common.collect.Sets;
+import org.spongepowered.include.com.google.common.io.ByteStreams;
+import org.spongepowered.include.com.google.common.io.Closeables;
 import snw.kookbc.impl.launch.IClassNameTransformer;
 import snw.kookbc.impl.launch.IClassTransformer;
 import snw.kookbc.impl.launch.Launch;
@@ -211,13 +210,13 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
 
     @Override
     public Collection<IContainerHandle> getMixinContainers() {
-        Builder<IContainerHandle> list = ImmutableList.<IContainerHandle>builder();
+        ImmutableList.Builder<IContainerHandle> list = ImmutableList.<IContainerHandle>builder();
         this.getContainersFromClassPath(list);
         this.getContainersFromAgents(list);
         return list.build();
     }
 
-    private void getContainersFromClassPath(Builder<IContainerHandle> list) {
+    private void getContainersFromClassPath(ImmutableList.Builder<IContainerHandle> list) {
         // We know this is deprecated, it works for LW though, so access directly
         URL[] sources = this.getClassPath();
         if (sources != null) {

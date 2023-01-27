@@ -27,7 +27,7 @@ package snw.kookbc.impl.mixin;
 import org.spongepowered.asm.service.IMixinServiceBootstrap;
 import snw.kookbc.impl.launch.Launch;
 
-public class KookBCServiceBootstrap implements IMixinServiceBootstrap {
+public class MixinServiceBootstrapKookBC implements IMixinServiceBootstrap {
 
     private static final String SERVICE_PACKAGE = "org.spongepowered.asm.service.";
     private static final String LAUNCH_PACKAGE = "org.spongepowered.asm.launch.";
@@ -51,14 +51,14 @@ public class KookBCServiceBootstrap implements IMixinServiceBootstrap {
     @Override
     public void bootstrap() {
         // Essential ones
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.SERVICE_PACKAGE);
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.LAUNCH_PACKAGE);
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.LOGGING_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.SERVICE_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.LAUNCH_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.LOGGING_PACKAGE);
 
         // Important ones
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.ASM_PACKAGE);
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.LEGACY_ASM_PACKAGE);
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.MIXIN_PACKAGE);
-        Launch.classLoader.addClassLoaderExclusion(KookBCServiceBootstrap.MIXIN_UTIL_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.ASM_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.LEGACY_ASM_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.MIXIN_PACKAGE);
+        Launch.classLoader.addClassLoaderExclusion(MixinServiceBootstrapKookBC.MIXIN_UTIL_PACKAGE);
     }
 }

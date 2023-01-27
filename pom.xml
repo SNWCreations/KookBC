@@ -36,7 +36,7 @@
         <log4j2.version>2.19.0</log4j2.version>
         <jkook.version>0.48.0</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mixin.version>0.8.5</mixin.version>
+        <mixin.version>0.11.4+mixin.0.8.5</mixin.version>
         <asm.version>9.3</asm.version>
     </properties>
 
@@ -151,11 +151,8 @@
             <url>https://jitpack.io</url>
         </repository>
         <repository>
-            <id>sponge</id>
-            <url>https://repo.spongepowered.org/repository/maven-public</url>
-            <!-- Use the following mirror if SpongePowered repository is not working!
-            <url>https://lss233.littleservice.cn/repositories/minecraft/</url>
-            -->
+            <id>fabricmc</id>
+            <url>https://maven.fabricmc.net/</url>
         </repository>
         <repository>
             <id>architectury</id>
@@ -256,8 +253,8 @@
 
         <!--Mixin-->
         <dependency>
-            <groupId>org.spongepowered</groupId>
-            <artifactId>mixin</artifactId>
+            <groupId>net.fabricmc</groupId>
+            <artifactId>sponge-mixin</artifactId>
             <version>${mixin.version}</version>
         </dependency>
 
