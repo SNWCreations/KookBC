@@ -34,10 +34,7 @@ import static snw.kookbc.impl.launch.Launch.blackboard;
 
 @SuppressWarnings("unchecked")
 public class Blackboard implements IGlobalPropertyService {
-//    public static Map<String, Object> blackboard = new ConcurrentHashMap<>();
-
     public Blackboard() {
-
     }
 
     public IPropertyKey resolveKey(String name) {

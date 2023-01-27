@@ -1,3 +1,6 @@
+/*
+ * License: https://github.com/Mojang/LegacyLauncher
+ */
 package snw.kookbc.impl.launch;
 
 import org.slf4j.Logger;
