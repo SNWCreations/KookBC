@@ -33,7 +33,11 @@ snw.kookbc.impl.pageiter
 snw.kookbc.impl.storage
 snw.kookbc.impl.tasks
 snw.kookbc.impl.entity.builder
+snw.kookbc.impl.mixin (用于提供 Mixin 支持)
+snw.kookbc.impl.launch (用于提供 Mixin 支持)
 ```
+
+* Mixin 是一个允许你运行时修改类的框架，由 SpongePowered 开发，详情请见 [Mixin 仓库](https://github.com/SpongePowered/Mixin) 。
 
 ## 重要的类
 
