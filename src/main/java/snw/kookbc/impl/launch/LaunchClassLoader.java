@@ -1,6 +1,5 @@
 package snw.kookbc.impl.launch;
 
-import org.slf4j.LoggerFactory;
 import snw.jkook.plugin.MarkedClassLoader;
 
 import java.io.Closeable;
@@ -171,8 +170,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         } catch (Throwable e) {
             invalidClasses.add(name);
             if (DEBUG) {
-                LogWrapper.LOGGER.trace("Exception encountered attempting classloading of {}", name, e);
-                LoggerFactory.getLogger("LaunchWrapper").error("Exception encountered attempting classloading of", e);
+                LogWrapper.LOGGER.error("Exception encountered attempting classloading of {}", name, e);
             }
             throw new ClassNotFoundException(name, e);
         }
