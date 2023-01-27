@@ -22,7 +22,7 @@ public class LaunchMain {
         LogWrapper.LOGGER.info("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
         // Turn to true if you are debugging and want to see the full debug log from Mixin
         // After that, add -Dlog4j2.log.level=debug to VM options for full debug log!
-        launch(Arrays.asList(args), true);
+        launch(Arrays.asList(args), false);
     }
 
     public static void launch(List<String> args, boolean fullDebug) {

@@ -76,8 +76,9 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         }
         if (!map.isEmpty()) {
             if (!Util.isStartByLaunch()) {
-                client.getCore().getLogger().warn(
-                        "{} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
+                client.getCore().getLogger().error(
+                        "[{}] {} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
+                        description.getName(),
                         description.getName(),
                         description.getVersion()
                 );
@@ -92,7 +93,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                     }
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new InvalidPluginException(e);
             }
         }
     }
@@ -150,7 +151,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             } catch (ClassCastException e) {
                 throw new IllegalArgumentException("Invalid plugin.yml", e);
             }
-            
+
             initMixins(); // Mixin support - Init mixins
 
             // if the class has already loaded, a conflict has been found.

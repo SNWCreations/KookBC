@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.Path;
 
 // The mixin config manager for plugins.
 // author: huanmeng_qwq
@@ -41,10 +41,17 @@ public class PluginMixinConfigManager {
 
     public void add(PluginDescription description, String name, InputStream stream) throws IOException {
         String fullName = description.getName() + "-" + name;
-        File target = new File(tempDir, fullName);
+        String configName = fullName;
+        Path path = new File(tempDir, fullName).toPath();
+        int duplicate = 0;
+        while (path.toFile().exists()) {
+            ++duplicate;
+            configName = fullName + "_" + duplicate;
+            path = new File(tempDir, configName).toPath();
+        }
         try (InputStream inputStream = stream) {
-            Files.copy(inputStream, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Mixins.addConfiguration(fullName);
+            Files.copy(inputStream, path);
+            Mixins.addConfiguration(configName);
         }
     }
 }
