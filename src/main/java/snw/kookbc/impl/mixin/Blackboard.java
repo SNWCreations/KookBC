@@ -27,9 +27,6 @@ package snw.kookbc.impl.mixin;
 import org.spongepowered.asm.service.IGlobalPropertyService;
 import org.spongepowered.asm.service.IPropertyKey;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import static snw.kookbc.impl.launch.Launch.blackboard;
 
 @SuppressWarnings("unchecked")

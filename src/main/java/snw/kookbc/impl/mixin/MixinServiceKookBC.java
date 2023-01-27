@@ -69,6 +69,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     // Blackboard keys
     public static final Keys BLACKBOARD_KEY_TWEAKCLASSES = Keys.of("TweakClasses");
     public static final Keys BLACKBOARD_KEY_TWEAKS = Keys.of("Tweaks");
+    public static final Keys MAIN_THREAD_NAME = Keys.of("mainThreadName");
 
     private static final String MIXIN_TWEAKER_CLASS = MixinServiceAbstract.LAUNCH_PACKAGE + "MixinTweaker";
 
@@ -135,6 +136,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public void prepare() {
         // Only needed in dev, in production this would be handled by the tweaker
         Launch.classLoader.addClassLoaderExclusion(MixinServiceAbstract.LAUNCH_PACKAGE);
+        GlobalProperties.put(MAIN_THREAD_NAME, Thread.currentThread().getName());
     }
 
     /* (non-Javadoc)
@@ -170,8 +172,9 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public void init() {
-        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.impl.launch.Launch", "launch") < 4) {
-            MixinServiceKookBC.logger.error("MixinBootstrap.doInit() called during a tweak constructor!");
+        int launch = MixinServiceKookBC.findInStackTrace("snw.kookbc.impl.launch.Launch", "launch");
+        if (launch < 4) {
+            MixinServiceKookBC.logger.error("MixinBootstrap.doInit() called during a tweak constructor! {}", launch);
         }
 
         List<String> tweakClasses = GlobalProperties.<List<String>>get(MixinServiceKookBC.BLACKBOARD_KEY_TWEAKCLASSES);
@@ -596,7 +599,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     private static int findInStackTrace(String className, String methodName) {
         Thread currentThread = Thread.currentThread();
 
-        if (!"main".equals(currentThread.getName())) {
+        if (!GlobalProperties.get(MAIN_THREAD_NAME, "main").equals(currentThread.getName())) {
             return 0;
         }
 
