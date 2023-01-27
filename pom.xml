@@ -84,7 +84,8 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Main-Class>snw.kookbc.Main</Main-Class>
+                            <!-- Edit "LaunchMain" to "Main" to disable Mixin support if you want -->
+                            <Main-Class>snw.kookbc.LaunchMain</Main-Class>
                             <Build-Time>${maven.build.timestamp}</Build-Time>
                             <Specification-Title>JKook</Specification-Title>
                             <Specification-Version>${jkook.version}</Specification-Version>
@@ -152,6 +153,9 @@
         <repository>
             <id>sponge</id>
             <url>https://repo.spongepowered.org/repository/maven-public</url>
+            <!-- Use the following mirror if SpongePowered repository is not working!
+            <url>https://lss233.littleservice.cn/repositories/minecraft/</url>
+            -->
         </repository>
         <repository>
             <id>architectury</id>
