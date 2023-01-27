@@ -7,12 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * 2023/1/24<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
+// Invoke the main method under this class to launch KookBC with Mixin support.
+// author: huanmeng_qwq
+// added since 2023/1/24
+// WARNING: Do not use this class in embedded environments!
 public class LaunchMain {
     // We won't use Main#MAIN_THREAD_NAME
     // The Main class should not be loaded at this time

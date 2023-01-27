@@ -9,12 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-/**
- * 2023/1/24<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
+// The mixin config manager for plugins.
+// author: huanmeng_qwq
+// added since 2023/1/24
 public class PluginMixinConfigManager {
     private final File tempDir;
 
