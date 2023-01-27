@@ -20,8 +20,8 @@ public class LaunchMain {
 
     public static void main(String[] args) {
         Thread.currentThread().setName(MAIN_THREAD_NAME);
-        LogWrapper.log.info("Launching KookBC with Mixin support");
-        LogWrapper.log.info("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
+        LogWrapper.LOGGER.info("Launching KookBC with Mixin support");
+        LogWrapper.LOGGER.info("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
         launch(Arrays.asList(args), true);
     }
 

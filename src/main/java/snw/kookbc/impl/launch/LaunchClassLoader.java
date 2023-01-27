@@ -79,7 +79,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                 renameTransformer = (IClassNameTransformer) transformer;
             }
         } catch (Exception e) {
-            LogWrapper.log.error("A critical problem occurred registering the ASM transformer class {}", transformerClassName, e);
+            LogWrapper.LOGGER.error("A critical problem occurred registering the ASM transformer class {}", transformerClassName, e);
         }
     }
 
@@ -143,9 +143,9 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                             pkg = definePackage(packageName, manifest, jarURLConnection.getJarFileURL());
                         } else {
                             if (pkg.isSealed() && !pkg.isSealed(jarURLConnection.getJarFileURL())) {
-                                LogWrapper.log.warn("The jar file {} is trying to seal already secured path {}", jarFile.getName(), packageName);
+                                LogWrapper.LOGGER.warn("The jar file {} is trying to seal already secured path {}", jarFile.getName(), packageName);
                             } else if (isSealed(packageName, manifest)) {
-                                LogWrapper.log.warn("The jar file {} has a security seal for path {}, but that path is defined and not secure", jarFile.getName(), packageName);
+                                LogWrapper.LOGGER.warn("The jar file {} has a security seal for path {}, but that path is defined and not secure", jarFile.getName(), packageName);
                             }
                         }
                     }
@@ -154,14 +154,14 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                     if (pkg == null) {
                         pkg = definePackage(packageName, null, null, null, null, null, null, null);
                     } else if (pkg.isSealed()) {
-                        LogWrapper.log.warn("The URL {} is defining elements for sealed path {}", urlConnection.getURL(), packageName);
+                        LogWrapper.LOGGER.warn("The URL {} is defining elements for sealed path {}", urlConnection.getURL(), packageName);
                     }
                 }
             }
 
             final byte[] transformedClass = runTransformers(untransformedName, transformedName, getClassBytes(untransformedName));
             if (transformedClass == null) {
-                LogWrapper.log.error(untransformedName + " fail#runTransformers");
+                LogWrapper.LOGGER.error(untransformedName + " fail#runTransformers");
             }
 
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
@@ -171,7 +171,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         } catch (Throwable e) {
             invalidClasses.add(name);
             if (DEBUG) {
-                LogWrapper.log.trace("Exception encountered attempting classloading of {}", name, e);
+                LogWrapper.LOGGER.trace("Exception encountered attempting classloading of {}", name, e);
                 LoggerFactory.getLogger("LaunchWrapper").error("Exception encountered attempting classloading of", e);
             }
             throw new ClassNotFoundException(name, e);
@@ -225,14 +225,14 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
         if (DEBUG_FINER) {
-            LogWrapper.log.warn("Beginning transform of {{} ({})} Start Length: {}", name, transformedName, (basicClass == null ? 0 : basicClass.length));
+            LogWrapper.LOGGER.warn("Beginning transform of {{} ({})} Start Length: {}", name, transformedName, (basicClass == null ? 0 : basicClass.length));
             for (final IClassTransformer transformer : transformers) {
                 final String transName = transformer.getClass().getName();
-                LogWrapper.log.warn("Before Transformer {{} ({})} {}: {}", name, transformedName, transName, (basicClass == null ? 0 : basicClass.length));
+                LogWrapper.LOGGER.warn("Before Transformer {{} ({})} {}: {}", name, transformedName, transName, (basicClass == null ? 0 : basicClass.length));
                 basicClass = transformer.transform(name, transformedName, basicClass);
-                LogWrapper.log.warn("After  Transformer {{} ({})} {}: {}", name, transformedName, transName, (basicClass == null ? 0 : basicClass.length));
+                LogWrapper.LOGGER.warn("After  Transformer {{} ({})} {}: {}", name, transformedName, transName, (basicClass == null ? 0 : basicClass.length));
             }
-            LogWrapper.log.warn("Ending transform of {{} ({})} Start Length: {}", name, transformedName, (basicClass == null ? 0 : basicClass.length));
+            LogWrapper.LOGGER.warn("Ending transform of {{} ({})} Start Length: {}", name, transformedName, (basicClass == null ? 0 : basicClass.length));
         } else {
             for (final IClassTransformer transformer : transformers) {
                 basicClass = transformer.transform(name, transformedName, basicClass);
@@ -272,7 +272,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             System.arraycopy(buffer, 0, result, 0, totalLength);
             return result;
         } catch (Throwable t) {
-            LogWrapper.log.error("Problem loading class", t);
+            LogWrapper.LOGGER.error("Problem loading class", t);
             return new byte[0];
         }
     }
@@ -322,13 +322,13 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             final URL classResource = findResource(resourcePath);
 
             if (classResource == null) {
-                if (DEBUG) LogWrapper.log.warn("Failed to find class resource {}", resourcePath);
+                if (DEBUG) LogWrapper.LOGGER.warn("Failed to find class resource {}", resourcePath);
                 negativeResourceCache.add(name);
                 return null;
             }
             classStream = classResource.openStream();
 
-            if (DEBUG) LogWrapper.log.warn("Loading class {} from resource {}", name, classResource.toString());
+            if (DEBUG) LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource.toString());
             final byte[] data = readFully(classStream);
             resourceCache.put(name, data);
             return data;

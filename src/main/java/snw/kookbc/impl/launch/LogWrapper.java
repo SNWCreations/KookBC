@@ -4,5 +4,5 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LogWrapper {
-    public static Logger log = LoggerFactory.getLogger("LaunchWrapper");
+    public static final Logger LOGGER = LoggerFactory.getLogger("LaunchWrapper");
 }
