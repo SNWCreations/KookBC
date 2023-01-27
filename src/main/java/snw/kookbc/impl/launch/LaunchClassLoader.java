@@ -59,10 +59,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("ch.qos.logback");
         addClassLoaderExclusion("snw.kookbc.impl.launch.");
         addClassLoaderExclusion("snw.jkook.plugin.MarkedClassLoader");
-//        addClassLoaderExclusion("snw.jkook.plugin.");
-//        addClassLoaderExclusion("snw.jkook.");
-//        addClassLoaderExclusion("snw.kookbc.");
-//        addClassLoaderExclusion("snw.jkook.");
+        addClassLoaderExclusion("net.minecrell.terminalconsole.");
+        addClassLoaderExclusion("org.jline.");
 
         // transformer exclusions
         addTransformerExclusion("javax.");
