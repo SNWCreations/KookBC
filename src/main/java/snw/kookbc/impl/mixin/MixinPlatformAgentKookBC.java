@@ -24,12 +24,9 @@ import org.spongepowered.asm.util.Constants;
 
 import java.util.Collection;
 
-/**
- * 2023/1/23<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
+// The Mixin Platform Agent for KookBC
+// added since 2023/1/23
+// author: huanmeng_qwq
 public class MixinPlatformAgentKookBC extends MixinPlatformAgentAbstract implements IMixinPlatformServiceAgent {
     @Override
     public void init() {
