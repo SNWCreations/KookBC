@@ -44,8 +44,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
-    private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("legacy.debugClassLoading", "false"));
-    private static final boolean DEBUG_FINER = DEBUG && Boolean.parseBoolean(System.getProperty("legacy.debugClassLoadingFiner", "false"));
+    private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("mixin.debug", "false"));
 
     public LaunchClassLoader(URL[] sources) {
         super(sources, null);
@@ -132,7 +131,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
             CodeSigner[] signers = null;
 
-            byte[] classBytes = getClassBytes(untransformedName);
+            final byte[] classBytes = getClassBytes(untransformedName);
             if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.launch")) {
                 if (urlConnection instanceof JarURLConnection) {
                     final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
@@ -238,7 +237,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     }
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
-        if (DEBUG_FINER) {
+        if (DEBUG) {
             LogWrapper.LOGGER.warn("Beginning transform of {{} ({})} Start Length: {}", name, transformedName, (basicClass == null ? 0 : basicClass.length));
             for (final IClassTransformer transformer : transformers) {
                 final String transName = transformer.getClass().getName();
