@@ -132,6 +132,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
             CodeSigner[] signers = null;
 
+            byte[] classBytes = getClassBytes(untransformedName);
             if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.launch")) {
                 if (urlConnection instanceof JarURLConnection) {
                     final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
@@ -142,7 +143,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                         final JarEntry entry = jarFile.getJarEntry(fileName);
 
                         Package pkg = getPackage0(packageName);
-                        getClassBytes(untransformedName);
                         signers = entry.getCodeSigners();
                         if (pkg == null) {
                             pkg = definePackage(packageName, manifest, jarURLConnection.getJarFileURL());
@@ -164,10 +164,10 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                 }
             }
 
-            final byte[] transformedClass = runTransformers(untransformedName, transformedName, getClassBytes(untransformedName));
+            byte[] transformedClass = runTransformers(untransformedName, transformedName, classBytes);
             if (transformedClass == null) {
                 LogWrapper.LOGGER.error(untransformedName + " fail#runTransformers");
-                return null;
+                transformedClass = classBytes;
             }
 
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
