@@ -76,7 +76,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         }
         if (!map.isEmpty()) {
             if (!Util.isStartByLaunch()) {
-                client.getCore().getLogger().error(
+                client.getCore().getLogger().warn(
                         "[{}] {} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
                         description.getName(),
                         description.getName(),
