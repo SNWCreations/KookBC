@@ -44,12 +44,12 @@ public final class Proxy implements IClassTransformer, ILegacyClassTransformer {
     /**
      * All existing proxies
      */
-    private static List<Proxy> proxies = new ArrayList<>();
+    private static final List<Proxy> proxies = new ArrayList<>();
 
     /**
      * Actual mixin transformer instance
      */
-    private static MixinTransformer transformer = new MixinTransformer();
+    private static final MixinTransformer transformer = new MixinTransformer();
 
     /**
      * True if this is the active proxy, newer proxies disable their older
