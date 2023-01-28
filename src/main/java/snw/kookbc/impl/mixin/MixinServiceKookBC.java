@@ -80,7 +80,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * Known re-entrant transformers, other re-entrant transformers will
      * detected automatically
      */
-    private static final Set<String> excludeTransformers = Sets.<String>newHashSet();
+    private static final Set<String> excludeTransformers = Sets.newHashSet();
 
     /**
      * Log4j2 logger
@@ -121,6 +121,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public boolean isValid() {
         try {
             // Detect launchwrapper
+            // noinspection ResultOfMethodCallIgnored
             Launch.classLoader.hashCode();
         } catch (Throwable ex) {
             return false;
@@ -176,7 +177,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
             MixinServiceKookBC.logger.error("MixinBootstrap.doInit() called during a tweak constructor! {}", launch);
         }
 
-        List<String> tweakClasses = GlobalProperties.<List<String>>get(MixinServiceKookBC.BLACKBOARD_KEY_TWEAKCLASSES);
+        List<String> tweakClasses = GlobalProperties.get(MixinServiceKookBC.BLACKBOARD_KEY_TWEAKCLASSES);
         if (tweakClasses != null) {
             tweakClasses.add(MixinServiceKookBC.STATE_TWEAKER);
         }
@@ -189,19 +190,17 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Collection<String> getPlatformAgents() {
-        return ImmutableList.<String>of(
+        return ImmutableList.of(
                 "snw.kookbc.impl.mixin.MixinPlatformAgentKookBC"
         );
     }
 
     @Override
     public IContainerHandle getPrimaryContainer() {
-        URI uri = null;
+        URI uri;
         try {
             uri = this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI();
-            if (uri != null) {
-                return new ContainerHandleURI(uri);
-            }
+            return new ContainerHandleURI(uri);
         } catch (URISyntaxException ex) {
             ex.printStackTrace();
         }
@@ -210,7 +209,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
 
     @Override
     public Collection<IContainerHandle> getMixinContainers() {
-        ImmutableList.Builder<IContainerHandle> list = ImmutableList.<IContainerHandle>builder();
+        ImmutableList.Builder<IContainerHandle> list = ImmutableList.builder();
         this.getContainersFromClassPath(list);
         this.getContainersFromAgents(list);
         return list.build();
@@ -350,7 +349,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     @Override
     public Collection<ITransformer> getTransformers() {
         List<IClassTransformer> transformers = Launch.classLoader.getTransformers();
-        List<ITransformer> wrapped = new ArrayList<ITransformer>(transformers.size());
+        List<ITransformer> wrapped = new ArrayList<>(transformers.size());
         for (IClassTransformer transformer : transformers) {
             if (transformer instanceof ITransformer) {
                 wrapped.add((ITransformer) transformer);
@@ -375,7 +374,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public List<ITransformer> getDelegatedTransformers() {
-        return Collections.<ITransformer>unmodifiableList(this.getDelegatedLegacyTransformers());
+        return Collections.unmodifiableList(this.getDelegatedLegacyTransformers());
     }
 
     private List<ILegacyClassTransformer> getDelegatedLegacyTransformers() {
@@ -394,7 +393,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     private void buildTransformerDelegationList() {
         MixinServiceKookBC.logger.debug("Rebuilding transformer delegation list:");
-        this.delegatedTransformers = new ArrayList<ILegacyClassTransformer>();
+        this.delegatedTransformers = new ArrayList<>();
         for (ITransformer transformer : this.getTransformers()) {
             if (!(transformer instanceof ILegacyClassTransformer)) {
                 continue;
@@ -461,6 +460,8 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
         try {
             final String resourcePath = transformedName.replace('.', '/').concat(".class");
             classStream = appClassLoader.getResourceAsStream(resourcePath);
+            // NullPointerException will be caught in the following catch statement
+            // noinspection DataFlowIssue
             return ByteStreams.toByteArray(classStream);
         } catch (Exception ex) {
             return null;
