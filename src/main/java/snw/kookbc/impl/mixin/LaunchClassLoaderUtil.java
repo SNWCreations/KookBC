@@ -24,13 +24,13 @@
  */
 package snw.kookbc.impl.mixin;
 
+import org.spongepowered.asm.service.IClassTracker;
+import snw.kookbc.impl.launch.LaunchClassLoader;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import org.spongepowered.asm.service.IClassTracker;
-import snw.kookbc.impl.launch.LaunchClassLoader;
 
 /**
  * Utility class for reflecting into {@link LaunchClassLoader}. We <b>do not
@@ -63,10 +63,10 @@ final class LaunchClassLoaderUtil implements IClassTracker {
      */
     LaunchClassLoaderUtil(LaunchClassLoader classLoader) {
         this.classLoader = classLoader;
-        this.cachedClasses = LaunchClassLoaderUtil.<Map<String, Class<?>>>getField(classLoader, LaunchClassLoaderUtil.CACHED_CLASSES_FIELD);
-        this.invalidClasses = LaunchClassLoaderUtil.<Set<String>>getField(classLoader, LaunchClassLoaderUtil.INVALID_CLASSES_FIELD);
-        this.classLoaderExceptions = LaunchClassLoaderUtil.<Set<String>>getField(classLoader, LaunchClassLoaderUtil.CLASS_LOADER_EXCEPTIONS_FIELD);
-        this.transformerExceptions = LaunchClassLoaderUtil.<Set<String>>getField(classLoader, LaunchClassLoaderUtil.TRANSFORMER_EXCEPTIONS_FIELD);
+        this.cachedClasses = LaunchClassLoaderUtil.getField(classLoader, LaunchClassLoaderUtil.CACHED_CLASSES_FIELD);
+        this.invalidClasses = LaunchClassLoaderUtil.getField(classLoader, LaunchClassLoaderUtil.INVALID_CLASSES_FIELD);
+        this.classLoaderExceptions = LaunchClassLoaderUtil.getField(classLoader, LaunchClassLoaderUtil.CLASS_LOADER_EXCEPTIONS_FIELD);
+        this.transformerExceptions = LaunchClassLoaderUtil.getField(classLoader, LaunchClassLoaderUtil.TRANSFORMER_EXCEPTIONS_FIELD);
     }
 
     /**
@@ -175,7 +175,7 @@ final class LaunchClassLoaderUtil implements IClassTracker {
         if (this.classLoaderExceptions != null) {
             return this.classLoaderExceptions;
         }
-        return Collections.<String>emptySet();
+        return Collections.emptySet();
     }
 
     /**
@@ -185,7 +185,7 @@ final class LaunchClassLoaderUtil implements IClassTracker {
         if (this.transformerExceptions != null) {
             return this.transformerExceptions;
         }
-        return Collections.<String>emptySet();
+        return Collections.emptySet();
     }
 
     @SuppressWarnings("unchecked")

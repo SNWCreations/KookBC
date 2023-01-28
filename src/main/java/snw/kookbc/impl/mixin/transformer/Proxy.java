@@ -44,7 +44,7 @@ public final class Proxy implements IClassTransformer, ILegacyClassTransformer {
     /**
      * All existing proxies
      */
-    private static List<Proxy> proxies = new ArrayList<Proxy>();
+    private static List<Proxy> proxies = new ArrayList<>();
 
     /**
      * Actual mixin transformer instance
