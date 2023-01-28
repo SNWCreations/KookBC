@@ -24,10 +24,10 @@
  */
 package snw.kookbc.impl.mixin;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.launch.GlobalProperties;
 import org.spongepowered.asm.launch.GlobalProperties.Keys;
 import org.spongepowered.asm.launch.platform.MainAttributes;
@@ -85,7 +85,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     /**
      * Log4j2 logger
      */
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(MixinServiceKookBC.class);
 
     /**
      * Utility for reflecting into Launch ClassLoader
