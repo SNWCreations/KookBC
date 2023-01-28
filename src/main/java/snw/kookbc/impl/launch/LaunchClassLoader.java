@@ -3,7 +3,9 @@
  */
 package snw.kookbc.impl.launch;
 
+import org.spongepowered.asm.util.JavaVersion;
 import snw.jkook.plugin.MarkedClassLoader;
+import uk.org.lidalia.sysoutslf4j.common.ReflectionUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -45,7 +47,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("legacy.debugClassLoading", "false"));
     private static final boolean DEBUG_FINER = DEBUG && Boolean.parseBoolean(System.getProperty("legacy.debugClassLoadingFiner", "false"));
 
-    public LaunchClassLoader(URL[] sources, ClassLoader classLoader) {
+    public LaunchClassLoader(URL[] sources) {
         super(sources, null);
         this.sources = new ArrayList<>(Arrays.asList(sources));
 
@@ -75,7 +77,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     public void registerTransformer(String transformerClassName) {
         try {
-            IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
+            IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).getConstructor().newInstance();
             transformers.add(transformer);
             if (transformer instanceof IClassNameTransformer && renameTransformer == null) {
                 renameTransformer = (IClassNameTransformer) transformer;
@@ -85,6 +87,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
     @Override
     public Class<?> findClass(final String name) throws ClassNotFoundException {
         if (invalidClasses.contains(name)) {
@@ -138,7 +141,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                         final Manifest manifest = jarFile.getManifest();
                         final JarEntry entry = jarFile.getJarEntry(fileName);
 
-                        Package pkg = getPackage(packageName);
+                        Package pkg = getPackage0(packageName);
                         getClassBytes(untransformedName);
                         signers = entry.getCodeSigners();
                         if (pkg == null) {
@@ -152,11 +155,11 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                         }
                     }
                 } else {
-                    Package pkg = getPackage(packageName);
+                    Package pkg = getPackage0(packageName);
                     if (pkg == null) {
                         pkg = definePackage(packageName, null, null, null, null, null, null, null);
                     } else if (pkg.isSealed()) {
-                        LogWrapper.LOGGER.warn("The URL {} is defining elements for sealed path {}", urlConnection.getURL(), packageName);
+                        LogWrapper.LOGGER.warn("The URL {} is defining elements for sealed path {}", urlConnection == null ? "null" : urlConnection.getURL(), packageName);
                     }
                 }
             }
@@ -164,6 +167,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             final byte[] transformedClass = runTransformers(untransformedName, transformedName, getClassBytes(untransformedName));
             if (transformedClass == null) {
                 LogWrapper.LOGGER.error(untransformedName + " fail#runTransformers");
+                return null;
             }
 
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
@@ -177,6 +181,15 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             }
             throw new ClassNotFoundException(name, e);
         }
+    }
+
+    private Package getPackage0(String name) {
+        double current = JavaVersion.current();
+        if (JavaVersion.JAVA_9 >= current) {
+            return (Package) ReflectionUtils.invokeMethod("getDefinedPackage", this, String.class, name);
+        }
+        //noinspection deprecation
+        return getPackage(name);
     }
 
     private String untransformName(final String name) {
@@ -329,7 +342,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             }
             classStream = classResource.openStream();
 
-            if (DEBUG) LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource.toString());
+            if (DEBUG) LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource);
             final byte[] data = readFully(classStream);
             resourceCache.put(name, data);
             return data;
@@ -347,6 +360,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         }
     }
 
+    @SuppressWarnings("unused")
     public void clearNegativeEntries(Set<String> entriesToClear) {
         negativeResourceCache.removeAll(entriesToClear);
     }

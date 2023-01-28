@@ -24,6 +24,7 @@
  */
 package snw.kookbc.impl.mixin;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.slf4j.Logger;
@@ -67,6 +68,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
 
     // Blackboard keys
     public static final Keys BLACKBOARD_KEY_TWEAKCLASSES = Keys.of("TweakClasses");
+    @SuppressWarnings("unused")
     public static final Keys BLACKBOARD_KEY_TWEAKS = Keys.of("Tweaks");
     public static final Keys MAIN_THREAD_NAME = Keys.of("mainThreadName");
 
@@ -144,7 +146,6 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Phase getInitialPhase() {
-        String command = System.getProperty("sun.java.command");
         System.setProperty("mixin.env.remapRefMap", "false");
 
         if (MixinServiceKookBC.findInStackTrace("snw.kookbc.impl.launch.Launch", "launch") > 132) {
@@ -338,7 +339,6 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * @see org.spongepowered.asm.service.IClassProvider#getClassPath()
      */
     @Override
-    @Deprecated
     public URL[] getClassPath() {
         return Launch.classLoader.getSources().toArray(new URL[0]);
     }
@@ -440,9 +440,8 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * @param transformedName transformed class name
      * @return class bytes or null if not found
      * @throws IOException propagated
-     * @deprecated Use {@link #getClassNode} instead
      */
-    @Deprecated
+    @ApiStatus.Internal
     public byte[] getClassBytes(String name, String transformedName) throws IOException {
         byte[] classBytes = Launch.classLoader.getClassBytes(name);
         if (classBytes != null) {
@@ -480,7 +479,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * @throws ClassNotFoundException if the specified class could not be loaded
      * @throws IOException            if an error occurs whilst reading the specified class
      */
-    @Deprecated
+    @ApiStatus.Internal
     public byte[] getClassBytes(String className, boolean runTransformers) throws ClassNotFoundException, IOException {
         String transformedName = className.replace('/', '.');
         String name = this.unmapClassName(transformedName);
@@ -589,6 +588,8 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * @param flags      ClassReader flags
      * @return ASM Tree view of the specified class
      */
+    @SuppressWarnings("SameParameterValue")
+    @ApiStatus.Internal
     private ClassNode getClassNode(String className, byte[] classBytes, int flags) {
         ClassNode classNode = new ClassNode();
         ClassReader classReader = new MixinClassReader(classBytes, className);
@@ -596,6 +597,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
         return classNode;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static int findInStackTrace(String className, String methodName) {
         Thread currentThread = Thread.currentThread();
 

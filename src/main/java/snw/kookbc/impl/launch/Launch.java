@@ -39,7 +39,7 @@ public class Launch {
                 }
             }
         }
-        classLoader = new LaunchClassLoader(urls.toArray(new URL[0]), getClass().getClassLoader());
+        classLoader = new LaunchClassLoader(urls.toArray(new URL[0]));
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
     }
@@ -96,7 +96,7 @@ public class Launch {
 
                     // Ensure we allow the tweak class to load with the parent classloader
                     classLoader.addClassLoaderExclusion(tweakName.substring(0, tweakName.lastIndexOf('.')));
-                    final ITweaker tweaker = (ITweaker) Class.forName(tweakName, true, classLoader).newInstance();
+                    final ITweaker tweaker = (ITweaker) Class.forName(tweakName, true, classLoader).getConstructor().newInstance();
                     tweakers.add(tweaker);
 
                     // Remove the tweaker from the list of tweaker names we've processed this pass
@@ -125,6 +125,10 @@ public class Launch {
             // master argument list
             for (final ITweaker tweaker : allTweakers) {
                 argumentList.addAll(Arrays.asList(tweaker.getLaunchArguments()));
+            }
+
+            if (primaryTweaker == null) {
+                throw new NullPointerException("Tweaker not found");
             }
 
             // Finally, we turn to the primary tweaker, and let it tell us where to go to launch

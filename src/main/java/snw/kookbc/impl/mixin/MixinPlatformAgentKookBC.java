@@ -27,6 +27,7 @@ import java.util.Collection;
 // The Mixin Platform Agent for KookBC
 // added since 2023/1/23
 // author: huanmeng_qwq
+@SuppressWarnings("unused")
 public class MixinPlatformAgentKookBC extends MixinPlatformAgentAbstract implements IMixinPlatformServiceAgent {
     @Override
     public void init() {

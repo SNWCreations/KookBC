@@ -72,6 +72,7 @@ final class LaunchClassLoaderUtil implements IClassTracker {
     /**
      * Get the classloader
      */
+    @SuppressWarnings("unused")
     LaunchClassLoader getClassLoader() {
         return this.classLoader;
     }

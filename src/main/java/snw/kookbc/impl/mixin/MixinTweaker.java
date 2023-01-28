@@ -26,6 +26,7 @@ import uk.org.lidalia.sysoutslf4j.common.ReflectionUtils;
 import java.util.List;
 
 
+@SuppressWarnings("unused")
 public class MixinTweaker implements ITweaker {
     private String[] args;
 
