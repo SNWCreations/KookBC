@@ -199,8 +199,12 @@ public class EntityBuilder {
         if (id.contains("/")) {
             try {
                 guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
-            } catch (BadResponseException ignored) {
-            } // you don't have permission to access it!
+            } catch (BadResponseException e) {
+                if (!(e.getCode() == 403)) {
+                    throw e;
+                }
+                // or you don't have permission to access it!
+            }
         }
         String name = object.get("name").getAsString();
         return new CustomEmojiImpl(client, id, name, guild);
