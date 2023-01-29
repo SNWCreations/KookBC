@@ -9,6 +9,7 @@
     <version>0.25.3</version>
     <description>The Kook Bot Client standard implementation for Java.</description>
 
+    <!-- Do not care the order! -->
     <developers>
         <developer>
             <id>SNWCreations</id>
@@ -16,6 +17,22 @@
             <email>snwcreations@qq.com</email>
             <roles>
                 <role>Owner</role>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>xiaoACE</id>
+            <name>xiaoACE</name>
+            <email>xiao_ACE@icloud.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>liufengyu</id>
+            <name>FlowPeakFish</name>
+            <email>i@liufengyu.cn</email>
+            <roles>
                 <role>Developer</role>
             </roles>
         </developer>
