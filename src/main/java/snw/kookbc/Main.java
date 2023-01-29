@@ -56,7 +56,6 @@ public class Main {
         OptionParser parser = new OptionParser();
         OptionSpec<String> tokenOption = parser.accepts("token", "The token that will be used. (Unsafe, write token to kbc.yml instead.)").withOptionalArg();
         OptionSpec<Void> helpOption = parser.accepts("help", "Get help and exit.");
-        NonOptionArgumentSpec<String> nonOptions = parser.nonOptions();
 
         OptionSet options;
         try {
