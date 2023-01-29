@@ -51,7 +51,7 @@ import org.spongepowered.include.com.google.common.io.ByteStreams;
 import org.spongepowered.include.com.google.common.io.Closeables;
 import snw.kookbc.impl.launch.IClassNameTransformer;
 import snw.kookbc.impl.launch.IClassTransformer;
-import snw.kookbc.impl.launch.Launch;
+import snw.kookbc.LaunchMain;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -108,7 +108,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     private IClassNameTransformer nameTransformer;
 
     public MixinServiceKookBC() {
-        this.classLoaderUtil = new LaunchClassLoaderUtil(Launch.classLoader);
+        this.classLoaderUtil = new LaunchClassLoaderUtil(LaunchMain.classLoader);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
         try {
             // Detect launchwrapper
             // noinspection ResultOfMethodCallIgnored
-            Launch.classLoader.hashCode();
+            LaunchMain.classLoader.hashCode();
         } catch (Throwable ex) {
             return false;
         }
@@ -137,7 +137,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     @Override
     public void prepare() {
         // Only needed in dev, in production this would be handled by the tweaker
-        Launch.classLoader.addClassLoaderExclusion(MixinServiceAbstract.LAUNCH_PACKAGE);
+        LaunchMain.classLoader.addClassLoaderExclusion(MixinServiceAbstract.LAUNCH_PACKAGE);
         GlobalProperties.put(MAIN_THREAD_NAME, Thread.currentThread().getName());
     }
 
@@ -148,7 +148,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public Phase getInitialPhase() {
         System.setProperty("mixin.env.remapRefMap", "false");
 
-        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.impl.launch.Launch", "launch") > 132) {
+        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 132) {
             return Phase.DEFAULT;
         }
         return Phase.PREINIT;
@@ -173,7 +173,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public void init() {
-        int launch = MixinServiceKookBC.findInStackTrace("snw.kookbc.impl.launch.Launch", "launch");
+        int launch = MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch");
         if (launch < 4) {
             MixinServiceKookBC.logger.error("MixinBootstrap.doInit() called during a tweak constructor! {}", launch);
         }
@@ -285,7 +285,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        return Launch.classLoader.findClass(name);
+        return LaunchMain.classLoader.findClass(name);
     }
 
     /* (non-Javadoc)
@@ -294,7 +294,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Class<?> findClass(String name, boolean initialize) throws ClassNotFoundException {
-        return Class.forName(name, initialize, Launch.classLoader);
+        return Class.forName(name, initialize, LaunchMain.classLoader);
     }
 
     /* (non-Javadoc)
@@ -303,7 +303,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Class<?> findAgentClass(String name, boolean initialize) throws ClassNotFoundException {
-        return Class.forName(name, initialize, Launch.class.getClassLoader());
+        return Class.forName(name, initialize, LaunchMain.class.getClassLoader());
     }
 
     /* (non-Javadoc)
@@ -311,7 +311,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public void beginPhase() {
-        Launch.classLoader.registerTransformer(MixinServiceKookBC.TRANSFORMER_PROXY_CLASS);
+        LaunchMain.classLoader.registerTransformer(MixinServiceKookBC.TRANSFORMER_PROXY_CLASS);
         this.delegatedTransformers = null;
     }
 
@@ -321,7 +321,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public void checkEnv(Object bootSource) {
-        if (bootSource.getClass().getClassLoader() != Launch.class.getClassLoader()) {
+        if (bootSource.getClass().getClassLoader() != LaunchMain.class.getClassLoader()) {
             throw new MixinException("Attempted to init the mixin environment in the wrong classloader");
         }
     }
@@ -332,7 +332,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public InputStream getResourceAsStream(String name) {
-        return Launch.classLoader.getResourceAsStream(name);
+        return LaunchMain.classLoader.getResourceAsStream(name);
     }
 
     /* (non-Javadoc)
@@ -340,7 +340,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public URL[] getClassPath() {
-        return Launch.classLoader.getSources().toArray(new URL[0]);
+        return LaunchMain.classLoader.getSources().toArray(new URL[0]);
     }
 
     /* (non-Javadoc)
@@ -348,7 +348,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Collection<ITransformer> getTransformers() {
-        List<IClassTransformer> transformers = Launch.classLoader.getTransformers();
+        List<IClassTransformer> transformers = LaunchMain.classLoader.getTransformers();
         List<ITransformer> wrapped = new ArrayList<>(transformers.size());
         for (IClassTransformer transformer : transformers) {
             if (transformer instanceof ITransformer) {
@@ -443,16 +443,16 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @ApiStatus.Internal
     public byte[] getClassBytes(String name, String transformedName) throws IOException {
-        byte[] classBytes = Launch.classLoader.getClassBytes(name);
+        byte[] classBytes = LaunchMain.classLoader.getClassBytes(name);
         if (classBytes != null) {
             return classBytes;
         }
 
         URLClassLoader appClassLoader;
-        if (Launch.class.getClassLoader() instanceof URLClassLoader) {
-            appClassLoader = (URLClassLoader) Launch.class.getClassLoader();
+        if (LaunchMain.class.getClassLoader() instanceof URLClassLoader) {
+            appClassLoader = (URLClassLoader) LaunchMain.class.getClassLoader();
         } else {
-            appClassLoader = new URLClassLoader(new URL[]{}, Launch.class.getClassLoader());
+            appClassLoader = new URLClassLoader(new URL[]{}, LaunchMain.class.getClassLoader());
         }
 
         InputStream classStream = null;
@@ -554,7 +554,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     }
 
     private void findNameTransformer() {
-        List<IClassTransformer> transformers = Launch.classLoader.getTransformers();
+        List<IClassTransformer> transformers = LaunchMain.classLoader.getTransformers();
         for (IClassTransformer transformer : transformers) {
             if (transformer instanceof IClassNameTransformer) {
                 MixinServiceKookBC.logger.debug("Found name transformer: {}", transformer.getClass().getName());

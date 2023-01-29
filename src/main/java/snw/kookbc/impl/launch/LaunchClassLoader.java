@@ -60,6 +60,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("org.spongepowered.asm.launch.");
         addClassLoaderExclusion("ch.qos.logback");
         addClassLoaderExclusion("snw.kookbc.impl.launch.");
+        addClassLoaderExclusion("snw.kookbc.LaunchMain");
         addClassLoaderExclusion("snw.jkook.plugin.MarkedClassLoader");
         addClassLoaderExclusion("net.minecrell.terminalconsole.");
         addClassLoaderExclusion("org.jline.");
