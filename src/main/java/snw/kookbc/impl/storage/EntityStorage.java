@@ -19,6 +19,7 @@
 package snw.kookbc.impl.storage;
 
 import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
@@ -32,6 +33,8 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.util.concurrent.TimeUnit;
 
 public class EntityStorage {
+    private static final int RETRY_TIMES = 1;
+
     private final KBCClient client;
 
     // See the notes of these member variables in the constructor.
@@ -50,15 +53,15 @@ public class EntityStorage {
     public EntityStorage(KBCClient client) {
         this.client = client;
         this.users = newCaffeineBuilderWithWeakRef()
-                .build(id ->
+                .build(withRetry(id ->
                         client.getEntityBuilder().buildUser(
                                 client.getNetworkClient().get(
                                         String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
                                 )
                         )
-                );
+                ));
         this.guilds = newCaffeineBuilderWithWeakRef()
-                .build(id -> {
+                .build(withRetry(id -> {
                     try {
                         return client.getEntityBuilder().buildGuild(
                                 client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
@@ -67,15 +70,15 @@ public class EntityStorage {
                         if (!(e.getCode() == 403)) throw e; // 403 maybe happened?
                     }
                     return null;
-                });
+                }));
         this.channels = newCaffeineBuilderWithWeakRef()
-                .build(id ->
+                .build(withRetry(id ->
                         client.getEntityBuilder().buildChannel(
                                 client.getNetworkClient().get(
                                         String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
                                 )
                         )
-                );
+                ));
         this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
         this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
         this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
@@ -231,5 +234,20 @@ public class EntityStorage {
     private static Caffeine<Object, Object> newCaffeineBuilderWithSoftRef() {
         return Caffeine.newBuilder()
                 .softValues();
+    }
+
+    private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
+        return k -> {
+            int retries = RETRY_TIMES;
+            Exception latestException;
+            do {
+                try {
+                    return original.load(k);
+                } catch (Exception e) {
+                    latestException = e;
+                }
+            } while (retries-- > 0);
+            throw new RuntimeException("Unable to load resource", latestException);
+        };
     }
 }
