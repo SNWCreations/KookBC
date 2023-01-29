@@ -35,7 +35,7 @@ public class LaunchMain {
         List<String> argsList = new ArrayList<>(Arrays.asList(args));
         if (argsList.stream().noneMatch(e -> e.contains("--tweakClass"))) {
             argsList.add("--tweakClass");
-            argsList.add("snw.kookbc.impl.mixin.MixinTweaker");
+            argsList.add(DEFAULT_TWEAK);
         }
         args = argsList.toArray(new String[0]);
         Thread.currentThread().setName(MAIN_THREAD_NAME);
