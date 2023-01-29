@@ -113,3 +113,8 @@ buildNumber.properties
 run/
 
 .vscode/
+
+# KookBC
+.console_history
+logs
+kbc.yml

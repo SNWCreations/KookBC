@@ -18,10 +18,7 @@
 
 package snw.kookbc;
 
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import joptsimple.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.JKook;
@@ -38,6 +35,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 
 public class Main {
+    private static final String MAIN_THREAD_NAME = "Main Thread";
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final File kbcLocal = new File("kbc.yml");
 
@@ -51,10 +49,6 @@ public class Main {
     }
 
     private static int main0(String[] args) {
-        Thread.currentThread().setName("Main Thread");
-        SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
-        SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
-
         // KBC accepts following arguments:
         // --token <tokenValue>   --  Use the tokenValue as the token
         // --help                 --  Get help and exit
@@ -81,8 +75,11 @@ public class Main {
             } catch (IOException e) {
                 logger.error("Unable to print help.");
             }
-            return 0;
+            return 1;
         }
+        Thread.currentThread().setName(MAIN_THREAD_NAME);
+        SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
+        SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
 
         String token = options.valueOf(tokenOption);
 
@@ -123,7 +120,6 @@ public class Main {
         if (!config.getBoolean("allow-help-ad", true)) {
             logger.warn("Detected allow-help-ad is false! :("); // why don't you support us?
         }
-
         return main1(token, config, pluginsFolder);
     }
 
@@ -162,7 +158,6 @@ public class Main {
             client.shutdown();
             return 1;
         }
-
         client.loop();
         client.shutdown();
         return 0;
@@ -191,5 +186,5 @@ public class Main {
             logger.warn("Cannot save kbc.yml because an error occurred", e);
         }
     }
-
 }
+

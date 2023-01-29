@@ -40,6 +40,15 @@
 
 如果 JitPack 构建出错，请联系我。
 
+### 常见误区
+
+我们遇见过使用 `snw.kookbc.LaunchMain` 或 `snw.kookbc.Main` 类启动 KookBC 的情况，但是那是**不推荐**的。
+
+你可以参考 `snw.kookbc.Main` 类的代码，以了解 KookBC 的正常启动流程。
+* 请不要尝试阅读 `snw.kookbc.LaunchMain` 类以了解 KookBC 的启动流程！那是为了配合 Mixin 支持而编写的。那其中并没有启动的逻辑。
+
+请直接使用 `KBCClient` 类。
+
 ### 了解&构造 KookBC 的关键类
 
 有两个类是很重要的：
