@@ -187,7 +187,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         if (current >= JavaVersion.JAVA_9) {
             return (Package) ReflectionUtils.invokeMethod("getDefinedPackage", this, String.class, name);
         }
-        //noinspection deprecation
+        //noinspection deprecation // You can ignore this if you are working on Java 8
         return getPackage(name);
     }
 
