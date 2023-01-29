@@ -24,3 +24,22 @@ java -jar kookbc-<version>.jar
 
 `-Dlog4j2.log.level`: 指定 Log4j2 的控制台日志级别，`latest.log` 和 `debug.log` 不受此项影响。
 * 例如 `-Dlog4j2.log.level=DEBUG` 使控制台可以显示 DEBUG 级别日志。
+
+### 启动入口
+
+KookBC 当前有两个主类。
+
+`snw.kookbc.LaunchMain` 与 `snw.kookbc.Main` 。
+
+前者会启动 Mixin 支持，然后再启动 KookBC 。我们称之为 "Launch" 模式。
+* 当前的 KookBC 默认主类也是这个，以使你的 Mixin 插件可以正常工作。
+
+后者将抛弃 Mixin 支持而直接启动 KookBC 。
+* 在这个情况下，加载插件时将忽略 Mixin 相关内容，遇到时给出警告。
+
+若需要指定主类，使用如下命令行:
+```text
+java -cp kookbc-<version>.jar <主类的完整名称>
+```
+
+其中 `<version>` 是 KookBC 的版本。主类名已在上文给出。
