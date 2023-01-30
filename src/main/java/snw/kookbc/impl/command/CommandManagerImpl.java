@@ -175,7 +175,7 @@ public class CommandManagerImpl implements CommandManager {
 
         Object[] arguments;
         try {
-            arguments = processArguments(commandObject, args);
+            arguments = processArguments(finalCommand, args);
         } catch (NoSuchElementException e) {
             if (sender instanceof ConsoleCommandSender) {
                 client.getCore().getLogger().info("Unable to execute command: No enough arguments.");
