@@ -336,7 +336,7 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
-        if (command.getArguments().isEmpty()) { // If this command don't want to use this feature?
+        if (command.getArguments().isEmpty() && command.getOptionalArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
             return rawArgs.toArray(new String[0]);
         }
