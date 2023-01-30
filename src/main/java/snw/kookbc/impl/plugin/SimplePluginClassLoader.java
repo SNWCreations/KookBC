@@ -48,7 +48,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 dataFolder,
                 description,
                 new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
-                new PluginLogger(description.getName(), LoggerFactory.getLogger(cls))
+                new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls))
         );
         return plugin;
     }
