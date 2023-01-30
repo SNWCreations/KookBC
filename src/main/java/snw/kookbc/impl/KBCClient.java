@@ -370,7 +370,7 @@ public class KBCClient {
                             if (args.length != 0) {
                                 String helpWanted = (String) args[0];
                                 JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager())
-                                        .getCommand(helpWanted);
+                                        .getCommand(helpWanted).getCommand();
                                 if (command == null) {
                                     if (commandSender instanceof User) {
                                         message.sendToSource(new MarkdownComponent("找不到命令。"));

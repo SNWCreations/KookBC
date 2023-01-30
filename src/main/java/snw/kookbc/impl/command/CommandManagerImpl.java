@@ -27,18 +27,26 @@ import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    private final Map<JKookCommand, Plugin> commands = new HashMap<>();
-    private final Map<Class<?>, Function<String, ?>> parsers = new HashMap<>();
+    // The following comments will tell you the difference between the following two member variables.
+    // For example, there is a command called "hello"
+    // Its prefixes are "/", "."
+    // So the commands Map will contain a key called "hello"
+    // But the commandWithPrefix Map will contain two keys, "/hello", ".hello"
+    private final Map<String, WrappedCommand> commands = new ConcurrentHashMap<>();
+    private final Map<String, WrappedCommand> commandWithPrefix = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this.client = client;
@@ -47,21 +55,63 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
-        ensurePluginEnabled(plugin); // null plugin is unsupported, but internal commands are allowed.
-        if (getCommand(command.getRootName()) != null
-                ||
-                commands.keySet().stream().anyMatch(
-                        IT -> IT.getAliases().stream().anyMatch(C -> Objects.equals(C, IT.getRootName()))
-                )
-        ) {
-            throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
+        ensurePluginEnabled(plugin);
+        checkCommand(command);
+        Collection<String> allCommandHeader = getAllCommandHeader(command);
+        WrappedCommand result = new WrappedCommand(command, plugin);
+        commands.put(command.getRootName(), result);
+        allCommandHeader.forEach(i -> commandWithPrefix.put(i, result));
+    }
+
+    // Return true if this command can be registered
+    private void checkCommand(JKookCommand command) throws IllegalArgumentException {
+        if (getCommand(command.getRootName()) != null) {
+            throw new IllegalArgumentException("The command with the same root name has already registered.");
+        }
+        boolean duplicateNameWithPrefix = command.getPrefixes()
+                .stream()
+                .map(i -> i + command.getRootName())
+                .anyMatch(commandWithPrefix::containsKey);
+        if (duplicateNameWithPrefix) {
+            throw new IllegalArgumentException("The command with the same (prefix + root name) result has already registered.");
+        }
+        boolean duplicateAliasWithPrefix = command.getPrefixes()
+                .stream()
+                .anyMatch(i -> !checkAliasWithPrefix(i, command.getAliases()));
+        if (duplicateAliasWithPrefix) {
+            throw new IllegalArgumentException("The command with the same (prefix + alias) result has already registered.");
         }
         for (Class<?> clazz : command.getArguments()) {
             if (parsers.get(clazz) == null) {
                 throw new IllegalArgumentException("Unsupported argument type: " + clazz);
             }
         }
-        commands.put(command, plugin);
+        for (Class<?> clazz : command.getOptionalArguments().getKeys()) {
+            if (parsers.get(clazz) == null) {
+                throw new IllegalArgumentException("Unsupported argument type: " + clazz);
+            }
+        }
+    }
+
+    // Return true if there is no conflict with the prefix and the aliases in the provided command
+    private boolean checkAliasWithPrefix(String prefix, Collection<String> aliases) {
+        for (String alias : aliases) {
+            if (commandWithPrefix.containsKey(prefix + alias)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Collection<String> getAllCommandHeader(JKookCommand command) {
+        Collection<String> result = new ArrayList<>(command.getPrefixes().size() * (command.getAliases().size() + 1));
+        for (String prefix : command.getPrefixes()) {
+            result.add(prefix + command.getRootName());
+            for (String alias : command.getAliases()) {
+                result.add(prefix + alias);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -101,7 +151,7 @@ public class CommandManagerImpl implements CommandManager {
 
         List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
         String root = args.remove(0);
-        JKookCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
+        WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
             if (sender instanceof ConsoleCommandSender) {
                 client.getCore().getLogger().info("Unknown command. Type \"help\" for help.");
@@ -110,7 +160,7 @@ public class CommandManagerImpl implements CommandManager {
         }
 
         // region Plugin.isEnabled check
-        Plugin owner = commands.get(commandObject);
+        Plugin owner = commandObject.getPlugin();
         if (!owner.isEnabled()) {
             if (sender instanceof ConsoleCommandSender) {
                 client.getCore().getLogger().info("Unable to execute command: The owner plugin of this command was disabled.");
@@ -126,7 +176,7 @@ public class CommandManagerImpl implements CommandManager {
         // endregion
 
         // first get commands
-        Collection<JKookCommand> sub = commandObject.getSubcommands();
+        Collection<JKookCommand> sub = commandObject.getCommand().getSubcommands();
         // then we should know the latest command to be executed
         // we will use the "/hello a b" as the example
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
@@ -174,7 +224,7 @@ public class CommandManagerImpl implements CommandManager {
         }
 
         // maybe some commands don't have subcommand?
-        JKookCommand finalCommand = (actualCommand == null) ? commandObject : actualCommand;
+        JKookCommand finalCommand = (actualCommand == null) ? commandObject.getCommand() : actualCommand;
 
         Object[] arguments;
         try {
@@ -268,31 +318,21 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     public Set<JKookCommand> getCommandSet() {
-        return commands.keySet();
+        return commands.values().stream().map(WrappedCommand::getCommand).collect(Collectors.toSet());
     }
 
-    public Map<JKookCommand, Plugin> getCommands() {
+    public Map<String, WrappedCommand> getCommands() {
         return commands;
     }
 
-    public JKookCommand getCommand(String rootName) {
+    public WrappedCommand getCommand(String rootName) {
         if (rootName.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands.keySet()) {
-            if (Objects.equals(command.getRootName(), rootName)) {
-                return command;
-            }
-        }
-        return null;
+        return commands.get(rootName);
     }
 
-    protected JKookCommand getCommandWithPrefix(String cmdHeader) {
+    protected WrappedCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands.keySet()) {
-            if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
-                return command;
-            }
-        }
-        return null;
+        return commandWithPrefix.get(cmdHeader);
     }
 
     protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
@@ -410,13 +450,5 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
-    }
-}
-
-final class UnknownArgumentException extends RuntimeException {
-    final int argIndex;
-
-    UnknownArgumentException(int argIndex) {
-        this.argIndex = argIndex;
     }
 }
