@@ -159,6 +159,9 @@ public class CommandManagerImpl implements CommandManager {
         }
 
         if (sender instanceof User) {
+            if (msg == null) {
+                client.getCore().getLogger().warn("A user issued command but the message object is null. Is the plugin calling a command as the user?");
+            }
             client.getCore().getLogger().info(
                     "{}(User ID: {}) issued command: {}",
                     ((User) sender).getName(),
