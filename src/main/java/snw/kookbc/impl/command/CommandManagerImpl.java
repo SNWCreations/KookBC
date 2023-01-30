@@ -25,11 +25,18 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    private final ArrayList<JKookCommand> commands = new ArrayList<>();
+    // The following comments will tell you the difference between the following two member variables.
+    // For example, there is a command called "hello"
+    // Its prefixes are "/", "."
+    // So the commands Map will contain a key called "hello"
+    // But the commandWithPrefix Map will contain two keys, "/hello", ".hello"
+    private final Map<String, JKookCommand> commands = new ConcurrentHashMap<>();
+    private final Map<String, JKookCommand> commandWithPrefix = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this.client = client;
@@ -37,24 +44,51 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public void registerCommand(JKookCommand command) throws IllegalArgumentException {
-        for (String p : command.getPrefixes()) {
-            for (JKookCommand cmd : commands) {
-                for (String p2 : cmd.getPrefixes()) {
-                    if (Objects.equals(p + command.getRootName(), p2 + cmd.getRootName())) {
-                        throw new IllegalArgumentException(String.format("Conflict rootname-with-prefix detected between registered command %s and incoming %s", cmd.getRootName(), command.getRootName()));
-                    }
-                }
+        checkCommand(command);
+        Collection<String> allCommandHeader = getAllCommandHeader(command);
+        commands.put(command.getRootName(), command);
+        allCommandHeader.forEach(i -> commandWithPrefix.put(i, command));
+    }
+
+    // Return true if this command can be registered
+    private void checkCommand(JKookCommand command) throws IllegalArgumentException {
+        if (getCommand(command.getRootName()) != null) {
+            throw new IllegalArgumentException("The command with the same root name has already registered.");
+        }
+        boolean duplicateNameWithPrefix = command.getPrefixes()
+                .stream()
+                .map(i -> i + command.getRootName())
+                .anyMatch(commandWithPrefix::containsKey);
+        if (duplicateNameWithPrefix) {
+            throw new IllegalArgumentException("The command with the same (prefix + root name) result has already registered.");
+        }
+        boolean duplicateAliasWithPrefix = command.getPrefixes()
+                .stream()
+                .anyMatch(i -> !checkAliasWithPrefix(i, command.getAliases()));
+        if (duplicateAliasWithPrefix) {
+            throw new IllegalArgumentException("The command with the same (prefix + alias) result has already registered.");
+        }
+    }
+
+    // Return true if there is no conflict with the prefix and the aliases in the provided command
+    private boolean checkAliasWithPrefix(String prefix, Collection<String> aliases) {
+        for (String alias : aliases) {
+            if (commandWithPrefix.containsKey(prefix + alias)) {
+                return false;
             }
         }
-        if (getCommand(command.getRootName()) != null
-                ||
-                commands.stream().anyMatch(
-                        IT -> IT.getAliases().stream().anyMatch(C -> Objects.equals(C, IT.getRootName()))
-                )
-        ) {
-            throw new IllegalArgumentException("The command with the same root name (or alias) has already registered.");
+        return true;
+    }
+
+    private Collection<String> getAllCommandHeader(JKookCommand command) {
+        Collection<String> result = new ArrayList<>(command.getPrefixes().size() * (command.getAliases().size() + 1));
+        for (String prefix : command.getPrefixes()) {
+            result.add(prefix + command.getRootName());
+            for (String alias : command.getAliases()) {
+                result.add(prefix + alias);
+            }
         }
-        commands.add(command);
+        return result;
     }
 
     // this method should only be used for executing Bot commands. And the executor is Console.
@@ -196,27 +230,17 @@ public class CommandManagerImpl implements CommandManager {
         return true; // ok, the command is ok, so we can return true.
     }
 
-    public ArrayList<JKookCommand> getCommands() {
-        return commands;
+    public Collection<JKookCommand> getCommands() {
+        return commands.values();
     }
 
     public JKookCommand getCommand(String rootName) {
-        if (rootName.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
-            if (Objects.equals(command.getRootName(), rootName)) {
-                return command;
-            }
-        }
-        return null;
+        if (rootName.isEmpty()) return null;
+        return commands.get(rootName);
     }
 
     protected JKookCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
-        for (JKookCommand command : commands) {
-            if (command.getPrefixes().stream().anyMatch(IT -> Objects.equals(IT + command.getRootName(), cmdHeader))) {
-                return command;
-            }
-        }
-        return null;
+        return commandWithPrefix.get(cmdHeader);
     }
 }
