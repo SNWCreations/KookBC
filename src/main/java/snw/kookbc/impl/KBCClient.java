@@ -31,6 +31,7 @@ import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
@@ -369,8 +370,8 @@ public class KBCClient {
                             JKookCommand[] result;
                             if (args.length != 0) {
                                 String helpWanted = (String) args[0];
-                                JKookCommand command = ((CommandManagerImpl) getCore().getCommandManager())
-                                        .getCommand(helpWanted).getCommand();
+                                WrappedCommand command = ((CommandManagerImpl) getCore().getCommandManager())
+                                        .getCommand(helpWanted);
                                 if (command == null) {
                                     if (commandSender instanceof User) {
                                         message.sendToSource(new MarkdownComponent("找不到命令。"));
@@ -379,7 +380,7 @@ public class KBCClient {
                                     }
                                     return;
                                 }
-                                result = new JKookCommand[]{command};
+                                result = new JKookCommand[]{command.getCommand()};
                             } else {
                                 result = ((CommandManagerImpl) getCore().getCommandManager()).getCommandSet()
                                         .toArray(new JKookCommand[0]);
