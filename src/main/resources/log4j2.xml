@@ -59,5 +59,6 @@
             <appender-ref ref="File" level="info"/>
             <appender-ref ref="DebugFile" level="debug"/>
         </root>
+        <logger name="uk.org.lidalia.sysoutslf4j" level="OFF"/>
     </loggers>
 </configuration>
