@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import snw.jkook.entity.abilities.Accessory;
 import snw.jkook.message.component.FileComponent;
 import snw.jkook.message.component.card.*;
@@ -29,6 +27,9 @@ import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
+import snw.kookbc.impl.serializer.component.CardComponentSerializer;
+import snw.kookbc.impl.serializer.component.element.*;
+import snw.kookbc.impl.serializer.component.module.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -38,6 +39,25 @@ import java.util.Objects;
 
 // Just for (de)serialize the CardMessages.
 public class CardBuilder {
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
+            .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
+            .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
+            .registerTypeAdapter(MarkdownElement.class, new MarkdownElementSerializer())
+            .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
+            .registerTypeAdapter(PlainTextElement.class, new PlainTextElementSerializer())
+            .registerTypeAdapter(ActionGroupModule.class, new ActionGroupModuleSerializer())
+            .registerTypeAdapter(ContainerModule.class, new ContainerModuleSerializer())
+            .registerTypeAdapter(ContextModule.class, new ContextModuleSerializer())
+            .registerTypeAdapter(CountdownModule.class, new CountdownModuleSerializer())
+            .registerTypeAdapter(DividerModule.class, new DividerModuleSerializer())
+            .registerTypeAdapter(FileModule.class, new FileModuleSerializer())
+            .registerTypeAdapter(HeaderModule.class, new HeaderModuleSerializer())
+            .registerTypeAdapter(ImageGroupModule.class, new ImageGroupModuleSerializer())
+            .registerTypeAdapter(InviteModule.class, new InviteModuleSerializer())
+            .registerTypeAdapter(SectionModule.class, new SectionModuleSerializer())
+            .disableHtmlEscaping()
+            .create();
 
     public static MultipleCardComponent buildCard(JsonArray array) {
         List<CardComponent> components = new LinkedList<>();
@@ -228,6 +248,10 @@ public class CardBuilder {
     }
 
     public static JsonObject serialize0(CardComponent component) {
+        // fixme 临时的
+        if (true) {
+            return gson.toJsonTree(component).getAsJsonObject();
+        }
         JsonObject object = new JsonObject();
         object.addProperty("type", "card");
         object.addProperty("theme", component.getTheme().getValue());
