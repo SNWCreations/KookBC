@@ -111,7 +111,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 dataFolder,
                 description,
                 file,
-                new PluginLogger(description.getName(), LoggerFactory.getLogger(cls)),
+                new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls)),
                 client.getCore()
         );
         return plugin;

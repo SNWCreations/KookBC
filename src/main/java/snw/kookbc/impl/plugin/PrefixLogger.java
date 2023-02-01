@@ -21,13 +21,13 @@ package snw.kookbc.impl.plugin;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
-// A wrapper of Bot logger
-public final class PluginLogger implements Logger {
+// A SLF4J Logger implementation that added a prefix on every log message
+public final class PrefixLogger implements Logger {
     private final String prefix;
     private final Logger logger;
 
-    public PluginLogger(String botName, Logger logger) {
-        this.prefix = String.format("[%s]", botName);
+    public PrefixLogger(String prefix, Logger logger) {
+        this.prefix = String.format("[%s]", prefix);
         this.logger = logger;
     }
 
@@ -337,6 +337,6 @@ public final class PluginLogger implements Logger {
     }
 
     private String format(String s) {
-        return String.format("%s %s", prefix, s);
+        return prefix + " " + s;
     }
 }
