@@ -2,6 +2,15 @@
 
 这是一个 [JKook API](https://github.com/SNWCreations/JKook) 的标准 Java 客户端实现。
 
+**此版本已终止支持！**
+
+您现在看到的分支是 0.17.x 的开发分支，对应 JKook API 0.37.x 。
+
+但 JKook API 0.37 的长期支持已在 2023-1-31 到期，故本分支已不再继续更新。
+
+请考虑迁移到更新的 API 版本以获得漏洞修复与更多的功能，
+详见 [JKook Tutorial 中的迁移教程](https://github.com/SNWCreations/JKookTutorial/blob/master/Migrate_To_0.48.md)。
+
 ## 用法
 
 从右侧 Releases 下载最新版本。
