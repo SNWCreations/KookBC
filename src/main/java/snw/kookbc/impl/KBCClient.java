@@ -156,12 +156,12 @@ public class KBCClient {
         }
     }
 
-    protected List<Plugin> loadAllPlugins() {
+    protected void loadAllPlugins() {
         if (pluginsFolder == null) {
-            return Collections.emptyList(); // If you just want to use JKook API?
+            return; // If you just want to use JKook API?
         }
         if (plugins != null) {
-            return plugins;
+            return;
         }
         List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
         //noinspection ComparatorMethodParameterNotUsed
@@ -188,7 +188,7 @@ public class KBCClient {
             }
             // end onLoad
         }
-        return this.plugins = plugins;
+        this.plugins = plugins;
     }
 
     protected final void enablePlugins(List<Plugin> plugins) {
@@ -418,7 +418,7 @@ public class KBCClient {
     }
 
     public static List<String> getHelp(JKookCommand[] commands) {
-        if (commands.length <= 0) { // I think this is impossible to happen!
+        if (commands.length == 0) { // I think this is impossible to happen!
             return Collections.singletonList("无法提供命令帮助。因为此 " + SharedConstants.IMPL_NAME + " 实例没有注册任何命令。");
         }
         List<String> result = new LinkedList<>();

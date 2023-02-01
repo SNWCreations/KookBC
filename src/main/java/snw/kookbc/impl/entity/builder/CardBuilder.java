@@ -77,16 +77,7 @@ public class CardBuilder {
                                 Theme buttonTheme = Theme.value(rawAccessory.get("theme").getAsString());
                                 JsonObject rawButtonText = rawAccessory.getAsJsonObject("text");
                                 String buttonContent = rawButtonText.get("content").getAsString();
-                                switch (rawButtonText.get("type").getAsString()) {
-                                    case "plain-text":
-                                        buttonText = new PlainTextElement(buttonContent, false);
-                                        break;
-                                    case "kmarkdown":
-                                        buttonText = new MarkdownElement(buttonContent);
-                                        break;
-                                    default:
-                                        throw new IllegalArgumentException("Unknown button text type.");
-                                }
+                                buttonText = createButtonText(rawButtonText, buttonContent);
                                 accessory = new ButtonElement(buttonTheme, (rawAccessory.has("value") && !rawAccessory.get("value").isJsonNull()) ? rawAccessory.get("value").getAsString() : null, ButtonElement.EventType.NO_ACTION, buttonText);
                                 break;
                             default:
@@ -164,20 +155,10 @@ public class CardBuilder {
                         Validate.isTrue(Objects.equals(rawButton.get("type").getAsString(), "button"), "Action Group module only accepts button.");
                         String value = (rawButton.has("value") && !rawButton.get("value").isJsonNull()) ? rawButton.get("value").getAsString() : "";
                         ButtonElement.EventType type = ButtonElement.EventType.value((rawButton.has("click") && !rawButton.get("click").isJsonNull()) ? rawButton.get("click").getAsString() : "");
-                        BaseElement buttonText;
                         Theme buttonTheme = Theme.value(rawButton.get("theme").getAsString());
                         JsonObject rawButtonText = rawButton.getAsJsonObject("text");
                         String buttonContent = rawButtonText.get("content").getAsString();
-                        switch (rawButtonText.get("type").getAsString()) {
-                            case "plain-text":
-                                buttonText = new PlainTextElement(buttonContent, false);
-                                break;
-                            case "kmarkdown":
-                                buttonText = new MarkdownElement(buttonContent);
-                                break;
-                            default:
-                                throw new IllegalArgumentException("Unknown button text type.");
-                        }
+                        BaseElement buttonText = createButtonText(rawButtonText, buttonContent);
                         actionModules.add(new ButtonElement(buttonTheme, value, type, buttonText));
                     }
                     moduleList.add(new ActionGroupModule(actionModules));
@@ -404,7 +385,6 @@ public class CardBuilder {
     private static void addAccessory(Accessory accessory, JsonObject moduleObj) {
         if (accessory == null) return;
         JsonObject accessoryJson = new JsonObject();
-        Accessory.Mode mode = (moduleObj.has("mode") && !moduleObj.get("mode").isJsonNull()) ? Accessory.Mode.value(moduleObj.get("mode").getAsString()) : null;
         if (accessory instanceof ImageElement) {
             accessoryJson.addProperty("type", "image");
             accessoryJson.addProperty("src", ((ImageElement) accessory).getSource());
@@ -424,9 +404,22 @@ public class CardBuilder {
             accessoryJson.addProperty("click", ((ButtonElement) accessory).getEventType().getValue());
             accessoryJson.addProperty("value", ((ButtonElement) accessory).getValue());
         }
-        if (mode != null) {
-            moduleObj.addProperty("mode", mode.getValue());
-        }
         moduleObj.add("accessory", accessoryJson);
     }
+
+    private static BaseElement createButtonText(JsonObject rawButtonText, String buttonContent) {
+        BaseElement buttonText;
+        switch (rawButtonText.get("type").getAsString()) {
+            case "plain-text":
+                buttonText = new PlainTextElement(buttonContent, false);
+                break;
+            case "kmarkdown":
+                buttonText = new MarkdownElement(buttonContent);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown button text type.");
+        }
+        return buttonText;
+    }
+
 }

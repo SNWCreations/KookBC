@@ -38,7 +38,7 @@ public class Bucket {
 
     private final KBCClient client;
     private final String name; // defined by response header
-    AtomicInteger availableTimes = new AtomicInteger(-1);
+    final AtomicInteger availableTimes = new AtomicInteger(-1);
     private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
