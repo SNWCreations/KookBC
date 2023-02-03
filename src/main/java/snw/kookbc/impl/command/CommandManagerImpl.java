@@ -18,11 +18,11 @@
 
 package snw.kookbc.impl.command;
 
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
-import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
@@ -161,15 +161,11 @@ public class CommandManagerImpl implements CommandManager {
         // region Plugin.isEnabled check
         Plugin owner = commandObject.getPlugin();
         if (!owner.isEnabled()) {
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("Unable to execute command: The owner plugin of this command was disabled.");
-            } else {
-                if (msg != null) {
-                    msg.reply(new MarkdownComponent("无法执行命令: 注册此命令的插件现已被禁用。"));
-                } else if (sender instanceof User) {
-                    ((User) sender).sendPrivateMessage(new MarkdownComponent("无法执行命令: 注册此命令的插件现已被禁用。"));
-                }
-            }
+            reply(
+                    "无法执行命令: 注册此命令的插件现已被禁用。",
+                    "Unable to execute command: The owner plugin of this command was disabled.",
+                    sender, msg
+            );
             return false;
         }
         // endregion
@@ -229,30 +225,14 @@ public class CommandManagerImpl implements CommandManager {
         try {
             arguments = processArguments(finalCommand, args);
         } catch (NoSuchElementException e) {
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("Unable to execute command: No enough arguments.");
-            } else {
-                if (msg != null) {
-                    msg.reply(new MarkdownComponent("执行命令失败：参数不足。"));
-                } else {
-                    if (sender instanceof User) {
-                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令失败：参数不足。"));
-                    }
-                }
-            }
+            reply("执行命令失败：参数不足。", "Unable to execute command: No enough arguments.", sender, msg);
             return false;
         } catch (UnknownArgumentException e) {
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("Unable to execute command: unable to parse the " + toEnglishNumOrder(e.argIndex) + " argument.");
-            } else {
-                if (msg != null) {
-                    msg.reply(new MarkdownComponent("执行命令时失败：无法解析第 " + e.argIndex + " 个参数。"));
-                } else {
-                    if (sender instanceof User) {
-                        ((User) sender).sendPrivateMessage(new MarkdownComponent("执行命令时失败：无法解析第 " + e.argIndex + " 个参数。"));
-                    }
-                }
-            }
+            reply(
+                    "执行命令时失败：无法解析第 " + e.argIndex + " 个参数。",
+                    "Unable to execute command: unable to parse the " + toEnglishNumOrder(e.argIndex) + " argument.",
+                    sender, msg
+            );
             return false;
         }
 
@@ -260,61 +240,40 @@ public class CommandManagerImpl implements CommandManager {
         if (sender instanceof ConsoleCommandSender) {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
-                try {
-                    consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments);
-                    client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-                    return true; // prevent CommandExecutor execution.
-                } catch (Throwable e) {
-                    client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-                    throw new CommandException("Something unexpected happened.", e);
-                }
+                exec(
+                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments),
+                        startTimeStamp, cmdLine
+                );
+                return true;
             }
         }
         if (sender instanceof User) {
             UserCommandExecutor userCommandExecutor = finalCommand.getUserCommandExecutor();
             if (userCommandExecutor != null) {
-                try {
-                    userCommandExecutor.onCommand((User) sender, arguments, msg);
-                    client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-                    return true; // prevent CommandExecutor execution.
-                } catch (Throwable e) {
-                    client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-                    throw new CommandException("Something unexpected happened.", e);
-                }
+                exec(
+                        () -> userCommandExecutor.onCommand((User) sender, arguments, msg),
+                        startTimeStamp, cmdLine
+                );
+                return true;
             }
         }
         // endregion
 
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("No executor was registered for provided command line.");
-            } // do nothing! lol
-            else {
-                if (sender instanceof User) {
-                    if (msg != null) {
-                        msg.reply(new MarkdownComponent("此命令没有对应的执行器。"));
-                    } else {
-                        ((User) sender).sendPrivateMessage(new MarkdownComponent("此命令没有对应的执行器。"));
-                    }
-                }
-            }
+            reply(
+                    "此命令没有对应的执行器。",
+                    "No executor was registered for provided command line.",
+                    sender, msg
+            );
             return false;
         }
 
         // alright, it is time to execute it!
-        try {
-            executor.onCommand(sender, arguments, msg);
-        } catch (Throwable e) {
-            client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-            // Why Throwable? We need to keep the client safe.
-            // it is easy to understand. NoClassDefError? NoSuchMethodError?
-            // It is OutOfMemoryError? nothing matters lol.
-            throw new CommandException("Something unexpected happened.", e);
-        }
-
-        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
-
+        exec(
+                () -> executor.onCommand(sender, arguments, msg),
+                startTimeStamp, cmdLine
+        );
         return true; // ok, the command is ok, so we can return true.
     }
 
@@ -451,5 +410,33 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
+    }
+
+    // execute the runnable, if it fails, a CommandException will be thrown
+    private void exec(Runnable runnable, long startTimeStamp, String cmdLine) throws CommandException {
+        try {
+            runnable.run();
+        } catch (Throwable e) {
+            client.getCore().getLogger().debug("The execution of command line '{}' is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+            // Why Throwable? We need to keep the client safe.
+            // it is easy to understand. NoClassDefError? NoSuchMethodError?
+            // It is OutOfMemoryError? nothing matters lol.
+            throw new CommandException("Something unexpected happened.", e);
+        }
+        // Do not put this in the try statement because we don't know if the logging system will throw an exception.
+        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+    }
+
+    private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
+        if (sender instanceof ConsoleCommandSender) {
+            client.getCore().getLogger().info(contentForConsole);
+        } else if (sender instanceof User) {
+            // contentForConsole should be null at this time
+            if (message != null) {
+                message.reply(content);
+            } else {
+                ((User) sender).sendPrivateMessage(content);
+            }
+        }
     }
 }
