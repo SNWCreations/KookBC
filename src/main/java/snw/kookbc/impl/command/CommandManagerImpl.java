@@ -225,11 +225,11 @@ public class CommandManagerImpl implements CommandManager {
         try {
             arguments = processArguments(finalCommand, args);
         } catch (NoSuchElementException e) {
-            reply("执行命令失败：参数不足。", "Unable to execute command: No enough arguments.", sender, msg);
+            reply("执行命令失败: 参数不足。", "Unable to execute command: No enough arguments.", sender, msg);
             return false;
         } catch (UnknownArgumentException e) {
             reply(
-                    "执行命令时失败：无法解析第 " + e.argIndex + " 个参数。",
+                    "执行命令失败: 无法解析第 " + e.argIndex + " 个参数。",
                     "Unable to execute command: unable to parse the " + toEnglishNumOrder(e.argIndex) + " argument.",
                     sender, msg
             );
@@ -262,7 +262,7 @@ public class CommandManagerImpl implements CommandManager {
         CommandExecutor executor = finalCommand.getExecutor();
         if (executor == null) { // no executor?
             reply(
-                    "此命令没有对应的执行器。",
+                    "执行命令失败: 此命令已注册，但它是一个空壳，没有可用的命令逻辑。",
                     "No executor was registered for provided command line.",
                     sender, msg
             );
