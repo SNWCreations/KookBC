@@ -43,6 +43,10 @@ public class LaunchMain {
         // Also, I think this message can let the user know they are running KookBC under Launch mode.
         LogWrapper.LOGGER.warn("Launching KookBC with Mixin support");
         LogWrapper.LOGGER.warn("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
+        LogWrapper.LOGGER.warn("Tips: You can safely ignore this.");
+        LogWrapper.LOGGER.warn("But if you're really sure you don't need Mixin support, visit the following link:");
+        LogWrapper.LOGGER.warn("https://github.com/SNWCreations/KookBC/blob/main/docs/KookBC_CommandLine.md");
+        LogWrapper.LOGGER.warn("The documentation will tell you how can you launch KookBC without Mixin support.");
         launch.launch(args);
     }
 
