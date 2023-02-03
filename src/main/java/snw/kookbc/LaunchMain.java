@@ -39,8 +39,10 @@ public class LaunchMain {
         }
         args = argsList.toArray(new String[0]);
         Thread.currentThread().setName(MAIN_THREAD_NAME);
-        LogWrapper.LOGGER.info("Launching KookBC with Mixin support");
-        LogWrapper.LOGGER.info("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
+        // Actually here should not be warning, but the logging level of the LaunchWrapper is WARN.
+        // Also, I think this message can let the user know they are running KookBC under Launch mode.
+        LogWrapper.LOGGER.warn("Launching KookBC with Mixin support");
+        LogWrapper.LOGGER.warn("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
         launch.launch(args);
     }
 
