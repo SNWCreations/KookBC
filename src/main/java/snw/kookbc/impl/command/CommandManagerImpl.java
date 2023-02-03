@@ -203,6 +203,8 @@ public class CommandManagerImpl implements CommandManager {
             }
         }
 
+        client.getCore().getLogger().debug("The final command has been found. Time elasped: {}ms", System.currentTimeMillis() - startTimeStamp);
+
         if (sender instanceof User) {
             if (msg == null) {
                 client.getCore().getLogger().warn("A user issued command but the message object is null. Is the plugin calling a command as the user?");
