@@ -28,7 +28,6 @@ import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -263,9 +262,10 @@ public class CommandManagerImpl implements CommandManager {
             if (consoleCommandExecutor != null) {
                 try {
                     consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments);
+                    client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
-                    client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
             }
@@ -275,9 +275,10 @@ public class CommandManagerImpl implements CommandManager {
             if (userCommandExecutor != null) {
                 try {
                     userCommandExecutor.onCommand((User) sender, arguments, msg);
+                    client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
                     return true; // prevent CommandExecutor execution.
                 } catch (Throwable e) {
-                    client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+                    client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
                     throw new CommandException("Something unexpected happened.", e);
                 }
             }
@@ -305,14 +306,14 @@ public class CommandManagerImpl implements CommandManager {
         try {
             executor.onCommand(sender, arguments, msg);
         } catch (Throwable e) {
-            client.getCore().getLogger().debug("The execution of command line {} is FAILED, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+            client.getCore().getLogger().debug("The execution of command line \"{}\" is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
             // Why Throwable? We need to keep the client safe.
             // it is easy to understand. NoClassDefError? NoSuchMethodError?
             // It is OutOfMemoryError? nothing matters lol.
             throw new CommandException("Something unexpected happened.", e);
         }
 
-        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}", cmdLine, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeStamp)); // debug, so ignore it
+        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp); // debug, so ignore it
 
         return true; // ok, the command is ok, so we can return true.
     }
