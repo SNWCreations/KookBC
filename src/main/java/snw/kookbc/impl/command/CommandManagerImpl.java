@@ -169,8 +169,8 @@ public class CommandManagerImpl implements CommandManager {
                 } else if (sender instanceof User) {
                     ((User) sender).sendPrivateMessage(new MarkdownComponent("无法执行命令: 注册此命令的插件现已被禁用。"));
                 }
-                return false;
             }
+            return false;
         }
         // endregion
 
