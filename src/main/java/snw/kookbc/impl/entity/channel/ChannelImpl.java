@@ -188,7 +188,17 @@ public abstract class ChannelImpl implements Channel {
         return name;
     }
 
+    @Override
     public void setName(String name) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("name", name)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setName0(name);
+    }
+
+    public void setName0(String name) {
         this.name = name;
     }
 

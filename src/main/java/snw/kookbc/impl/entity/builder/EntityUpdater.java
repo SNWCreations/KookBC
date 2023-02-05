@@ -108,12 +108,12 @@ public class EntityUpdater {
             );
         }
 
+        ((ChannelImpl) channel).setName0(name);
         ((ChannelImpl) channel).setOverwrittenRolePermissions(rpo);
         ((ChannelImpl) channel).setOverwrittenUserPermissions(upo);
 
         if (object.get("is_category").getAsInt() == 1) {
             CategoryImpl category = (CategoryImpl) channel;
-            category.setName(name);
             category.setPermissionSync(isPermSync);
         } else {
             String parentId = object.get("parent_id").getAsString();
