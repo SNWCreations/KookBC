@@ -117,7 +117,7 @@ public class EntityUpdater {
             category.setPermissionSync(isPermSync);
         } else {
             String parentId = object.get("parent_id").getAsString();
-            Category parent = "0".equals(parentId) ? null : (Category) client.getStorage().getChannel(parentId);
+            Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
             ((ChannelImpl) channel).setParent0(parent);
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
