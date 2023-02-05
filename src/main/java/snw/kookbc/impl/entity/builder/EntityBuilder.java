@@ -104,8 +104,7 @@ public class EntityBuilder {
         Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
 
         boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
-        int level = object.get("level").getAsInt();
-
+        Integer level = object.get("level").isJsonNull() ? 0 : object.get("level").getAsInt();
         // rpo parse
         Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
         for (JsonElement element : object.get("permission_overwrites").getAsJsonArray()) {
