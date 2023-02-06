@@ -9,12 +9,6 @@ import snw.jkook.message.component.card.module.SectionModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class SectionModuleSerializer implements JsonSerializer<SectionModule> {
     @Override
     public JsonElement serialize(SectionModule sectionModule, Type typeOfSrc, JsonSerializationContext context) {

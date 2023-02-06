@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.module.ContainerModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ContainerModuleSerializer implements JsonSerializer<ContainerModule> {
     @Override
     public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {

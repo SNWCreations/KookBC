@@ -9,12 +9,6 @@ import snw.jkook.message.component.card.module.FileModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class FileModuleSerializer implements JsonSerializer<FileModule> {
     @Override
     public JsonElement serialize(FileModule module, Type typeOfSrc, JsonSerializationContext context) {

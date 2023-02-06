@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.module.ImageGroupModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModule> {
     @Override
     public JsonElement serialize(ImageGroupModule module, Type typeOfSrc, JsonSerializationContext context) {

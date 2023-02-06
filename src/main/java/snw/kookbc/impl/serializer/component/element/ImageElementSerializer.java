@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.element.ImageElement;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ImageElementSerializer implements JsonSerializer<ImageElement> {
     @Override
     public JsonElement serialize(ImageElement element, Type typeOfSrc, JsonSerializationContext context) {

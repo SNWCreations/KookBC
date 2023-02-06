@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class PlainTextElementSerializer implements JsonSerializer<PlainTextElement> {
     @Override
     public JsonElement serialize(PlainTextElement element, Type typeOfSrc, JsonSerializationContext context) {

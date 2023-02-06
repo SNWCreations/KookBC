@@ -6,12 +6,6 @@ import snw.jkook.message.component.card.structure.Paragraph;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ParagraphSerializer implements JsonSerializer<Paragraph> {
     @Override
     public JsonElement serialize(Paragraph element, Type typeOfSrc, JsonSerializationContext context) {

@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.module.InviteModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class InviteModuleSerializer implements JsonSerializer<InviteModule> {
     @Override
     public JsonElement serialize(InviteModule module, Type typeOfSrc, JsonSerializationContext context) {

@@ -8,12 +8,6 @@ import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class CountdownModuleSerializer implements JsonSerializer<CountdownModule> {
     @Override
     public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {

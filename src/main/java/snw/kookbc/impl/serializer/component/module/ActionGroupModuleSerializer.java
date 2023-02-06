@@ -12,12 +12,6 @@ import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupModule> {
     @Override
     public JsonElement serialize(ActionGroupModule module, Type typeOfSrc, JsonSerializationContext context) {

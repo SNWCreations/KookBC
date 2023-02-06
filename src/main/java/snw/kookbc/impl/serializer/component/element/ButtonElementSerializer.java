@@ -11,12 +11,6 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 
 import java.lang.reflect.Type;
 
-/**
- * 2023/2/1<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class ButtonElementSerializer implements JsonSerializer<ButtonElement> {
     @Override
     public JsonElement serialize(ButtonElement element, Type typeOfSrc, JsonSerializationContext context) {
