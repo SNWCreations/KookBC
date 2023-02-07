@@ -120,7 +120,7 @@ public abstract class ChannelImpl implements Channel {
     }
 
     @Override
-    public void setLevel(Integer level) {
+    public void setLevel(int level) {
         Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
                 .put("level", level)
