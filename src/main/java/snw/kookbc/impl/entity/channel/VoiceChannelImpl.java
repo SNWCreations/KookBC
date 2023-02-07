@@ -36,7 +36,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 
-    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
+    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, Integer level, boolean passwordProtected, int maxSize) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;

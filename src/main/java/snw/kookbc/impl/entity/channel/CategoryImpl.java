@@ -35,7 +35,7 @@ import java.util.Set;
 public class CategoryImpl extends ChannelImpl implements Category {
     private final Collection<Channel> channels = new HashSet<>();
 
-    public CategoryImpl(KBCClient client, String id, User master, Guild guild, Category parent, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
+    public CategoryImpl(KBCClient client, String id, User master, Guild guild, Category parent, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, Integer level, String name) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
     }
 

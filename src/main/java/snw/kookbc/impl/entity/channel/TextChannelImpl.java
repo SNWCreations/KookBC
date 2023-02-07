@@ -44,7 +44,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;
     private String topic;
 
-    public TextChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime, String topic) {
+    public TextChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, Integer level, int chatLimitTime, String topic) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.chatLimitTime = chatLimitTime;
         this.topic = topic;
