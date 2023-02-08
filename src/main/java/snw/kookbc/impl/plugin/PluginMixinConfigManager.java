@@ -40,18 +40,22 @@ public class PluginMixinConfigManager {
     }
 
     public void add(PluginDescription description, String name, InputStream stream) throws IOException {
-        String fullName = description.getName() + "-" + name;
-        String configName = fullName;
-        Path path = new File(tempDir, fullName).toPath();
+        String configName = description.getName() + "-" + name;
+        addConfig(stream, configName);
+    }
+
+    public void addConfig(InputStream stream, String configName) throws IOException {
+        String targetName = configName;
+        Path path = new File(tempDir, configName).toPath();
         int duplicate = 0;
         while (path.toFile().exists()) {
             ++duplicate;
-            configName = fullName + "_" + duplicate;
+            configName = targetName + "_" + duplicate;
             path = new File(tempDir, configName).toPath();
         }
         try (InputStream inputStream = stream) {
             Files.copy(inputStream, path);
-            Mixins.addConfiguration(configName);
+            Mixins.addConfiguration(path.toFile().getName());
         }
     }
 }
