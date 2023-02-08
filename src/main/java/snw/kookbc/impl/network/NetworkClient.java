@@ -28,13 +28,17 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
     private final KBCClient kbcClient;
     private final String tokenWithPrefix;
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = new OkHttpClient.Builder()
+            .writeTimeout(Duration.ofMinutes(1))
+            .readTimeout(Duration.ofMinutes(1))
+            .build();
 
     public NetworkClient(KBCClient kbcClient, String token) {
         this.kbcClient = kbcClient;
