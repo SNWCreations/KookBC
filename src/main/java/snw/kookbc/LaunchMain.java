@@ -22,7 +22,8 @@ import java.util.*;
 // added since 2023/1/24
 // WARNING: Do not use this class in embedded environments!
 public class LaunchMain {
-    private static final String DEFAULT_TWEAK = "snw.kookbc.impl.mixin.MixinTweaker";
+    private static final String MIXIN_TWEAK = "snw.kookbc.impl.mixin.MixinTweaker";
+    private static final String DEFAULT_TWEAK = "snw.kookbc.impl.launch.LaunchMainTweaker";
     public static Map<String, Object> blackboard;
 
     // We won't use Main#MAIN_THREAD_NAME
@@ -34,6 +35,8 @@ public class LaunchMain {
         System.setProperty("kookbc.launch", "true");
         List<String> argsList = new ArrayList<>(Arrays.asList(args));
         if (argsList.stream().noneMatch(e -> e.contains("--tweakClass"))) {
+            argsList.add("--tweakClass");
+            argsList.add(MIXIN_TWEAK);
             argsList.add("--tweakClass");
             argsList.add(DEFAULT_TWEAK);
         }
@@ -75,7 +78,7 @@ public class LaunchMain {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
 
-        final OptionSpec<String> tweakClassOption = parser.accepts("tweakClass", "Tweak class(es) to load").withRequiredArg().defaultsTo(DEFAULT_TWEAK);
+        final OptionSpec<String> tweakClassOption = parser.accepts("tweakClass", "Tweak class(es) to load").withRequiredArg().defaultsTo(MIXIN_TWEAK, DEFAULT_TWEAK);
         final OptionSpec<String> nonOption = parser.nonOptions();
 
         final OptionSet options = parser.parse(args);
@@ -151,7 +154,10 @@ public class LaunchMain {
             // Once we're done, we then ask all the tweakers for their arguments and add them all to the
             // master argument list
             for (final ITweaker tweaker : allTweakers) {
-                argumentList.addAll(Arrays.asList(tweaker.getLaunchArguments()));
+                String[] launchArguments = tweaker.getLaunchArguments();
+                if (launchArguments != null) {
+                    argumentList.addAll(Arrays.asList(launchArguments));
+                }
             }
 
             if (primaryTweaker == null) {
@@ -159,12 +165,26 @@ public class LaunchMain {
             }
 
             // Finally, we turn to the primary tweaker, and let it tell us where to go to launch
-            final String launchTarget = primaryTweaker.getLaunchTarget();
+            String launchTarget = primaryTweaker.getLaunchTarget();
+            if (launchTarget == null || launchTarget.isEmpty()) {
+                ITweaker launchTweaker = allTweakers.stream()
+                        .filter(tweaker -> tweaker.getLaunchTarget() != null && !tweaker.getLaunchTarget().isEmpty())
+                        .findFirst()
+                        .orElse(null);
+                if (launchTweaker != null) {
+                    launchTarget = launchTweaker.getLaunchTarget();
+                }
+            }
             if (launchTarget != null && !launchTarget.isEmpty()) {
                 final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
                 final Method mainMethod = clazz.getMethod("main", String[].class);
-
-                mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
+                new Thread(() -> {
+                    try {
+                        mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, clazz.getSimpleName()).start();
             }
         } catch (Exception e) {
             LogWrapper.LOGGER.error("Unable to launch", e);
