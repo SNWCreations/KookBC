@@ -108,16 +108,16 @@ public class EntityUpdater {
             );
         }
 
+        ((ChannelImpl) channel).setName0(name);
         ((ChannelImpl) channel).setOverwrittenRolePermissions(rpo);
         ((ChannelImpl) channel).setOverwrittenUserPermissions(upo);
 
         if (object.get("is_category").getAsInt() == 1) {
             CategoryImpl category = (CategoryImpl) channel;
-            category.setName(name);
             category.setPermissionSync(isPermSync);
         } else {
             String parentId = object.get("parent_id").getAsString();
-            Category parent = "0".equals(parentId) ? null : (Category) client.getStorage().getChannel(parentId);
+            Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
             ((ChannelImpl) channel).setParent0(parent);
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
