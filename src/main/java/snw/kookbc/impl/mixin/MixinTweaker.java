@@ -28,7 +28,6 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class MixinTweaker implements ITweaker {
-    private String[] args;
 
     /**
      * Hello world
@@ -40,7 +39,6 @@ public class MixinTweaker implements ITweaker {
     @Override
     public final void acceptOptions(List<String> args) {
         ReflectionUtils.invokeStaticMethod("doInit", MixinBootstrap.class, CommandLineOptions.class, CommandLineOptions.ofArgs(args));
-        this.args = args.toArray(new String[0]);
     }
 
     @Override
@@ -50,15 +48,12 @@ public class MixinTweaker implements ITweaker {
 
     @Override
     public String getLaunchTarget() {
-        return "snw.kookbc.Main";
+        return null;
     }
 
     @Override
     public String[] getLaunchArguments() {
-        if (args != null) {
-            return args;
-        }
-        return new String[]{};
+        return null;
     }
 
 }
