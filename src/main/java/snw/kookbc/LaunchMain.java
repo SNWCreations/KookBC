@@ -165,26 +165,20 @@ public class LaunchMain {
             }
 
             // Finally, we turn to the primary tweaker, and let it tell us where to go to launch
-            String launchTarget = primaryTweaker.getLaunchTarget();
-            if (launchTarget == null || launchTarget.isEmpty()) {
-                ITweaker launchTweaker = allTweakers.stream()
-                        .filter(tweaker -> tweaker.getLaunchTarget() != null && !tweaker.getLaunchTarget().isEmpty())
-                        .findFirst()
-                        .orElse(null);
-                if (launchTweaker != null) {
-                    launchTarget = launchTweaker.getLaunchTarget();
+
+            for (ITweaker allTweaker : allTweakers) {
+                final String launchTarget = allTweaker.getLaunchTarget();
+                if (launchTarget != null && !launchTarget.isEmpty()) {
+                    final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
+                    final Method mainMethod = clazz.getMethod("main", String[].class);
+                    new Thread(() -> {
+                        try {
+                            mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }, clazz.getSimpleName()).start();
                 }
-            }
-            if (launchTarget != null && !launchTarget.isEmpty()) {
-                final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
-                final Method mainMethod = clazz.getMethod("main", String[].class);
-                new Thread(() -> {
-                    try {
-                        mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }, clazz.getSimpleName()).start();
             }
         } catch (Exception e) {
             LogWrapper.LOGGER.error("Unable to launch", e);
