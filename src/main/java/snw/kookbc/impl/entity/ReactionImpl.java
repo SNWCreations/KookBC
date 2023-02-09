@@ -58,7 +58,7 @@ public class ReactionImpl implements Reaction {
                 .put("msg_id", getMessageId())
                 .put("emoji_id", emoji.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
