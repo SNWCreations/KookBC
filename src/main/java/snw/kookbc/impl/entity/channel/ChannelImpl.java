@@ -59,6 +59,9 @@ public abstract class ChannelImpl implements Channel {
         this.rpo = rpo;
         this.upo = upo;
         this.level = level;
+        if (parent != null) {
+            ((CategoryImpl) parent).getChannels0().add(this);
+        }
     }
 
     @Override
