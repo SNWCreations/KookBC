@@ -100,8 +100,6 @@ public class EntityBuilder {
         String name = object.get("name").getAsString();
         Guild guild = client.getStorage().getGuild(object.get("guild_id").getAsString());
         User master = client.getStorage().getUser(object.get("user_id").getAsString());
-        String parentId = object.get("parent_id").getAsString();
-        Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
 
         boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
         int level = object.get("level").getAsInt();
@@ -138,10 +136,13 @@ public class EntityBuilder {
                     client, id,
                     master,
                     guild,
-                    parent, isPermSync,
+                    isPermSync,
                     rpo, upo, level, name
             );
         } else {
+            String parentId = object.get("parent_id").getAsString();
+            Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
+            
             int type = object.get("type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = object.get("slow_mode").getAsInt();
