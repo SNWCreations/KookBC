@@ -46,7 +46,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 .put("msg_id", getId())
                 .put("emoji", emoji.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 .put("msg_id", getId())
                 .put("emoji", emoji.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -65,7 +65,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
                 .put("emoji", emoji.getId())
                 .put("user_id", user.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override

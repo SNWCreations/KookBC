@@ -41,7 +41,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji", emoji.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD.toFullURL(), body);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
                 .put("msg_id", getId())
                 .put("emoji", emoji.getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE.toFullURL(), body);
     }
 
     @Override
@@ -78,6 +78,6 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
     }
 }
