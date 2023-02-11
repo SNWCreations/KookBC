@@ -192,6 +192,7 @@ public class CommandManagerImpl implements CommandManager {
                         args.remove(0); // "a" was removed, so we have "b" in next round
                         actualCommand = s; // got "a" subcommand
                         found = true; // found
+                        sub = actualCommand.getSubcommands(); // update the search target, so we can search deeply
                         break; // it's not necessary to continue
                     }
                 }
