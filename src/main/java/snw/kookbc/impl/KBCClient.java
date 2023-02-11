@@ -191,7 +191,7 @@ public class KBCClient {
         this.plugins = plugins;
     }
 
-    protected final void enablePlugins(List<Plugin> plugins) {
+    private void enablePlugins(List<Plugin> plugins) {
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
