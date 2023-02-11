@@ -33,6 +33,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CategoryImpl extends ChannelImpl implements Category {
+    // Yes, this implementation provides the channel list by using self-hosted cache.
+    // Current KOOK Channel view API does NOT provide the channels under the category.
+    // So the getChannels method is UNSAFE. The result maybe not full.
     private final Collection<Channel> channels = new HashSet<>();
 
     public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
