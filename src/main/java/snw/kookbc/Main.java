@@ -128,7 +128,7 @@ public class Main {
         OperatingSystemMXBean osMX = ManagementFactory.getOperatingSystemMXBean();
         if (runtimeMX != null && osMX != null) {
             logger.debug("System information is following:");
-            logger.debug("Java: {} ({} {})", runtimeMX.getSpecVersion(), runtimeMX.getVmName(), runtimeMX.getVmVersion());
+            logger.debug("Java: {} ({} {} by {})", runtimeMX.getSpecVersion(), runtimeMX.getVmName(), runtimeMX.getVmVersion(), runtimeMX.getVmVendor());
             logger.debug("Host: {} {} (Architecture: {})", osMX.getName(), osMX.getVersion(), osMX.getArch());
         } else {
             logger.debug("Unable to read system info");
