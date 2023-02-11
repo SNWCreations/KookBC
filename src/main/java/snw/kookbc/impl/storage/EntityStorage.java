@@ -26,21 +26,30 @@ import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.kookbc.util.Util;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class EntityStorage {
-    private static final int RETRY_TIMES = 1;
+    public static final int RETRY_TIMES = 1;
 
     private final KBCClient client;
 
     // See the notes of these member variables in the constructor.
     private final LoadingCache<String, User> users;
     private final LoadingCache<String, Guild> guilds;
-    private final LoadingCache<String, Channel> channels;
+    private final ConcurrentMap<String, ChannelReference> channels;
+    private final Function<String, Channel> channelLoader;
+    private final ReferenceQueue<Channel> refQueue;
 
     // The following data types can be loaded manually, but it costs too many network resource.
     // So we won't remove them if the memory is enough.
@@ -71,19 +80,23 @@ public class EntityStorage {
                     }
                     return null;
                 }));
-        this.channels = newCaffeineBuilderWithWeakRef()
-                .build(withRetry(id ->
-                        client.getEntityBuilder().buildChannel(
-                                client.getNetworkClient().get(
-                                        String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
-                                )
-                        )
-                ));
+        this.channels = new ConcurrentHashMap<>();
         this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
         this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
         this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
         this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
         this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
+
+        this.channelLoader = Util.withRetry(
+                id ->
+                client.getEntityBuilder().buildChannel(
+                        client.getNetworkClient().get(
+                                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
+                        )
+                )
+        );
+        this.refQueue = new ReferenceQueue<>();
+        new RefCleaner().start();
     }
 
     public Game getGame(int id) {
@@ -103,7 +116,12 @@ public class EntityStorage {
     }
 
     public Channel getChannel(String id) {
-        return channels.get(id);
+        Channel channel = getChannel0(id);
+        if (channel == null) {
+            channel = channelLoader.apply(id);
+            channels.putIfAbsent(id, new ChannelReference(id, channel, refQueue)); // prevent JDK-8062841
+        }
+        return channel;
     }
 
     public Role getRole(Guild guild, int id) {
@@ -138,7 +156,7 @@ public class EntityStorage {
     }
 
     public Channel getChannel(String id, JsonObject def) {
-        Channel result = channels.getIfPresent(id);
+        Channel result = getChannel0(id);
         if (result == null) {
             result = client.getEntityBuilder().buildChannel(def);
             addChannel(result);
@@ -200,7 +218,7 @@ public class EntityStorage {
     }
 
     public void addChannel(Channel channel) {
-        channels.put(channel.getId(), channel);
+        channels.put(channel.getId(), new ChannelReference(channel.getId(), channel, refQueue));
     }
 
     public void addRole(Guild guild, Role role) {
@@ -218,7 +236,7 @@ public class EntityStorage {
     }
 
     public void removeChannel(String id) {
-        channels.invalidate(id);
+        channels.remove(id);
     }
 
     public void removeGuild(String id) {
@@ -249,5 +267,49 @@ public class EntityStorage {
             } while (retries-- > 0);
             throw new RuntimeException("Unable to load resource", latestException);
         };
+    }
+
+    // It was removed since we added Caffeine, but it was "respawned" here...
+    private Channel getChannel0(String id) {
+        ChannelReference object = channels.get(id);
+        if (object == null) {
+            return null;
+        }
+        return object.get();
+    }
+
+    class RefCleaner extends Thread {
+        public RefCleaner() {
+            super(SharedConstants.IMPL_NAME + " - WeakReference Cleaner");
+            setDaemon(true);
+            setPriority(Thread.MAX_PRIORITY);
+        }
+
+        @Override
+        public void run() {
+            try {
+                run0();
+            } catch (Exception ignored) {}
+        }
+
+        private void run0() throws Exception {
+            while (client.isRunning()) {
+                ChannelReference res = ((ChannelReference) refQueue.remove());
+                removeChannel(res.getId());
+            }
+        }
+    }
+}
+
+class ChannelReference extends WeakReference<Channel> {
+    private final String id;
+
+    public ChannelReference(String id, Channel referent, ReferenceQueue<? super Channel> q) {
+        super(referent, q);
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
     }
 }
