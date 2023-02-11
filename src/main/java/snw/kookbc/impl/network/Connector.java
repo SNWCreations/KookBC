@@ -152,7 +152,7 @@ public class Connector {
             setPingOk(true);
             return;
         }
-        kbcClient.getCore().getLogger().debug("Attempting to PING.");
+        kbcClient.getCore().getLogger().trace("Attempting to PING.");
         setPingOk(false);
         boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         Validate.isTrue(queued, "Unable to queue ping request");

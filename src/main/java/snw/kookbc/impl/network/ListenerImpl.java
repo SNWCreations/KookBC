@@ -51,7 +51,9 @@ public class ListenerImpl implements Listener {
 
     @Override
     public void executeEvent(Frame frame) {
-        client.getCore().getLogger().debug("Got payload frame: {}", frame);
+        if (!(frame.getType() == MessageType.PONG)) { // I hate PONG logging messages
+            client.getCore().getLogger().debug("Got payload frame: {}", frame);
+        }
         if (frame.getType() == null) {
             client.getCore().getLogger().warn("Unknown event type!");
             return;
@@ -67,7 +69,7 @@ public class ListenerImpl implements Listener {
                 client.getCore().getLogger().debug("Impossible Message from remote: type is PING.");
                 break;
             case PONG:
-                client.getCore().getLogger().debug("Got PONG");
+                client.getCore().getLogger().trace("Got PONG");
                 client.getConnector().pong();
                 break;
             case RESUME:
