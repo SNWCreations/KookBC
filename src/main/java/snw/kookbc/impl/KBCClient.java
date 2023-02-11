@@ -192,6 +192,11 @@ public class KBCClient {
     }
 
     private void enablePlugins(List<Plugin> plugins) {
+        if (plugins == null) { // no plugins? do nothing!
+            // if the plugins was not loaded, we can't continue
+            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
+            return;
+        }
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
