@@ -136,13 +136,13 @@ public class GuildImpl implements Guild {
         JsonObject object = client.getNetworkClient().get(url);
 
         MuteResultImpl result = new MuteResultImpl();
-        for (JsonElement element : object.getAsJsonObject("mic").getAsJsonObject("user_ids").getAsJsonArray()) {
+        for (JsonElement element : object.getAsJsonObject("mic").getAsJsonArray("user_ids")) {
             String id = element.getAsString();
             MuteDataImpl data = new MuteDataImpl(client.getStorage().getUser(id));
             data.setInputDisabled(true);
             result.add(data);
         }
-        for (JsonElement element : object.getAsJsonObject("headset").getAsJsonObject("user_ids").getAsJsonArray()) {
+        for (JsonElement element : object.getAsJsonObject("headset").getAsJsonArray("user_ids")) {
             String id = element.getAsString();
             MuteDataImpl resDef = (MuteDataImpl) result.getByUser(id);
             if (resDef == null) {
