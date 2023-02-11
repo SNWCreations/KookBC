@@ -86,7 +86,7 @@ public class Bucket {
             // Or new API is published.
             throw new IllegalArgumentException("The bucket name of the provided route is unknown. Report to " + SharedConstants.IMPL_NAME + " authors if you saw this!");
         }
-        return map.computeIfAbsent(bucketName, r -> new Bucket(client, r));
+        return map.computeIfAbsent(client.hashCode() + "#" + bucketName, r -> new Bucket(client, bucketName));
     }
 
     static {
