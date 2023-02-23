@@ -28,10 +28,19 @@ import snw.jkook.message.component.card.element.MarkdownElement;
 import snw.jkook.message.component.card.element.PlainTextElement;
 
 import java.lang.reflect.Type;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class ButtonElementSerializer implements JsonSerializer<ButtonElement> {
     @Override
     public JsonElement serialize(ButtonElement element, Type typeOfSrc, JsonSerializationContext context) {
+        if (element.getEventType() == ButtonElement.EventType.LINK) {
+            try {
+                new URL(element.getValue());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Invalid URL for the button", e);
+            }
+        }
         JsonObject accessoryJson = new JsonObject();
         accessoryJson.addProperty("type", "button");
         accessoryJson.addProperty("theme", element.getTheme().getValue());
