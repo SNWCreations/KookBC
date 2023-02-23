@@ -39,6 +39,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
+import snw.kookbc.util.GsonUtil;
 
 public class MessageBuilder {
     private final KBCClient client;
@@ -54,9 +55,9 @@ public class MessageBuilder {
         } else if (component instanceof TextComponent) {
             return new Object[]{1, component.toString()};
         } else if (component instanceof CardComponent) {
-            return new Object[]{10, new Gson().toJson(CardBuilder.serialize((CardComponent) component))};
+            return new Object[]{10, GsonUtil.gson().toJson(CardBuilder.serialize((CardComponent) component))};
         } else if (component instanceof MultipleCardComponent) {
-            return new Object[]{10, new Gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
+            return new Object[]{10, GsonUtil.gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
             MultipleCardComponent fileCard;

@@ -37,6 +37,7 @@ import static snw.kookbc.util.Util.decompressDeflate;
 import static snw.kookbc.util.Util.inputStreamToByteArray;
 
 public class SimpleHttpHandler implements HTTPServer.ContextHandler {
+    private static final Gson GSON = new Gson();
     protected final KBCClient client;
     protected final Listener listener;
 
@@ -85,7 +86,7 @@ public class SimpleHttpHandler implements HTTPServer.ContextHandler {
                 String finalChallengeResponse = frame.getData().get("challenge").getAsString();
                 JsonObject obj = new JsonObject();
                 obj.addProperty("challenge", finalChallengeResponse);
-                String challengeJson = new Gson().toJson(obj);
+                String challengeJson = GSON.toJson(obj);
 
                 // the following part is copied from HTTPServer.Response.send method.
                 // I just edited the value of the "contentType" parameter.

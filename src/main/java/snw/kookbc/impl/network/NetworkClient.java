@@ -32,6 +32,7 @@ import java.util.Map;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
+    private static final Gson GSON = new Gson();
     private final KBCClient kbcClient;
     private final String tokenWithPrefix;
     private final OkHttpClient client = new OkHttpClient();
@@ -60,7 +61,7 @@ public class NetworkClient {
     }
 
     public String postContent(String fullUrl, Map<?, ?> body) {
-        return postContent(fullUrl, new Gson().toJson(body), "application/json");
+        return postContent(fullUrl, GSON.toJson(body), "application/json");
     }
 
     public String postContent(String fullUrl, String body, String mediaType) {
