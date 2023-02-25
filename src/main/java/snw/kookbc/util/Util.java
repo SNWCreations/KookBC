@@ -24,11 +24,8 @@ import snw.jkook.util.Validate;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Function;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
-
-import static snw.kookbc.impl.storage.EntityStorage.RETRY_TIMES;
 
 public class Util {
 
@@ -131,20 +128,5 @@ public class Util {
 
     public static boolean isStartByLaunch() {
         return Boolean.getBoolean("kookbc.launch");
-    }
-
-    public static <K, V> Function<K, V> withRetry(Function<K, V> func) {
-        return k -> {
-            int retries = RETRY_TIMES;
-            Exception latestException;
-            do {
-                try {
-                    return func.apply(k);
-                } catch (Exception e) {
-                    latestException = e;
-                }
-            } while (retries-- > 0);
-            throw new RuntimeException("Unable to load resource", latestException);
-        };
     }
 }
