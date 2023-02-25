@@ -47,5 +47,5 @@ webhook-route: "kookbc-webhook"
 
 这是 Webhook 的路由地址。
 
-最终您应该提供给 Kook 开放平台作 Callback 的 URL是： `http(s)://{您的域名}:{webhook-port}/{webhook-route}`
-
+最终您应该提供给 Kook 开放平台作 Callback 的 URL是： `http://{您的域名}:{webhook-port}/{webhook-route}`
+* 当前的 Webhook 实现 (基于 JLHTTP) 不支持 HTTPS 。
