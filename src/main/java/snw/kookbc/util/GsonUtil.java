@@ -51,4 +51,5 @@ public class GsonUtil {
             .disableHtmlEscaping()
             .create();
 
+    public static final Gson NORMAL_GSON = new Gson();
 }

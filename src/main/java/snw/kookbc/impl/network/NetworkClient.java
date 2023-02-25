@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.network;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
@@ -30,9 +29,10 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.io.IOException;
 import java.util.Map;
 
+import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
+
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
-    private static final Gson GSON = new Gson();
     private final KBCClient kbcClient;
     private final String tokenWithPrefix;
     private final OkHttpClient client = new OkHttpClient();
@@ -61,7 +61,7 @@ public class NetworkClient {
     }
 
     public String postContent(String fullUrl, Map<?, ?> body) {
-        return postContent(fullUrl, GSON.toJson(body), "application/json");
+        return postContent(fullUrl, NORMAL_GSON.toJson(body), "application/json");
     }
 
     public String postContent(String fullUrl, String body, String mediaType) {
