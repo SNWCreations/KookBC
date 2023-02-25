@@ -64,14 +64,14 @@ public class WebHookClient extends KBCClient {
         }
         getSession().getSN().set(initSN);
 
-        // Initialize server
+        // region Initialize server
         server = new HTTPServer(port);
         server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
         HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
         virtualHost.addContext('/' + route, new SimpleHttpHandler(this), "POST");
         server.start(); // throws IOException
         getCore().getLogger().info("HTTP Server is listening on port {}", port);
-        // end Initialize server
+        // endregion Initialize server
     }
 
     @Override
