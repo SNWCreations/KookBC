@@ -53,15 +53,6 @@ public class WebHookClient extends KBCClient {
         }
         int port = getConfig().getInt("webhook-port");
 
-        // Initialize server
-        server = new HTTPServer(port);
-        server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
-        HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
-        virtualHost.addContext('/' + route, new SimpleHttpHandler(this), "POST");
-        server.start(); // throws IOException
-        getCore().getLogger().info("HTTP Server is listening on port {}", port);
-        // end Initialize server
-
         getCore().getLogger().debug("Initializing SN from local file.");
         int initSN = 0;
         File snfile = new File(getPluginsFolder(), "sn");
@@ -72,6 +63,15 @@ public class WebHookClient extends KBCClient {
             }
         }
         getSession().getSN().set(initSN);
+
+        // Initialize server
+        server = new HTTPServer(port);
+        server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
+        HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
+        virtualHost.addContext('/' + route, new SimpleHttpHandler(this), "POST");
+        server.start(); // throws IOException
+        getCore().getLogger().info("HTTP Server is listening on port {}", port);
+        // end Initialize server
     }
 
     @Override
