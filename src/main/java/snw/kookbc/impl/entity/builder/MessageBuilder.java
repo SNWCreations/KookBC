@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import snw.jkook.entity.User;
@@ -55,9 +54,9 @@ public class MessageBuilder {
         } else if (component instanceof TextComponent) {
             return new Object[]{1, component.toString()};
         } else if (component instanceof CardComponent) {
-            return new Object[]{10, GsonUtil.gson().toJson(CardBuilder.serialize((CardComponent) component))};
+            return new Object[]{10, GsonUtil.CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component))};
         } else if (component instanceof MultipleCardComponent) {
-            return new Object[]{10, GsonUtil.gson().toJson(CardBuilder.serialize((MultipleCardComponent) component))};
+            return new Object[]{10, GsonUtil.CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component))};
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
             MultipleCardComponent fileCard;

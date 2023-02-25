@@ -45,7 +45,7 @@ public class CardBuilder {
 
     public static CardComponent buildCard(JsonObject object) {
         Validate.isTrue(Objects.equals(object.get("type").getAsString(), "card"), "The provided element is not a card.");
-        return GsonUtil.gson().fromJson(object, CardComponent.class);
+        return GsonUtil.CARD_GSON.fromJson(object, CardComponent.class);
     }
 
     public static JsonArray serialize(CardComponent component) {
@@ -63,7 +63,7 @@ public class CardBuilder {
     }
 
     public static JsonObject serialize0(CardComponent component) {
-        return GsonUtil.gson().toJsonTree(component).getAsJsonObject();
+        return GsonUtil.CARD_GSON.toJsonTree(component).getAsJsonObject();
     }
 
     private static void addAccessory(Accessory accessory, JsonObject moduleObj) {

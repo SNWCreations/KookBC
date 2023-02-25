@@ -31,7 +31,7 @@ import snw.kookbc.impl.serializer.component.element.*;
 import snw.kookbc.impl.serializer.component.module.*;
 
 public class GsonUtil {
-    private static final Gson gson = new GsonBuilder()
+    public static final Gson CARD_GSON = new GsonBuilder()
             .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
             .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
             .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
@@ -51,7 +51,4 @@ public class GsonUtil {
             .disableHtmlEscaping()
             .create();
 
-    public static Gson gson() {
-        return gson;
-    }
 }
