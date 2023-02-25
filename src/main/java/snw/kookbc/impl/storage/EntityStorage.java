@@ -31,6 +31,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
@@ -40,7 +41,7 @@ public class EntityStorage {
     // See the notes of these member variables in the constructor.
     private final LoadingCache<String, User> users;
     private final LoadingCache<String, Guild> guilds;
-    private final LoadingCache<String, Channel> channels;
+    private final Cache<String, Channel> channels;
 
     // The following data types can be loaded manually, but it costs too many network resource.
     // So we won't remove them if the memory is enough.
@@ -49,6 +50,8 @@ public class EntityStorage {
     private final Cache<String, Message> msgs;
     private final Cache<String, Reaction> reactions;
     private final Cache<Integer, Game> games;
+
+    private final Function<String, Channel> channelLoader;
 
     public EntityStorage(KBCClient client) {
         this.client = client;
@@ -71,19 +74,20 @@ public class EntityStorage {
                     }
                     return null;
                 }));
-        this.channels = newCaffeineBuilderWithWeakRef()
-                .build(withRetry(id ->
-                        client.getEntityBuilder().buildChannel(
-                                client.getNetworkClient().get(
-                                        String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
-                                )
-                        )
-                ));
+        this.channels = newCaffeineBuilderWithWeakRef().build(); // key: channel ID
         this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
         this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
         this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
         this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
         this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
+
+        this.channelLoader = funcWithRetry(id ->
+                client.getEntityBuilder().buildChannel(
+                        client.getNetworkClient().get(
+                                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
+                        )
+                )
+        );
     }
 
     public Game getGame(int id) {
@@ -103,7 +107,12 @@ public class EntityStorage {
     }
 
     public Channel getChannel(String id) {
-        return channels.get(id);
+        Channel result = channels.getIfPresent(id);
+        if (result == null) {
+            result = channelLoader.apply(id);
+            addChannel(result);
+        }
+        return result;
     }
 
     public Role getRole(Guild guild, int id) {
@@ -234,6 +243,21 @@ public class EntityStorage {
     private static Caffeine<Object, Object> newCaffeineBuilderWithSoftRef() {
         return Caffeine.newBuilder()
                 .softValues();
+    }
+
+    private static <K, V> Function<K, V> funcWithRetry(Function<K, V> func) {
+        return k -> {
+            int retries = RETRY_TIMES;
+            Exception latestException;
+            do {
+                try {
+                    return func.apply(k);
+                } catch (Exception e) {
+                    latestException = e;
+                }
+            } while (retries-- > 0);
+            throw new RuntimeException("Unable to load resource", latestException);
+        };
     }
 
     private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
