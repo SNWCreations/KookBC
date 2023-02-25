@@ -27,17 +27,27 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
 import snw.kookbc.impl.serializer.component.CardComponentSerializer;
-import snw.kookbc.impl.serializer.component.element.*;
+import snw.kookbc.impl.serializer.component.element.ButtonElementSerializer;
+import snw.kookbc.impl.serializer.component.element.ImageElementSerializer;
+import snw.kookbc.impl.serializer.component.element.MarkdownElementSerializer;
+import snw.kookbc.impl.serializer.component.element.PlainTextElementSerializer;
 import snw.kookbc.impl.serializer.component.module.*;
+import snw.kookbc.impl.serializer.component.structure.ParagraphSerializer;
 
 public class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
             .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
+
+            // Element
             .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
             .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
             .registerTypeAdapter(MarkdownElement.class, new MarkdownElementSerializer())
-            .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
             .registerTypeAdapter(PlainTextElement.class, new PlainTextElementSerializer())
+
+            //structure
+            .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
+
+            // Module
             .registerTypeAdapter(ActionGroupModule.class, new ActionGroupModuleSerializer())
             .registerTypeAdapter(ContainerModule.class, new ContainerModuleSerializer())
             .registerTypeAdapter(ContextModule.class, new ContextModuleSerializer())
@@ -48,6 +58,7 @@ public class GsonUtil {
             .registerTypeAdapter(ImageGroupModule.class, new ImageGroupModuleSerializer())
             .registerTypeAdapter(InviteModule.class, new InviteModuleSerializer())
             .registerTypeAdapter(SectionModule.class, new SectionModuleSerializer())
+
             .disableHtmlEscaping()
             .create();
 

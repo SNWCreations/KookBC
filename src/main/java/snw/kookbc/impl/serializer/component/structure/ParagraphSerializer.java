@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.element;
+package snw.kookbc.impl.serializer.component.structure;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

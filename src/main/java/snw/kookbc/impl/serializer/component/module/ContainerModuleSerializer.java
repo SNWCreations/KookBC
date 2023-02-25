@@ -37,6 +37,7 @@ public class ContainerModuleSerializer implements JsonSerializer<ContainerModule
             element.addProperty("src", image.getSource());
             elements.add(element);
         }*/
+        // 这个会包含size属性
         JsonElement elements = context.serialize(module.getImages());
         moduleObj.addProperty("type", "container");
         moduleObj.add("elements", elements);
