@@ -65,6 +65,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("net.minecrell.terminalconsole.");
         addClassLoaderExclusion("org.jline.");
         addClassLoaderExclusion("joptsimple.");
+        addClassLoaderExclusion("com.sun.");
 
         // transformer exclusions
         addTransformerExclusion("javax.");
