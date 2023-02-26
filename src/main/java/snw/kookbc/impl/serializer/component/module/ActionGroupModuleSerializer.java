@@ -33,7 +33,7 @@ public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupMo
     @Override
     public JsonElement serialize(ActionGroupModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        Validate.isFalse(
+        Validate.isTrue(
                 module.getButtons().stream().allMatch(button -> button instanceof ButtonElement),
                 "If this has error, please tell the author of " + SharedConstants.SPEC_NAME + "! Maybe Kook updated the action module?"
         );
