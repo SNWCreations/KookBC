@@ -29,6 +29,8 @@ import java.util.zip.Inflater;
 
 public class Util {
 
+    private Util() {} // cannot call constructor
+
     // -1 = Outdated
     // 0 = Latest
     // 1 = From Future (means this version is not on GitHub. Development version?)
