@@ -44,7 +44,7 @@ public class GsonUtil {
             .registerTypeAdapter(MarkdownElement.class, new MarkdownElementSerializer())
             .registerTypeAdapter(PlainTextElement.class, new PlainTextElementSerializer())
 
-            //structure
+            //Structure
             .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
 
             // Module
@@ -63,4 +63,7 @@ public class GsonUtil {
             .create();
 
     public static final Gson NORMAL_GSON = new Gson();
+
+    private GsonUtil() {
+    }
 }

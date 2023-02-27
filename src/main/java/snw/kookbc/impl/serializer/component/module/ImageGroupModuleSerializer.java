@@ -30,13 +30,6 @@ public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModu
     @Override
     public JsonElement serialize(ImageGroupModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        /*JsonArray elements = new JsonArray();
-        for (ImageElement image : module.getImages()) {
-            JsonObject element = new JsonObject();
-            element.addProperty("type", "image");
-            element.addProperty("src", image.getSource());
-            elements.add(element);
-        }*/
         JsonElement elements = context.serialize(module.getImages());
         moduleObj.addProperty("type", "image-group");
         moduleObj.add("elements", elements);
