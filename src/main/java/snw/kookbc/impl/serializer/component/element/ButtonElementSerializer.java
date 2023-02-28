@@ -18,10 +18,8 @@
 
 package snw.kookbc.impl.serializer.component.element;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.element.BaseElement;
 import snw.jkook.message.component.card.element.ButtonElement;
 import snw.jkook.message.component.card.element.MarkdownElement;
@@ -31,7 +29,7 @@ import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class ButtonElementSerializer implements JsonSerializer<ButtonElement> {
+public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, JsonDeserializer<ButtonElement> {
     @Override
     public JsonElement serialize(ButtonElement element, Type typeOfSrc, JsonSerializationContext context) {
         if (element.getEventType() == ButtonElement.EventType.LINK) {
@@ -56,5 +54,22 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement> {
         accessoryJson.addProperty("click", element.getEventType().getValue());
         accessoryJson.addProperty("value", element.getValue());
         return accessoryJson;
+    }
+
+    @Override
+    public ButtonElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        String theme = jsonObject.getAsJsonPrimitive("theme").getAsString();
+
+        JsonObject textObj = jsonObject.getAsJsonObject("text");
+        String type = "", content = null;
+        if (textObj != null) {
+            type = textObj.getAsJsonPrimitive("type").getAsString();
+            content = textObj.getAsJsonPrimitive("content").getAsString();
+        }
+        String click = jsonObject.has("click") ? jsonObject.getAsJsonPrimitive("click").getAsString() : null;
+        String value = jsonObject.has("value") ? jsonObject.getAsJsonPrimitive("value").getAsString() : null;
+        BaseElement text = (type.equals("kmarkdown")) ? new MarkdownElement(content) : new PlainTextElement(content);
+        return new ButtonElement(Theme.value(theme), value, ButtonElement.EventType.value(click), text);
     }
 }

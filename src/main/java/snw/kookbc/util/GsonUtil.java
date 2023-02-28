@@ -20,6 +20,7 @@ package snw.kookbc.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.element.ButtonElement;
 import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.element.MarkdownElement;
@@ -27,6 +28,7 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
 import snw.kookbc.impl.serializer.component.CardComponentSerializer;
+import snw.kookbc.impl.serializer.component.MultipleCardComponentSerializer;
 import snw.kookbc.impl.serializer.component.element.ButtonElementSerializer;
 import snw.kookbc.impl.serializer.component.element.ImageElementSerializer;
 import snw.kookbc.impl.serializer.component.element.MarkdownElementSerializer;
@@ -36,7 +38,9 @@ import snw.kookbc.impl.serializer.component.structure.ParagraphSerializer;
 
 public class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
+            // Card
             .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
+            .registerTypeAdapter(MultipleCardComponent.class, new MultipleCardComponentSerializer())
 
             // Element
             .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())

@@ -18,19 +18,25 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import snw.jkook.message.component.card.module.DividerModule;
 
 import java.lang.reflect.Type;
 
-public class DividerModuleSerializer implements JsonSerializer<DividerModule> {
+public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override
     public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
         moduleObj.addProperty("type", "divider");
         return moduleObj;
+    }
+
+    @Override
+    public DividerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        if (jsonObject.has("type") && jsonObject.getAsJsonPrimitive("type").getAsString().equals("divider")) {
+            return DividerModule.INSTANCE;
+        }
+        throw new JsonParseException("Invalid divider module");
     }
 }

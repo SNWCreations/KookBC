@@ -18,15 +18,13 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.HeaderModule;
 
 import java.lang.reflect.Type;
 
-public class HeaderModuleSerializer implements JsonSerializer<HeaderModule> {
+public class HeaderModuleSerializer implements JsonSerializer<HeaderModule>, JsonDeserializer<HeaderModule> {
     @Override
     public JsonElement serialize(HeaderModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -36,5 +34,13 @@ public class HeaderModuleSerializer implements JsonSerializer<HeaderModule> {
         moduleObj.addProperty("type", "header");
         moduleObj.add("text", textObj);
         return moduleObj;
+    }
+
+    @Override
+    public HeaderModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        JsonObject text = jsonObject.getAsJsonObject("text");
+        String content = text.getAsJsonPrimitive("content").getAsString();
+        return new HeaderModule(new PlainTextElement(content));
     }
 }

@@ -18,20 +18,24 @@
 
 package snw.kookbc.impl.serializer.component.element;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import snw.jkook.message.component.card.element.MarkdownElement;
 
 import java.lang.reflect.Type;
 
-public class MarkdownElementSerializer implements JsonSerializer<MarkdownElement> {
+public class MarkdownElementSerializer implements JsonSerializer<MarkdownElement>, JsonDeserializer<MarkdownElement> {
     @Override
     public JsonElement serialize(MarkdownElement element, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject rawText = new JsonObject();
         rawText.addProperty("type", "kmarkdown");
         rawText.addProperty("content", element.getContent());
         return rawText;
+    }
+
+    @Override
+    public MarkdownElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        String content = jsonObject.getAsJsonPrimitive("content").getAsString();
+        return new MarkdownElement(content);
     }
 }

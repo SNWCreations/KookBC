@@ -18,15 +18,15 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.module.ContainerModule;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
-public class ContainerModuleSerializer implements JsonSerializer<ContainerModule> {
+public class ContainerModuleSerializer implements JsonSerializer<ContainerModule>, JsonDeserializer<ContainerModule> {
     @Override
     public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -35,5 +35,12 @@ public class ContainerModuleSerializer implements JsonSerializer<ContainerModule
         moduleObj.addProperty("type", "container");
         moduleObj.add("elements", elements);
         return moduleObj;
+    }
+
+    @Override
+    public ContainerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        List<ImageElement> list = context.deserialize(jsonObject.get("elements"), TypeToken.getParameterized(List.class, ImageElement.class).getType());
+        return new ContainerModule(list);
     }
 }

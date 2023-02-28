@@ -18,16 +18,19 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import snw.jkook.entity.abilities.Accessory;
+import snw.jkook.message.component.card.CardScopeElement;
+import snw.jkook.message.component.card.element.ButtonElement;
+import snw.jkook.message.component.card.element.ImageElement;
+import snw.jkook.message.component.card.element.MarkdownElement;
+import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.SectionModule;
+import snw.jkook.message.component.card.structure.Paragraph;
 
 import java.lang.reflect.Type;
 
-public class SectionModuleSerializer implements JsonSerializer<SectionModule> {
+public class SectionModuleSerializer implements JsonSerializer<SectionModule>, JsonDeserializer<SectionModule> {
     @Override
     public JsonElement serialize(SectionModule sectionModule, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -40,5 +43,40 @@ public class SectionModuleSerializer implements JsonSerializer<SectionModule> {
         }
         moduleObj.add("accessory", context.serialize(sectionModule.getAccessory()));
         return moduleObj;
+    }
+
+    @Override
+    public SectionModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        JsonObject text = jsonObject.get("text").getAsJsonObject();
+        boolean hasModeField = jsonObject.has("mode");
+        Accessory.Mode mode = hasModeField ? Accessory.Mode.value(jsonObject.getAsJsonPrimitive("mode").getAsString()) : null;
+        Accessory accessory = null;
+        if(jsonObject.has("accessory")){
+            JsonObject accessoryJson = jsonObject.get("accessory").getAsJsonObject();
+            String accessoryType = accessoryJson.getAsJsonPrimitive("type").getAsString();
+            if (accessoryType.equals("image")) {
+                accessory = context.deserialize(accessoryJson, ImageElement.class);
+            } else if (accessoryType.equals("button")) {
+                accessory = context.deserialize(accessoryJson, ButtonElement.class);
+            }
+        }
+        CardScopeElement cardElement = null;
+        String type = text.getAsJsonPrimitive("type").getAsString();
+        switch (type) {
+            case "plain-text": {
+                cardElement = context.deserialize(text, PlainTextElement.class);
+                break;
+            }
+            case "kmarkdown": {
+                cardElement = context.deserialize(text, MarkdownElement.class);
+                break;
+            }
+            case "paragraph": {
+                cardElement = context.deserialize(text, Paragraph.class);
+                break;
+            }
+        }
+        return new SectionModule(cardElement, accessory, mode);
     }
 }

@@ -18,15 +18,12 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
-public class CountdownModuleSerializer implements JsonSerializer<CountdownModule> {
+public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override
     public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -34,5 +31,13 @@ public class CountdownModuleSerializer implements JsonSerializer<CountdownModule
         moduleObj.addProperty("mode", module.getType().getValue());
         moduleObj.addProperty("endTime", module.getEndTime());
         return moduleObj;
+    }
+
+    @Override
+    public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        String mode = jsonObject.getAsJsonPrimitive("mode").getAsString();
+        long endTime = jsonObject.getAsJsonPrimitive("endTime").getAsLong();
+        return new CountdownModule(CountdownModule.Type.value(mode), endTime);
     }
 }

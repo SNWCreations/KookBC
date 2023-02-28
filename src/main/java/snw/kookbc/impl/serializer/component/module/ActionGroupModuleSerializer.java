@@ -18,18 +18,18 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import snw.jkook.message.component.card.element.ButtonElement;
+import snw.jkook.message.component.card.element.InteractElement;
 import snw.jkook.message.component.card.module.ActionGroupModule;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
-public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupModule> {
+public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupModule>, JsonDeserializer<ActionGroupModule> {
     @Override
     public JsonElement serialize(ActionGroupModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -40,5 +40,12 @@ public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupMo
         moduleObj.addProperty("type", "action-group");
         moduleObj.add("elements", context.serialize(module.getButtons()));
         return moduleObj;
+    }
+
+    @Override
+    public ActionGroupModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        List<InteractElement> list = context.deserialize(jsonObject.get("elements"), TypeToken.getParameterized(List.class, ButtonElement.class).getType());
+        return new ActionGroupModule(list);
     }
 }

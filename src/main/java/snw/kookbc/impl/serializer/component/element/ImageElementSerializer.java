@@ -18,15 +18,13 @@
 
 package snw.kookbc.impl.serializer.component.element;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.element.ImageElement;
 
 import java.lang.reflect.Type;
 
-public class ImageElementSerializer implements JsonSerializer<ImageElement> {
+public class ImageElementSerializer implements JsonSerializer<ImageElement>, JsonDeserializer<ImageElement> {
     @Override
     public JsonElement serialize(ImageElement element, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject accessoryJson = new JsonObject();
@@ -34,5 +32,14 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement> {
         accessoryJson.addProperty("src", element.getSource());
         accessoryJson.addProperty("size", element.getSize().getValue());
         return accessoryJson;
+    }
+
+    @Override
+    public ImageElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        String src = jsonObject.getAsJsonPrimitive("src").getAsString();
+        JsonPrimitive sizeEle = jsonObject.getAsJsonPrimitive("size");
+        String size = sizeEle != null ? sizeEle.getAsString() : Size.LG.getValue();
+        return new ImageElement(src, "", Size.value(size), false);
     }
 }

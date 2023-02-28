@@ -18,16 +18,13 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import snw.jkook.message.component.FileComponent;
 import snw.jkook.message.component.card.module.FileModule;
 
 import java.lang.reflect.Type;
 
-public class FileModuleSerializer implements JsonSerializer<FileModule> {
+public class FileModuleSerializer implements JsonSerializer<FileModule>, JsonDeserializer<FileModule> {
     @Override
     public JsonElement serialize(FileModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -38,5 +35,18 @@ public class FileModuleSerializer implements JsonSerializer<FileModule> {
             moduleObj.addProperty("cover", module.getCover());
         }
         return moduleObj;
+    }
+
+    @Override
+    public FileModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        String type = jsonObject.getAsJsonPrimitive("type").getAsString();
+        String title = jsonObject.getAsJsonPrimitive("title").getAsString();
+        String src = jsonObject.getAsJsonPrimitive("src").getAsString();
+        String cover = null;
+        if (jsonObject.has("cover")) {
+            cover = jsonObject.getAsJsonPrimitive("cover").getAsString();
+        }
+        return new FileModule(FileComponent.Type.value(type), title, src, cover);
     }
 }

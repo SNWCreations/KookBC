@@ -26,8 +26,10 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.ContextModule;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ContextModuleSerializer implements JsonSerializer<ContextModule> {
+public class ContextModuleSerializer implements JsonSerializer<ContextModule>, JsonDeserializer<ContextModule> {
     @Override
     public JsonElement serialize(ContextModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -57,5 +59,33 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule> {
         moduleObj.addProperty("type", "context");
         moduleObj.add("elements", elements);
         return moduleObj;
+    }
+
+    @Override
+    public ContextModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        JsonArray elements = jsonObject.getAsJsonArray("elements");
+        List<BaseElement> list = new ArrayList<>();
+        for (JsonElement element1 : elements) {
+            JsonObject obj = element1.getAsJsonObject();
+            String type = obj.getAsJsonPrimitive("type").getAsString();
+            switch (type) {
+                case "plain-text": {
+                    String content = obj.getAsJsonPrimitive("content").getAsString();
+                    list.add(new PlainTextElement(content));
+                    break;
+                }
+                case "kmarkdown": {
+                    String content = obj.getAsJsonPrimitive("content").getAsString();
+                    list.add(new MarkdownElement(content));
+                    break;
+                }
+                case "image":
+                    String src = obj.getAsJsonPrimitive("src").getAsString();
+                    list.add(new ImageElement(src, "", false));
+                    break;
+            }
+        }
+        return new ContextModule(list);
     }
 }

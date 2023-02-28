@@ -18,15 +18,17 @@
 
 package snw.kookbc.impl.serializer.component.structure;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import snw.jkook.message.component.card.element.BaseElement;
+import snw.jkook.message.component.card.element.MarkdownElement;
+import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.structure.Paragraph;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ParagraphSerializer implements JsonSerializer<Paragraph> {
+public class ParagraphSerializer implements JsonSerializer<Paragraph>, JsonDeserializer<Paragraph> {
     @Override
     public JsonElement serialize(Paragraph element, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject rawText = new JsonObject();
@@ -34,5 +36,29 @@ public class ParagraphSerializer implements JsonSerializer<Paragraph> {
         rawText.addProperty("cols", element.getColumns());
         rawText.add("fields", context.serialize(element.getFields()));
         return rawText;
+    }
+
+    @Override
+    public Paragraph deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        if (jsonObject.has("type") && jsonObject.getAsJsonPrimitive("type").getAsString().equals("paragraph")) {
+            int cols = jsonObject.getAsJsonPrimitive("cols").getAsInt();
+            JsonArray fieldArray = jsonObject.getAsJsonArray("fields");
+
+            List<BaseElement> fields = new ArrayList<>(fieldArray.size());
+            fieldArray.forEach(json -> {
+                JsonObject object = json.getAsJsonObject();
+                String type = object.getAsJsonPrimitive("type").getAsString();
+                String content = object.getAsJsonPrimitive("content").getAsString();
+                if (type.equals("kmarkdown")) {
+                    fields.add(new MarkdownElement(content));
+                } else {
+                    fields.add(new PlainTextElement(content));
+                }
+            });
+
+            return new Paragraph(cols, fields);
+        }
+        throw new JsonParseException("Invalid paragraph");
     }
 }

@@ -18,15 +18,15 @@
 
 package snw.kookbc.impl.serializer.component.module;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.module.ImageGroupModule;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
-public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModule> {
+public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModule>, JsonDeserializer<ImageGroupModule> {
     @Override
     public JsonElement serialize(ImageGroupModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
@@ -34,5 +34,12 @@ public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModu
         moduleObj.addProperty("type", "image-group");
         moduleObj.add("elements", elements);
         return moduleObj;
+    }
+
+    @Override
+    public ImageGroupModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject jsonObject = element.getAsJsonObject();
+        JsonElement elements = jsonObject.get("elements");
+        return new ImageGroupModule(context.deserialize(elements, TypeToken.getParameterized(List.class, ImageElement.class).getType()));
     }
 }
