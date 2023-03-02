@@ -30,7 +30,7 @@ public class ContainerModuleSerializer implements JsonSerializer<ContainerModule
     @Override
     public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        // 这个会包含size属性
+        // This will include the size attribute
         JsonElement elements = context.serialize(module.getImages());
         moduleObj.addProperty("type", "container");
         moduleObj.add("elements", elements);
