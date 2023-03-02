@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -33,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 import static snw.kookbc.util.Util.decompressDeflate;
 import static snw.kookbc.util.Util.inputStreamToByteArray;
 
@@ -85,7 +85,7 @@ public class SimpleHttpHandler implements HTTPServer.ContextHandler {
                 String finalChallengeResponse = frame.getData().get("challenge").getAsString();
                 JsonObject obj = new JsonObject();
                 obj.addProperty("challenge", finalChallengeResponse);
-                String challengeJson = new Gson().toJson(obj);
+                String challengeJson = NORMAL_GSON.toJson(obj);
 
                 // the following part is copied from HTTPServer.Response.send method.
                 // I just edited the value of the "contentType" parameter.
