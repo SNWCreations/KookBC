@@ -144,7 +144,7 @@ public class KBCClient {
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
-        enablePlugins(plugins);
+        enablePlugins();
         getCore().getLogger().debug("Loading all the plugins from plugins folder");
         getCore().getLogger().debug("Starting Network");
         startNetwork();
@@ -191,7 +191,7 @@ public class KBCClient {
         this.plugins = plugins;
     }
 
-    private void enablePlugins(List<Plugin> plugins) {
+    private void enablePlugins() {
         if (plugins == null) { // no plugins? do nothing!
             // if the plugins was not loaded, we can't continue
             // the loadPlugins method is protected, NOT private, so it is possible to be empty!
