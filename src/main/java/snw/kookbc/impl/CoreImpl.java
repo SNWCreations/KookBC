@@ -146,6 +146,12 @@ public class CoreImpl implements Core {
         new Thread(client::shutdown, "Shutdown Thread").start();
     }
 
+    // Just a friendly way to get the client instance.
+    @SuppressWarnings("unused")
+    public KBCClient getClient() {
+        return client;
+    }
+
     void init(KBCClient client, HttpAPIImpl impl) {
         Validate.isFalse(init, "This core implementation has already initialized.");
         Validate.notNull(client);
