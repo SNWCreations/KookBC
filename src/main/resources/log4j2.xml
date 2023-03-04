@@ -60,7 +60,7 @@
             <appender-ref ref="File" level="info"/>
             <appender-ref ref="DebugFile" level="debug"/>
         </root>
-        <logger name="snw.kookbc.include.uk.org.lidalia.sysoutslf4j" level="OFF"/>
+        <logger name="uk.org.lidalia.sysoutslf4j" level="OFF"/>
         <logger name="LaunchWrapper" level="WARN"/>
     </loggers>
 </configuration>
