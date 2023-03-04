@@ -20,7 +20,6 @@ package snw.kookbc.impl;
 
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
-import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -30,8 +29,8 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.WrappedCommand;
+import snw.kookbc.impl.command.internal.HelpCommand;
+import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
@@ -54,7 +53,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 // The client representation.
 public class KBCClient {
@@ -341,119 +339,17 @@ public class KBCClient {
     protected void registerPluginsCommand() {
         new JKookCommand("plugins")
                 .setDescription("获取已安装到此 " + SharedConstants.IMPL_NAME + " 实例的插件列表。")
-                .setExecutor(
-                        (sender, arguments, message) -> {
-                            if (sender instanceof User && message == null) {
-                                // executed by CommandManager#executeCommand?
-                                return;
-                            }
-                            String result = String.format(
-                                    "已安装并正在运行的插件 (%s): %s",
-                                    getCore().getPluginManager().getPlugins().length,
-                                    String.join(", ",
-                                            Arrays.stream(getCore().getPluginManager().getPlugins())
-                                                    .map(IT -> IT.getDescription().getName())
-                                                    .collect(Collectors.toSet())));
-                            if (sender instanceof User) {
-                                message.sendToSource(new MarkdownComponent(result));
-                            } else {
-                                getCore().getLogger().info(result);
-                            }
-                        })
+                .setExecutor(new PluginsCommand(this))
                 .register(getInternalPlugin());
     }
 
     protected void registerHelpCommand() {
+        HelpCommand executor = new HelpCommand(this);
         new JKookCommand("help")
                 .setDescription("获取此帮助列表。")
-                .setExecutor(
-                        (commandSender, args, message) -> {
-                            if (commandSender instanceof User && message == null) {
-                                // executed by CommandManager#executeCommand?
-                                return;
-                            }
-                            JKookCommand[] result;
-                            if (args.length != 0) {
-                                String helpWanted = (String) args[0];
-                                WrappedCommand command = ((CommandManagerImpl) getCore().getCommandManager())
-                                        .getCommand(helpWanted);
-                                if (command == null) {
-                                    if (commandSender instanceof User) {
-                                        message.sendToSource(new MarkdownComponent("找不到命令。"));
-                                    } else if (commandSender instanceof ConsoleCommandSender) {
-                                        getCore().getLogger().info("Unknown command.");
-                                    }
-                                    return;
-                                }
-                                result = new JKookCommand[]{command.getCommand()};
-                            } else {
-                                result = ((CommandManagerImpl) getCore().getCommandManager()).getCommandSet()
-                                        .toArray(new JKookCommand[0]);
-                            }
-
-                            List<String> helpList = getHelp(result);
-
-                            if (commandSender instanceof ConsoleCommandSender) {
-                                for (String s : helpList) {
-                                    getCore().getLogger().info(s);
-                                }
-                            } else if (commandSender instanceof User) {
-                                helpList.removeIf(IT -> IT.startsWith("(/)stop:"));
-
-                                if (getConfig().getBoolean("allow-help-ad", true)) {
-                                    helpList.add(
-                                            String.format(
-                                                    "由 [%s](%s) v%s 驱动 - %s API %s",
-                                                    SharedConstants.IMPL_NAME,
-                                                    SharedConstants.REPO_URL,
-                                                    SharedConstants.IMPL_VERSION,
-                                                    SharedConstants.SPEC_NAME,
-                                                    getCore().getAPIVersion()
-                                            )
-                                    );
-                                } else {
-                                    helpList.remove(helpList.size() - 1);
-                                }
-
-                                String finalResult = String.join("\n", helpList.toArray(new String[0]));
-                                message.sendToSource(new MarkdownComponent(finalResult));
-                            }
-                        })
+                .executesUser(executor)
+                .executesConsole(executor)
                 .register(getInternalPlugin());
     }
 
-    public static List<String> getHelp(JKookCommand[] commands) {
-        if (commands.length == 0) { // I think this is impossible to happen!
-            return Collections.singletonList("无法提供命令帮助。因为此 " + SharedConstants.IMPL_NAME + " 实例没有注册任何命令。");
-        }
-        List<String> result = new LinkedList<>();
-        result.add("-------- 命令帮助 --------");
-        if (commands.length > 1) {
-            for (JKookCommand command : commands) {
-                result.add(String.format("(%s)%s: %s", String.join(",", command.getPrefixes()), command.getRootName(),
-                        (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()));
-            }
-            result.add(""); // the blank line as the separator
-            result.add("注: 在每条命令帮助的开头，括号中用 \",\" 隔开的字符为此命令的前缀。");
-            result.add("如 \"(/,.)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
-        } else {
-            JKookCommand command = commands[0];
-            result.add(String.format("命令: %s", command.getRootName()));
-            result.add(String.format("别称: %s", String.join(", ", command.getAliases())));
-            result.add(String.format("可用前缀: %s", String.join(", ", command.getPrefixes())));
-            result.add(
-                    String.format("简介: %s",
-                            (command.getDescription() == null)
-                                    ? "此命令没有简介。"
-                                    : command.getDescription()
-                    )
-            );
-            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()) {
-                result.add("详细帮助信息:");
-                result.add(command.getHelpContent());
-            }
-        }
-        result.add("-------------------------");
-        return result;
-    }
 }
