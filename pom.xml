@@ -55,6 +55,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mixin.version>0.12.4+mixin.0.8.5</mixin.version>
         <asm.version>9.3</asm.version>
+        <!-- Used by JitPack CI -->
+        <skipShade>false</skipShade>
     </properties>
 
     <build>
@@ -126,6 +128,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <skip>${skipShade}</skip>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <!-- Make sure log4j's plugin can load correctly -->
