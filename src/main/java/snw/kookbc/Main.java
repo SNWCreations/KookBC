@@ -78,8 +78,9 @@ public class Main {
                 parser.printHelpOn(System.out);
             } catch (IOException e) {
                 logger.error("Unable to print help.");
+                return 1;
             }
-            return 1;
+            return 0;
         }
 
         String token = options.valueOf(tokenOption);
