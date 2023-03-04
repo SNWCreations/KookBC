@@ -64,7 +64,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("snw.jkook.plugin.MarkedClassLoader");
         addClassLoaderExclusion("net.minecrell.terminalconsole.");
         addClassLoaderExclusion("org.jline.");
-        addClassLoaderExclusion("snw.kookbc.include.joptsimple.");
+        addClassLoaderExclusion("joptsimple.");
         addClassLoaderExclusion("com.sun.");
 
         // transformer exclusions
