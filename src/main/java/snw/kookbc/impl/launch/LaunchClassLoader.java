@@ -55,8 +55,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("sun.");
         addClassLoaderExclusion("org.lwjgl.");
         addClassLoaderExclusion("org.apache.logging.");
-        addClassLoaderExclusion("org.slf4j");
-        addClassLoaderExclusion("uk.org.lidalia.sysoutslf4j.");
+        addClassLoaderExclusion("org.slf4j.");
+        addClassLoaderExclusion("snw.kookbc.include.uk.org.lidalia.sysoutslf4j.");
         addClassLoaderExclusion("org.spongepowered.asm.launch.");
         addClassLoaderExclusion("ch.qos.logback");
         addClassLoaderExclusion("snw.kookbc.impl.launch.");
@@ -64,7 +64,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("snw.jkook.plugin.MarkedClassLoader");
         addClassLoaderExclusion("net.minecrell.terminalconsole.");
         addClassLoaderExclusion("org.jline.");
-        addClassLoaderExclusion("joptsimple.");
+        addClassLoaderExclusion("snw.kookbc.include.joptsimple.");
         addClassLoaderExclusion("com.sun.");
 
         // transformer exclusions

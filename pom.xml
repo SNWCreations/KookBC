@@ -142,6 +142,51 @@
                                     </excludes>
                                 </filter>
                             </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com</pattern>
+                                    <shadedPattern>snw.kookbc.include.com</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net</pattern>
+                                    <shadedPattern>snw.kookbc.include.net</shadedPattern>
+                                    <excludes>
+                                        <exclude>net.minecrell.terminalconsole.*</exclude>
+                                    </excludes>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org</pattern>
+                                    <shadedPattern>snw.kookbc.include.org</shadedPattern>
+                                    <excludes>
+                                        <exclude>org.spongepowered.*</exclude>
+                                        <exclude>org.jline.*</exclude>
+                                        <exclude>org.apache.*</exclude>
+                                        <exclude>org.xml.*</exclude>
+                                        <exclude>org.w3c.*</exclude>
+                                        <exclude>org.slf4j.*</exclude>
+                                    </excludes>
+                                </relocation>
+                                <relocation>
+                                    <pattern>uk.org.lidalia.sysoutslf4j</pattern>
+                                    <shadedPattern>snw.kookbc.include.uk.org.lidalia.sysoutslf4j</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>okhttp3</pattern>
+                                    <shadedPattern>snw.kookbc.include.okhttp3</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>okio</pattern>
+                                    <shadedPattern>snw.kookbc.include.okio</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>joptsimple</pattern>
+                                    <shadedPattern>snw.kookbc.include.joptsimple</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>kotlin</pattern>
+                                    <shadedPattern>snw.kookbc.include.kotlin</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
