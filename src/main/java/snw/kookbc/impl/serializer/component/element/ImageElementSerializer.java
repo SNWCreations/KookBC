@@ -42,7 +42,7 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
         JsonPrimitive sizeEle = jsonObject.getAsJsonPrimitive("size");
         String size = sizeEle != null && !sizeEle.isJsonNull() ? sizeEle.getAsString() : Size.LG.getValue();
         JsonPrimitive altEle = jsonObject.getAsJsonPrimitive("alt");
-        String alt = altEle != null && altEle.isJsonNull() ? altEle.getAsString() : "";
+        String alt = altEle != null && !altEle.isJsonNull() ? altEle.getAsString() : "";
         return new ImageElement(src, alt, Size.value(size), false);
     }
 }
