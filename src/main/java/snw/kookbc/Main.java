@@ -49,6 +49,10 @@ public class Main {
     }
 
     private static int main0(String[] args) {
+        Thread.currentThread().setName(MAIN_THREAD_NAME);
+        SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
+        SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
+
         // KBC accepts following arguments:
         // --token <tokenValue>   --  Use the tokenValue as the token
         // --help                 --  Get help and exit
@@ -77,9 +81,6 @@ public class Main {
             }
             return 1;
         }
-        Thread.currentThread().setName(MAIN_THREAD_NAME);
-        SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
-        SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
 
         String token = options.valueOf(tokenOption);
 
