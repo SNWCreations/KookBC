@@ -184,6 +184,10 @@
                                     <shadedPattern>snw.kookbc.include.okio</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>joptsimple</pattern>
+                                    <shadedPattern>snw.kookbc.include.joptsimple</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>kotlin</pattern>
                                     <shadedPattern>snw.kookbc.include.kotlin</shadedPattern>
                                 </relocation>
