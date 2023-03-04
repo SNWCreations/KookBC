@@ -139,6 +139,8 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <!-- We are NOT running under ModLauncher! -->
+                                        <exclude>META-INF/services/cpw.*</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
