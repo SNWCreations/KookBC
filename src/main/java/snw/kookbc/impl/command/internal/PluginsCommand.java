@@ -21,11 +21,11 @@ package snw.kookbc.impl.command.internal;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.CommandSender;
+import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -43,7 +43,8 @@ public final class PluginsCommand implements CommandExecutor {
             return;
         }
         Plugin[] plugins = client.getCore().getPluginManager().getPlugins();
-        String result = String.format("已安装并正在运行的插件 (%d): %s",
+        String result = String.format("%s (%d): %s",
+                (sender instanceof ConsoleCommandSender) ? "Installed and running plugins" : "已安装并正在运行的插件",
                 plugins.length,
                 String.join(", ",
                     Arrays.stream(plugins)
