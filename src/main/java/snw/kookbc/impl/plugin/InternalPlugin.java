@@ -24,14 +24,32 @@ import snw.jkook.config.file.FileConfiguration;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.util.Validate;
+import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 
 // A plugin implementation as a placeholder to call methods that require plugin instance.
 // DO NOT USE THIS OUTSIDE snw.kookbc PACKAGE.
 public final class InternalPlugin implements Plugin {
+    private static final PluginDescription DESCRIPTION;
+
+    static {
+        DESCRIPTION = new PluginDescription(
+            SharedConstants.IMPL_NAME,
+            SharedConstants.IMPL_VERSION,
+            SharedConstants.SPEC_VERSION,
+            "Just a placeholder. Only for internal use.",
+            SharedConstants.REPO_URL,
+            "null",
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList()
+        );
+    }
+
     private final KBCClient client;
 
     // DO NOT USE THIS.
@@ -58,7 +76,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public PluginDescription getDescription() {
-        throw new UnsupportedOperationException("Not supported.");
+        return DESCRIPTION;
     }
 
     @Override
