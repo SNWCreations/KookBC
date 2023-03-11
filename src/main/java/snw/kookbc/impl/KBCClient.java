@@ -136,6 +136,17 @@ public class KBCClient {
     // WARN: Set the JKook Core by constructing CoreImpl and call getCore().setCore() using it first,
     // or you will get NullPointerException.
     public void start() {
+        // Print version information
+        getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
+        getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
+        Properties gitProperties = new Properties();
+        try {
+            gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
+            getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
+        } catch (NullPointerException | IOException e) {
+            getCore().getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
+        }
+
         core.getLogger().debug("Fetching Bot user object");
         User botUser = getEntityBuilder().buildUser(
                 getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));

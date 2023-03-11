@@ -37,9 +37,6 @@ import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 
-import java.io.IOException;
-import java.util.Properties;
-
 public class CoreImpl implements Core {
     private boolean init = false;
     private SchedulerImpl scheduler;
@@ -55,20 +52,11 @@ public class CoreImpl implements Core {
     // Note for hardcore developers:
     // Use this instead of CoreImpl(Logger) constructor, unless you want the logging output.
     public CoreImpl() {
-        this.logger = NOPLogger.NOP_LOGGER;
+        this(NOPLogger.NOP_LOGGER);
     }
 
     public CoreImpl(Logger logger) {
         this.logger = logger;
-        getLogger().info("Starting {} version {}", getImplementationName(), getImplementationVersion());
-        getLogger().info("This VM is running {} version {} (Implementing API version {})", getImplementationName(), getImplementationVersion(), getAPIVersion());
-        Properties gitProperties = new Properties();
-        try {
-            gitProperties.load(CoreImpl.class.getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
-            getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
-        } catch (NullPointerException | IOException e) {
-            getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
-        }
     }
 
     @Override
