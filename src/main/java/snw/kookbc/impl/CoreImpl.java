@@ -140,12 +140,11 @@ public class CoreImpl implements Core {
         return client;
     }
 
-    void init(KBCClient client, HttpAPIImpl impl) {
+    void init(KBCClient client) {
         Validate.isFalse(init, "This core implementation has already initialized.");
         Validate.notNull(client);
-        Validate.notNull(impl);
         this.client = client;
-        this.httpApi = impl;
+        this.httpApi = new HttpAPIImpl(client);
         this.pluginManager = new SimplePluginManager(client);
         this.client.loadAllPlugins();
         this.unsafe = new UnsafeImpl(client);

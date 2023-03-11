@@ -86,7 +86,7 @@ public class KBCClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.core.init(this, new HttpAPIImpl(this));
+        this.core.init(this);
         this.networkClient = new NetworkClient(this, token);
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
