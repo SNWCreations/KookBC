@@ -47,6 +47,6 @@ public class FileModuleSerializer implements JsonSerializer<FileModule>, JsonDes
         if (jsonObject.has("cover")) {
             cover = jsonObject.getAsJsonPrimitive("cover").getAsString();
         }
-        return new FileModule(FileComponent.Type.value(type), title, src, cover);
+        return new FileModule(FileComponent.Type.value(type), src, title, cover);
     }
 }
