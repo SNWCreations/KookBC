@@ -38,7 +38,7 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
             try {
                 new URL(value);
             } catch (MalformedURLException e) {
-                throw new RuntimeException("Invalid URL for the button", e);
+                throw new IllegalArgumentException("Invalid URL for the button", e);
             }
         }
         JsonObject accessoryJson = new JsonObject();
