@@ -32,7 +32,8 @@ import java.net.URL;
 public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, JsonDeserializer<ButtonElement> {
     @Override
     public JsonElement serialize(ButtonElement element, Type typeOfSrc, JsonSerializationContext context) {
-        if (element.getEventType() == ButtonElement.EventType.LINK) {
+        ButtonElement.EventType eventType = element.getEventType();
+        if (eventType == ButtonElement.EventType.LINK) {
             try {
                 new URL(element.getValue());
             } catch (MalformedURLException e) {
@@ -51,7 +52,9 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
                         ((PlainTextElement) textModule).getContent()
         );
         accessoryJson.add("text", textObj);
-        accessoryJson.addProperty("click", element.getEventType().getValue());
+        if (eventType != null) {
+            accessoryJson.addProperty("click", eventType.getValue());
+        }
         accessoryJson.addProperty("value", element.getValue());
         return accessoryJson;
     }

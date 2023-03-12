@@ -18,14 +18,15 @@
 package snw.kookbc.impl.serializer.component;
 
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 
 import java.lang.reflect.Type;
-import java.util.List;
+import static snw.kookbc.util.GsonUtil.createListType;
 
 public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {
+    private static final Type LIST_CARDCOMPONENT = createListType(CardComponent.class);
+
     @Override
     public JsonElement serialize(MultipleCardComponent src, Type typeOfSrc, JsonSerializationContext context) {
         return context.serialize(src.getComponents());
@@ -34,6 +35,6 @@ public class MultipleCardComponentSerializer implements JsonSerializer<MultipleC
     @Override
     public MultipleCardComponent deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonArray array = json.getAsJsonArray();
-        return new MultipleCardComponent(context.deserialize(array, TypeToken.getParameterized(List.class, CardComponent.class).getType()));
+        return new MultipleCardComponent(context.deserialize(array, LIST_CARDCOMPONENT));
     }
 }

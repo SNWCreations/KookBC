@@ -19,6 +19,7 @@ package snw.kookbc.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.element.ButtonElement;
@@ -27,14 +28,17 @@ import snw.jkook.message.component.card.element.MarkdownElement;
 import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.serializer.component.CardComponentSerializer;
 import snw.kookbc.impl.serializer.component.MultipleCardComponentSerializer;
 import snw.kookbc.impl.serializer.component.element.ButtonElementSerializer;
+import snw.kookbc.impl.serializer.component.element.ContentElementSerializer;
 import snw.kookbc.impl.serializer.component.element.ImageElementSerializer;
-import snw.kookbc.impl.serializer.component.element.MarkdownElementSerializer;
-import snw.kookbc.impl.serializer.component.element.PlainTextElementSerializer;
 import snw.kookbc.impl.serializer.component.module.*;
 import snw.kookbc.impl.serializer.component.structure.ParagraphSerializer;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 public class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
@@ -45,8 +49,8 @@ public class GsonUtil {
             // Element
             .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
             .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
-            .registerTypeAdapter(MarkdownElement.class, new MarkdownElementSerializer())
-            .registerTypeAdapter(PlainTextElement.class, new PlainTextElementSerializer())
+            .registerTypeAdapter(MarkdownElement.class, new ContentElementSerializer<>("kmarkdown", MarkdownElement::getContent, MarkdownElement::new))
+            .registerTypeAdapter(PlainTextElement.class, new ContentElementSerializer<>("plain-text", PlainTextElement::getContent, PlainTextElement::new))
 
             //Structure
             .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
@@ -67,6 +71,11 @@ public class GsonUtil {
             .create();
 
     public static final Gson NORMAL_GSON = new Gson();
+
+    public static Type createListType(Class<?> elementType) {
+        Validate.notNull(elementType);
+        return TypeToken.getParameterized(List.class, elementType).getType();
+    }
 
     private GsonUtil() {
     }
