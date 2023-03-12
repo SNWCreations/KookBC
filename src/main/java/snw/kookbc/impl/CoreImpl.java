@@ -18,6 +18,9 @@
 
 package snw.kookbc.impl;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 import snw.jkook.Core;
@@ -140,17 +143,30 @@ public class CoreImpl implements Core {
         return client;
     }
 
-    void init(KBCClient client) {
-        Validate.isFalse(init, "This core implementation has already initialized.");
+    synchronized void init(KBCClient client) {
+        this.init(client, null, null, null, null, null, null);
+    }
+
+    // pass null to an argument if you don't need to replace it using your version.
+    synchronized void init(
+        KBCClient client,
+        @Nullable SimplePluginManager simplePluginManager,
+        @Nullable HttpAPIImpl httpApiImpl,
+        @Nullable SchedulerImpl schedulerImpl,
+        @Nullable EventManagerImpl eventManagerImpl,
+        @Nullable CommandManagerImpl commandManagerImpl,
+        @Nullable UnsafeImpl unsafeImpl
+    ) {
+        Validate.isFalse(this.init, "This core implementation has already initialized.");
         Validate.notNull(client);
         this.client = client;
-        this.httpApi = new HttpAPIImpl(client);
-        this.pluginManager = new SimplePluginManager(client);
+        this.pluginManager = Optional.ofNullable(simplePluginManager).orElseGet(() -> new SimplePluginManager(client));
         this.client.loadAllPlugins();
-        this.unsafe = new UnsafeImpl(client);
-        this.scheduler = new SchedulerImpl(client);
-        this.eventManager = new EventManagerImpl(client);
-        this.commandManager = new CommandManagerImpl(client);
+        this.httpApi = Optional.ofNullable(httpApiImpl).orElseGet(() -> new HttpAPIImpl(client));
+        this.scheduler = Optional.ofNullable(schedulerImpl).orElseGet(() -> new SchedulerImpl(client));
+        this.eventManager = Optional.ofNullable(eventManagerImpl).orElseGet(() -> new EventManagerImpl(client));
+        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CommandManagerImpl(client));
+        this.unsafe = Optional.ofNullable(unsafeImpl).orElseGet(() -> new UnsafeImpl(client));
         this.init = true;
     }
 }
