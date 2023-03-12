@@ -44,16 +44,10 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
         JsonObject accessoryJson = new JsonObject();
         accessoryJson.addProperty("type", "button");
         accessoryJson.addProperty("theme", element.getTheme().getValue());
-        JsonObject textObj = new JsonObject();
+
         BaseElement textModule = element.getText();
         if (textModule != null) {
-            textObj.addProperty("type", (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text");
-            textObj.addProperty("content",
-                    (textModule instanceof MarkdownElement) ?
-                            ((MarkdownElement) textModule).getContent() :
-                            ((PlainTextElement) textModule).getContent()
-            );
-            accessoryJson.add("text", textObj);
+            accessoryJson.add("text", context.serialize(textModule));
         } else {
             accessoryJson.addProperty("text", "");
         }
@@ -76,14 +70,13 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
         String theme = jsonObject.getAsJsonPrimitive("theme").getAsString();
 
         JsonObject textObj = jsonObject.getAsJsonObject("text");
-        String type = "", content = null;
-        if (textObj != null) {
-            type = textObj.getAsJsonPrimitive("type").getAsString();
-            content = textObj.getAsJsonPrimitive("content").getAsString();
-        }
-        String click = jsonObject.has("click") ? jsonObject.getAsJsonPrimitive("click").getAsString() : null;
-        String value = jsonObject.has("value") ? jsonObject.getAsJsonPrimitive("value").getAsString() : null;
-        BaseElement text = (type.equals("kmarkdown")) ? new MarkdownElement(content) : new PlainTextElement(content);
+        BaseElement text = context.deserialize(textObj,
+                "kmarkdown".equals(textObj.getAsJsonPrimitive("type").getAsString()) ? MarkdownElement.class
+                        : PlainTextElement.class);
+
+        String click = jsonObject.has("click") ? jsonObject.getAsJsonPrimitive("click").getAsString() : "";
+        String value = jsonObject.has("value") ? jsonObject.getAsJsonPrimitive("value").getAsString() : "";
+
         return new ButtonElement(Theme.value(theme), value, ButtonElement.EventType.value(click), text);
     }
 }
