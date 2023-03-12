@@ -17,8 +17,13 @@
  */
 package snw.kookbc.util;
 
+import java.lang.reflect.Type;
+import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.element.ButtonElement;
@@ -27,6 +32,7 @@ import snw.jkook.message.component.card.element.MarkdownElement;
 import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.jkook.message.component.card.structure.Paragraph;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.serializer.component.CardComponentSerializer;
 import snw.kookbc.impl.serializer.component.MultipleCardComponentSerializer;
 import snw.kookbc.impl.serializer.component.element.ButtonElementSerializer;
@@ -67,6 +73,11 @@ public class GsonUtil {
             .create();
 
     public static final Gson NORMAL_GSON = new Gson();
+
+    public static Type createListType(Class<?> elementType) {
+        Validate.notNull(elementType);
+        return TypeToken.getParameterized(List.class, elementType).getType();
+    }
 
     private GsonUtil() {
     }
