@@ -127,6 +127,19 @@ public class KBCClient {
 
 **但请注意，此方法可能会抛出 `RuntimeException` ，请注意捕获并处理。**
 
+### 使用需要 Plugin 实例作为参数的 JKook API 方法
+
+首先，在嵌入 KookBC 的环境中，请不要直接通过 `new` 关键字使用 `snw.jkook.plugin.BasePlugin` 及其子类。
+* **为什么？** `BasePlugin` 在构造时会检查加载其类的类加载器是否是 `snw.jkook.plugin.MarkedClassLoader` 的子类 (在过去的 API 版本中比较的是 `snw.jkook.plugin.PluginLoader`)，如果不是，会抛出异常。
+
+怎么办？
+
+你可以参考 `snw.kookbc.impl.plugin.InternalPlugin` ，编写一个始终被启用的，除了能返回一个 `PluginDescription` 以外什么都不能做的 `Plugin` 。
+
+然后直接 `new` 这个占位符插件，用来调用需要 `Plugin` 实例的方法。
+
+这个方法是最推荐的。
+
 ## 再看 KBCClient
 
 此节介绍 `KBCClient` 类内的部分方法。
