@@ -26,9 +26,27 @@ import snw.jkook.message.component.card.module.*;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
+    private static final Map<String, Class<? extends BaseModule>> MODULE_MAP = new HashMap<>();
+
+    static {
+        MODULE_MAP.put("action-group", ActionGroupModule.class);
+        MODULE_MAP.put("container", ContainerModule.class);
+        MODULE_MAP.put("context", ContextModule.class);
+        MODULE_MAP.put("countdown", CountdownModule.class);
+        MODULE_MAP.put("divider", DividerModule.class);
+        MODULE_MAP.put("file", FileModule.class);
+        MODULE_MAP.put("audio", FileModule.class);
+        MODULE_MAP.put("video", FileModule.class);
+        MODULE_MAP.put("header", HeaderModule.class);
+        MODULE_MAP.put("image-group", ImageGroupModule.class);
+        MODULE_MAP.put("invite", InviteModule.class);
+        MODULE_MAP.put("section", SectionModule.class);
+    }
 
     @Override
     public JsonElement serialize(CardComponent component, Type typeOfSrc, JsonSerializationContext context) {
@@ -64,49 +82,6 @@ public class CardComponentSerializer implements JsonSerializer<CardComponent>, J
     }
 
     private static void processModule(JsonDeserializationContext context, List<BaseModule> list, JsonObject json, String type) {
-        switch (type) {
-            case "action-group": {
-                list.add(context.deserialize(json, ActionGroupModule.class));
-                break;
-            }
-            case "container": {
-                list.add(context.deserialize(json, ContainerModule.class));
-                break;
-            }
-            case "context": {
-                list.add(context.deserialize(json, ContextModule.class));
-                break;
-            }
-            case "countdown": {
-                list.add(context.deserialize(json, CountdownModule.class));
-                break;
-            }
-            case "divider": {
-                list.add(context.deserialize(json, DividerModule.class));
-                break;
-            }
-            case "file":
-            case "audio":
-            case "video": {
-                list.add(context.deserialize(json, FileModule.class));
-                break;
-            }
-            case "header": {
-                list.add(context.deserialize(json, HeaderModule.class));
-                break;
-            }
-            case "image-group": {
-                list.add(context.deserialize(json, ImageGroupModule.class));
-                break;
-            }
-            case "invite": {
-                list.add(context.deserialize(json, InviteModule.class));
-                break;
-            }
-            case "section": {
-                list.add(context.deserialize(json, SectionModule.class));
-                break;
-            }
-        }
+        list.add(context.deserialize(json, MODULE_MAP.get(type)));
     }
 }
