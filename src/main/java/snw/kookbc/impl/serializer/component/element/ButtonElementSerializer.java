@@ -33,9 +33,10 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
     @Override
     public JsonElement serialize(ButtonElement element, Type typeOfSrc, JsonSerializationContext context) {
         ButtonElement.EventType eventType = element.getEventType();
+        String value = element.getValue();
         if (eventType == ButtonElement.EventType.LINK) {
             try {
-                new URL(element.getValue());
+                new URL(value);
             } catch (MalformedURLException e) {
                 throw new RuntimeException("Invalid URL for the button", e);
             }
@@ -45,17 +46,27 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
         accessoryJson.addProperty("theme", element.getTheme().getValue());
         JsonObject textObj = new JsonObject();
         BaseElement textModule = element.getText();
-        textObj.addProperty("type", (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text");
-        textObj.addProperty("content",
-                (textModule instanceof MarkdownElement) ?
-                        ((MarkdownElement) textModule).getContent() :
-                        ((PlainTextElement) textModule).getContent()
-        );
-        accessoryJson.add("text", textObj);
+        if (textModule != null) {
+            textObj.addProperty("type", (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text");
+            textObj.addProperty("content",
+                    (textModule instanceof MarkdownElement) ?
+                            ((MarkdownElement) textModule).getContent() :
+                            ((PlainTextElement) textModule).getContent()
+            );
+            accessoryJson.add("text", textObj);
+        } else {
+            accessoryJson.addProperty("text", "");
+        }
         if (eventType != null) {
             accessoryJson.addProperty("click", eventType.getValue());
+        } else {
+            accessoryJson.addProperty("click", "");
         }
-        accessoryJson.addProperty("value", element.getValue());
+        if (value != null) {
+            accessoryJson.addProperty("value", value);
+        } else {
+            accessoryJson.addProperty("value", "");
+        }
         return accessoryJson;
     }
 
