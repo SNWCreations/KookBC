@@ -82,6 +82,9 @@ public class CardComponentSerializer implements JsonSerializer<CardComponent>, J
     }
 
     private static void processModule(JsonDeserializationContext context, List<BaseModule> list, JsonObject json, String type) {
+        if (!MODULE_MAP.containsKey(type)) {
+            throw new IllegalArgumentException("Unsupported module type: " + type);
+        }
         list.add(context.deserialize(json, MODULE_MAP.get(type)));
     }
 }
