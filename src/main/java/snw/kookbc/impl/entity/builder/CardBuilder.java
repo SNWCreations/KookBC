@@ -21,10 +21,8 @@ package snw.kookbc.impl.entity.builder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import snw.jkook.entity.abilities.Accessory;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.jkook.message.component.card.element.*;
 import snw.jkook.util.Validate;
 import snw.kookbc.util.GsonUtil;
 
@@ -64,46 +62,6 @@ public class CardBuilder {
 
     public static JsonObject serialize0(CardComponent component) {
         return GsonUtil.CARD_GSON.toJsonTree(component).getAsJsonObject();
-    }
-
-    private static void addAccessory(Accessory accessory, JsonObject moduleObj) {
-        if (accessory == null) return;
-        JsonObject accessoryJson = new JsonObject();
-        if (accessory instanceof ImageElement) {
-            accessoryJson.addProperty("type", "image");
-            accessoryJson.addProperty("src", ((ImageElement) accessory).getSource());
-            accessoryJson.addProperty("size", ((ImageElement) accessory).getSize().getValue());
-        } else if (accessory instanceof ButtonElement) {
-            accessoryJson.addProperty("type", "button");
-            accessoryJson.addProperty("theme", ((ButtonElement) accessory).getTheme().getValue());
-            JsonObject textObj = new JsonObject();
-            BaseElement textModule = ((ButtonElement) accessory).getText();
-            textObj.addProperty("type", (textModule instanceof MarkdownElement) ? "kmarkdown" : "plain-text");
-            textObj.addProperty("content",
-                    (textModule instanceof MarkdownElement) ?
-                            ((MarkdownElement) textModule).getContent() :
-                            ((PlainTextElement) textModule).getContent()
-            );
-            accessoryJson.add("text", textObj);
-            accessoryJson.addProperty("click", ((ButtonElement) accessory).getEventType().getValue());
-            accessoryJson.addProperty("value", ((ButtonElement) accessory).getValue());
-        }
-        moduleObj.add("accessory", accessoryJson);
-    }
-
-    private static BaseElement createButtonText(JsonObject rawButtonText, String buttonContent) {
-        BaseElement buttonText;
-        switch (rawButtonText.get("type").getAsString()) {
-            case "plain-text":
-                buttonText = new PlainTextElement(buttonContent, false);
-                break;
-            case "kmarkdown":
-                buttonText = new MarkdownElement(buttonContent);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown button text type.");
-        }
-        return buttonText;
     }
 
 }
