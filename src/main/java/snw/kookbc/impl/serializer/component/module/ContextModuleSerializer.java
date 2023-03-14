@@ -19,7 +19,6 @@
 package snw.kookbc.impl.serializer.component.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.element.BaseElement;
 import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.element.MarkdownElement;
@@ -29,6 +28,8 @@ import snw.jkook.message.component.card.module.ContextModule;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
+import static snw.kookbc.impl.serializer.component.CardComponentSerializer.MODULE_MAP;
 
 public class ContextModuleSerializer implements JsonSerializer<ContextModule>, JsonDeserializer<ContextModule> {
     @Override
@@ -70,25 +71,9 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule>, J
         for (JsonElement element1 : elements) {
             JsonObject obj = element1.getAsJsonObject();
             String type = obj.getAsJsonPrimitive("type").getAsString();
-            switch (type) {
-                case "plain-text": {
-                    String content = obj.getAsJsonPrimitive("content").getAsString();
-                    list.add(new PlainTextElement(content));
-                    break;
-                }
-                case "kmarkdown": {
-                    String content = obj.getAsJsonPrimitive("content").getAsString();
-                    list.add(new MarkdownElement(content));
-                    break;
-                }
-                case "image":
-                    String src = obj.getAsJsonPrimitive("src").getAsString();
-                    boolean circle = obj.getAsJsonPrimitive("circle").getAsBoolean();
-                    String alt = obj.has("alt") ? obj.getAsJsonPrimitive("alt").getAsString() : "";
-                    Size size = obj.has("size") ? Size.valueOf(obj.getAsJsonPrimitive("size").getAsString()) : Size.LG;
-                    list.add(new ImageElement(src, alt, size, circle));
-                    break;
-            }
+            BaseElement el = context.deserialize(obj, MODULE_MAP.get(type));
+            list.add(el);
+
         }
         return new ContextModule(list);
     }

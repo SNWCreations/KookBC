@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
-    private static final Map<String, Class<? extends BaseModule>> MODULE_MAP = new HashMap<>();
+    public static final Map<String, Class<? extends BaseModule>> MODULE_MAP = new HashMap<>();
 
     static {
         MODULE_MAP.put("action-group", ActionGroupModule.class);
