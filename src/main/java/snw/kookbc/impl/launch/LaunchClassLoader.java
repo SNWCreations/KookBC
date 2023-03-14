@@ -4,12 +4,14 @@
 package snw.kookbc.impl.launch;
 
 import org.spongepowered.asm.util.JavaVersion;
-import snw.jkook.plugin.MarkedClassLoader;
-import uk.org.lidalia.sysoutslf4j.common.ReflectionUtils;
 
+import snw.jkook.plugin.MarkedClassLoader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -18,6 +20,7 @@ import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.JarEntry;
@@ -42,9 +45,27 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<>();
 
-    private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
+    private final Function<String, Package> packageProvider;
+
+    private static final MethodHandle GET_DEFINED_PACKAGE;
+
+    private static final String[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
+        "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
 
     private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("mixin.debug", "false"));
+
+    static {
+        if (JavaVersion.current() >= JavaVersion.JAVA_9) {
+            try {
+                Method getDefinedPackageMethod = ClassLoader.class.getMethod("getDefinedPackage", String.class);
+                GET_DEFINED_PACKAGE = MethodHandles.lookup().unreflect(getDefinedPackageMethod);
+            } catch (Throwable e) {
+                throw new Error("Unable to initialize LaunchClassLoader.getPackage0 environment.", e);
+            }
+        } else {
+            GET_DEFINED_PACKAGE = null;
+        }
+    }
 
     public LaunchClassLoader(URL[] sources) {
         super(sources, null);
@@ -74,6 +95,19 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addTransformerExclusion("com.google.common.");
         addTransformerExclusion("org.bouncycastle.");
 
+        if (GET_DEFINED_PACKAGE != null) {
+            final MethodHandle gdpForThis = GET_DEFINED_PACKAGE.bindTo(this);
+            packageProvider = name -> {
+                try {
+                    return ((Package) gdpForThis.invokeExact(name));
+                } catch (Throwable e) {
+                    throw new Error("Unhandled exception from ClassLoader.getDefinedPackage method.", e);
+
+                }
+            };
+        } else {
+            packageProvider = this::getPackage;
+        }
     }
 
     public void registerTransformer(String transformerClassName) {
@@ -185,12 +219,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     }
 
     private Package getPackage0(String name) {
-        double current = JavaVersion.current();
-        if (current >= JavaVersion.JAVA_9) {
-            return (Package) ReflectionUtils.invokeMethod("getDefinedPackage", this, String.class, name);
-        }
-        //noinspection deprecation // You can ignore this if you are working on Java 8
-        return getPackage(name);
+        return packageProvider.apply(name);
     }
 
     private String untransformName(final String name) {
@@ -337,13 +366,15 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             final URL classResource = findResource(resourcePath);
 
             if (classResource == null) {
-                if (DEBUG) LogWrapper.LOGGER.warn("Failed to find class resource {}", resourcePath);
+                if (DEBUG)
+                    LogWrapper.LOGGER.warn("Failed to find class resource {}", resourcePath);
                 negativeResourceCache.add(name);
                 return null;
             }
             classStream = classResource.openStream();
 
-            if (DEBUG) LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource);
+            if (DEBUG)
+                LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource);
             final byte[] data = readFully(classStream);
             resourceCache.put(name, data);
             return data;
