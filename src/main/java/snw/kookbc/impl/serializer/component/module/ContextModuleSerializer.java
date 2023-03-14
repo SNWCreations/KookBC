@@ -19,6 +19,7 @@
 package snw.kookbc.impl.serializer.component.module;
 
 import com.google.gson.*;
+import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.element.BaseElement;
 import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.element.MarkdownElement;
@@ -82,7 +83,10 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule>, J
                 }
                 case "image":
                     String src = obj.getAsJsonPrimitive("src").getAsString();
-                    list.add(new ImageElement(src, "", false));
+                    boolean circle = obj.getAsJsonPrimitive("circle").getAsBoolean();
+                    String alt = obj.has("alt") ? obj.getAsJsonPrimitive("alt").getAsString() : "";
+                    Size size = obj.has("size") ? Size.valueOf(obj.getAsJsonPrimitive("size").getAsString()) : Size.LG;
+                    list.add(new ImageElement(src, alt, size, circle));
                     break;
             }
         }
