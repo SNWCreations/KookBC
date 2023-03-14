@@ -32,6 +32,7 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
         accessoryJson.addProperty("src", element.getSource());
         accessoryJson.addProperty("size", element.getSize().getValue());
         accessoryJson.addProperty("alt", element.getAlt());
+        accessoryJson.addProperty("circle", element.isCircled());
         return accessoryJson;
     }
 
@@ -43,6 +44,8 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
         String size = sizeEle != null && !sizeEle.isJsonNull() ? sizeEle.getAsString() : Size.LG.getValue();
         JsonPrimitive altEle = jsonObject.getAsJsonPrimitive("alt");
         String alt = altEle != null && !altEle.isJsonNull() ? altEle.getAsString() : "";
-        return new ImageElement(src, alt, Size.value(size), false);
+        JsonPrimitive circleEle = jsonObject.getAsJsonPrimitive("circle");
+        boolean circle = circleEle != null && !circleEle.isJsonNull() ? circleEle.getAsBoolean() : false;
+        return new ImageElement(src, alt, Size.value(size), circle);
     }
 }
