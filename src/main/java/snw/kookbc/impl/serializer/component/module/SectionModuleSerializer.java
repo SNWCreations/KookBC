@@ -52,7 +52,7 @@ public class SectionModuleSerializer implements JsonSerializer<SectionModule>, J
         boolean hasModeField = jsonObject.has("mode");
         Accessory.Mode mode = hasModeField ? Accessory.Mode.value(jsonObject.getAsJsonPrimitive("mode").getAsString()) : null;
         Accessory accessory = null;
-        if(jsonObject.has("accessory")){
+        if (jsonObject.has("accessory") && !jsonObject.get("accessory").isJsonNull()) {
             JsonObject accessoryJson = jsonObject.get("accessory").getAsJsonObject();
             String accessoryType = accessoryJson.getAsJsonPrimitive("type").getAsString();
             if (accessoryType.equals("image")) {
