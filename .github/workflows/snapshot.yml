@@ -1,0 +1,29 @@
+name: Snapshot Build Java CI with Maven
+
+on:
+  push:
+    branches:
+      - 'dev'
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml -DsnapshotBuild=true -DskipTests=false
+    - name: Upload Snapshot Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Shaded JAR
+        path: target/kookbc-*.jar
+
+
+
