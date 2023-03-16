@@ -57,6 +57,8 @@
         <asm.version>9.3</asm.version>
         <!-- Used by JitPack CI -->
         <skipShade>false</skipShade>
+        <!-- Used by GitHub Actions -->
+        <snapshotBuild>false</snapshotBuild>
     </properties>
 
     <build>

@@ -147,6 +147,16 @@ public class KBCClient {
             getCore().getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
         }
 
+        if (SharedConstants.IS_SNAPSHOT) {
+            getCore().getLogger().warn("***********************************");
+            getCore().getLogger().warn("YOU ARE RUNNING A SNAPSHOT BUILD.");
+            getCore().getLogger().warn("DO NOT USE SNAPSHOT BUILDS IN YOUR");
+            getCore().getLogger().warn(" PRODUCTION ENVIRONMENT!");
+            getCore().getLogger().warn("If you don't know why you're seeing");
+            getCore().getLogger().warn(" this, download the stable version.");
+            getCore().getLogger().warn("***********************************");
+        }
+
         core.getLogger().debug("Fetching Bot user object");
         User botUser = getEntityBuilder().buildUser(
                 getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));
