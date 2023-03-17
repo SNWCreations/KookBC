@@ -44,6 +44,8 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 public class SimplePluginClassLoader extends PluginClassLoader {
+    private static final Collection<SimplePluginClassLoader> INSTANCES = new LinkedList<>();
+
     private final KBCClient client;
     private PluginDescription description;
     private final File file;
@@ -55,6 +57,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         if (classLoader instanceof LaunchClassLoader) {
             ((LaunchClassLoader) classLoader).addURL(file.toURI().toURL());
         }
+        INSTANCES.add(this);
     }
 
     private void initMixins() {
@@ -178,9 +181,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         try {
             return super.findClass(name);
         } catch (ClassNotFoundException e) {
-            // Try to load class from other known plugin
-            for (Plugin plugin : client.getCore().getPluginManager().getPlugins()) {
-                ClassLoader classLoader = plugin.getClass().getClassLoader();
+            // Try to load class from other known instances
+            for (ClassLoader classLoader : INSTANCES) {
                 if (classLoader == this) {
                     continue;
                 }
@@ -192,4 +194,11 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         }
         throw new ClassNotFoundException(name);
     }
+
+    @Override
+    public void close() throws IOException {
+        INSTANCES.remove(this);
+        super.close();
+    }
+    
 }
