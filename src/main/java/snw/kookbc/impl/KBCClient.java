@@ -86,7 +86,7 @@ public class KBCClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.core.init(this);
+        initCore();
         this.networkClient = new NetworkClient(this, token);
         this.storage = new EntityStorage(this);
         this.entityBuilder = new EntityBuilder(this);
@@ -112,6 +112,12 @@ public class KBCClient {
                 reallyThingToRun.accept(arguments);
             }
         };
+    }
+
+    // Should be called only once in constructor.
+    // Rewrite this if you want to use another version of CoreImpl.init method.
+    protected void initCore() {
+        this.core.init(this);
     }
 
     public ConfigurationSection getConfig() {
