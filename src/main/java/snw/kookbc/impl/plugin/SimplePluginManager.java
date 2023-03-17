@@ -28,8 +28,6 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -78,13 +76,15 @@ public class SimplePluginManager implements PluginManager {
         // pluginManager.disablePlugin(plugin);
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
         Plugin plugin;
+        PluginLoader loader;
+        ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
         try {
-            SecureClassLoader classLoader = Util.isStartByLaunch() ? LaunchMain.classLoader : (SecureClassLoader) getClass().getClassLoader();
-            //noinspection resource
-            plugin = new SimplePluginClassLoader(client, file, classLoader).loadPlugin(file);
-        } catch (MalformedURLException e) {
+            loader = createPluginLoader(file, parent);
+
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        plugin = loader.loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
@@ -192,5 +192,9 @@ public class SimplePluginManager implements PluginManager {
     @Override
     public void removePlugin(Plugin plugin) {
         plugins.remove(plugin);
+    }
+
+    protected PluginLoader createPluginLoader(File pluginFile, ClassLoader parent) throws Exception {
+        return new SimplePluginClassLoader(client, pluginFile, parent);
     }
 }
