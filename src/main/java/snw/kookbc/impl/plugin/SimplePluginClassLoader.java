@@ -42,6 +42,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+// The Plugin ClassLoader.
+// Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
     private static final Collection<SimplePluginClassLoader> INSTANCES = new LinkedList<>();
 
