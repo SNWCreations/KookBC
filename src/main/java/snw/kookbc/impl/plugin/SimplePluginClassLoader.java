@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.SecureClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -50,12 +49,12 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     private PluginDescription description;
     private final File file;
 
-    public SimplePluginClassLoader(KBCClient client, File file, SecureClassLoader classLoader) throws MalformedURLException {
-        super(new URL[]{file.toURI().toURL()}, classLoader);
+    public SimplePluginClassLoader(KBCClient client, File file, ClassLoader parent) throws MalformedURLException {
+        super(new URL[]{file.toURI().toURL()}, parent);
         this.file = file;
         this.client = client;
-        if (classLoader instanceof LaunchClassLoader) {
-            ((LaunchClassLoader) classLoader).addURL(file.toURI().toURL());
+        if (parent instanceof LaunchClassLoader) {
+            ((LaunchClassLoader) parent).addURL(file.toURI().toURL());
         }
         INSTANCES.add(this);
     }
