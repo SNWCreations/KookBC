@@ -81,6 +81,12 @@ public class GsonUtil {
         return TypeToken.getParameterized(List.class, elementType).getType();
     }
 
+    // Return false if the provided object does not contain the specified key,
+    // or the value mapped to it is JSON null.
+    public static boolean has(JsonObject object, String key) {
+        return get(object, key) != null;
+    }
+
     // Return the element object from the provided object using the key.
     // Return Java null instead of com.google.gson.JsonNull if detected.
     public static @Nullable JsonElement get(JsonObject object, String key) {
