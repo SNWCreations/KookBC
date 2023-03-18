@@ -19,6 +19,8 @@ package snw.kookbc.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
@@ -39,6 +41,8 @@ import snw.kookbc.impl.serializer.component.structure.ParagraphSerializer;
 
 import java.lang.reflect.Type;
 import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
 
 public class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
@@ -75,6 +79,19 @@ public class GsonUtil {
     public static Type createListType(Class<?> elementType) {
         Validate.notNull(elementType);
         return TypeToken.getParameterized(List.class, elementType).getType();
+    }
+
+    // Return the element object from the provided object using the key.
+    // Return Java null instead of com.google.gson.JsonNull if detected.
+    public static @Nullable JsonElement get(JsonObject object, String key) {
+        JsonElement result = null;
+        if (object.has(key)) {
+            result = object.get(key);
+            if (result.isJsonNull()) {
+                result = null; // DO NOT RETURN JSON NULL.
+            }
+        }
+        return result;
     }
 
     private GsonUtil() {
