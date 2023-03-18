@@ -16,17 +16,12 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.interfaces.network;
+package snw.kookbc.interfaces;
 
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+public interface Lifecycle {
 
-import snw.kookbc.impl.network.Frame;
-import snw.kookbc.interfaces.Lifecycle;
+    void start();
 
-public interface NetworkSystem extends Lifecycle {
+    void stop();
 
-    ConcurrentLinkedQueue<Frame> getMessageQueue();
-
-    List<Frame> getWrongOrderFrames();
 }
