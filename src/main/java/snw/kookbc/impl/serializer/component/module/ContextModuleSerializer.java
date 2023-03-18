@@ -37,25 +37,11 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule>, J
         JsonObject moduleObj = new JsonObject();
         JsonArray elements = new JsonArray();
         for (BaseElement base : module.getModules()) {
-            JsonObject rawObj = new JsonObject();
-            if (base instanceof PlainTextElement || base instanceof MarkdownElement) {
-                String content;
-                String type;
-                if (base instanceof PlainTextElement) {
-                    type = "plain-text";
-                    content = ((PlainTextElement) base).getContent();
-                } else {
-                    type = "kmarkdown";
-                    content = ((MarkdownElement) base).getContent();
-                }
-                rawObj.addProperty("type", type);
-                rawObj.addProperty("content", content);
-                elements.add(rawObj);
-            } else if (base instanceof ImageElement) {
-                ImageElement image = (ImageElement) base;
-                rawObj.addProperty("type", "image");
-                rawObj.addProperty("src", image.getSource());
-                elements.add(rawObj);
+            if (base instanceof PlainTextElement || base instanceof MarkdownElement || base instanceof ImageElement) {
+                JsonElement raw = context.serialize(base);
+                elements.add(raw);
+            } else {
+                throw new IllegalArgumentException("Invalid element in context module");
             }
         }
         moduleObj.addProperty("type", "context");
