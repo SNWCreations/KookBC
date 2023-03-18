@@ -20,7 +20,8 @@ package snw.kookbc.interfaces.network.webhook;
 
 // A interface which is designed for KOOK Webhook Event Requests.
 // Represents a HTTP POST request, and there is some KOOK-specific methods.
-public interface Request {
+// T is the Java JSON object type.
+public interface Request<T> {
 
     // Get the decompressed (and decrypted if encrypted) data as the result.
     String getRawBody();
@@ -29,7 +30,7 @@ public interface Request {
     // No actual type for T, because it is depend on the dependency of implementation.
     // e.g.
     // com.google.gson.JsonObject json = request.toJson(); // it should be OK
-    <T> T toJson();
+    T toJson();
 
     // Only for implementation use.
     boolean isCompressed();

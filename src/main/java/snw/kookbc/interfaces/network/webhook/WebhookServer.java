@@ -20,12 +20,13 @@ package snw.kookbc.interfaces.network.webhook;
 
 import snw.kookbc.interfaces.Lifecycle;
 
-public interface WebhookServer extends Lifecycle {
+// T is the Java JSON object type.
+public interface WebhookServer<T> extends Lifecycle {
     
     // Should only be called once during its lifecycle.
     // So its implementations should be protected.
     // Only for implementation use.
-    void setHandler(RequestHandler handler);
+    void setHandler(RequestHandler<T> handler);
 
     // Set the endpoint of the Webhook handler, should be called BEFORE THE SERVER STARTS.
     void setEndpoint(String path);
