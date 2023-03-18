@@ -80,7 +80,6 @@ public class SimplePluginManager implements PluginManager {
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
         try {
             loader = createPluginLoader(file, parent);
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
