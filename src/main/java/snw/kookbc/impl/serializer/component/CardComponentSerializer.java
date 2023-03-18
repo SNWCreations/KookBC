@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
     public static final Map<String, Class<? extends BaseModule>> MODULE_MAP = new HashMap<>();
 
@@ -67,7 +69,7 @@ public class CardComponentSerializer implements JsonSerializer<CardComponent>, J
         JsonObject jsonObject = element.getAsJsonObject();
         String theme = jsonObject.getAsJsonPrimitive("theme").getAsString();
         String size = jsonObject.getAsJsonPrimitive("size").getAsString();
-        String color = jsonObject.has("color") ? jsonObject.getAsJsonPrimitive("color").getAsString() : null;
+        String color = has(jsonObject, "color") ? get(jsonObject, "color").getAsString() : null;
         if (color != null && color.isEmpty()) {
             color = null;
         }

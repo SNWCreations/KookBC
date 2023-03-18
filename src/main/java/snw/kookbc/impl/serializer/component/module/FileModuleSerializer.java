@@ -24,6 +24,8 @@ import snw.jkook.message.component.card.module.FileModule;
 
 import java.lang.reflect.Type;
 
+import static snw.kookbc.util.GsonUtil.has;
+
 public class FileModuleSerializer implements JsonSerializer<FileModule>, JsonDeserializer<FileModule> {
     @Override
     public JsonElement serialize(FileModule module, Type typeOfSrc, JsonSerializationContext context) {
@@ -44,7 +46,7 @@ public class FileModuleSerializer implements JsonSerializer<FileModule>, JsonDes
         String title = jsonObject.getAsJsonPrimitive("title").getAsString();
         String src = jsonObject.getAsJsonPrimitive("src").getAsString();
         String cover = null;
-        if (jsonObject.has("cover")) {
+        if (has(jsonObject, "cover")) {
             cover = jsonObject.getAsJsonPrimitive("cover").getAsString();
         }
         return new FileModule(FileComponent.Type.value(type), src, title, cover);

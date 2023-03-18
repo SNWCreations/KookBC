@@ -23,6 +23,8 @@ import snw.jkook.message.component.card.module.DividerModule;
 
 import java.lang.reflect.Type;
 
+import static snw.kookbc.util.GsonUtil.has;
+
 public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override
     public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {
@@ -34,7 +36,7 @@ public class DividerModuleSerializer implements JsonSerializer<DividerModule>, J
     @Override
     public DividerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        if (jsonObject.has("type") && jsonObject.getAsJsonPrimitive("type").getAsString().equals("divider")) {
+        if (has(jsonObject, "type") && jsonObject.getAsJsonPrimitive("type").getAsString().equals("divider")) {
             return DividerModule.INSTANCE;
         }
         throw new JsonParseException("Invalid divider module");
