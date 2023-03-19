@@ -62,7 +62,7 @@ public class CommandManagerImpl implements CommandManager {
         allCommandHeader.forEach(i -> commandWithPrefix.put(i, result));
     }
 
-    // Return true if this command can be registered
+    // Throw exception if the provided command can NOT be registered
     private void checkCommand(JKookCommand command) throws IllegalArgumentException {
         if (getCommand(command.getRootName()) != null) {
             throw new IllegalArgumentException("The command with the same root name has already registered.");
