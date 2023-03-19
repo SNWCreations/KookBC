@@ -34,6 +34,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class TextChannelMessageIterator extends PageIteratorImpl<Collection<TextChannelMessage>> {
     private final TextChannel channel;
     private final String refer;
@@ -67,12 +69,12 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
     }
 
     private TextChannelMessage buildMessage(JsonObject object) {
-        String id = object.get("id").getAsString();
+        String id = get(object, "id").getAsString();
         Message message = client.getStorage().getMessage(id);
         if (message != null) {
             return (TextChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
         }
-        long timeStamp = object.get("create_at").getAsLong();
+        long timeStamp = get(object, "create_at").getAsLong();
         JsonObject authorObj = object.getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         BaseComponent component = client.getMessageBuilder().buildComponent(object);

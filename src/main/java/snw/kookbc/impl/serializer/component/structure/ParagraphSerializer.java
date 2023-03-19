@@ -28,6 +28,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class ParagraphSerializer implements JsonSerializer<Paragraph>, JsonDeserializer<Paragraph> {
     @Override
     public JsonElement serialize(Paragraph element, Type typeOfSrc, JsonSerializationContext context) {
@@ -41,8 +43,8 @@ public class ParagraphSerializer implements JsonSerializer<Paragraph>, JsonDeser
     @Override
     public Paragraph deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        if (jsonObject.has("type") && jsonObject.getAsJsonPrimitive("type").getAsString().equals("paragraph")) {
-            int cols = jsonObject.getAsJsonPrimitive("cols").getAsInt();
+        if (has(jsonObject, "type") && get(jsonObject, "type").getAsString().equals("paragraph")) {
+            int cols = get(jsonObject, "cols").getAsInt();
             JsonArray fieldArray = jsonObject.getAsJsonArray("fields");
 
             List<BaseElement> fields = new ArrayList<>(fieldArray.size());

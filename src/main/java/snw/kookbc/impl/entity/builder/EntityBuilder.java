@@ -34,6 +34,8 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 // The class for building entities.
 public class EntityBuilder {
     private final KBCClient client;
@@ -43,14 +45,14 @@ public class EntityBuilder {
     }
 
     public User buildUser(JsonObject object) {
-        String id = object.get("id").getAsString();
-        boolean bot = object.get("bot").getAsBoolean();
-        String userName = object.get("username").getAsString();
-        String avatar = object.get("avatar").getAsString();
-        String vipAvatar = object.get("vip_avatar").getAsString();
-        int identify = object.get("identify_num").getAsInt();
-        boolean ban = object.get("status").getAsInt() == 10;
-        boolean vip = object.get("is_vip").getAsBoolean();
+        String id = get(object, "id").getAsString();
+        boolean bot = get(object, "bot").getAsBoolean();
+        String userName = get(object, "username").getAsString();
+        String avatar = get(object, "avatar").getAsString();
+        String vipAvatar = get(object, "vip_avatar").getAsString();
+        int identify = get(object, "identify_num").getAsInt();
+        boolean ban = get(object, "status").getAsInt() == 10;
+        boolean vip = get(object, "is_vip").getAsBoolean();
         return new UserImpl(
                 client,
                 id,
@@ -65,12 +67,12 @@ public class EntityBuilder {
     }
 
     public Guild buildGuild(JsonObject object) {
-        String id = object.get("id").getAsString();
-        String name = object.get("name").getAsString();
-        boolean isPublic = object.get("enable_open").getAsBoolean();
-        String region = object.get("region").getAsString();
-        User master = client.getStorage().getUser(object.get("master_id").getAsString());
-        int rawNotifyType = object.get("notify_type").getAsInt();
+        String id = get(object, "id").getAsString();
+        String name = get(object, "name").getAsString();
+        boolean isPublic = get(object, "enable_open").getAsBoolean();
+        String region = get(object, "region").getAsString();
+        User master = client.getStorage().getUser(get(object, "master_id").getAsString());
+        int rawNotifyType = get(object, "notify_type").getAsInt();
 
         Guild.NotifyType type = null;
         for (Guild.NotifyType value : Guild.NotifyType.values()) {
@@ -81,7 +83,7 @@ public class EntityBuilder {
         }
         Validate.notNull(type, String.format("Internal Error: Unexpected NotifyType from remote: %s", rawNotifyType));
 
-        String avatar = object.get("icon").getAsString();
+        String avatar = get(object, "icon").getAsString();
         return new GuildImpl(
                 client,
                 id,
@@ -96,17 +98,17 @@ public class EntityBuilder {
 
     public Channel buildChannel(JsonObject object) {
         // basic information
-        String id = object.get("id").getAsString();
-        String name = object.get("name").getAsString();
-        Guild guild = client.getStorage().getGuild(object.get("guild_id").getAsString());
-        User master = client.getStorage().getUser(object.get("user_id").getAsString());
+        String id = get(object, "id").getAsString();
+        String name = get(object, "name").getAsString();
+        Guild guild = client.getStorage().getGuild(get(object, "guild_id").getAsString());
+        User master = client.getStorage().getUser(get(object, "user_id").getAsString());
 
-        boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
-        int level = object.get("level").getAsInt();
+        boolean isPermSync = get(object, "permission_sync").getAsInt() != 0;
+        int level = get(object, "level").getAsInt();
 
         // rpo parse
         Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
-        for (JsonElement element : object.get("permission_overwrites").getAsJsonArray()) {
+        for (JsonElement element : get(object, "permission_overwrites").getAsJsonArray()) {
             JsonObject orpo = element.getAsJsonObject();
             rpo.add(
                     new Channel.RolePermissionOverwrite(
@@ -119,7 +121,7 @@ public class EntityBuilder {
 
         // upo parse
         Collection<Channel.UserPermissionOverwrite> upo = new ArrayList<>();
-        for (JsonElement element : object.get("permission_users").getAsJsonArray()) {
+        for (JsonElement element : get(object, "permission_users").getAsJsonArray()) {
             JsonObject oupo = element.getAsJsonObject();
             JsonObject rawUser = oupo.getAsJsonObject("user");
             upo.add(
@@ -131,7 +133,7 @@ public class EntityBuilder {
             );
         }
 
-        if (object.get("is_category").getAsBoolean()) {
+        if (get(object, "is_category").getAsBoolean()) {
             return new CategoryImpl(
                     client, id,
                     master,
@@ -140,13 +142,13 @@ public class EntityBuilder {
                     rpo, upo, level, name
             );
         } else {
-            String parentId = object.get("parent_id").getAsString();
+            String parentId = get(object, "parent_id").getAsString();
             Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
             
-            int type = object.get("type").getAsInt();
+            int type = get(object, "type").getAsInt();
             if (type == 1) { // TextChannel
-                int chatLimitTime = object.get("slow_mode").getAsInt();
-                String topic = object.get("topic").getAsString();
+                int chatLimitTime = get(object, "slow_mode").getAsInt();
+                String topic = get(object, "topic").getAsString();
                 return new TextChannelImpl(
                         client,
                         id,
@@ -162,8 +164,8 @@ public class EntityBuilder {
                         topic
                 );
             } else if (type == 2) { // VoiceChannel
-                boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
-                int size = object.get("limit_amount").getAsInt();
+                boolean hasPassword = object.has("has_password") && get(object, "has_password").getAsBoolean();
+                int size = get(object, "limit_amount").getAsInt();
                 return new VoiceChannelImpl(
                         client,
                         id,
@@ -184,18 +186,18 @@ public class EntityBuilder {
     }
 
     public Role buildRole(Guild guild, JsonObject object) {
-        int id = object.get("role_id").getAsInt();
-        String name = object.get("name").getAsString();
-        int color = object.get("color").getAsInt();
-        int pos = object.get("position").getAsInt();
-        boolean hoist = object.get("hoist").getAsInt() == 1;
-        boolean mentionable = object.get("mentionable").getAsInt() == 1;
-        int permissions = object.get("permissions").getAsInt();
+        int id = get(object, "role_id").getAsInt();
+        String name = get(object, "name").getAsString();
+        int color = get(object, "color").getAsInt();
+        int pos = get(object, "position").getAsInt();
+        boolean hoist = get(object, "hoist").getAsInt() == 1;
+        boolean mentionable = get(object, "mentionable").getAsInt() == 1;
+        int permissions = get(object, "permissions").getAsInt();
         return new RoleImpl(client, guild, id, color, pos, permissions, mentionable, hoist, name);
     }
 
     public CustomEmoji buildEmoji(JsonObject object) {
-        String id = object.get("id").getAsString();
+        String id = get(object, "id").getAsString();
         Guild guild = null;
         if (id.contains("/")) {
             try {
@@ -207,14 +209,14 @@ public class EntityBuilder {
                 // or you don't have permission to access it!
             }
         }
-        String name = object.get("name").getAsString();
+        String name = get(object, "name").getAsString();
         return new CustomEmojiImpl(client, id, name, guild);
     }
 
     public Game buildGame(JsonObject object) {
-        int id = object.get("id").getAsInt();
-        String name = object.get("name").getAsString();
-        String icon = object.get("icon").getAsString();
+        int id = get(object, "id").getAsInt();
+        String name = get(object, "name").getAsString();
+        String icon = get(object, "icon").getAsString();
         return new GameImpl(client, id, name, icon);
     }
 }

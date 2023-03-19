@@ -41,6 +41,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class ListenerImpl implements Listener {
     protected final KBCClient client;
     protected final Object lck = new Object();
@@ -171,9 +173,9 @@ public class ListenerImpl implements Listener {
         client.getCore().getLogger().debug("Got HELLO");
         client.getConnector().setConnected(true);
         JsonObject object = frame.getData();
-        int status = object.get("code").getAsInt();
+        int status = get(object, "code").getAsInt();
         if (status == 0) {
-            client.getSession().setId(object.get("session_id").getAsString());
+            client.getSession().setId(get(object, "session_id").getAsString());
         } else {
             client.getConnector().requestReconnect();
         }

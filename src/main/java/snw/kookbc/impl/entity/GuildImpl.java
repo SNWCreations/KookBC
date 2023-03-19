@@ -45,6 +45,8 @@ import snw.kookbc.util.MapBuilder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class GuildImpl implements Guild {
     private final KBCClient client;
     private final String id;
@@ -333,7 +335,7 @@ public class GuildImpl implements Guild {
                 .put("setting_times", validTimes)
                 .build();
         JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return object.get("url").getAsString();
+        return get(object, "url").getAsString();
     }
 
     @Override

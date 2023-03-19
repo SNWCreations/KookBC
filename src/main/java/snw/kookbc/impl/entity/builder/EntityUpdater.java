@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 // The class for building entities.
 public class EntityUpdater {
     private final KBCClient client;
@@ -44,13 +46,13 @@ public class EntityUpdater {
     }
 
     public void updateUser(JsonObject object, User user) {
-        Validate.isTrue(Objects.equals(user.getId(), object.get("id").getAsString()), "You can't update user by using different data");
-        String userName = object.get("username").getAsString();
-        String avatar = object.get("avatar").getAsString();
-        String vipAvatar = object.get("vip_avatar").getAsString();
-        int identify = object.get("identify_num").getAsInt();
-        boolean ban = object.get("status").getAsInt() == 10;
-        boolean vip = object.get("is_vip").getAsBoolean();
+        Validate.isTrue(Objects.equals(user.getId(), get(object, "id").getAsString()), "You can't update user by using different data");
+        String userName = get(object, "username").getAsString();
+        String avatar = get(object, "avatar").getAsString();
+        String vipAvatar = get(object, "vip_avatar").getAsString();
+        int identify = get(object, "identify_num").getAsInt();
+        boolean ban = get(object, "status").getAsInt() == 10;
+        boolean vip = get(object, "is_vip").getAsBoolean();
         UserImpl usr = (UserImpl) user;
         usr.setName(userName);
         usr.setAvatarUrl(avatar);
@@ -61,13 +63,13 @@ public class EntityUpdater {
     }
 
     public void updateGuild(JsonObject object, Guild guild) {
-        Validate.isTrue(Objects.equals(guild.getId(), object.get("id").getAsString()), "You can't update guild by using different data");
-        String name = object.get("name").getAsString();
-        boolean isPublic = object.get("enable_open").getAsBoolean();
-        String region = object.get("region").getAsString();
-        Guild.NotifyType type = Guild.NotifyType.value(object.get("notify_type").getAsInt());
+        Validate.isTrue(Objects.equals(guild.getId(), get(object, "id").getAsString()), "You can't update guild by using different data");
+        String name = get(object, "name").getAsString();
+        boolean isPublic = get(object, "enable_open").getAsBoolean();
+        String region = get(object, "region").getAsString();
+        Guild.NotifyType type = Guild.NotifyType.value(get(object, "notify_type").getAsInt());
         Validate.notNull(type, "Internal Error: Unexpected NotifyType from remote");
-        String avatar = object.get("icon").getAsString();
+        String avatar = get(object, "icon").getAsString();
 
         GuildImpl guildimpl = (GuildImpl) guild;
         guildimpl.setName(name);
@@ -78,12 +80,12 @@ public class EntityUpdater {
 
     public void updateChannel(JsonObject object, Channel channel) {
         // basic information
-        Validate.isTrue(Objects.equals(channel.getId(), object.get("id").getAsString()), "You can't update channel by using different data");
-        String name = object.get("name").getAsString();
-        boolean isPermSync = object.get("permission_sync").getAsInt() != 0;
+        Validate.isTrue(Objects.equals(channel.getId(), get(object, "id").getAsString()), "You can't update channel by using different data");
+        String name = get(object, "name").getAsString();
+        boolean isPermSync = get(object, "permission_sync").getAsInt() != 0;
         // rpo parse
         Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
-        for (JsonElement element : object.get("permission_overwrites").getAsJsonArray()) {
+        for (JsonElement element : get(object, "permission_overwrites").getAsJsonArray()) {
             JsonObject orpo = element.getAsJsonObject();
             rpo.add(
                     new Channel.RolePermissionOverwrite(
@@ -96,7 +98,7 @@ public class EntityUpdater {
 
         // upo parse
         Collection<Channel.UserPermissionOverwrite> upo = new ArrayList<>();
-        for (JsonElement element : object.get("permission_users").getAsJsonArray()) {
+        for (JsonElement element : get(object, "permission_users").getAsJsonArray()) {
             JsonObject oupo = element.getAsJsonObject();
             JsonObject rawUser = oupo.getAsJsonObject("user");
             upo.add(
@@ -112,22 +114,22 @@ public class EntityUpdater {
         ((ChannelImpl) channel).setOverwrittenRolePermissions(rpo);
         ((ChannelImpl) channel).setOverwrittenUserPermissions(upo);
 
-        if (object.get("is_category").getAsInt() == 1) {
+        if (get(object, "is_category").getAsInt() == 1) {
             CategoryImpl category = (CategoryImpl) channel;
             category.setPermissionSync(isPermSync);
         } else {
-            String parentId = object.get("parent_id").getAsString();
+            String parentId = get(object, "parent_id").getAsString();
             Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
             ((ChannelImpl) channel).setParent0(parent);
-            int type = object.get("type").getAsInt();
+            int type = get(object, "type").getAsInt();
             if (type == 1) { // TextChannel
-                int chatLimitTime = object.get("slow_mode").getAsInt();
-                String topic = object.get("topic").getAsString();
+                int chatLimitTime = get(object, "slow_mode").getAsInt();
+                String topic = get(object, "topic").getAsString();
                 ((TextChannelImpl) channel).setChatLimitTime0(chatLimitTime);
                 ((TextChannelImpl) channel).setTopic0(topic);
             } else if (type == 2) { // VoiceChannel
-                boolean hasPassword = object.has("has_password") && object.get("has_password").getAsBoolean();
-                int size = object.has("limit_amount") ? object.get("limit_amount").getAsInt() : 0;
+                boolean hasPassword = object.has("has_password") && get(object, "has_password").getAsBoolean();
+                int size = object.has("limit_amount") ? get(object, "limit_amount").getAsInt() : 0;
                 ((VoiceChannelImpl) channel).setPasswordProtected(hasPassword);
                 ((VoiceChannelImpl) channel).setMaxSize(size);
             }
@@ -135,13 +137,13 @@ public class EntityUpdater {
     }
 
     public void updateRole(JsonObject object, Role role) {
-        Validate.isTrue(role.getId() == object.get("role_id").getAsInt(), "You can't update the role by using different data");
-        String name = object.get("name").getAsString();
-        int color = object.get("color").getAsInt();
-        int pos = object.get("position").getAsInt();
-        boolean hoist = object.get("hoist").getAsInt() == 1;
-        boolean mentionable = object.get("mentionable").getAsInt() == 1;
-        int permissions = object.get("permissions").getAsInt();
+        Validate.isTrue(role.getId() == get(object, "role_id").getAsInt(), "You can't update the role by using different data");
+        String name = get(object, "name").getAsString();
+        int color = get(object, "color").getAsInt();
+        int pos = get(object, "position").getAsInt();
+        boolean hoist = get(object, "hoist").getAsInt() == 1;
+        boolean mentionable = get(object, "mentionable").getAsInt() == 1;
+        int permissions = get(object, "permissions").getAsInt();
         RoleImpl roleImpl = (RoleImpl) role;
         roleImpl.setName(name);
         roleImpl.setPermSum(permissions);
@@ -152,16 +154,16 @@ public class EntityUpdater {
     }
 
     public void updateEmoji(JsonObject object, CustomEmoji emoji) {
-        Validate.isTrue(Objects.equals(emoji.getId(), object.get("id").getAsString()), "You can't update the emoji by using different data");
-        String name = object.get("name").getAsString();
+        Validate.isTrue(Objects.equals(emoji.getId(), get(object, "id").getAsString()), "You can't update the emoji by using different data");
+        String name = get(object, "name").getAsString();
         CustomEmojiImpl emojiImpl = (CustomEmojiImpl) emoji;
         emojiImpl.setName0(name);
     }
 
     public void updateGame(JsonObject object, Game game) {
         GameImpl impl = (GameImpl) game;
-        String name = object.get("name").getAsString();
-        String icon = object.get("icon").getAsString();
+        String name = get(object, "name").getAsString();
+        String icon = get(object, "icon").getAsString();
         impl.setName0(name);
         impl.setIcon0(icon);
     }

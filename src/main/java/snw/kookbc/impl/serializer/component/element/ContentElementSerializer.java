@@ -23,6 +23,8 @@ import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class ContentElementSerializer<T> implements JsonSerializer<T>, JsonDeserializer<T> {
     private final String type;
     private final Function<T, String> contentFunc;
@@ -45,7 +47,7 @@ public class ContentElementSerializer<T> implements JsonSerializer<T>, JsonDeser
     @Override
     public T deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String content = jsonObject.getAsJsonPrimitive("content").getAsString();
+        String content = get(jsonObject, "content").getAsString();
         return parseFunc.apply(content);
     }
 }
