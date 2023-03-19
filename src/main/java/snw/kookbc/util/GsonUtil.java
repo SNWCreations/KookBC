@@ -87,7 +87,6 @@ public class GsonUtil {
     }
 
     // Return the element object from the provided object using the key.
-    // Return Java null instead of com.google.gson.JsonNull if detected.
     public static JsonElement get(JsonObject object, String key) {
         JsonElement result = null;
         if (object.has(key)) {
