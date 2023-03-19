@@ -23,7 +23,6 @@ import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
-import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -106,7 +105,7 @@ public class KBCClient {
                     return;
                 }
                 if (message != null) {
-                    message.sendToSource(new MarkdownComponent("你不能这样做，因为你正在尝试执行仅后台可用的命令。"));
+                    message.sendToSource("你不能这样做，因为你正在尝试执行仅后台可用的命令。");
                 }
             } else {
                 reallyThingToRun.accept(arguments);
