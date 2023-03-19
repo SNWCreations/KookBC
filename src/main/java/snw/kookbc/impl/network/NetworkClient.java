@@ -98,6 +98,10 @@ public class NetworkClient {
                 }
 
             }
+
+            if (!res.isSuccessful()) {
+                throw new BadResponseException(res.code(), "UNKNOWN");
+            }
             return res.body() != null ? res.body().string() : "";
         } catch (IOException e) {
             throw new RuntimeException("Unexpected IOException when we attempting to call request.", e);
