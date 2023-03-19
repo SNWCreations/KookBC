@@ -41,8 +41,7 @@ import snw.kookbc.impl.serializer.component.structure.ParagraphSerializer;
 
 import java.lang.reflect.Type;
 import java.util.List;
-
-import org.jetbrains.annotations.Nullable;
+import java.util.NoSuchElementException;
 
 public class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
@@ -84,18 +83,21 @@ public class GsonUtil {
     // Return false if the provided object does not contain the specified key,
     // or the value mapped to it is JSON null.
     public static boolean has(JsonObject object, String key) {
-        return get(object, key) != null;
+        return object.has(key) && !object.get(key).isJsonNull();
     }
 
     // Return the element object from the provided object using the key.
     // Return Java null instead of com.google.gson.JsonNull if detected.
-    public static @Nullable JsonElement get(JsonObject object, String key) {
+    public static JsonElement get(JsonObject object, String key) {
         JsonElement result = null;
         if (object.has(key)) {
             result = object.get(key);
             if (result.isJsonNull()) {
                 result = null; // DO NOT RETURN JSON NULL.
             }
+        }
+        if (result == null) {
+            throw new NoSuchElementException("There is no valid value mapped to requested key '" + key + "'.");
         }
         return result;
     }
