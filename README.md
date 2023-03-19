@@ -89,15 +89,15 @@ Copyright (C) 2022 - 2023 KookBC contributors
 
 在编写 Mixin 支持 的实现代码时引用了部分来自 Mixin 项目的源代码，以及 [LegacyLauncher](https://github.com/Mojang/LegacyLauncher) 项目的源代码，在此一并表示感谢。
 
-此程序使用 AGPLv3 作为许可证，对于特定情形，可以在适用 AGPLv3 许可证条款的同时适用 LGPLv3 许可证的条款，详情见下文。
-
 对于下文，提供如下定义以便于讨论:
 * "此仓库"即 此 [GitHub 仓库](https://github.com/SNWCreations/KookBC) 及其本地副本，此仓库的 Fork 及其本地副本不等同于此仓库。
 * "此项目"即 此仓库中存放的 KookBC 源代码及其附属内容。
 * "源代码"即 人类直接可读的 Java 程序文本文件。
 * "原始"版本即 使用此仓库中的源代码编译得到的 KookBC 副本。
 
-若你以任何形式使用此项目，则表明你同意此节的内容以及 AGPLv3 许可证的条款和 LGPLv3 许可证的条款。
+若你以任何形式使用此项目，则表明你同意此节的内容以及 AGPLv3 许可证的条款。
+
+若你在下文提及的特定情形下使用此项目，则表明你在同意上文内容的同时同意 LGPLv3 许可证的条款。
 
 若此节的内容与 AGPLv3 许可证的条款或 LGPLv3 许可证的条款冲突，以此节内容为准。
 
