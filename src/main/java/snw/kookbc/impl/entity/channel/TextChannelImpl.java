@@ -40,6 +40,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;
     private String topic;
@@ -58,7 +60,7 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
                 .put("setting_times", validTimes)
                 .build();
         JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return object.get("url").getAsString();
+        return get(object, "url").getAsString();
     }
 
     @Override

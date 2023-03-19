@@ -83,7 +83,7 @@ public class GsonUtil {
     // Return false if the provided object does not contain the specified key,
     // or the value mapped to it is JSON null.
     public static boolean has(JsonObject object, String key) {
-        return object.has(key) && !object.get(key).isJsonNull();
+        return object.has(key) && !get(object, key).isJsonNull();
     }
 
     // Return the element object from the provided object using the key.
@@ -91,7 +91,7 @@ public class GsonUtil {
     public static JsonElement get(JsonObject object, String key) {
         JsonElement result = null;
         if (object.has(key)) {
-            result = object.get(key);
+            result = get(object, key);
             if (result.isJsonNull()) {
                 result = null; // DO NOT RETURN JSON NULL.
             }

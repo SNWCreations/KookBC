@@ -69,8 +69,8 @@ public class SimpleHttpHandler implements HTTPServer.ContextHandler {
         }
         JsonObject object = JsonParser.parseString(EncryptUtils.decrypt(client, res)).getAsJsonObject();
         Frame frame = new Frame(
-                object.get("s").getAsInt(),
-                has(object, "sn") ? object.get("sn").getAsInt() : -1,
+                get(object, "s").getAsInt(),
+                has(object, "sn") ? get(object, "sn").getAsInt() : -1,
                 object.getAsJsonObject("d")
         );
         if (!Objects.equals(

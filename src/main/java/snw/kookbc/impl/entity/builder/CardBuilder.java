@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 // Just for (de)serialize the CardMessages.
 public class CardBuilder {
 
@@ -42,7 +44,7 @@ public class CardBuilder {
     }
 
     public static CardComponent buildCard(JsonObject object) {
-        Validate.isTrue(Objects.equals(object.get("type").getAsString(), "card"), "The provided element is not a card.");
+        Validate.isTrue(Objects.equals(get(object, "type").getAsString(), "card"), "The provided element is not a card.");
         return GsonUtil.CARD_GSON.fromJson(object, CardComponent.class);
     }
 
