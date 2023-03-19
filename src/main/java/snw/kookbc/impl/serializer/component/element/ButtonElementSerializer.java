@@ -60,7 +60,7 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
     @Override
     public ButtonElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String theme = jsonObject.getAsJsonPrimitive("theme").getAsString();
+        String theme = get(jsonObject, "theme").getAsString();
 
         JsonObject textObj = jsonObject.getAsJsonObject("text");
         BaseElement text = context.deserialize(textObj,

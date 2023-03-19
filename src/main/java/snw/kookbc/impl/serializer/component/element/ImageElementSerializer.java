@@ -41,7 +41,7 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
     @Override
     public ImageElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String src = jsonObject.getAsJsonPrimitive("src").getAsString();
+        String src = get(jsonObject, "src").getAsString();
         String size = has(jsonObject, "size") ? get(jsonObject, "size").getAsString() : Size.LG.getValue();
         String alt = has(jsonObject, "alt") ? get(jsonObject, "alt").getAsString() : "";
         boolean circle = has(jsonObject, "circle") ? get(jsonObject, "circle").getAsBoolean() : false;
