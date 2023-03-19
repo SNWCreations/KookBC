@@ -32,7 +32,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
+import static snw.kookbc.util.GsonUtil.*;
 import static snw.kookbc.util.Util.decompressDeflate;
 import static snw.kookbc.util.Util.inputStreamToByteArray;
 
@@ -70,7 +70,7 @@ public class SimpleHttpHandler implements HTTPServer.ContextHandler {
         JsonObject object = JsonParser.parseString(EncryptUtils.decrypt(client, res)).getAsJsonObject();
         Frame frame = new Frame(
                 object.get("s").getAsInt(),
-                object.has("sn") ? object.get("sn").getAsInt() : -1,
+                has(object, "sn") ? object.get("sn").getAsInt() : -1,
                 object.getAsJsonObject("d")
         );
         if (!Objects.equals(
