@@ -44,6 +44,12 @@ java -jar kookbc-<version>.jar --help
 
 我们在本仓库的 docs 文件夹下放了一些 KookBC 的相关文档，善用它们会帮助您！
 
+如：\
+[嵌入 KookBC 到您的项目](docs/Embedding_KookBC.md)\
+[KookBC 与 Webhook](docs/KookBC_with_Webhook.md)\
+[浅析 KookBC 的结构与工作流程](docs/The_Design_of_KookBC.md)
+
+
 ## 贡献
 
 很感谢您愿意帮助我们改进 KookBC ！
