@@ -150,7 +150,7 @@ allow-help-ad: true
 ```
 ## _internal-commands_ 
 
-决定是否允许注册内部命令。
+决定是否注册内部命令。
 
 示例:
 ```yaml
@@ -162,7 +162,7 @@ internal-commands:
 
 ## _allow-error-feedback_
 
-决定是否允许向发送者反馈错误。
+决定是否向命令发送者反馈命令运行时发生的异常。
 
 示例:
 ```yaml
