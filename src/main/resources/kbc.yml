@@ -68,7 +68,7 @@ allow-help-ad: true
 internal-commands:
   stop: true
   help: true
-  plugin: true
+  plugins: true
 
 # Allow error feedback to the sender
 allow-error-feedback: true
