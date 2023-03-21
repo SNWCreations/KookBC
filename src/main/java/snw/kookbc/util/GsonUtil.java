@@ -90,7 +90,7 @@ public class GsonUtil {
     public static JsonElement get(JsonObject object, String key) {
         JsonElement result = null;
         if (object.has(key)) {
-            result = get(object, key);
+            result = object.get(key);
             if (result.isJsonNull()) {
                 result = null; // DO NOT RETURN JSON NULL.
             }
