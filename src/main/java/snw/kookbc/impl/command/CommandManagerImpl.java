@@ -55,30 +55,38 @@ public class CommandManagerImpl implements CommandManager {
     @Override
     public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
         ensurePluginEnabled(plugin);
-        checkCommand(command);
+        try {
+            checkCommand(command);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
+        }
         Collection<String> allCommandHeader = getAllCommandHeader(command);
         WrappedCommand result = new WrappedCommand(command, plugin);
         commands.put(command.getRootName(), result);
         allCommandHeader.forEach(i -> commandWithPrefix.put(i, result));
     }
 
-    // Return true if this command can be registered
+    // Throw exception if the provided command can NOT be registered
     private void checkCommand(JKookCommand command) throws IllegalArgumentException {
         if (getCommand(command.getRootName()) != null) {
             throw new IllegalArgumentException("The command with the same root name has already registered.");
         }
-        boolean duplicateNameWithPrefix = command.getPrefixes()
+        List<String> duplicateNameWithPrefix = command.getPrefixes()
                 .stream()
                 .map(i -> i + command.getRootName())
-                .anyMatch(commandWithPrefix::containsKey);
-        if (duplicateNameWithPrefix) {
-            throw new IllegalArgumentException("The command with the same (prefix + root name) result has already registered.");
+                .collect(Collectors.toList());
+        for (String head : duplicateNameWithPrefix) {
+            WrappedCommand cmd = commandWithPrefix.get(head);
+            if (cmd != null) {
+                throw new IllegalArgumentException("The command with the same (prefix + root name) result has been found in a command from '" + cmd.getPlugin().getDescription().getName() + "' plugin.");
+            }
         }
-        boolean duplicateAliasWithPrefix = command.getPrefixes()
-                .stream()
-                .anyMatch(i -> !checkAliasWithPrefix(i, command.getAliases()));
-        if (duplicateAliasWithPrefix) {
-            throw new IllegalArgumentException("The command with the same (prefix + alias) result has already registered.");
+
+        for (String prefix : command.getPrefixes()) {
+            WrappedCommand cmd = checkAliasWithPrefix(prefix, command.getAliases());
+            if (cmd != null) {
+                throw new IllegalArgumentException("The command with the same (prefix + alias) result has been found in a command from '" + cmd.getPlugin().getDescription().getName() + "' plugin.");
+            }
         }
         for (Class<?> clazz : command.getArguments()) {
             if (parsers.get(clazz) == null) {
@@ -92,14 +100,15 @@ public class CommandManagerImpl implements CommandManager {
         }
     }
 
-    // Return true if there is no conflict with the prefix and the aliases in the provided command
-    private boolean checkAliasWithPrefix(String prefix, Collection<String> aliases) {
+    // Return the conflict command object if detected confliction, otherwise null.
+    private WrappedCommand checkAliasWithPrefix(String prefix, Collection<String> aliases) {
         for (String alias : aliases) {
-            if (commandWithPrefix.containsKey(prefix + alias)) {
-                return false;
+            String head = prefix + alias;
+            if (commandWithPrefix.containsKey(head)) {
+                return commandWithPrefix.get(head);
             }
         }
-        return true;
+        return null;
     }
 
     private Collection<String> getAllCommandHeader(JKookCommand command) {
@@ -286,6 +295,10 @@ public class CommandManagerImpl implements CommandManager {
 
     public Map<String, WrappedCommand> getCommands() {
         return commands;
+    }
+
+    public Map<String, WrappedCommand> getCommandWithPrefix() {
+        return commandWithPrefix;
     }
 
     public WrappedCommand getCommand(String rootName) {

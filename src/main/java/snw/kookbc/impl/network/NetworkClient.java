@@ -47,11 +47,11 @@ public class NetworkClient {
     }
 
     public JsonObject get(String fullUrl) {
-        return JsonParser.parseString(getRawContent(fullUrl)).getAsJsonObject().getAsJsonObject("data");
+        return checkResponse(JsonParser.parseString(getRawContent(fullUrl)).getAsJsonObject()).getAsJsonObject("data");
     }
 
     public JsonObject post(String fullUrl, Map<?, ?> body) {
-        return JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject().getAsJsonObject("data");
+        return checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject()).getAsJsonObject("data");
     }
 
     public String getRawContent(String fullUrl) {
@@ -96,19 +96,13 @@ public class NetworkClient {
                 } else {
                     bucket.scheduleUpdateAvailableTimes(limit, reset);
                 }
-            }
-            // endregion
 
-            if (res.body() != null) {
-                String resStr = res.body().string();
-                JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
-                int status = object.get("code").getAsInt();
-                if (status != 0) {
-                    throw new BadResponseException(status, object.get("message").getAsString());
-                }
-                return resStr;
             }
-            return "";
+
+            if (!res.isSuccessful()) {
+                throw new BadResponseException(res.code(), "UNKNOWN");
+            }
+            return res.body() != null ? res.body().string() : "";
         } catch (IOException e) {
             throw new RuntimeException("Unexpected IOException when we attempting to call request.", e);
         }
@@ -129,6 +123,18 @@ public class NetworkClient {
     }
 
     protected void logRequest(String method, String fullUrl, @Nullable String postBodyJson) {
-        kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}", method, fullUrl, postBodyJson);
+        kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}",
+            method, fullUrl, postBodyJson);
+    }
+
+    // Return original object if check OK
+    public JsonObject checkResponse(JsonObject response) {
+        int code = response.get("code").getAsInt();
+
+        if (code != 0) {
+            String message = response.get("message").getAsString();
+            throw new BadResponseException(code, message);
+        }
+        return response;
     }
 }
