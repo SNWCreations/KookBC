@@ -297,6 +297,10 @@ public class CommandManagerImpl implements CommandManager {
         return commands;
     }
 
+    public Map<String, WrappedCommand> getCommandWithPrefix() {
+        return commandWithPrefix;
+    }
+
     public WrappedCommand getCommand(String rootName) {
         if (rootName.isEmpty()) return null; // do not execute invalid for loop!
         return commands.get(rootName);

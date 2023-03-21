@@ -166,6 +166,7 @@ public class SimplePluginManager implements PluginManager {
         client.getCore().getEventManager().unregisterAllHandlers(plugin);
         // unregister commands
         ((CommandManagerImpl) client.getCore().getCommandManager()).getCommands().entrySet().removeIf(next -> Objects.equals(next.getValue().getPlugin(), plugin));
+        ((CommandManagerImpl) client.getCore().getCommandManager()).getCommandWithPrefix().entrySet().removeIf(i -> Objects.equals(i.getValue().getPlugin(), plugin));
         try {
             plugin.setEnabled(false);
         } catch (Throwable e) {
