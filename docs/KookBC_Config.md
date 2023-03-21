@@ -31,6 +31,13 @@ save-console-history: true
 ignore-sn-order: false
 
 allow-help-ad: true
+
+internal-commands:
+  help: true
+  plugins: true
+  stop: true
+
+allow-error-feedback: true
 ```
 
 其中的注释已经移除。
