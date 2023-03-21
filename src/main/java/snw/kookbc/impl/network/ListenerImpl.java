@@ -41,7 +41,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class ListenerImpl implements Listener {
     protected final KBCClient client;
@@ -210,28 +210,30 @@ public class ListenerImpl implements Listener {
         try {
             return ((CommandManagerImpl) client.getCore().getCommandManager()).executeCommand0(sender, component.toString(), msg);
         } catch (Exception e) {
-            StringWriter strWrt = new StringWriter();
-            MarkdownComponent markdownComponent;
-            // remove CommandException stacktrace to make the stacktrace smaller
-            (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
-            markdownComponent = new MarkdownComponent(
-                    "执行命令时发生异常，请联系 Bot 的开发者和 " + SharedConstants.IMPL_NAME + " 的开发者！\n" +
-                            "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
-                            "---\n" +
-                            strWrt
-            );
-            try {
-                if (event instanceof ChannelMessageEvent) {
-                    channel.sendComponent(
-                            markdownComponent,
-                            null,
-                            sender
-                    );
-                } else {
-                    sender.sendPrivateMessage(markdownComponent);
+            if (client.getConfig().getBoolean("allow-error-feedback", true)) {
+                StringWriter strWrt = new StringWriter();
+                MarkdownComponent markdownComponent;
+                // remove CommandException stacktrace to make the stacktrace smaller
+                (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
+                markdownComponent = new MarkdownComponent(
+                        "执行命令时发生异常，请联系 Bot 的开发者和 " + SharedConstants.IMPL_NAME + " 的开发者！\n" +
+                                "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
+                                "---\n" +
+                                strWrt
+                );
+                try {
+                    if (event instanceof ChannelMessageEvent) {
+                        channel.sendComponent(
+                                markdownComponent,
+                                null,
+                                sender
+                        );
+                    } else {
+                        sender.sendPrivateMessage(markdownComponent);
+                    }
+                } catch (BadResponseException ex) {
+                    client.getCore().getLogger().error("Unable to send command failure message.", ex);
                 }
-            } catch (BadResponseException ex) {
-                client.getCore().getLogger().error("Unable to send command failure message.", ex);
             }
             client.getCore().getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
             return true; // Although this failed, but it is a valid command
