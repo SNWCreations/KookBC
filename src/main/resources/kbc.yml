@@ -70,5 +70,5 @@ internal-commands:
   help: true
   plugins: true
 
-# Allow error feedback to the sender
+# Allow command exception feedback to the sender
 allow-error-feedback: true
