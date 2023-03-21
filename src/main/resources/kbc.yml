@@ -63,3 +63,9 @@ check-update: true
 # If true, we will add two lines about KookBC's introduction and the repository link to command help.
 # Please don't set it to false, it won't impact the performance!
 allow-help-ad: true
+
+# Whether to register internal commands.
+internal-commands:
+  stop: true
+  help: true
+  plugin: true
