@@ -141,3 +141,23 @@ ignore-sn-order: true
 ```yaml
 allow-help-ad: true
 ```
+## _internal-commands_ 
+
+决定是否允许注册内部命令。
+
+示例:
+```yaml
+internal-commands:
+  stop: true
+  help: true
+  plugins: true
+```
+
+## _allow-error-feedback_
+
+决定是否允许向发送者反馈错误。
+
+示例:
+```yaml
+allow-error-feedback: true
+```
