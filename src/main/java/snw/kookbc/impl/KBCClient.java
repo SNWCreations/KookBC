@@ -340,9 +340,19 @@ public class KBCClient {
     }
 
     protected void registerInternal() {
-        registerStopCommand();
-        registerHelpCommand();
-        registerPluginsCommand();
+        ConfigurationSection commandConfig = getConfig().getConfigurationSection("internal-commands");
+        if (commandConfig == null) {
+            commandConfig = getConfig().createSection("internal-commands");
+        }
+        if (commandConfig.getBoolean("stop", true)) {
+            registerStopCommand();
+        }
+        if (commandConfig.getBoolean("help", true)) {
+            registerHelpCommand();
+        }
+        if (commandConfig.getBoolean("plugins", true)) {
+            registerPluginsCommand();
+        }
     }
 
     protected void registerStopCommand() {
