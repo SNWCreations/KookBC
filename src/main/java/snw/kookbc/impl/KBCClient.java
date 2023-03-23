@@ -53,6 +53,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import org.jetbrains.annotations.Nullable;
+
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
@@ -72,6 +74,18 @@ public class KBCClient {
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
+        this(core, config, pluginsFolder, token, null, null, null, null, null);
+    }
+
+    public KBCClient(
+            CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
+            /* Customizable components are following: */
+            @Nullable NetworkClient networkClient,
+            @Nullable EntityStorage storage,
+            @Nullable EntityBuilder entityBuilder,
+            @Nullable MessageBuilder msgBuilder,
+            @Nullable EntityUpdater entityUpdater
+    ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
         }
@@ -86,11 +100,11 @@ public class KBCClient {
             throw new RuntimeException(e);
         }
         this.core.init(this);
-        this.networkClient = new NetworkClient(this, token);
-        this.storage = new EntityStorage(this);
-        this.entityBuilder = new EntityBuilder(this);
-        this.msgBuilder = new MessageBuilder(this);
-        this.entityUpdater = new EntityUpdater(this);
+        this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
+        this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
+        this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
+        this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
+        this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
     }
