@@ -38,11 +38,16 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    protected final SimpleCommandMap commandMap = new SimpleCommandMap();
+    protected final SimpleCommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
+        this(client, new SimpleCommandMap());
+    }
+
+    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap) {
         this.client = client;
+        this.commandMap = commandMap;
         registerInternalParsers();
     }
 
