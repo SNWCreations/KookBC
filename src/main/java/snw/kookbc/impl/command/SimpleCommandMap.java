@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.command;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -28,19 +29,16 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 
-import static snw.kookbc.util.Util.ensurePluginEnabled;
-
 // A simple command map as the storage of the command objects. // TODO implement methods
 public class SimpleCommandMap {
     protected final Map<String, WrappedCommand> commandsWithoutPrefix = new ConcurrentHashMap<>();
     protected final Map<String, WrappedCommand> commandsWithPrefix = new ConcurrentHashMap<>();
     protected final Map<String, WrappedCommand> commandsWithoutPrefixView = Collections.unmodifiableMap(commandsWithoutPrefix);
     protected final Map<String, WrappedCommand> commandsWithPrefixView = Collections.unmodifiableMap(commandsWithPrefix);
-    
-    public void register(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
-        ensurePluginEnabled(plugin);
-        checkCommand(command);
 
+    protected SimpleCommandMap() {}
+    
+    public void register(Plugin plugin, JKookCommand command) {
         WrappedCommand wrapped = new WrappedCommand(command, plugin);
         
         commandsWithoutPrefix.put(command.getRootName(), wrapped);
@@ -72,12 +70,16 @@ public class SimpleCommandMap {
         return null;
     }
 
-    protected void checkCommand(JKookCommand command) throws IllegalArgumentException {
-        // TODO
-    }
 
     protected static Collection<String> createHeaders(JKookCommand command) {
-        return null; // TODO
+        Collection<String> result = new ArrayList<>(command.getPrefixes().size() * (command.getAliases().size() + 1));
+        for (String prefix : command.getPrefixes()) {
+            result.add(prefix + command.getRootName());
+            for (String alias : command.getAliases()) {
+                result.add(prefix + alias);
+            }
+        }
+        return result;
     }
 
 }
