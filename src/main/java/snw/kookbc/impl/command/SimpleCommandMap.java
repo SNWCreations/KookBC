@@ -18,34 +18,66 @@
 
 package snw.kookbc.impl.command;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jetbrains.annotations.Nullable;
 
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 
+import static snw.kookbc.util.Util.ensurePluginEnabled;
+
 // A simple command map as the storage of the command objects. // TODO implement methods
 public class SimpleCommandMap {
+    protected final Map<String, WrappedCommand> commandsWithoutPrefix = new ConcurrentHashMap<>();
+    protected final Map<String, WrappedCommand> commandsWithPrefix = new ConcurrentHashMap<>();
+    protected final Map<String, WrappedCommand> commandsWithoutPrefixView = Collections.unmodifiableMap(commandsWithoutPrefix);
+    protected final Map<String, WrappedCommand> commandsWithPrefixView = Collections.unmodifiableMap(commandsWithPrefix);
     
     public void register(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
+        ensurePluginEnabled(plugin);
+        checkCommand(command);
 
+        WrappedCommand wrapped = new WrappedCommand(command, plugin);
+        
+        commandsWithoutPrefix.put(command.getRootName(), wrapped);
+        for (String head : createHeaders(command)) {
+            commandsWithPrefix.put(head, wrapped);
+        }
     }
 
     public void unregister(JKookCommand command) {
-
+        commandsWithPrefix.entrySet().removeIf(i -> i.getValue().getCommand() == command);
+        commandsWithoutPrefix.entrySet().removeIf(i -> i.getValue().getCommand() == command);
     }
 
     public void unregisterAll(Plugin plugin) {
+        commandsWithPrefix.entrySet().removeIf(i -> i.getValue().getPlugin() == plugin);
+        commandsWithoutPrefix.entrySet().removeIf(i -> i.getValue().getPlugin() == plugin);
 
     }
 
     public Map<String, WrappedCommand> getView(boolean withPrefix) {
-        return null;
+        return withPrefix ? commandsWithPrefixView : commandsWithoutPrefixView;
     }
 
     public @Nullable JKookCommand getByRootName(String head, boolean withPrefix) {
+        Map<String, WrappedCommand> view = getView(withPrefix);
+        if (view.containsKey(head)) {
+            return view.get(head).getCommand();
+        }
         return null;
+    }
+
+    protected void checkCommand(JKookCommand command) throws IllegalArgumentException {
+        // TODO
+    }
+
+    protected static Collection<String> createHeaders(JKookCommand command) {
+        return null; // TODO
     }
 
 }
