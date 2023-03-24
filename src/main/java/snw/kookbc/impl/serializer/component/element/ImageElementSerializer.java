@@ -24,7 +24,8 @@ import snw.jkook.message.component.card.element.ImageElement;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class ImageElementSerializer implements JsonSerializer<ImageElement>, JsonDeserializer<ImageElement> {
     @Override
@@ -44,7 +45,7 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
         String src = get(jsonObject, "src").getAsString();
         String size = has(jsonObject, "size") ? get(jsonObject, "size").getAsString() : Size.LG.getValue();
         String alt = has(jsonObject, "alt") ? get(jsonObject, "alt").getAsString() : "";
-        boolean circle = has(jsonObject, "circle") ? get(jsonObject, "circle").getAsBoolean() : false;
+        boolean circle = has(jsonObject, "circle") && get(jsonObject, "circle").getAsBoolean();
         return new ImageElement(src, alt, Size.value(size), circle);
     }
 }
