@@ -2,8 +2,8 @@ name: Snapshot Build Java CI with Maven
 
 on:
   push:
-    branches:
-      - 'dev'
+    branches-ignore:
+      - "main"
   workflow_dispatch:
 
 
