@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 
-// A simple command map as the storage of the command objects. // TODO implement methods
+// A simple command map as the storage of the command objects.
 public class SimpleCommandMap {
     protected final Map<String, WrappedCommand> commandsWithoutPrefix = new ConcurrentHashMap<>();
     protected final Map<String, WrappedCommand> commandsWithPrefix = new ConcurrentHashMap<>();
