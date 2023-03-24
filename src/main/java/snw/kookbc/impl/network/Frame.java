@@ -22,7 +22,7 @@ import com.google.gson.JsonObject;
 
 import java.util.Objects;
 
-// represents a message from WebSocket server.
+// represents a message using KOOK standard event format.
 public class Frame {
     private final MessageType type;
     private final int sn;

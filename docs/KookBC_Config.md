@@ -31,6 +31,13 @@ save-console-history: true
 ignore-sn-order: false
 
 allow-help-ad: true
+
+internal-commands:
+  help: true
+  plugins: true
+  stop: true
+
+allow-error-feedback: true
 ```
 
 其中的注释已经移除。
@@ -140,4 +147,24 @@ ignore-sn-order: true
 
 ```yaml
 allow-help-ad: true
+```
+## _internal-commands_ 
+
+决定是否注册内部命令。
+
+示例:
+```yaml
+internal-commands:
+  stop: true
+  help: true
+  plugins: true
+```
+
+## _allow-error-feedback_
+
+决定是否向命令发送者反馈命令运行时发生的异常。
+
+示例:
+```yaml
+allow-error-feedback: true
 ```

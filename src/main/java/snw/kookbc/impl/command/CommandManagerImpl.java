@@ -38,47 +38,53 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    // The following comments will tell you the difference between the following two member variables.
-    // For example, there is a command called "hello"
-    // Its prefixes are "/", "."
-    // So the commands Map will contain a key called "hello"
-    // But the commandWithPrefix Map will contain two keys, "/hello", ".hello"
-    private final Map<String, WrappedCommand> commands = new ConcurrentHashMap<>();
-    private final Map<String, WrappedCommand> commandWithPrefix = new ConcurrentHashMap<>();
+    protected final SimpleCommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
+        this(client, new SimpleCommandMap());
+    }
+
+    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap) {
         this.client = client;
+        this.commandMap = commandMap;
         registerInternalParsers();
     }
 
     @Override
     public void registerCommand(Plugin plugin, JKookCommand command) throws IllegalArgumentException {
         ensurePluginEnabled(plugin);
-        checkCommand(command);
-        Collection<String> allCommandHeader = getAllCommandHeader(command);
-        WrappedCommand result = new WrappedCommand(command, plugin);
-        commands.put(command.getRootName(), result);
-        allCommandHeader.forEach(i -> commandWithPrefix.put(i, result));
+        try {
+            checkCommand(command);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
+        }
+        commandMap.register(plugin, command);
+
+
     }
 
-    // Return true if this command can be registered
+    // Throw exception if the provided command can NOT be registered
     private void checkCommand(JKookCommand command) throws IllegalArgumentException {
         if (getCommand(command.getRootName()) != null) {
             throw new IllegalArgumentException("The command with the same root name has already registered.");
         }
-        boolean duplicateNameWithPrefix = command.getPrefixes()
+        List<String> duplicateNameWithPrefix = command.getPrefixes()
                 .stream()
                 .map(i -> i + command.getRootName())
-                .anyMatch(commandWithPrefix::containsKey);
-        if (duplicateNameWithPrefix) {
-            throw new IllegalArgumentException("The command with the same (prefix + root name) result has already registered.");
+                .collect(Collectors.toList());
+        for (String head : duplicateNameWithPrefix) {
+            WrappedCommand cmd = getCommandWithPrefix(head);
+            if (cmd != null) {
+                throw new IllegalArgumentException("The command with the same (prefix + root name) result has been found in a command from '" + cmd.getPlugin().getDescription().getName() + "' plugin.");
+            }
         }
-        boolean duplicateAliasWithPrefix = command.getPrefixes()
-                .stream()
-                .anyMatch(i -> !checkAliasWithPrefix(i, command.getAliases()));
-        if (duplicateAliasWithPrefix) {
-            throw new IllegalArgumentException("The command with the same (prefix + alias) result has already registered.");
+
+        for (String prefix : command.getPrefixes()) {
+            WrappedCommand cmd = checkAliasWithPrefix(prefix, command.getAliases());
+            if (cmd != null) {
+                throw new IllegalArgumentException("The command with the same (prefix + alias) result has been found in a command from '" + cmd.getPlugin().getDescription().getName() + "' plugin.");
+            }
         }
         for (Class<?> clazz : command.getArguments()) {
             if (parsers.get(clazz) == null) {
@@ -92,25 +98,16 @@ public class CommandManagerImpl implements CommandManager {
         }
     }
 
-    // Return true if there is no conflict with the prefix and the aliases in the provided command
-    private boolean checkAliasWithPrefix(String prefix, Collection<String> aliases) {
+    // Return the conflict command object if detected confliction, otherwise null.
+    private WrappedCommand checkAliasWithPrefix(String prefix, Collection<String> aliases) {
+        final Map<String, WrappedCommand> view = commandMap.getView(true);
         for (String alias : aliases) {
-            if (commandWithPrefix.containsKey(prefix + alias)) {
-                return false;
+            String head = prefix + alias;
+            if (view.containsKey(head)) {
+                return view.get(head);
             }
         }
-        return true;
-    }
-
-    private Collection<String> getAllCommandHeader(JKookCommand command) {
-        Collection<String> result = new ArrayList<>(command.getPrefixes().size() * (command.getAliases().size() + 1));
-        for (String prefix : command.getPrefixes()) {
-            result.add(prefix + command.getRootName());
-            for (String alias : command.getAliases()) {
-                result.add(prefix + alias);
-            }
-        }
-        return result;
+        return null;
     }
 
     @Override
@@ -280,22 +277,30 @@ public class CommandManagerImpl implements CommandManager {
         return true; // ok, the command is ok, so we can return true.
     }
 
+    public SimpleCommandMap getCommandMap() {
+        return commandMap;
+    }
+
     public Set<JKookCommand> getCommandSet() {
-        return commands.values().stream().map(WrappedCommand::getCommand).collect(Collectors.toSet());
+        return commandMap.getView(false).values().stream().map(WrappedCommand::getCommand).collect(Collectors.toSet());
     }
 
     public Map<String, WrappedCommand> getCommands() {
-        return commands;
+        return commandMap.getView(false);
+    }
+
+    public Map<String, WrappedCommand> getCommandWithPrefix() {
+        return commandMap.getView(true);
     }
 
     public WrappedCommand getCommand(String rootName) {
         if (rootName.isEmpty()) return null; // do not execute invalid for loop!
-        return commands.get(rootName);
+        return commandMap.getView(false).get(rootName);
     }
 
     protected WrappedCommand getCommandWithPrefix(String cmdHeader) {
         if (cmdHeader.isEmpty()) return null; // do not execute invalid for loop!
-        return commandWithPrefix.get(cmdHeader);
+        return commandMap.getView(true).get(cmdHeader);
     }
 
     protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {

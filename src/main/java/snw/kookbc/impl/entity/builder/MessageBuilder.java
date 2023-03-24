@@ -38,7 +38,8 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
-import snw.kookbc.util.GsonUtil;
+
+import static snw.kookbc.util.GsonUtil.*;
 
 public class MessageBuilder {
     private final KBCClient client;
@@ -54,9 +55,9 @@ public class MessageBuilder {
         } else if (component instanceof TextComponent) {
             return new Object[]{1, component.toString()};
         } else if (component instanceof CardComponent) {
-            return new Object[]{10, GsonUtil.CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component))};
+            return new Object[]{10, CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component))};
         } else if (component instanceof MultipleCardComponent) {
-            return new Object[]{10, GsonUtil.CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component))};
+            return new Object[]{10, CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component))};
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
             MultipleCardComponent fileCard;
@@ -79,31 +80,31 @@ public class MessageBuilder {
     }
 
     public PrivateMessage buildPrivateMessage(JsonObject object) {
-        String id = object.get("msg_id").getAsString();
+        String id = get(object, "msg_id").getAsString();
         JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
-        long timeStamp = object.get("msg_timestamp").getAsLong();
+        long timeStamp = get(object, "msg_timestamp").getAsLong();
         return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")));
     }
 
     public TextChannelMessage buildTextChannelMessage(JsonObject object) {
-        String id = object.get("msg_id").getAsString();
+        String id = get(object, "msg_id").getAsString();
         JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
-        TextChannel channel = (TextChannel) client.getStorage().getChannel(object.get("target_id").getAsString());
-        long timeStamp = object.get("msg_timestamp").getAsLong();
+        TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+        long timeStamp = get(object, "msg_timestamp").getAsLong();
         return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")), channel);
     }
 
     public Message buildQuote(JsonObject object) {
         if (object == null) return null;
 
-        String id = object.get("rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
+        String id = get(object, "rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
         Message message = client.getStorage().getMessage(id);
         if (message != null) return message; // prevent resource leak
 
         BaseComponent component = buildComponent(object);
-        long timeStamp = object.get("create_at").getAsLong();
+        long timeStamp = get(object, "create_at").getAsLong();
         JsonObject rawUser = object.getAsJsonObject("author");
         User author = client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
         return new QuoteImpl(component, id, author, timeStamp);
@@ -111,8 +112,8 @@ public class MessageBuilder {
 
     public BaseComponent buildComponent(JsonObject object) {
         // we use text channel message format
-        String content = object.get("content").getAsString();
-        switch (object.get("type").getAsInt()) {
+        String content = get(object, "content").getAsString();
+        switch (get(object, "type").getAsInt()) {
             case 9:
                 return new MarkdownComponent(content);
             case 10:

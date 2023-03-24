@@ -32,6 +32,8 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
@@ -50,7 +52,7 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
                 .put("setting_times", validTimes)
                 .build();
         JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return object.get("url").getAsString();
+        return get(object, "url").getAsString();
     }
 
     @Override

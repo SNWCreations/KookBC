@@ -27,6 +27,8 @@ import snw.kookbc.impl.KBCClient;
 
 import java.util.concurrent.TimeUnit;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class BotMarketPingThread extends Thread {
     private final KBCClient client;
     private final Request request;
@@ -66,10 +68,10 @@ public class BotMarketPingThread extends Thread {
                 if (response.body() != null) {
                     String resStr = response.body().string();
                     JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
-                    int status = object.get("code").getAsInt();
+                    int status = get(object, "code").getAsInt();
                     if (status != 0) {
                         throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status,
-                                object.get("message").getAsString()));
+                                get(object, "message").getAsString()));
                     }
                 } else {
                     throw new RuntimeException("No response body when we attempting to PING BotMarket.");

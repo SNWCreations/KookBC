@@ -38,6 +38,8 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 public class UserImpl implements User {
     private final KBCClient client;
     private final String id;
@@ -188,11 +190,11 @@ public class UserImpl implements User {
     @Override
     public IntimacyInfo getIntimacyInfo() {
         JsonObject object = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
-        String socialImage = object.get("img_url").getAsString();
-        String socialInfo = object.get("social_info").getAsString();
-        int lastRead = object.get("last_read").getAsInt();
-        int score = object.get("score").getAsInt();
-        JsonArray socialImageListRaw = object.get("img_list").getAsJsonArray();
+        String socialImage = get(object, "img_url").getAsString();
+        String socialInfo = get(object, "social_info").getAsString();
+        int lastRead = get(object, "last_read").getAsInt();
+        int score = get(object, "score").getAsInt();
+        JsonArray socialImageListRaw = get(object, "img_list").getAsJsonArray();
         Collection<IntimacyInfo.SocialImage> socialImages = new ArrayList<>(socialImageListRaw.size());
         for (JsonElement element : socialImageListRaw) {
             JsonObject obj = element.getAsJsonObject();

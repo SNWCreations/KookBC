@@ -143,12 +143,12 @@ public class CoreImpl implements Core {
         return client;
     }
 
-    synchronized void init(KBCClient client) {
+    protected synchronized void init(KBCClient client) {
         this.init(client, null, null, null, null, null, null);
     }
 
     // pass null to an argument if you don't need to replace it using your version.
-    synchronized void init(
+    protected synchronized void init(
         KBCClient client,
         @Nullable SimplePluginManager simplePluginManager,
         @Nullable HttpAPIImpl httpApiImpl,

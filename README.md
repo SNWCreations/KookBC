@@ -44,6 +44,12 @@ java -jar kookbc-<version>.jar --help
 
 我们在本仓库的 docs 文件夹下放了一些 KookBC 的相关文档，善用它们会帮助您！
 
+如：\
+[嵌入 KookBC 到您的项目](docs/Embedding_KookBC.md)\
+[KookBC 与 Webhook](docs/KookBC_with_Webhook.md)\
+[浅析 KookBC 的结构与工作流程](docs/The_Design_of_KookBC.md)
+
+
 ## 贡献
 
 很感谢您愿意帮助我们改进 KookBC ！
@@ -89,15 +95,15 @@ Copyright (C) 2022 - 2023 KookBC contributors
 
 在编写 Mixin 支持 的实现代码时引用了部分来自 Mixin 项目的源代码，以及 [LegacyLauncher](https://github.com/Mojang/LegacyLauncher) 项目的源代码，在此一并表示感谢。
 
-此程序使用 AGPLv3 作为许可证。
-
 对于下文，提供如下定义以便于讨论:
 * "此仓库"即 此 [GitHub 仓库](https://github.com/SNWCreations/KookBC) 及其本地副本，此仓库的 Fork 及其本地副本不等同于此仓库。
 * "此项目"即 此仓库中存放的 KookBC 源代码及其附属内容。
 * "源代码"即 人类直接可读的 Java 程序文本文件。
 * "原始"版本即 使用此仓库中的源代码编译得到的 KookBC 副本。
 
-若你以任何形式使用此项目，则表明你同意此节的内容以及 AGPLv3 许可证的条款和 LGPLv3 许可证的条款。
+若你以任何形式使用此项目，则表明你同意此节的内容以及 AGPLv3 许可证的条款。
+
+若你在下文提及的特定情形下使用此项目，则表明你在同意上文内容的同时同意 LGPLv3 许可证的条款。
 
 若此节的内容与 AGPLv3 许可证的条款或 LGPLv3 许可证的条款冲突，以此节内容为准。
 
@@ -110,10 +116,10 @@ Copyright (C) 2022 - 2023 KookBC contributors
 * 其他修改方式均认为是"间接修改"。
 * 比如在你自己的项目中，通过使用 `extends` 关键字对此项目的内容修改得到的 Java 类可以认为是对此项目的间接修改。
 
-对于仅将此程序作为依赖项的，可以在适用 AGPLv3 许可证的同时应用 LGPLv3 许可证的条款，即意味着:
+对于仅将此项目作为依赖项的，可以在适用 AGPLv3 许可证的同时应用 LGPLv3 许可证的条款，即意味着:
 
 若你的项目只是依赖此项目，并且你依赖的此项目是"原始"版本，你依赖此项目的项目可以不公开源代码并按其他许可证授权。
 
 若你的项目只是依赖此项目，但你依赖的此项目是你基于此仓库直接修改的版本，
-你需要依据 AGPLv3 许可证以及 LGPLv3 许可证的条款公开修改过的版本的源代码，
+你需要依据 AGPLv3 许可证以及 LGPLv3 许可证的条款公开修改过的此项目的源代码，
 然后你依赖此项目的项目可以不公开源代码并按其他许可证授权。

@@ -23,7 +23,7 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.TooFastException;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // Not single instance. Created when network call requested.
 // Cached.
 public class Bucket {
-    private static final Map<HttpAPIRoute, String> bucketNameMap = new HashMap<>();
+    private static final Map<HttpAPIRoute, String> bucketNameMap = new EnumMap<>(HttpAPIRoute.class);
     private static final Map<String, Bucket> map = new ConcurrentHashMap<>();
 
     private final KBCClient client;
