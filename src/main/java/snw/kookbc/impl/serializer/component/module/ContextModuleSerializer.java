@@ -29,8 +29,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static snw.kookbc.impl.serializer.component.CardComponentSerializer.MODULE_MAP;
-
 public class ContextModuleSerializer implements JsonSerializer<ContextModule>, JsonDeserializer<ContextModule> {
     @Override
     public JsonElement serialize(ContextModule module, Type typeOfSrc, JsonSerializationContext context) {
@@ -57,9 +55,19 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule>, J
         for (JsonElement element1 : elements) {
             JsonObject obj = element1.getAsJsonObject();
             String type = obj.getAsJsonPrimitive("type").getAsString();
-            BaseElement el = context.deserialize(obj, MODULE_MAP.get(type));
-            list.add(el);
-
+            switch (type) {
+                case "plain-text": {
+                    list.add(context.deserialize(obj, PlainTextElement.class));
+                    break;
+                }
+                case "kmarkdown": {
+                    list.add(context.deserialize(obj, MarkdownElement.class));
+                    break;
+                }
+                case "image":
+                    list.add(context.deserialize(obj, ImageElement.class));
+                    break;
+            }
         }
         return new ContextModule(list);
     }
