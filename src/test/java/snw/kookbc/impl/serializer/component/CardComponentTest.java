@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.component;
+package snw.kookbc.impl.serializer.component;
 
 import org.junit.jupiter.api.Test;
 import snw.jkook.message.component.card.CardComponent;

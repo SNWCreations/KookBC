@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl;
+package snw.kookbc.impl.serializer;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

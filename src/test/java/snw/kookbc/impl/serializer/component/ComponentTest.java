@@ -16,12 +16,12 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.component;
+package snw.kookbc.impl.serializer.component;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.message.component.BaseComponent;
-import snw.kookbc.impl.SerializeTest;
+import snw.kookbc.impl.serializer.SerializeTest;
 
 import java.util.function.Consumer;
 
