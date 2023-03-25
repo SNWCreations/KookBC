@@ -29,33 +29,17 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static snw.kookbc.impl.serializer.component.CardComponentSerializer.MODULE_MAP;
-
 public class ContextModuleSerializer implements JsonSerializer<ContextModule>, JsonDeserializer<ContextModule> {
     @Override
     public JsonElement serialize(ContextModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
         JsonArray elements = new JsonArray();
         for (BaseElement base : module.getModules()) {
-            JsonObject rawObj = new JsonObject();
-            if (base instanceof PlainTextElement || base instanceof MarkdownElement) {
-                String content;
-                String type;
-                if (base instanceof PlainTextElement) {
-                    type = "plain-text";
-                    content = ((PlainTextElement) base).getContent();
-                } else {
-                    type = "kmarkdown";
-                    content = ((MarkdownElement) base).getContent();
-                }
-                rawObj.addProperty("type", type);
-                rawObj.addProperty("content", content);
-                elements.add(rawObj);
-            } else if (base instanceof ImageElement) {
-                ImageElement image = (ImageElement) base;
-                rawObj.addProperty("type", "image");
-                rawObj.addProperty("src", image.getSource());
-                elements.add(rawObj);
+            if (base instanceof PlainTextElement || base instanceof MarkdownElement || base instanceof ImageElement) {
+                JsonElement raw = context.serialize(base);
+                elements.add(raw);
+            } else {
+                throw new IllegalArgumentException("Invalid element in context module");
             }
         }
         moduleObj.addProperty("type", "context");
@@ -71,9 +55,19 @@ public class ContextModuleSerializer implements JsonSerializer<ContextModule>, J
         for (JsonElement element1 : elements) {
             JsonObject obj = element1.getAsJsonObject();
             String type = obj.getAsJsonPrimitive("type").getAsString();
-            BaseElement el = context.deserialize(obj, MODULE_MAP.get(type));
-            list.add(el);
-
+            switch (type) {
+                case "plain-text": {
+                    list.add(context.deserialize(obj, PlainTextElement.class));
+                    break;
+                }
+                case "kmarkdown": {
+                    list.add(context.deserialize(obj, MarkdownElement.class));
+                    break;
+                }
+                case "image":
+                    list.add(context.deserialize(obj, ImageElement.class));
+                    break;
+            }
         }
         return new ContextModule(list);
     }

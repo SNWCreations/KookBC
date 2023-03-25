@@ -42,13 +42,20 @@ import snw.kookbc.util.MapBuilder;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
+    private static final Collection<String> SUPPORTED_MUSIC_SOFTWARES;
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
+        SUPPORTED_MUSIC_SOFTWARES = Collections.unmodifiableCollection(
+            Arrays.asList(
+                "cloudmusic", "qqmusic", "kugou"
+            )
+        );
     }
 
     private final KBCClient client;
@@ -156,7 +163,7 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public void setListening(@NotNull String softwareName, @NotNull String singerName, @NotNull String musicName) {
-        Validate.isTrue(Arrays.asList("cloudmusic", "qqmusic", "kugou").contains(softwareName), "Unsupported music software name.");
+        Validate.isTrue(SUPPORTED_MUSIC_SOFTWARES.contains(softwareName), "Unsupported music software name.");
         Map<String, Object> body = new MapBuilder()
                 .put("data_type", 2)
                 .put("software", softwareName)

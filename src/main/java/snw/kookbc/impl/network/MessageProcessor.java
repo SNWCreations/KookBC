@@ -33,6 +33,7 @@ import java.net.ProtocolException;
 import java.util.zip.DataFormatException;
 
 import static snw.kookbc.util.Util.decompressDeflate;
+import static snw.kookbc.util.GsonUtil.*;
 
 public class MessageProcessor extends WebSocketListener {
     private final KBCClient client;
@@ -56,7 +57,7 @@ public class MessageProcessor extends WebSocketListener {
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
         JsonObject object = JsonParser.parseString(text).getAsJsonObject();
-        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        Frame frame = new Frame(get(object, "s").getAsInt(), has(object, "sn") ? get(object, "sn").getAsInt() : -1, object.getAsJsonObject("d"));
         listener.executeEvent(frame);
     }
 
@@ -72,7 +73,7 @@ public class MessageProcessor extends WebSocketListener {
             return;
         }
         JsonObject object = JsonParser.parseString(res).getAsJsonObject();
-        Frame frame = new Frame(object.get("s").getAsInt(), object.get("sn") != null ? object.get("sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        Frame frame = new Frame(get(object, "s").getAsInt(), has(object, "sn") ? get(object, "sn").getAsInt() : -1, object.getAsJsonObject("d"));
         listener.executeEvent(frame);
     }
 

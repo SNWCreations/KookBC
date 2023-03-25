@@ -47,13 +47,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static snw.kookbc.util.GsonUtil.*;
+
 // A basic enum-based event factory, designed for Network message processor.
 public class EventFactory {
 
     // the object should be provided from snw.kbc.impl.network.Frame#getData.
     public static Event getEvent(@NotNull KBCClient client, @NotNull Frame frame) {
         JsonObject object = frame.getData();
-        long msgTimeStamp = object.get("msg_timestamp").getAsLong();
+        long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
 
         JsonObject extra = object.getAsJsonObject("extra");
         String type = extra.get("type").getAsString();
@@ -68,10 +70,10 @@ public class EventFactory {
                 JsonObject content = object.getAsJsonObject("content");
                 User consumer = client.getStorage().getUser(content.get("user_id").getAsString());
                 User affected = client.getStorage().getUser(content.get("target_id").getAsString());
-                int itemId = object.get("item_id").getAsInt();
+                int itemId = get(object, "item_id").getAsInt();
                 return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
             }
-            if (Objects.equals(object.get("channel_type").getAsString(), "PERSON")) {
+            if (Objects.equals(get(object, "channel_type").getAsString(), "PERSON")) {
                 PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
                 client.getStorage().addMessage(pm);
                 return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
@@ -150,7 +152,7 @@ public class EventFactory {
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
                     client.getStorage().removeChannel(body.get("id").getAsString());
-                    return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString(), client.getStorage().getGuild(object.get("target_id").getAsString()));
+                    return new ChannelDeleteEvent(msgTimeStamp, body.get("id").getAsString(), client.getStorage().getGuild(get(object, "target_id").getAsString()));
                 case CHANNEL_MESSAGE_PINNED:
                     return new ChannelMessagePinEvent(
                             msgTimeStamp,
@@ -168,7 +170,7 @@ public class EventFactory {
                 case GUILD_USER_UPDATE:
                     return new GuildUserNickNameUpdateEvent(
                             msgTimeStamp,
-                            client.getStorage().getGuild(object.get("target_id").getAsString()),
+                            client.getStorage().getGuild(get(object, "target_id").getAsString()),
                             client.getStorage().getUser(body.get("user_id").getAsString()),
                             body.get("nickname").getAsString());
                 case GUILD_USER_ONLINE:
@@ -183,17 +185,17 @@ public class EventFactory {
                     );
                 case GUILD_ADD_ROLE:
                     Role role = client.getEntityBuilder().buildRole(
-                            client.getStorage().getGuild(object.get("target_id").getAsString()),
+                            client.getStorage().getGuild(get(object, "target_id").getAsString()),
                             body
                     );
                     return new RoleCreateEvent(msgTimeStamp, role);
                 case GUILD_REMOVE_ROLE:
                     Role deletedRole = client.getEntityBuilder().buildRole(
-                            client.getStorage().getGuild(object.get("target_id").getAsString()),
+                            client.getStorage().getGuild(get(object, "target_id").getAsString()),
                             body);
                     return new RoleDeleteEvent(msgTimeStamp, deletedRole);
                 case GUILD_UPDATE_ROLE:
-                    Guild guild = client.getStorage().getGuild(object.get("target_id").getAsString());
+                    Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
                     client.getEntityUpdater().updateRole(
                             body,
                             client.getStorage().getRole(guild, body.get("role_id").getAsInt(), body)
@@ -211,13 +213,13 @@ public class EventFactory {
                     body.getAsJsonArray("user_id").forEach(
                             IT -> banned.add(client.getStorage().getUser(IT.getAsString()))
                     );
-                    return new GuildBanUserEvent(msgTimeStamp, client.getStorage().getGuild(object.get("target_id").getAsString()), banned, client.getStorage().getUser(body.get("operator_id").getAsString()), body.get("remark").getAsString());
+                    return new GuildBanUserEvent(msgTimeStamp, client.getStorage().getGuild(get(object, "target_id").getAsString()), banned, client.getStorage().getUser(body.get("operator_id").getAsString()), body.get("remark").getAsString());
                 case GUILD_UNBAN:
                     List<User> unbanned = new ArrayList<>();
                     body.getAsJsonArray("user_id").forEach(
                             IT -> unbanned.add(client.getStorage().getUser(IT.getAsString()))
                     );
-                    return new GuildUnbanUserEvent(msgTimeStamp, client.getStorage().getGuild(object.get("target_id").getAsString()), unbanned, client.getStorage().getUser(body.get("operator_id").getAsString()));
+                    return new GuildUnbanUserEvent(msgTimeStamp, client.getStorage().getGuild(get(object, "target_id").getAsString()), unbanned, client.getStorage().getUser(body.get("operator_id").getAsString()));
                 case ADD_EMOJI:
                     CustomEmoji emoji1 = client.getEntityBuilder().buildEmoji(body);
                     return new GuildAddEmojiEvent(msgTimeStamp, emoji1.getGuild(), emoji1);
@@ -237,13 +239,13 @@ public class EventFactory {
                     return new UserJoinGuildEvent(
                             msgTimeStamp,
                             client.getStorage().getUser(body.get("user_id").getAsString()),
-                            client.getStorage().getGuild(object.get("target_id").getAsString())
+                            client.getStorage().getGuild(get(object, "target_id").getAsString())
                     );
                 case USER_LEFT_GUILD:
                     return new UserLeaveGuildEvent(
                             msgTimeStamp,
                             client.getStorage().getUser(body.get("user_id").getAsString()),
-                            client.getStorage().getGuild(object.get("target_id").getAsString())
+                            client.getStorage().getGuild(get(object, "target_id").getAsString())
                     );
                 case USER_JOINED_VOICE_CHANNEL:
                     return new UserJoinVoiceChannelEvent(
