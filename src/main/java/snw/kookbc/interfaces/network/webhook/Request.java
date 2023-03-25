@@ -20,7 +20,7 @@ package snw.kookbc.interfaces.network.webhook;
 
 // A interface which is designed for KOOK Webhook Event Requests.
 // Represents a HTTP POST request, and there is some KOOK-specific methods.
-// T is the Java JSON object type.
+// The T type means the JSON in Java object.
 public interface Request<T> {
 
     // Get the decompressed (and decrypted if encrypted) data as the result.

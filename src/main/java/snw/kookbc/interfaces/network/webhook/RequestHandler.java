@@ -18,11 +18,9 @@
 
 package snw.kookbc.interfaces.network.webhook;
 
-public interface RequestHandler<T> {
+public interface RequestHandler {
     
     // The invalid Request objects should NOT be passed to handlers.
-    // We don't care about the T type, it is implementation's work
-    // T is the actual Java JSON object type like com.google.gson.JsonObject.
-    void handle(Request<T> request) throws Exception;
+    void handle(Request<?> request) throws Exception;
     
 }
