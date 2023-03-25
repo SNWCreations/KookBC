@@ -33,8 +33,8 @@ public interface NetworkClient {
 
     JsonElement post(String url, @Nullable Map<?, ?> body) throws BadResponseException;
 
-    JsonElement postFileAsMultipart(String url, File file) throws BadResponseException;
+    JsonElement postFileInMultipartBody(String url, File file) throws BadResponseException;
 
-    JsonElement postFileAsMultipart(String url, String fileName, byte[] data) throws BadResponseException;
+    JsonElement postFileInMultipartBody(String url, String fileName, byte[] data) throws BadResponseException;
 
 }
