@@ -77,6 +77,7 @@ public class EventManagerImpl implements EventManager {
     @Override
     public void unregisterAllHandlers(Plugin plugin) {
         getListeners(plugin).forEach(this::unregisterHandlers);
+        listeners.remove(plugin);
     }
 
     @Override
