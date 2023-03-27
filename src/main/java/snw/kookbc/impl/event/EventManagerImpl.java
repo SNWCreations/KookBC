@@ -78,6 +78,9 @@ public class EventManagerImpl implements EventManager {
 
     @Override
     public void unregisterAllHandlers(Plugin plugin) {
+        if (!listeners.containsKey(plugin)) {
+            return; // it is not necessary to waste a List.
+        }
         getListeners(plugin).forEach(this::unregisterHandlers);
         listeners.remove(plugin);
     }
