@@ -4,8 +4,8 @@
 package snw.kookbc.impl.launch;
 
 import org.spongepowered.asm.util.JavaVersion;
-
 import snw.jkook.plugin.MarkedClassLoader;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,8 +49,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private static final MethodHandle GET_DEFINED_PACKAGE;
 
-    private static final String[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
-        "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+    private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
+            "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
     private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("mixin.debug", "false"));
 
@@ -168,6 +168,10 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             CodeSigner[] signers = null;
 
             final byte[] classBytes = getClassBytes(untransformedName);
+            if (classBytes == null) {
+                invalidClasses.add(name);
+                throw new ClassNotFoundException(name);
+            }
             if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.launch")) {
                 if (urlConnection instanceof JarURLConnection) {
                     final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
