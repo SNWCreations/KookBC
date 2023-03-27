@@ -52,12 +52,14 @@ public class EventManagerImpl implements EventManager {
     @Override
     public void callEvent(Event event) {
         PostResult result = bus.post(event);
-        try {
-            result.raise();
-        } catch (CompositeException e) {
-            client.getCore().getLogger().error("Unexpected exception while posting event.");
-            for (final Throwable t : e.result().exceptions().values()) {
-                t.printStackTrace();
+        if (!result.wasSuccessful()) {
+            try {
+                result.raise();
+            } catch (CompositeException e) {
+                client.getCore().getLogger().error("Unexpected exception while posting event.");
+                for (final Throwable t : e.result().exceptions().values()) {
+                    t.printStackTrace();
+                }
             }
         }
     }
