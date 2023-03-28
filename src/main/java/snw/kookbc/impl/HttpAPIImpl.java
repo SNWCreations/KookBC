@@ -177,4 +177,95 @@ public class HttpAPIImpl implements HttpAPI {
     public void stopListening() {
         client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), new MapBuilder().put("data_type", 2).build());
     }
+
+    // -------- Friend API --------
+
+    protected static class FriendStateImpl implements HttpAPI.FriendState {
+        private final Collection<User> friends;
+        private final Collection<User> blocked;
+        private final Collection<FriendRequest> requests;
+
+        public FriendStateImpl(Collection<User> friends, Collection<User> blocked, Collection<FriendRequest> requests) {
+            this.friends = Collections.unmodifiableCollection(friends);
+            this.blocked = Collections.unmodifiableCollection(blocked);
+            this.requests = Collections.unmodifiableCollection(requests);
+        }
+
+        @Override
+        public Collection<User> getBlockedUsers() {
+            return blocked;
+        }
+
+        @Override
+        public Collection<User> getFriends() {
+            return friends;
+        }
+
+        @Override
+        public Collection<FriendRequest> getPendingFriendRequests() {
+            return requests;
+        }
+
+    }
+
+    protected static class FriendRequestImpl implements HttpAPI.FriendRequest {
+        private final int id;
+        private final User requester;
+
+        public FriendRequestImpl(int id, User requester) {
+            this.id = id;
+            this.requester = requester;
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public User getRequester() {
+            return requester;
+        }
+
+        @Override
+        public void handle(boolean arg0) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'handle'");
+        }}
+
+    @Override
+    public void addFriend(String arg0, int arg1, String arg2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'addFriend'");
+    }
+
+    @Override
+    public void deleteFriend(User arg0) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteFriend'");
+    }
+
+    @Override
+    public Collection<User> getBlockedUsers() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getBlockedUsers'");
+    }
+
+    @Override
+    public FriendState getFriendState() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFriendState'");
+    }
+
+    @Override
+    public Collection<User> getFriends() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFriends'");
+    }
+
+    @Override
+    public void handleFriendRequest(int arg0, boolean arg1) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'handleFriendRequest'");
+    }
 }
