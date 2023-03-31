@@ -43,6 +43,7 @@ public class SharedConstants {
     public static final String IMPL_VERSION;
     // The KookBC repository url, modify it to your fork repository if you want
     public static final String REPO_URL;
+    public static final boolean IS_SNAPSHOT;
 
     static {
         // region Initialize data object
@@ -63,6 +64,7 @@ public class SharedConstants {
             IMPL_NAME = dataObject.get("name").getAsString();
             IMPL_VERSION = dataObject.get("version").getAsString();
             REPO_URL = dataObject.get("repo_url").getAsString();
+            IS_SNAPSHOT = Boolean.parseBoolean(dataObject.get("is_snapshot").getAsString());
         } catch (Exception e) {
             throw new Error("Cannot define KookBC data", e);
         }
