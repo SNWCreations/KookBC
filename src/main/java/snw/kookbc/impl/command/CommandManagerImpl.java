@@ -134,10 +134,17 @@ public class CommandManagerImpl implements CommandManager {
     // We wish the Bot know what are they doing!
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine) throws CommandException {
-        return executeCommand0(sender, cmdLine, null);
+        return executeCommand(sender, cmdLine, null);
     }
 
+    // Deprecated because this method has been written into the API.
+    @Deprecated
     public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
+        return executeCommand(sender, cmdLine, msg);
+    }
+
+    @Override
+    public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;

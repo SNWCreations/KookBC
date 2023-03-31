@@ -208,7 +208,7 @@ public class ListenerImpl implements Listener {
         if (component == null) return false; // not a text component!
         if (sender == client.getCore().getUser()) return false; // prevent self call
         try {
-            return ((CommandManagerImpl) client.getCore().getCommandManager()).executeCommand0(sender, component.toString(), msg);
+            return ((CommandManagerImpl) client.getCore().getCommandManager()).executeCommand(sender, component.toString(), msg);
         } catch (Exception e) {
             if (client.getConfig().getBoolean("allow-error-feedback", true)) {
                 StringWriter strWrt = new StringWriter();
