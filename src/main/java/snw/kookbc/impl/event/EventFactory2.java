@@ -19,6 +19,7 @@
 package snw.kookbc.impl.event;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import snw.jkook.event.Event;
@@ -36,6 +37,10 @@ public class EventFactory2 {
     }
 
     public Event createEvent(JsonObject object) {
+        return this.gson.fromJson(object, parseEventType(object));
+    }
+
+    protected <T extends Event> Class<T> parseEventType(JsonObject object) {
         return null; // TODO
     }
 
