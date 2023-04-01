@@ -42,6 +42,8 @@ public class EventFactory2 {
     // NOT static, so it can be override.
     protected Gson createGson() {
         final KBCClient client = this.client;
-        return null; // TODO
+        return new GsonBuilder()
+                // TODO add type adapters
+                .create();
     }
 }
