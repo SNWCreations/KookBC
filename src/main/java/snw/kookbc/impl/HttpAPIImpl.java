@@ -262,8 +262,29 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public FriendState getFriendState() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFriendState'");
+        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
+        JsonArray request = get(object, "request").getAsJsonArray();
+        Collection<FriendRequest> requestCollection;
+        if (!request.isEmpty()) {
+            requestCollection = new ArrayList<>(request.size());
+            for (JsonElement element : request) {
+                JsonObject obj = element.getAsJsonObject();
+                int id = get(obj, "id").getAsInt();
+                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
+                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+                FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
+                requestCollection.add(requestObj);
+            }
+        } else {
+            requestCollection = Collections.emptyList();
+        }
+        JsonArray blocked = get(object, "blocked").getAsJsonArray();
+        Collection<User> blockedUsers = buildUserListFromFriendStateArray(blocked);
+        JsonArray friend = get(object, "friend").getAsJsonArray();
+        Collection<User> friends = buildUserListFromFriendStateArray(friend);
+        return new FriendStateImpl(
+                friends, blockedUsers, requestCollection
+        );
     }
 
     @Override
