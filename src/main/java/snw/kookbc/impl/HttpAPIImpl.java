@@ -234,7 +234,12 @@ public class HttpAPIImpl implements HttpAPI {
         }}
 
     @Override
-    public void addFriend(String userCode, int from, @Nullable String guildId) {
+    public void addFriend(String userCode, int from, String guildId) {
+        if (from == 2) {
+            if (guildId == null) {
+                throw new IllegalArgumentException("Guild ID should be NOT NULL if method is 2");
+            }
+        }
         MapBuilder builder = new MapBuilder()
                 .put("user_code", userCode)
                 .put("from", from);
