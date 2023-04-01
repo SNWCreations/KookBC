@@ -137,6 +137,11 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     @Override
+    public PageIterator<Collection<Game>> getGames(int type) {
+        return new GameIterator(client, type);
+    }
+
+    @Override
     public Game createGame(String name, @Nullable String icon) {
         MapBuilder builder = new MapBuilder()
                 .put("name", name);
