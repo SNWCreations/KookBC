@@ -274,6 +274,22 @@ public class UserImpl implements User {
     }
 
     @Override
+    public void block() {
+        Map<String, Object> body = new MapBuilder()
+                .put("user_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.BLOCK.toFullURL(), body);
+    }
+
+    @Override
+    public void unblock() {
+        Map<String, Object> body = new MapBuilder()
+                .put("user_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.UNBLOCK.toFullURL(), body);
+    }
+
+    @Override
     public @Nullable String getAvatarUrl(boolean b) {
         return b ? vipAvatarUrl : avatarUrl;
     }

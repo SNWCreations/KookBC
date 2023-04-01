@@ -142,7 +142,14 @@ public enum HttpAPIRoute {
     GAME_UPDATE("/v3/game/update"),
     GAME_DELETE("/v3/game/delete"),
     GAME_CREATE_ACTIVITY("/v3/game/activity"),
-    GAME_DELETE_ACTIVITY("/v3/game/delete-activity");
+    GAME_DELETE_ACTIVITY("/v3/game/delete-activity"),
+
+    // ------ FRIEND ------
+
+    BLOCK("/v3/friend/block"),
+
+    UNBLOCK("/v3/friend/unblock");
+
     private static final Map<String, HttpAPIRoute> map = new HashMap<>();
 
     static {
