@@ -45,7 +45,7 @@ public class EventFactory2 {
     }
 
     protected Class<? extends Event> parseEventType(JsonObject object) {
-        String type = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
+        final String type = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
         if (EventTypeMap.MAP.containsKey(type)) {
             return EventTypeMap.MAP.get(type);
         }
