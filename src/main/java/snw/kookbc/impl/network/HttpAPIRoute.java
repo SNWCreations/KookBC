@@ -146,6 +146,14 @@ public enum HttpAPIRoute {
 
     // ------ FRIEND ------
 
+    FRIEND_HANDLE_REQUEST("/v3/friend/handle-request"),
+
+    FRIEND_REQUEST("/v3/friend/request"),
+
+    FRIEND_DELETE("/v3/friend/delete"),
+
+    FRIEND_LIST("/v3/friend"),
+
     BLOCK("/v3/friend/block"),
 
     UNBLOCK("/v3/friend/unblock");

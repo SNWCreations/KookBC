@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.MediaType;
@@ -40,10 +42,9 @@ import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
@@ -208,7 +209,7 @@ public class HttpAPIImpl implements HttpAPI {
 
     }
 
-    protected static class FriendRequestImpl implements HttpAPI.FriendRequest {
+    protected class FriendRequestImpl implements HttpAPI.FriendRequest {
         private final int id;
         private final User requester;
 
@@ -228,27 +229,35 @@ public class HttpAPIImpl implements HttpAPI {
         }
 
         @Override
-        public void handle(boolean arg0) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'handle'");
+        public void handle(boolean accept) {
+            HttpAPIImpl.this.handleFriendRequest(getId(), accept);
         }}
 
     @Override
-    public void addFriend(String arg0, int arg1, String arg2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addFriend'");
+    public void addFriend(String userCode, int from, @Nullable String guildId) {
+        MapBuilder builder = new MapBuilder()
+                .put("user_code", userCode)
+                .put("from", from);
+        if (guildId != null) {
+            builder.put("guild_id", guildId);
+        }
+        Map<String, Object> body = builder.build();
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_REQUEST.toFullURL(), body);
     }
 
     @Override
-    public void deleteFriend(User arg0) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteFriend'");
+    public void deleteFriend(User target) {
+        Map<String, Object> body = new MapBuilder()
+                .put("user_id", target.getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_DELETE.toFullURL(), body);
     }
 
     @Override
     public Collection<User> getBlockedUsers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBlockedUsers'");
+        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
+        JsonArray blocked = get(object, "blocked").getAsJsonArray();
+        return buildUserListFromFriendStateArray(blocked);
     }
 
     @Override
@@ -259,13 +268,30 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public Collection<User> getFriends() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getFriends'");
+        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
+        JsonArray blocked = get(object, "friend").getAsJsonArray();
+        return buildUserListFromFriendStateArray(blocked);
     }
 
     @Override
-    public void handleFriendRequest(int arg0, boolean arg1) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'handleFriendRequest'");
+    public void handleFriendRequest(int id, boolean accept) {
+        Map<String, Object> body = new MapBuilder()
+                .put("id", id)
+                .put("accept", accept ? 1 : 0)
+                .build();
+        HttpAPIImpl.this.client.getNetworkClient().post(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
+    }
+
+    protected final Collection<User> buildUserListFromFriendStateArray(JsonArray array) {
+        if (!array.isEmpty()) {
+            Collection<User> c = new ArrayList<>(array.size());
+            for (JsonElement element : array) {
+                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
+                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+                c.add(user);
+            }
+            return Collections.unmodifiableCollection(c);
+        }
+        return Collections.emptyList();
     }
 }
