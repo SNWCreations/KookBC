@@ -21,9 +21,13 @@ package snw.kookbc.impl.event;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-
 import snw.jkook.event.Event;
+import snw.jkook.event.channel.ChannelMessageEvent;
+import snw.jkook.event.item.ItemConsumedEvent;
+import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.kookbc.impl.KBCClient;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 // TODO replace EventFactory class using this class
 // after the works on this branch is done.
@@ -40,8 +44,22 @@ public class EventFactory2 {
         return this.gson.fromJson(object, parseEventType(object));
     }
 
-    protected <T extends Event> Class<T> parseEventType(JsonObject object) {
-        return null; // TODO
+    protected Class<? extends Event> parseEventType(JsonObject object) {
+        String type = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
+        int typeAsInt;
+        try {
+            typeAsInt = Integer.parseInt(type);
+        } catch (NumberFormatException e) {
+            return EventTypeMap.MAP.get(type);
+        }
+        if (typeAsInt == 12) {
+            return ItemConsumedEvent.class;
+        }
+        if ("PERSON".equals(get(object, "channel_type").getAsString())) {
+            return PrivateMessageReceivedEvent.class;
+        } else {
+            return ChannelMessageEvent.class;
+        }
     }
 
     // NOT static, so it can be override.
