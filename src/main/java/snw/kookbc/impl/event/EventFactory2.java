@@ -32,14 +32,16 @@ public class EventFactory2 {
 
     public EventFactory2(KBCClient client) {
         this.client = client;
-        this.gson = createGson(this.client);
+        this.gson = createGson();
     }
 
     public Event createEvent(JsonObject object) {
         return null; // TODO
     }
 
-    protected static Gson createGson(KBCClient client) {
+    // NOT static, so it can be override.
+    protected Gson createGson() {
+        final KBCClient client = this.client;
         return null; // TODO
     }
 }
