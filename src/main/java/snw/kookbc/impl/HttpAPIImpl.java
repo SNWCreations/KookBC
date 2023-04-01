@@ -290,8 +290,8 @@ public class HttpAPIImpl implements HttpAPI {
     @Override
     public Collection<User> getFriends() {
         JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
-        JsonArray blocked = get(object, "friend").getAsJsonArray();
-        return buildUserListFromFriendStateArray(blocked);
+        JsonArray friend = get(object, "friend").getAsJsonArray();
+        return buildUserListFromFriendStateArray(friend);
     }
 
     @Override
