@@ -18,20 +18,25 @@
 
 package snw.kookbc.interfaces.network;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Nullable;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
+
 import java.io.File;
 import java.util.Map;
-
-import org.jetbrains.annotations.Nullable;
-
-import com.google.gson.JsonElement;
-
-import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 public interface NetworkClient {
 
     JsonElement get(String url) throws BadResponseException;
 
     JsonElement post(String url, @Nullable Map<?, ?> body) throws BadResponseException;
+
+    // xxxToObject methods are the wrappers that will convert the returned json element into json objects.
+
+    JsonObject getToObject(String url) throws BadResponseException;
+
+    JsonObject postToObject(String url, @Nullable Map<?, ?> body) throws BadResponseException;
 
     JsonElement postFileInMultipartBody(String url, File file) throws BadResponseException;
 
