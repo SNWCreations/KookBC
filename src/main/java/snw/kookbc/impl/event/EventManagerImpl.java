@@ -20,7 +20,6 @@ package snw.kookbc.impl.event;
 
 import net.kyori.event.EventBus;
 import net.kyori.event.PostResult;
-import net.kyori.event.PostResult.CompositeException;
 import net.kyori.event.SimpleEventBus;
 import net.kyori.event.method.MethodSubscriptionAdapter;
 import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
@@ -51,15 +50,11 @@ public class EventManagerImpl implements EventManager {
 
     @Override
     public void callEvent(Event event) {
-        PostResult result = bus.post(event);
+        final PostResult result = bus.post(event);
         if (!result.wasSuccessful()) {
-            try {
-                result.raise();
-            } catch (CompositeException e) {
-                client.getCore().getLogger().error("Unexpected exception while posting event.");
-                for (final Throwable t : e.result().exceptions().values()) {
-                    t.printStackTrace();
-                }
+            client.getCore().getLogger().error("Unexpected exception while posting event.");
+            for (final Throwable t : result.exceptions().values()) {
+                t.printStackTrace();
             }
         }
     }
