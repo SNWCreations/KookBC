@@ -46,13 +46,10 @@ public class EventFactory2 {
 
     protected Class<? extends Event> parseEventType(JsonObject object) {
         String type = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
-        int typeAsInt;
-        try {
-            typeAsInt = Integer.parseInt(type);
-        } catch (NumberFormatException e) {
+        if (EventTypeMap.MAP.containsKey(type)) {
             return EventTypeMap.MAP.get(type);
         }
-        if (typeAsInt == 12) {
+        if ("12".equals(type)) {
             return ItemConsumedEvent.class;
         }
         if ("PERSON".equals(get(object, "channel_type").getAsString())) {
