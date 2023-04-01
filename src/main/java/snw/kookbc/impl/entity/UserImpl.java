@@ -278,7 +278,7 @@ public class UserImpl implements User {
         Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.BLOCK.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_BLOCK.toFullURL(), body);
     }
 
     @Override
@@ -286,7 +286,7 @@ public class UserImpl implements User {
         Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.UNBLOCK.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_UNBLOCK.toFullURL(), body);
     }
 
     @Override

@@ -154,9 +154,9 @@ public enum HttpAPIRoute {
 
     FRIEND_LIST("/v3/friend"),
 
-    BLOCK("/v3/friend/block"),
+    FRIEND_BLOCK("/v3/friend/block"),
 
-    UNBLOCK("/v3/friend/unblock");
+    FRIEND_UNBLOCK("/v3/friend/unblock");
 
     private static final Map<String, HttpAPIRoute> map = new HashMap<>();
 
