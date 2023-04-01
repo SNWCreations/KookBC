@@ -29,10 +29,10 @@ import snw.jkook.event.Listener;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
@@ -40,7 +40,7 @@ public class EventManagerImpl implements EventManager {
     private final KBCClient client;
     private final EventBus<Event> bus;
     private final MethodSubscriptionAdapter<Listener> msa;
-    private final Map<Plugin, List<Listener>> listeners = new HashMap<>();
+    private final Map<Plugin, List<Listener>> listeners = new ConcurrentHashMap<>();
 
     public EventManagerImpl(KBCClient client) {
         this.client = client;
