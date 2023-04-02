@@ -111,9 +111,7 @@ public abstract class ChannelImpl implements Channel {
     @Override
     public void delete() {
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
-                new MapBuilder()
-                        .put("channel_id", getId())
-                        .build()
+                Collections.singletonMap("channel_id", getId())
         );
     }
 

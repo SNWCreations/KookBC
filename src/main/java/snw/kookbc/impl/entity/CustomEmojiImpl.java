@@ -24,6 +24,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class CustomEmojiImpl implements CustomEmoji {
@@ -67,10 +68,7 @@ public class CustomEmojiImpl implements CustomEmoji {
 
     @Override
     public void delete() {
-        Map<String, Object> body = new MapBuilder()
-                .put("id", getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), body);
+        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), Collections.singletonMap("id", getId()));
     }
 
     public void setName0(String name) {

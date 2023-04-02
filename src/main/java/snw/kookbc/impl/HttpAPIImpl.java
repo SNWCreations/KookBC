@@ -124,9 +124,7 @@ public class HttpAPIImpl implements HttpAPI {
     @Override
     public void removeInvite(String urlCode) {
         client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
-                new MapBuilder()
-                        .put("url_code", urlCode)
-                        .build()
+                Collections.singletonMap("url_code", urlCode)
         );
     }
 
@@ -137,12 +135,16 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public Game createGame(String name, @Nullable String icon) {
-        MapBuilder builder = new MapBuilder()
-                .put("name", name);
+        Map<?, ?> body;
         if (icon != null) {
-            builder.put("icon", icon);
+            body = new MapBuilder()
+                    .put("name", name)
+                    .put("icon", icon)
+                    .build();
+        } else {
+            body = Collections.singletonMap("name", name);
         }
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), builder.build());
+        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), body);
         Game game = client.getEntityBuilder().buildGame(object);
         client.getStorage().addGame(game);
         return game;
@@ -157,7 +159,7 @@ public class HttpAPIImpl implements HttpAPI {
                     .build();
             client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE_ACTIVITY.toFullURL(), body);
         } else {
-            client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), new MapBuilder().put("data_type", 1).build());
+            client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), Collections.singletonMap("data_type", 1));
         }
     }
 
@@ -175,6 +177,6 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public void stopListening() {
-        client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), new MapBuilder().put("data_type", 2).build());
+        client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), Collections.singletonMap("data_type", 2));
     }
 }
