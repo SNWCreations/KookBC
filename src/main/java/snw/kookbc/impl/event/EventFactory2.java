@@ -26,6 +26,9 @@ import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.item.ItemConsumedEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.channel.ChannelMessageEventDeserializer;
+import snw.kookbc.impl.serializer.event.item.ItemConsumedEventDeserializer;
+import snw.kookbc.impl.serializer.event.pm.PrivateMessageReceivedEventDeserializer;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -64,6 +67,11 @@ public class EventFactory2 {
     protected Gson createGson() {
         final KBCClient client = this.client;
         return new GsonBuilder()
+                // --- UNUSUAL EVENTS START ---
+                .registerTypeAdapter(ChannelMessageEvent.class, new ChannelMessageEventDeserializer(client))
+                .registerTypeAdapter(ItemConsumedEvent.class, new ItemConsumedEventDeserializer(client))
+                .registerTypeAdapter(PrivateMessageReceivedEvent.class, new PrivateMessageReceivedEventDeserializer(client))
+                // --- UNUSUAL EVENTS END   ---
                 // TODO add type adapters
                 .create();
     }
