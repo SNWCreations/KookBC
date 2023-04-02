@@ -16,31 +16,27 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.element.PlainTextElement;
-import snw.jkook.message.component.card.module.HeaderModule;
+import snw.jkook.message.component.card.module.InviteModule;
 
 import java.lang.reflect.Type;
 
-public class HeaderModuleSerializer implements JsonSerializer<HeaderModule>, JsonDeserializer<HeaderModule> {
+import static snw.kookbc.util.GsonUtil.*;
+
+public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
     @Override
-    public JsonElement serialize(HeaderModule module, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(InviteModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        JsonObject textObj = new JsonObject();
-        textObj.addProperty("type", "plain-text");
-        textObj.addProperty("content", module.getElement().getContent());
-        moduleObj.addProperty("type", "header");
-        moduleObj.add("text", textObj);
+        moduleObj.addProperty("type", "invite");
+        moduleObj.addProperty("code", module.getCode());
         return moduleObj;
     }
 
     @Override
-    public HeaderModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public InviteModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        JsonObject text = jsonObject.getAsJsonObject("text");
-        String content = text.getAsJsonPrimitive("content").getAsString();
-        return new HeaderModule(new PlainTextElement(content));
+        return new InviteModule(get(jsonObject, "code").getAsString());
     }
 }

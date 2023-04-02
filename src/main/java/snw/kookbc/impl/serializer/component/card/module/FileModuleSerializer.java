@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
 import snw.jkook.message.component.FileComponent;

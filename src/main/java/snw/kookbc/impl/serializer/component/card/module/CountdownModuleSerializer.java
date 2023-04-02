@@ -16,27 +16,30 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.module.InviteModule;
+import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.*;
 
-public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
+public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override
-    public JsonElement serialize(InviteModule module, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        moduleObj.addProperty("type", "invite");
-        moduleObj.addProperty("code", module.getCode());
+        moduleObj.addProperty("type", "countdown");
+        moduleObj.addProperty("mode", module.getType().getValue());
+        moduleObj.addProperty("endTime", module.getEndTime());
         return moduleObj;
     }
 
     @Override
-    public InviteModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        return new InviteModule(get(jsonObject, "code").getAsString());
+        String mode = get(jsonObject, "mode").getAsString();
+        long endTime = get(jsonObject, "endTime").getAsLong();
+        return new CountdownModule(CountdownModule.Type.value(mode), endTime);
     }
 }
