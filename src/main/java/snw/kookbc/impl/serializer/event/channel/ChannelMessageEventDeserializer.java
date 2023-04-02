@@ -22,10 +22,11 @@ import com.google.gson.*;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.message.TextChannelMessage;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 
 import java.lang.reflect.Type;
 
-public class ChannelMessageEventDeserializer implements JsonDeserializer<ChannelMessageEvent> {
+public class ChannelMessageEventDeserializer extends BaseEventDeserializer<ChannelMessageEvent> {
     private final KBCClient client;
 
     public ChannelMessageEventDeserializer(KBCClient client) {
@@ -33,10 +34,13 @@ public class ChannelMessageEventDeserializer implements JsonDeserializer<Channel
     }
 
     @Override
-    public ChannelMessageEvent deserialize(JsonElement element, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JsonObject object = element.getAsJsonObject();
+    protected ChannelMessageEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         TextChannelMessage message = client.getMessageBuilder().buildTextChannelMessage(object);
-        // client.getStorage().addMessage(message);
         return new ChannelMessageEvent(message.getTimeStamp(), message.getChannel(), message);
+    }
+
+    @Override
+    protected void beforeReturn(ChannelMessageEvent event) {
+        client.getStorage().addMessage(event.getMessage());
     }
 }

@@ -23,20 +23,21 @@ import snw.jkook.event.Event;
 
 import java.lang.reflect.Type;
 
-public abstract class BaseEventDeserializer<T extends Event> implements JsonDeserializer<T> {
+import static snw.kookbc.util.GsonUtil.get;
+
+public abstract class NormalEventDeserializer<T extends Event> extends BaseEventDeserializer<T> {
 
     @Override
-    public final T deserialize(JsonElement element, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        final JsonObject object = element.getAsJsonObject();
-        T t = deserialize(object, type, ctx);
-        beforeReturn(t);
-        return t;
+    protected T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
+        return deserialize(
+                object,
+                type,
+                ctx,
+                get(object, "msg_timestamp").getAsLong(),
+                get(get(object, "extra").getAsJsonObject(), "body").getAsJsonObject()
+        );
     }
 
-    protected abstract T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException;
-
-    // override it if you want to do something before we returning the final result.
-    protected void beforeReturn(T event) {
-    }
+    protected abstract T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException;
 
 }

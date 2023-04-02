@@ -22,12 +22,13 @@ import com.google.gson.*;
 import snw.jkook.entity.User;
 import snw.jkook.event.item.ItemConsumedEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 
 import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class ItemConsumedEventDeserializer implements JsonDeserializer<ItemConsumedEvent> {
+public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemConsumedEvent> {
     private final KBCClient client;
 
     public ItemConsumedEventDeserializer(KBCClient client) {
@@ -35,8 +36,7 @@ public class ItemConsumedEventDeserializer implements JsonDeserializer<ItemConsu
     }
 
     @Override
-    public ItemConsumedEvent deserialize(JsonElement element, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JsonObject object = element.getAsJsonObject();
+    protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
         JsonObject content = object.getAsJsonObject("content");
         User consumer = client.getStorage().getUser(content.get("user_id").getAsString());

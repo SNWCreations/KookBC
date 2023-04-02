@@ -22,10 +22,11 @@ import com.google.gson.*;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.message.PrivateMessage;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 
 import java.lang.reflect.Type;
 
-public class PrivateMessageReceivedEventDeserializer implements JsonDeserializer<PrivateMessageReceivedEvent> {
+public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializer<PrivateMessageReceivedEvent> {
     private final KBCClient client;
 
     public PrivateMessageReceivedEventDeserializer(KBCClient client) {
@@ -33,10 +34,13 @@ public class PrivateMessageReceivedEventDeserializer implements JsonDeserializer
     }
 
     @Override
-    public PrivateMessageReceivedEvent deserialize(JsonElement element, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-        JsonObject object = element.getAsJsonObject();
+    protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
-        // client.getStorage().addMessage(pm);
         return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
+    }
+
+    @Override
+    protected void beforeReturn(PrivateMessageReceivedEvent event) {
+        client.getStorage().addMessage(event.getMessage());
     }
 }
