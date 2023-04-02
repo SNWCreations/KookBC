@@ -25,10 +25,12 @@ import snw.jkook.event.Event;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.item.ItemConsumedEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
+import snw.jkook.event.user.UserAddReactionEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.channel.ChannelMessageEventDeserializer;
 import snw.kookbc.impl.serializer.event.item.ItemConsumedEventDeserializer;
 import snw.kookbc.impl.serializer.event.pm.PrivateMessageReceivedEventDeserializer;
+import snw.kookbc.impl.serializer.event.user.UserAddReactionEventDeserializer;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -73,6 +75,7 @@ public class EventFactory2 {
                 .registerTypeAdapter(PrivateMessageReceivedEvent.class, new PrivateMessageReceivedEventDeserializer(client))
                 // --- UNUSUAL EVENTS END   ---
                 // TODO add type adapters
+                .registerTypeAdapter(UserAddReactionEvent.class, new UserAddReactionEventDeserializer(client))
                 .create();
     }
 }
