@@ -20,10 +20,16 @@ package snw.kookbc.impl.serializer.event;
 
 import com.google.gson.*;
 import snw.jkook.event.Event;
+import snw.kookbc.impl.KBCClient;
 
 import java.lang.reflect.Type;
 
 public abstract class BaseEventDeserializer<T extends Event> implements JsonDeserializer<T> {
+    protected final KBCClient client;
+
+    protected BaseEventDeserializer(KBCClient client) {
+        this.client = client;
+    }
 
     @Override
     public final T deserialize(JsonElement element, Type type, JsonDeserializationContext ctx) throws JsonParseException {

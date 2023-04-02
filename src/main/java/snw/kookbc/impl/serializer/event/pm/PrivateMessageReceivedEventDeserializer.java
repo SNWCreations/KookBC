@@ -27,10 +27,9 @@ import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 import java.lang.reflect.Type;
 
 public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializer<PrivateMessageReceivedEvent> {
-    private final KBCClient client;
 
     public PrivateMessageReceivedEventDeserializer(KBCClient client) {
-        this.client = client;
+        super(client);
     }
 
     @Override

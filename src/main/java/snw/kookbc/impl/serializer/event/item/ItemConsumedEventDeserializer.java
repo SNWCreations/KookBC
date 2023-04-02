@@ -29,10 +29,9 @@ import java.lang.reflect.Type;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemConsumedEvent> {
-    private final KBCClient client;
 
     public ItemConsumedEventDeserializer(KBCClient client) {
-        this.client = client;
+        super(client);
     }
 
     @Override

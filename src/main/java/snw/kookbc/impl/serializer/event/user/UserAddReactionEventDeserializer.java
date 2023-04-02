@@ -32,10 +32,9 @@ import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
-    private final KBCClient client;
 
     public UserAddReactionEventDeserializer(KBCClient client) {
-        this.client = client;
+        super(client);
     }
 
     @Override
