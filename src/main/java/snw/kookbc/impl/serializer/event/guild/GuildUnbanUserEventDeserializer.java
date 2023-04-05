@@ -34,6 +34,7 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<GuildUnbanUserEvent> {
+
     public GuildUnbanUserEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -51,4 +52,5 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
             client.getStorage().getUser(body.get("operator_id").getAsString())
         );
     }
+
 }

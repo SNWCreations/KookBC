@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnlineEvent> {
+
     public UserOnlineEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -40,4 +41,5 @@ public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnl
             client.getStorage().getUser(body.get("user_id").getAsString())
         );
     }
+
 }

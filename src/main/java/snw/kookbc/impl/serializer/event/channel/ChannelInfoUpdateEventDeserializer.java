@@ -31,6 +31,7 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<ChannelInfoUpdateEvent> {
+
     public ChannelInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -54,4 +55,5 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
             channel
         );
     }
+
 }

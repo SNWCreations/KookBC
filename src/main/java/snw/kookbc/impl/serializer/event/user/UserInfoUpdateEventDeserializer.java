@@ -30,6 +30,7 @@ import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<UserInfoUpdateEvent> {
+
     public UserInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -44,4 +45,5 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
             updatedUser
         );
     }
+
 }

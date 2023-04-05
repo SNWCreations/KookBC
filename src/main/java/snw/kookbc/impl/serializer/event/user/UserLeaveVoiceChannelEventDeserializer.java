@@ -30,6 +30,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserLeaveVoiceChannelEventDeserializer extends NormalEventDeserializer<UserLeaveVoiceChannelEvent> {
+
     public UserLeaveVoiceChannelEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -42,4 +43,5 @@ public class UserLeaveVoiceChannelEventDeserializer extends NormalEventDeseriali
             (VoiceChannel) client.getStorage().getChannel(body.get("channel_id").getAsString())
         );
     }
+
 }

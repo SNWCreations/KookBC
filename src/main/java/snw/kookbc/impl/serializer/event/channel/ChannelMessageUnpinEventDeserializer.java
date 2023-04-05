@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelMessageUnpinEventDeserializer extends NormalEventDeserializer<ChannelMessageUnpinEvent> {
+
     public ChannelMessageUnpinEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -42,4 +43,5 @@ public class ChannelMessageUnpinEventDeserializer extends NormalEventDeserialize
             client.getStorage().getUser(body.get("operator_id").getAsString())
         );
     }
+
 }

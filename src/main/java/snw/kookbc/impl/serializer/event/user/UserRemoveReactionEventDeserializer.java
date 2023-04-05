@@ -33,6 +33,7 @@ import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer<UserRemoveReactionEvent> {
+
     public UserRemoveReactionEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -61,4 +62,5 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
             ))
         );
     }
+
 }

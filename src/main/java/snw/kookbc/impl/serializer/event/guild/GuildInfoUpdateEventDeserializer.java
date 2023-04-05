@@ -30,6 +30,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<GuildInfoUpdateEvent> {
+
     public GuildInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -43,4 +44,5 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
             guild
         );
     }
+
 }

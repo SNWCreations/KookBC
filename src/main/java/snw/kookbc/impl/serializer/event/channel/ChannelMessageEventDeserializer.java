@@ -27,6 +27,7 @@ import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 import java.lang.reflect.Type;
 
 public class ChannelMessageEventDeserializer extends BaseEventDeserializer<ChannelMessageEvent> {
+
     public ChannelMessageEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -45,4 +46,5 @@ public class ChannelMessageEventDeserializer extends BaseEventDeserializer<Chann
     protected void beforeReturn(ChannelMessageEvent event) {
         client.getStorage().addMessage(event.getMessage());
     }
+
 }

@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelCreateEventDeserializer extends NormalEventDeserializer<ChannelCreateEvent> {
+
     public ChannelCreateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -46,4 +47,5 @@ public class ChannelCreateEventDeserializer extends NormalEventDeserializer<Chan
     protected void beforeReturn(ChannelCreateEvent event) {
         client.getStorage().addChannel(event.getChannel());
     }
+
 }

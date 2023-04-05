@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class PrivateMessageUpdateEventDeserializer extends NormalEventDeserializer<PrivateMessageUpdateEvent> {
+
     public PrivateMessageUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -41,4 +42,5 @@ public class PrivateMessageUpdateEventDeserializer extends NormalEventDeserializ
             body.get("content").getAsString()
         );
     }
+
 }

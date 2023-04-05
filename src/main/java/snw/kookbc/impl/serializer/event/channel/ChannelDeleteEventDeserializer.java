@@ -31,6 +31,7 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<ChannelDeleteEvent> {
+
     public ChannelDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -48,4 +49,5 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
     protected void beforeReturn(ChannelDeleteEvent event) {
         client.getStorage().removeChannel(event.getChannelId());
     }
+
 }

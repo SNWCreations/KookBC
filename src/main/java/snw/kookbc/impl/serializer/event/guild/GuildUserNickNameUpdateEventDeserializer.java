@@ -32,6 +32,7 @@ import snw.kookbc.impl.storage.EntityStorage;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeserializer<GuildUserNickNameUpdateEvent> {
+
     public GuildUserNickNameUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -46,4 +47,5 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
             body.get("nickname").getAsString()
         );
     }
+
 }

@@ -30,6 +30,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class GuildAddEmojiEventDeserializer extends NormalEventDeserializer<GuildAddEmojiEvent> {
+
     public GuildAddEmojiEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -43,4 +44,5 @@ public class GuildAddEmojiEventDeserializer extends NormalEventDeserializer<Guil
             customEmoji
         );
     }
+
 }

@@ -31,6 +31,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserClickButtonEventDeserializer extends NormalEventDeserializer<UserClickButtonEvent> {
+
     public UserClickButtonEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -48,4 +49,5 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
             ) ? null : (TextChannel) client.getStorage().getChannel(body.get("target_id").getAsString())
         );
     }
+
 }

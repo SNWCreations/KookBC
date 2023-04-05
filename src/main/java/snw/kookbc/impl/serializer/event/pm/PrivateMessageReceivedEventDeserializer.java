@@ -46,4 +46,5 @@ public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializ
     protected void beforeReturn(PrivateMessageReceivedEvent event) {
         client.getStorage().addMessage(event.getMessage());
     }
+
 }

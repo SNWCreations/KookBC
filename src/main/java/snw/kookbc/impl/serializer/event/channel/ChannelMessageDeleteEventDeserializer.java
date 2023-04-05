@@ -30,6 +30,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializer<ChannelMessageDeleteEvent> {
+
     public ChannelMessageDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -47,4 +48,5 @@ public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializ
     protected void beforeReturn(ChannelMessageDeleteEvent event) {
         client.getStorage().removeMessage(event.getMessageId());
     }
+
 }

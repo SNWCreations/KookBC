@@ -35,6 +35,7 @@ import snw.kookbc.impl.storage.EntityStorage;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class GuildBanUserEventDeserializer extends NormalEventDeserializer<GuildBanUserEvent> {
+
     public GuildBanUserEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -54,4 +55,5 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
             body.get("remark").getAsString()
         );
     }
+
 }

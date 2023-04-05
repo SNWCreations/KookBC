@@ -45,4 +45,5 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
             )
         );
     }
+
 }

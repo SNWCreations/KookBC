@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildDeleteEvent> {
+
     public GuildDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -41,4 +42,5 @@ public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildD
             body.get("id").getAsString()
         );
     }
+
 }

@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<UserJoinGuildEvent> {
+
     public UserJoinGuildEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -41,4 +42,5 @@ public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<User
             client.getStorage().getGuild(body.get("guild_id").getAsString())
         );
     }
+
 }

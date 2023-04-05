@@ -32,6 +32,7 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 import static snw.kookbc.util.GsonUtil.get;
 
 public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<RoleInfoUpdateEvent> {
+
     public RoleInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
@@ -46,4 +47,5 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
             client.getStorage().getRole(guild, roleId)
         );
     }
+
 }
