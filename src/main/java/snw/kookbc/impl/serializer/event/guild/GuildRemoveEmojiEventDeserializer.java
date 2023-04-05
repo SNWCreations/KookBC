@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+package snw.kookbc.impl.serializer.event.guild;
 
 import java.lang.reflect.Type;
 
@@ -24,21 +24,23 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.event.user.UserLeaveGuildEvent;
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.event.guild.GuildRemoveEmojiEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserLeaveGuildEventDerserializer extends NormalEventDeserializer<UserLeaveGuildEvent> {
-    public UserLeaveGuildEventDerserializer(KBCClient client) {
+public class GuildRemoveEmojiEventDeserializer extends NormalEventDeserializer<GuildRemoveEmojiEvent> {
+    public GuildRemoveEmojiEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserLeaveGuildEvent(
+    protected GuildRemoveEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        CustomEmoji customEmoji = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+        return new GuildRemoveEmojiEvent(
             timeStamp,
-            client.getCore().getUser(),
-            client.getStorage().getGuild(body.get("guild_id").getAsString())
+            customEmoji.getGuild(),
+            customEmoji
         );
     }
 }

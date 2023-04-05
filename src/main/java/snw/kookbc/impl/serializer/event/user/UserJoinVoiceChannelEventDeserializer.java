@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.pm;
+package snw.kookbc.impl.serializer.event.user;
 
 import java.lang.reflect.Type;
 
@@ -24,17 +24,22 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.event.pm.PrivateMessageUpdateEvent;
+import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.event.user.UserJoinVoiceChannelEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class PrivateMessageUpdateEventDerserializer extends NormalEventDeserializer<PrivateMessageUpdateEvent> {
-    public PrivateMessageUpdateEventDerserializer(KBCClient client) {
+public class UserJoinVoiceChannelEventDeserializer extends NormalEventDeserializer<UserJoinVoiceChannelEvent> {
+    public UserJoinVoiceChannelEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected PrivateMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new PrivateMessageUpdateEvent(timeStamp, body.get("msg_id").getAsString(), body.get("content").getAsString());
+    protected UserJoinVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserJoinVoiceChannelEvent(
+            timeStamp,
+            client.getStorage().getUser(body.get("user_id").getAsString()),
+            (VoiceChannel) client.getStorage().getChannel(body.get("channel_id").getAsString())
+        );
     }
 }

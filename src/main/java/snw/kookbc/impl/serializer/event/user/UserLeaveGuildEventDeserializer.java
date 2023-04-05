@@ -16,39 +16,29 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.guild;
+package snw.kookbc.impl.serializer.event.user;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.User;
-import snw.jkook.event.guild.GuildBanUserEvent;
+import snw.jkook.event.user.UserLeaveGuildEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-import snw.kookbc.util.GsonUtil;
 
-public class GuildBanUserEventDerserializer extends NormalEventDeserializer<GuildBanUserEvent> {
-    public GuildBanUserEventDerserializer(KBCClient client) {
+public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<UserLeaveGuildEvent> {
+    public UserLeaveGuildEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected GuildBanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        List<User> banned = new ArrayList<>();
-        body.getAsJsonArray("user_id").forEach(
-                IT -> banned.add(client.getStorage().getUser(IT.getAsString()))
-        );
-        return new GuildBanUserEvent(
+    protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserLeaveGuildEvent(
             timeStamp,
-            client.getStorage().getGuild(GsonUtil.get(object, "target_id").getAsString()),
-            banned,
-            client.getStorage().getUser(body.get("operator_id").getAsString()),
-            body.get("remark").getAsString()
+            client.getCore().getUser(),
+            client.getStorage().getGuild(body.get("guild_id").getAsString())
         );
     }
 }

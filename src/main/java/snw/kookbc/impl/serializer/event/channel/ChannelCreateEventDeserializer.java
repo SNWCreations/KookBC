@@ -36,7 +36,10 @@ public class ChannelCreateEventDeserializer extends NormalEventDeserializer<Chan
     @Override
     protected ChannelCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Channel newChannel = client.getEntityBuilder().buildChannel(body);
-        return new ChannelCreateEvent(timeStamp, newChannel);
+        return new ChannelCreateEvent(
+            timeStamp,
+            newChannel
+        );
     }
 
     @Override

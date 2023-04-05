@@ -24,22 +24,20 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.channel.VoiceChannel;
-import snw.jkook.event.user.UserLeaveVoiceChannelEvent;
+import snw.jkook.event.user.UserOfflineEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserLeaveVoiceChannelEventDerserializer extends NormalEventDeserializer<UserLeaveVoiceChannelEvent> {
-    public UserLeaveVoiceChannelEventDerserializer(KBCClient client) {
+public class UserOfflineEventDeserializer extends NormalEventDeserializer<UserOfflineEvent> {
+    public UserOfflineEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserLeaveVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserLeaveVoiceChannelEvent(
+    protected UserOfflineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserOfflineEvent(
             timeStamp,
-            client.getStorage().getUser(body.get("user_id").getAsString()),
-            (VoiceChannel) client.getStorage().getChannel(body.get("channel_id").getAsString())
+            client.getStorage().getUser(body.get("user_id").getAsString())
         );
     }
 }

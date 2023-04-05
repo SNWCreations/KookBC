@@ -19,35 +19,31 @@
 package snw.kookbc.impl.serializer.event.guild;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.User;
-import snw.jkook.event.guild.GuildUnbanUserEvent;
+import snw.jkook.event.guild.GuildUserNickNameUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-import snw.kookbc.util.GsonUtil;
+import snw.kookbc.impl.storage.EntityStorage;
 
-public class GuildUnbanUserEventDerserializer extends NormalEventDeserializer<GuildUnbanUserEvent> {
-    public GuildUnbanUserEventDerserializer(KBCClient client) {
+import static snw.kookbc.util.GsonUtil.get;
+
+public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeserializer<GuildUserNickNameUpdateEvent> {
+    public GuildUserNickNameUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        List<User> unbanned = new ArrayList<>();
-        body.getAsJsonArray("user_id").forEach(
-                IT -> unbanned.add(client.getStorage().getUser(IT.getAsString()))
-        );
-        return new GuildUnbanUserEvent(
+    protected GuildUserNickNameUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        EntityStorage entityStorage = client.getStorage();
+        return new GuildUserNickNameUpdateEvent(
             timeStamp,
-            client.getStorage().getGuild(GsonUtil.get(object, "target_id").getAsString()),
-            unbanned,
-            client.getStorage().getUser(body.get("operator_id").getAsString())
+            entityStorage.getGuild(get(object, "target_id").getAsString()),
+            entityStorage.getUser(body.get("user_id").getAsString()),
+            body.get("nickname").getAsString()
         );
     }
 }

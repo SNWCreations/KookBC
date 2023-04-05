@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.guild;
+package snw.kookbc.impl.serializer.event.user;
 
 import java.lang.reflect.Type;
 
@@ -24,19 +24,24 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.event.guild.GuildRemoveEmojiEvent;
+import snw.jkook.event.user.UserInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class GuildRemoveEmojiEventDerserializer extends NormalEventDeserializer<GuildRemoveEmojiEvent> {
-    public GuildRemoveEmojiEventDerserializer(KBCClient client) {
+public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<UserInfoUpdateEvent> {
+    public UserInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected GuildRemoveEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji emoji2 = client.getStorage().getEmoji(body.get("id").getAsString(), body);
-        return new GuildRemoveEmojiEvent(timeStamp, emoji2.getGuild(), emoji2);
+    protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        UserImpl updatedUser = ((UserImpl) client.getStorage().getUser(body.get("body_id").getAsString()));
+        updatedUser.setName(body.get("username").getAsString());
+        updatedUser.setAvatarUrl(body.get("avatar").getAsString());
+        return new UserInfoUpdateEvent(
+            timeStamp,
+            updatedUser
+        );
     }
 }

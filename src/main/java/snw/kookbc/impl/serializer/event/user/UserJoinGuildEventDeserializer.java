@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.guild;
+package snw.kookbc.impl.serializer.event.user;
 
 import java.lang.reflect.Type;
 
@@ -24,20 +24,21 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.Guild;
-import snw.jkook.event.guild.GuildInfoUpdateEvent;
+import snw.jkook.event.user.UserJoinGuildEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class GuildInfoUpdateEventDerserializer extends NormalEventDeserializer<GuildInfoUpdateEvent> {
-    public GuildInfoUpdateEventDerserializer(KBCClient client) {
+public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<UserJoinGuildEvent> {
+    public UserJoinGuildEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected GuildInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        Guild guild = client.getStorage().getGuild(body.get("id").getAsString());
-        client.getEntityUpdater().updateGuild(body, guild);
-        return new GuildInfoUpdateEvent(timeStamp, guild);
+    protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserJoinGuildEvent(
+            timeStamp,
+            client.getCore().getUser(),
+            client.getStorage().getGuild(body.get("guild_id").getAsString())
+        );
     }
 }

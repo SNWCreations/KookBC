@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.role;
+package snw.kookbc.impl.serializer.event.user;
 
 import java.lang.reflect.Type;
 
@@ -24,22 +24,20 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.Role;
-import snw.jkook.event.role.RoleDeleteEvent;
+import snw.jkook.event.user.UserOnlineEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-import snw.kookbc.util.GsonUtil;
 
-public class RoleDeleteEventDerserializer extends NormalEventDeserializer<RoleDeleteEvent> {
-    public RoleDeleteEventDerserializer(KBCClient client) {
+public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnlineEvent> {
+    public UserOnlineEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        Role deletedRole = client.getEntityBuilder().buildRole(
-                client.getStorage().getGuild(GsonUtil.get(object, "target_id").getAsString()),
-                body);
-        return new RoleDeleteEvent(timeStamp, deletedRole);
+    protected UserOnlineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserOnlineEvent(
+            timeStamp,
+            client.getStorage().getUser(body.get("user_id").getAsString())
+        );
     }
 }

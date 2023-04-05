@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.pm;
+package snw.kookbc.impl.serializer.event.guild;
 
 import java.lang.reflect.Type;
 
@@ -24,18 +24,24 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.event.pm.PrivateMessageDeleteEvent;
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.event.guild.GuildUpdateEmojiEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class PrivateMessageDeleteEventDerserializer extends NormalEventDeserializer<PrivateMessageDeleteEvent> {
-    public PrivateMessageDeleteEventDerserializer(KBCClient client) {
+public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<GuildUpdateEmojiEvent> {
+    public GuildUpdateEmojiEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected PrivateMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        client.getStorage().removeMessage(body.get("msg_id").getAsString());
-        return new PrivateMessageDeleteEvent(timeStamp, body.get("msg_id").getAsString());
+    protected GuildUpdateEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        CustomEmoji customEmoji = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+        client.getEntityUpdater().updateEmoji(body, customEmoji);
+        return new GuildUpdateEmojiEvent(
+            timeStamp,
+            customEmoji.getGuild(),
+            customEmoji
+        );
     }
 }

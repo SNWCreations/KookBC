@@ -90,35 +90,35 @@ public class EventFactory2 {
                 .registerTypeAdapter(ChannelMessageUpdateEvent.class, new ChannelMessageUpdateEventDeserializer(client))
 
                 // Guild Event
-                .registerTypeAdapter(GuildAddEmojiEvent.class, new GuildAddEmojiEventDerserializer(client))
-                .registerTypeAdapter(GuildBanUserEvent.class, new GuildBanUserEventDerserializer(client))
-                .registerTypeAdapter(GuildDeleteEvent.class, new GuildDeleteEventDerserializer(client))
-                .registerTypeAdapter(GuildInfoUpdateEvent.class, new GuildInfoUpdateEventDerserializer(client))
-                .registerTypeAdapter(GuildRemoveEmojiEvent.class, new GuildRemoveEmojiEventDerserializer(client))
-                .registerTypeAdapter(GuildUnbanUserEvent.class, new GuildUnbanUserEventDerserializer(client))
-                .registerTypeAdapter(GuildUpdateEmojiEvent.class, new GuildUpdateEmojiEventDerserializer(client))
-                .registerTypeAdapter(GuildUserNickNameUpdateEvent.class, new GuildUserNickNameUpdateEventDerserializer(client))
+                .registerTypeAdapter(GuildAddEmojiEvent.class, new GuildAddEmojiEventDeserializer(client))
+                .registerTypeAdapter(GuildBanUserEvent.class, new GuildBanUserEventDeserializer(client))
+                .registerTypeAdapter(GuildDeleteEvent.class, new GuildDeleteEventDeserializer(client))
+                .registerTypeAdapter(GuildInfoUpdateEvent.class, new GuildInfoUpdateEventDeserializer(client))
+                .registerTypeAdapter(GuildRemoveEmojiEvent.class, new GuildRemoveEmojiEventDeserializer(client))
+                .registerTypeAdapter(GuildUnbanUserEvent.class, new GuildUnbanUserEventDeserializer(client))
+                .registerTypeAdapter(GuildUpdateEmojiEvent.class, new GuildUpdateEmojiEventDeserializer(client))
+                .registerTypeAdapter(GuildUserNickNameUpdateEvent.class, new GuildUserNickNameUpdateEventDeserializer(client))
 
                 // PrivateMessage Event
-                .registerTypeAdapter(PrivateMessageDeleteEvent.class, new PrivateMessageDeleteEventDerserializer(client))
-                .registerTypeAdapter(PrivateMessageUpdateEvent.class, new PrivateMessageUpdateEventDerserializer(client))
+                .registerTypeAdapter(PrivateMessageDeleteEvent.class, new PrivateMessageDeleteEventDeserializer(client))
+                .registerTypeAdapter(PrivateMessageUpdateEvent.class, new PrivateMessageUpdateEventDeserializer(client))
 
                 // Role Event
-                .registerTypeAdapter(RoleCreateEvent.class, new RoleCreateEventDerserializer(client))
-                .registerTypeAdapter(RoleDeleteEvent.class, new RoleDeleteEventDerserializer(client))
-                .registerTypeAdapter(RoleInfoUpdateEvent.class, new RoleInfoUpdateEventDerserializer(client))
+                .registerTypeAdapter(RoleCreateEvent.class, new RoleCreateEventDeserializer(client))
+                .registerTypeAdapter(RoleDeleteEvent.class, new RoleDeleteEventDeserializer(client))
+                .registerTypeAdapter(RoleInfoUpdateEvent.class, new RoleInfoUpdateEventDeserializer(client))
 
                 // User Event
                 .registerTypeAdapter(UserAddReactionEvent.class, new UserAddReactionEventDeserializer(client))
-                .registerTypeAdapter(UserClickButtonEvent.class, new UserClickButtonEventDerserializer(client))
-                .registerTypeAdapter(UserInfoUpdateEvent.class, new UserInfoUpdateEventDerserializer(client))
-                .registerTypeAdapter(UserJoinGuildEvent.class, new UserJoinGuildEventDerserializer(client))
-                .registerTypeAdapter(UserJoinVoiceChannelEvent.class, new UserJoinVoiceChannelEventDerserializer(client))
-                .registerTypeAdapter(UserLeaveGuildEvent.class, new UserLeaveGuildEventDerserializer(client))
-                .registerTypeAdapter(UserLeaveVoiceChannelEvent.class, new UserLeaveVoiceChannelEventDerserializer(client))
-                .registerTypeAdapter(UserOfflineEvent.class, new UserOfflineEventDerserializer(client))
-                .registerTypeAdapter(UserOnlineEvent.class, new UserOnlineEventDerserializer(client))
-                .registerTypeAdapter(UserRemoveReactionEvent.class, new UserRemoveReactionEventDerserializer(client))
+                .registerTypeAdapter(UserClickButtonEvent.class, new UserClickButtonEventDeserializer(client))
+                .registerTypeAdapter(UserInfoUpdateEvent.class, new UserInfoUpdateEventDeserializer(client))
+                .registerTypeAdapter(UserJoinGuildEvent.class, new UserJoinGuildEventDeserializer(client))
+                .registerTypeAdapter(UserJoinVoiceChannelEvent.class, new UserJoinVoiceChannelEventDeserializer(client))
+                .registerTypeAdapter(UserLeaveGuildEvent.class, new UserLeaveGuildEventDeserializer(client))
+                .registerTypeAdapter(UserLeaveVoiceChannelEvent.class, new UserLeaveVoiceChannelEventDeserializer(client))
+                .registerTypeAdapter(UserOfflineEvent.class, new UserOfflineEventDeserializer(client))
+                .registerTypeAdapter(UserOnlineEvent.class, new UserOnlineEventDeserializer(client))
+                .registerTypeAdapter(UserRemoveReactionEvent.class, new UserRemoveReactionEventDeserializer(client))
                 .create();
     }
 }

@@ -34,8 +34,12 @@ public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializ
 
     @Override
     protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
-        return new PrivateMessageReceivedEvent(pm.getTimeStamp(), pm.getSender(), pm);
+        PrivateMessage privateMessage = client.getMessageBuilder().buildPrivateMessage(object);
+        return new PrivateMessageReceivedEvent(
+            privateMessage.getTimeStamp(),
+            privateMessage.getSender(),
+            privateMessage
+        );
     }
 
     @Override

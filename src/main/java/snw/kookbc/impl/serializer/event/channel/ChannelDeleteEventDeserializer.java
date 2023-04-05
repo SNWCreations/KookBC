@@ -27,7 +27,8 @@ import com.google.gson.JsonParseException;
 import snw.jkook.event.channel.ChannelDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-import snw.kookbc.util.GsonUtil;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<ChannelDeleteEvent> {
     public ChannelDeleteEventDeserializer(KBCClient client) {
@@ -39,7 +40,7 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
         return new ChannelDeleteEvent(
             timeStamp,
             body.get("id").getAsString(),
-            client.getStorage().getGuild(GsonUtil.get(object, "target_id").getAsString())
+            client.getStorage().getGuild(get(object, "target_id").getAsString())
         );
     }
 

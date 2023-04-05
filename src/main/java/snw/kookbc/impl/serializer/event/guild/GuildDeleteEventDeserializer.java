@@ -24,19 +24,21 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.event.guild.GuildAddEmojiEvent;
+import snw.jkook.event.guild.GuildDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class GuildAddEmojiEventDerserializer extends NormalEventDeserializer<GuildAddEmojiEvent> {
-    public GuildAddEmojiEventDerserializer(KBCClient client) {
+public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildDeleteEvent> {
+    public GuildDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected GuildAddEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji emoji1 = client.getEntityBuilder().buildEmoji(body);
-        return new GuildAddEmojiEvent(timeStamp, emoji1.getGuild(), emoji1);
+    protected GuildDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        client.getStorage().removeGuild(body.get("id").getAsString());
+        return new GuildDeleteEvent(
+            timeStamp,
+            body.get("id").getAsString()
+        );
     }
 }

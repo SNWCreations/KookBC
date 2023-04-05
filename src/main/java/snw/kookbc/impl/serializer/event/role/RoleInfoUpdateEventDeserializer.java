@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+package snw.kookbc.impl.serializer.event.role;
 
 import java.lang.reflect.Type;
 
@@ -24,21 +24,26 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.event.user.UserJoinGuildEvent;
+import snw.jkook.entity.Guild;
+import snw.jkook.event.role.RoleInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserJoinGuildEventDerserializer extends NormalEventDeserializer<UserJoinGuildEvent> {
-    public UserJoinGuildEventDerserializer(KBCClient client) {
+import static snw.kookbc.util.GsonUtil.get;
+
+public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<RoleInfoUpdateEvent> {
+    public RoleInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserJoinGuildEvent(
+    protected RoleInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
+        int roleId = body.get("role_id").getAsInt();
+        client.getEntityUpdater().updateRole(body, client.getStorage().getRole(guild, roleId, body));
+        return new RoleInfoUpdateEvent(
             timeStamp,
-            client.getCore().getUser(),
-            client.getStorage().getGuild(body.get("guild_id").getAsString())
+            client.getStorage().getRole(guild, roleId)
         );
     }
 }
