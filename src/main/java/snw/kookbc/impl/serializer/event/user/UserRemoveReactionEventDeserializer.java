@@ -18,19 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import java.lang.reflect.Type;
-import java.util.Optional;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Reaction;
 import snw.jkook.event.user.UserRemoveReactionEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
 
 public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer<UserRemoveReactionEvent> {
 
@@ -48,18 +46,20 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
         );
         if (reaction != null) {
             client.getStorage().removeReaction(reaction);
+        } else {
+            reaction = new ReactionImpl(
+                    client,
+                    body.get("msg.id").getAsString(),
+                    customEmoji,
+                    client.getStorage().getUser(body.get("user_id").getAsString()),
+                    -1
+            );
         }
         return new UserRemoveReactionEvent(
             timeStamp,
             client.getStorage().getUser(body.get("user_id").getAsString()),
             body.get("msg_id").getAsString(),
-            Optional.ofNullable(reaction).orElseGet(() -> new ReactionImpl(
-                client,
-                body.get("msg.id").getAsString(),
-                customEmoji,
-                client.getStorage().getUser(body.get("user_id").getAsString()),
-                -1
-            ))
+            reaction
         );
     }
 
