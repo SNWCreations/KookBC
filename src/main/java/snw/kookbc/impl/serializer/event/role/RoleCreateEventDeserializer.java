@@ -48,10 +48,10 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
     }
 
     @Override
-    protected void beforeReturn(RoleCreateEvent roleCreateEvent) {
+    protected void beforeReturn(RoleCreateEvent event) {
         client.getStorage().addRole(
-            client.getStorage().getGuild(roleCreateEvent.getRole().getGuild().getId()),
-            roleCreateEvent.getRole()
+            client.getStorage().getGuild(event.getRole().getGuild().getId()),
+            event.getRole()
         );
     }
 

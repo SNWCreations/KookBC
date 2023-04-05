@@ -43,8 +43,8 @@ public class PrivateMessageDeleteEventDeserializer extends NormalEventDeserializ
     }
 
     @Override
-    protected void beforeReturn(PrivateMessageDeleteEvent privateMessageDeleteEvent) {
-        client.getStorage().removeMessage(privateMessageDeleteEvent.getMessageId());
+    protected void beforeReturn(PrivateMessageDeleteEvent event) {
+        client.getStorage().removeMessage(event.getMessageId());
     }
 
 }
