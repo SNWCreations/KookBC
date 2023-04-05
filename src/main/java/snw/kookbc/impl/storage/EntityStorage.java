@@ -241,6 +241,10 @@ public class EntityStorage {
         guilds.invalidate(id);
     }
 
+    public void removeRole(Role role) {
+        roles.invalidate(role.getGuild().getId() + "#" + role.getId());
+    }
+
     private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
         return Caffeine.newBuilder()
                 .weakValues()
@@ -271,9 +275,6 @@ public class EntityStorage {
         return funcWithRetry(original::load)::apply;
     }
 
-    public void removeRole(Role role) {
-        roles.invalidate(role.getGuild().getId() + "#" + role.getId());
-    }
 }
 
 interface UncheckedFunction<K, V> {
