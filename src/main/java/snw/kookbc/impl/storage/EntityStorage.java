@@ -270,6 +270,10 @@ public class EntityStorage {
     private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
         return funcWithRetry(original::load)::apply;
     }
+
+    public void removeRole(Role role) {
+        roles.invalidate(role.getGuild().getId() + "#" + role.getId());
+    }
 }
 
 interface UncheckedFunction<K, V> {

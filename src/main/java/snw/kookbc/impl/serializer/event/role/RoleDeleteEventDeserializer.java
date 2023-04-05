@@ -18,15 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
+import snw.jkook.entity.Role;
 import snw.jkook.event.role.RoleDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -37,13 +37,16 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
 
     @Override
     protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new RoleDeleteEvent(
-            timeStamp,
-            client.getEntityBuilder().buildRole(
+        Role role = client.getStorage().getRole(
                 client.getStorage().getGuild(get(object, "target_id").getAsString()),
+                get(object, "role_id").getAsInt(),
                 body
-            )
         );
+        return new RoleDeleteEvent(timeStamp, role);
     }
 
+    @Override
+    protected void beforeReturn(RoleDeleteEvent event) {
+        client.getStorage().removeRole(event.getRole());
+    }
 }
