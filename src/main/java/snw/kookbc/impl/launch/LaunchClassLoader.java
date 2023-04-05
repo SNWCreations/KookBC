@@ -76,6 +76,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("sun.");
         addClassLoaderExclusion("org.lwjgl.");
         addClassLoaderExclusion("org.apache.logging.");
+        addClassLoaderExclusion("org.apache.log4j.");
         addClassLoaderExclusion("org.slf4j");
         addClassLoaderExclusion("uk.org.lidalia.sysoutslf4j.");
         addClassLoaderExclusion("org.spongepowered.asm.launch.");

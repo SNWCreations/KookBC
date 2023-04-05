@@ -30,7 +30,8 @@ import snw.jkook.message.component.card.structure.Paragraph;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class SectionModuleSerializer implements JsonSerializer<SectionModule>, JsonDeserializer<SectionModule> {
     @Override
@@ -43,7 +44,9 @@ public class SectionModuleSerializer implements JsonSerializer<SectionModule>, J
         if (mode != null) {
             moduleObj.addProperty("mode", mode.getValue());
         }
-        moduleObj.add("accessory", context.serialize(sectionModule.getAccessory()));
+        if (sectionModule.getAccessory() != null) {
+            moduleObj.add("accessory", context.serialize(sectionModule.getAccessory()));
+        }
         return moduleObj;
     }
 
