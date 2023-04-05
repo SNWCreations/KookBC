@@ -22,10 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.HttpAPI;
@@ -42,6 +39,9 @@ import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
@@ -49,6 +49,7 @@ import static snw.kookbc.util.GsonUtil.get;
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
     private static final Collection<String> SUPPORTED_MUSIC_SOFTWARES;
+//    private static final long UPLOAD_FILE_LENGTH_LIMIT = 25; // in MB
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
@@ -60,9 +61,11 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     private final KBCClient client;
+    private final OkHttpClient okHttpClient;
 
     public HttpAPIImpl(KBCClient client) {
         this.client = client;
+        this.okHttpClient = new OkHttpClient();
     }
 
     @Override
@@ -120,6 +123,31 @@ public class HttpAPIImpl implements HttpAPI {
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
         return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+    }
+
+    @Override
+    public String uploadFile(String fileName, String url) throws IllegalArgumentException {
+        try {
+            new URL(url);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Cannot upload file: Malformed URL", e);
+        }
+        try (Response response = this.okHttpClient.newCall(
+                new Request.Builder()
+                        .get()
+                        .url(url)
+                        .build()
+        ).execute()) {
+            ResponseBody body = Objects.requireNonNull(response.body(), "Cannot upload file at " + url + ": Response body should not be null");
+            long contentLength = body.contentLength();
+//            if (contentLength > UPLOAD_FILE_LENGTH_LIMIT * 1024) {
+//                throw new IllegalArgumentException("Cannot upload file at " + url + ": Too big file");
+//            }
+            byte[] bytes = body.bytes();
+            return uploadFile(fileName, bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
