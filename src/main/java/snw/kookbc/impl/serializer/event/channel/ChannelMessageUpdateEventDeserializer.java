@@ -18,15 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.channel.ChannelMessageUpdateEvent;
+import snw.jkook.message.Message;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.message.MessageImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
 
 public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializer<ChannelMessageUpdateEvent> {
 
@@ -44,4 +46,11 @@ public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializ
         );
     }
 
+    @Override
+    protected void beforeReturn(ChannelMessageUpdateEvent event) {
+        Message message = client.getStorage().getMessage(event.getMessageId());
+        if (message != null) {
+            ((MessageImpl) message).setComponent0(new MarkdownComponent(event.getContent()));
+        }
+    }
 }
