@@ -18,18 +18,19 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildUnbanUserEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -41,9 +42,13 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
 
     @Override
     protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        List<User> unbanned = new ArrayList<>();
-        body.getAsJsonArray("user_id").forEach(
-                IT -> unbanned.add(client.getStorage().getUser(IT.getAsString()))
+        List<User> unbanned = Collections.unmodifiableList(
+                body.getAsJsonArray("user_id")
+                        .asList()
+                        .stream()
+                        .map(JsonElement::getAsString)
+                        .map(i -> client.getStorage().getUser(i))
+                        .collect(Collectors.toList())
         );
         return new GuildUnbanUserEvent(
             timeStamp,
