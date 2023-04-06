@@ -160,8 +160,20 @@ public class Main {
             client.shutdown();
             return 1;
         }
-        client.loop();
-        client.shutdown();
+
+        try {
+            client.loop();
+            while (client.isRunning()) {
+                try {
+                    client.waitUntilShutdown();
+                } catch (InterruptedException ignored) {
+                    // interrupted, but ignore
+                    // interrupt != client stopped
+                }
+            }
+        } finally {
+            client.shutdown();
+        }
         return 0;
     }
 

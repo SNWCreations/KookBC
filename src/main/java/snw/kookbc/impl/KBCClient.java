@@ -51,6 +51,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import org.jetbrains.annotations.Nullable;
@@ -68,6 +70,9 @@ public class KBCClient {
     private final File pluginsFolder;
     private final Session session = new Session(null);
     private final InternalPlugin internalPlugin;
+    private final ReentrantLock shutdownLock;
+    private final Condition shutdownCondition;
+
     protected final ExecutorService eventExecutor;
     protected Connector connector;
     protected List<Plugin> plugins;
@@ -107,6 +112,8 @@ public class KBCClient {
         this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.shutdownLock = new ReentrantLock();
+        this.shutdownCondition = this.shutdownLock.newCondition();
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -309,6 +316,24 @@ public class KBCClient {
         getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
         getCore().getLogger().info("Client stopped");
+        try {
+            shutdownLock.lock();
+            shutdownCondition.signalAll();
+        } finally {
+            shutdownLock.unlock();
+        }
+    }
+
+    public void waitUntilShutdown() throws InterruptedException {
+        if (!running) {
+            return;
+        }
+        try {
+            shutdownLock.lock();
+            shutdownCondition.await();
+        } finally {
+            shutdownLock.unlock();
+        }
     }
 
     protected void shutdownNetwork() {
