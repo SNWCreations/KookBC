@@ -163,14 +163,7 @@ public class Main {
 
         try {
             client.loop();
-            while (client.isRunning()) {
-                try {
-                    client.waitUntilShutdown();
-                } catch (InterruptedException ignored) {
-                    // interrupted, but ignore
-                    // interrupt != client stopped
-                }
-            }
+            client.waitUntilShutdown();
         } finally {
             client.shutdown();
         }

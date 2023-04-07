@@ -155,9 +155,7 @@ public class KBCClient {
 
 ### KBCClient#waitUntilShutdown
 
-此方法使当前线程阻塞，直到当前客户端实例终止，或当前线程被中断。
-
-如果不希望被中断打断，使用 while 循环检查客户端的运行状态 (使用 KBCClient#isRunning 方法)，条件满足时一直调用此方法即可。
+此方法使当前线程阻塞，直到当前客户端实例终止。
 
 ### KBCClient#loadAllPlugins
 

@@ -46,7 +46,6 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.Util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -347,13 +346,19 @@ public class KBCClient {
         }
     }
 
-    public void waitUntilShutdown() throws InterruptedException {
+    public void waitUntilShutdown() {
         if (!running) {
             return;
         }
+        shutdownLock.lock();
         try {
-            shutdownLock.lock();
-            shutdownCondition.await();
+            while (isRunning()) {
+                try {
+                    shutdownCondition.await();
+                } catch (InterruptedException ignored) {
+                    // interrupted, but ignore
+                }
+            }
         } finally {
             shutdownLock.unlock();
         }
