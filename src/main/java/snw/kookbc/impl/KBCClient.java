@@ -338,12 +338,15 @@ public class KBCClient {
         getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
         getCore().getLogger().info("Client stopped");
+
+        // region Emit shutdown signal
+        shutdownLock.lock();
         try {
-            shutdownLock.lock();
             shutdownCondition.signalAll();
         } finally {
             shutdownLock.unlock();
         }
+        // endregion
     }
 
     public void waitUntilShutdown() {
