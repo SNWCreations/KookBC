@@ -46,8 +46,11 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.Util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -289,6 +292,26 @@ public class KBCClient {
     // Note that this method won't return until the client stopped,
     // so call it in a single thread.
     public void loop() {
+        // region Check console status
+        getCore().getLogger().debug("Checking console");
+        boolean consoleAvailable = true;
+        Reader reader = new InputStreamReader(System.in);
+        try {
+            if (!reader.ready()) {
+                getCore().getLogger().warn("The console is NOT available. Running WITHOUT console!");
+                consoleAvailable = false;
+            }
+            reader.close();
+        } catch (IOException e) {
+            getCore().getLogger().warn("Exception occurred while checking console status! Running WITHOUT console!", e);
+            consoleAvailable = false;
+        }
+        if (!consoleAvailable) {
+            return;
+        }
+        reader = null; // help GC
+        // endregion
+
         getCore().getLogger().debug("Starting console");
         try {
             new Console(this).start();
