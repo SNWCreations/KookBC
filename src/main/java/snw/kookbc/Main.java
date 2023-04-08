@@ -160,13 +160,8 @@ public class Main {
             client.shutdown();
             return 1;
         }
-
-        try {
-            client.loop();
-            client.waitUntilShutdown();
-        } finally {
-            client.shutdown();
-        }
+        client.loop();
+        client.shutdown();
         return 0;
     }
 
