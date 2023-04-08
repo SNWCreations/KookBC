@@ -55,6 +55,9 @@ public class EventFactory {
     // the object should be provided from snw.kbc.impl.network.Frame#getData.
     public static Event getEvent(@NotNull KBCClient client, @NotNull Frame frame) {
         JsonObject object = frame.getData();
+        if (true) {
+            return client.getEventFactory().createEvent(object);
+        }
         long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
 
         JsonObject extra = object.getAsJsonObject("extra");

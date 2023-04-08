@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl;
 
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
@@ -34,6 +35,7 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.event.EventFactory2;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
@@ -53,8 +55,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.Nullable;
-
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
@@ -64,6 +64,7 @@ public class KBCClient {
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
     private final EntityUpdater entityUpdater;
+    private final EventFactory2 eventFactory;
     private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
@@ -74,7 +75,7 @@ public class KBCClient {
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        this(core, config, pluginsFolder, token, null, null, null, null, null);
+        this(core, config, pluginsFolder, token, null, null, null, null, null, null);
     }
 
     public KBCClient(
@@ -84,7 +85,8 @@ public class KBCClient {
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
             @Nullable MessageBuilder msgBuilder,
-            @Nullable EntityUpdater entityUpdater
+            @Nullable EntityUpdater entityUpdater,
+            @Nullable EventFactory2 eventFactory
     ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -107,6 +109,7 @@ public class KBCClient {
         this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> new EventFactory2(this));
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -345,6 +348,10 @@ public class KBCClient {
 
     public PluginMixinConfigManager getPluginMixinConfigManager() {
         return pluginMixinConfigManager;
+    }
+
+    public EventFactory2 getEventFactory() {
+        return eventFactory;
     }
 
     protected void registerInternal() {

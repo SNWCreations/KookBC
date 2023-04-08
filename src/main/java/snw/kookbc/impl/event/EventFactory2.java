@@ -43,15 +43,21 @@ import static snw.kookbc.util.GsonUtil.get;
 // after the works on this branch is done.
 public class EventFactory2 {
     protected final KBCClient client;
+    protected final EventManagerImpl eventManager;
     protected final Gson gson;
 
     public EventFactory2(KBCClient client) {
         this.client = client;
+        this.eventManager = ((EventManagerImpl) client.getCore().getEventManager());
         this.gson = createGson();
     }
 
     public Event createEvent(JsonObject object) {
-        return this.gson.fromJson(object, parseEventType(object));
+        Class<? extends Event> eventType = parseEventType(object);
+        if (!eventManager.isSubscribed(eventType)) {
+            return null;
+        }
+        return this.gson.fromJson(object, eventType);
     }
 
     protected Class<? extends Event> parseEventType(JsonObject object) {
