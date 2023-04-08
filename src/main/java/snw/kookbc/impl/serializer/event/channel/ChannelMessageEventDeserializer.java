@@ -34,12 +34,17 @@ public class ChannelMessageEventDeserializer extends BaseEventDeserializer<Chann
 
     @Override
     protected ChannelMessageEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        TextChannelMessage message = client.getMessageBuilder().buildTextChannelMessage(object);
-        return new ChannelMessageEvent(message.getTimeStamp(), message.getChannel(), message);
+        TextChannelMessage textChannelMessage = client.getMessageBuilder().buildTextChannelMessage(object);
+        return new ChannelMessageEvent(
+            textChannelMessage.getTimeStamp(),
+            textChannelMessage.getChannel(),
+            textChannelMessage
+        );
     }
 
     @Override
     protected void beforeReturn(ChannelMessageEvent event) {
         client.getStorage().addMessage(event.getMessage());
     }
+
 }

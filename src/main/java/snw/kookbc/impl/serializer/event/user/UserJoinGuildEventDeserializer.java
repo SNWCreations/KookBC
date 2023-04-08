@@ -24,37 +24,23 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.event.user.UserAddReactionEvent;
+import snw.jkook.event.user.UserJoinGuildEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
+public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<UserJoinGuildEvent> {
 
-    public UserAddReactionEventDeserializer(KBCClient client) {
+    public UserJoinGuildEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = body.get("msg_id").getAsString();
-        User user = client.getStorage().getUser(body.get("user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
-        ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
-        return new UserAddReactionEvent(
+    protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new UserJoinGuildEvent(
             timeStamp,
-            user,
-            messageId,
-            reaction
+            client.getCore().getUser(),
+            client.getStorage().getGuild(body.get("guild_id").getAsString())
         );
-    }
-
-    @Override
-    public void beforeReturn(UserAddReactionEvent event) {
-        client.getStorage().addReaction(event.getReaction());
     }
 
 }

@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+package snw.kookbc.impl.serializer.event.channel;
 
 import java.lang.reflect.Type;
 
@@ -24,37 +24,36 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.event.user.UserAddReactionEvent;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.event.channel.ChannelInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.ReactionImpl;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
+public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<ChannelInfoUpdateEvent> {
 
-    public UserAddReactionEventDeserializer(KBCClient client) {
+    public ChannelInfoUpdateEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = body.get("msg_id").getAsString();
-        User user = client.getStorage().getUser(body.get("user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
-        ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
-        return new UserAddReactionEvent(
+    protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        Channel channel;
+        String id = body.get("id").getAsString();
+        try {
+            channel = client.getStorage().getChannel(id);
+        } catch (BadResponseException e) {
+            client.getCore().getLogger().warn(
+                "Detected snw.jkook.event.channel.ChannelInfoUpdateEvent, but we are unable to fetch channel (id {}).",
+                id
+            );
+            return null;
+        }
+        client.getEntityUpdater().updateChannel(body, channel);
+        return new ChannelInfoUpdateEvent(
             timeStamp,
-            user,
-            messageId,
-            reaction
+            channel
         );
-    }
-
-    @Override
-    public void beforeReturn(UserAddReactionEvent event) {
-        client.getStorage().addReaction(event.getReaction());
     }
 
 }

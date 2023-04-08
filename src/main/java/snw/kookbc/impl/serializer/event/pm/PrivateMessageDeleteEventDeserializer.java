@@ -18,33 +18,33 @@
 
 package snw.kookbc.impl.serializer.event.pm;
 
-import com.google.gson.*;
-import snw.jkook.event.pm.PrivateMessageReceivedEvent;
-import snw.jkook.message.PrivateMessage;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
-
 import java.lang.reflect.Type;
 
-public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializer<PrivateMessageReceivedEvent> {
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
-    public PrivateMessageReceivedEventDeserializer(KBCClient client) {
+import snw.jkook.event.pm.PrivateMessageDeleteEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+public class PrivateMessageDeleteEventDeserializer extends NormalEventDeserializer<PrivateMessageDeleteEvent> {
+
+    public PrivateMessageDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        PrivateMessage privateMessage = client.getMessageBuilder().buildPrivateMessage(object);
-        return new PrivateMessageReceivedEvent(
-            privateMessage.getTimeStamp(),
-            privateMessage.getSender(),
-            privateMessage
+    protected PrivateMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        return new PrivateMessageDeleteEvent(
+            timeStamp,
+            body.get("msg_id").getAsString()
         );
     }
 
     @Override
-    protected void beforeReturn(PrivateMessageReceivedEvent event) {
-        client.getStorage().addMessage(event.getMessage());
+    protected void beforeReturn(PrivateMessageDeleteEvent event) {
+        client.getStorage().removeMessage(event.getMessageId());
     }
 
 }

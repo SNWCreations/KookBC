@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+package snw.kookbc.impl.serializer.event.guild;
 
 import java.lang.reflect.Type;
 
@@ -25,36 +25,25 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.event.user.UserAddReactionEvent;
+import snw.jkook.event.guild.GuildUpdateEmojiEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
+public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<GuildUpdateEmojiEvent> {
 
-    public UserAddReactionEventDeserializer(KBCClient client) {
+    public GuildUpdateEmojiEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = body.get("msg_id").getAsString();
-        User user = client.getStorage().getUser(body.get("user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
-        ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
-        return new UserAddReactionEvent(
+    protected GuildUpdateEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        CustomEmoji customEmoji = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+        client.getEntityUpdater().updateEmoji(body, customEmoji);
+        return new GuildUpdateEmojiEvent(
             timeStamp,
-            user,
-            messageId,
-            reaction
+            customEmoji.getGuild(),
+            customEmoji
         );
-    }
-
-    @Override
-    public void beforeReturn(UserAddReactionEvent event) {
-        client.getStorage().addReaction(event.getReaction());
     }
 
 }

@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+package snw.kookbc.impl.serializer.event.guild;
 
 import java.lang.reflect.Type;
 
@@ -24,37 +24,23 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.event.user.UserAddReactionEvent;
+import snw.jkook.event.guild.GuildDeleteEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
+public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildDeleteEvent> {
 
-    public UserAddReactionEventDeserializer(KBCClient client) {
+    public GuildDeleteEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = body.get("msg_id").getAsString();
-        User user = client.getStorage().getUser(body.get("user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
-        ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
-        return new UserAddReactionEvent(
+    protected GuildDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        client.getStorage().removeGuild(body.get("id").getAsString());
+        return new GuildDeleteEvent(
             timeStamp,
-            user,
-            messageId,
-            reaction
+            body.get("id").getAsString()
         );
-    }
-
-    @Override
-    public void beforeReturn(UserAddReactionEvent event) {
-        client.getStorage().addReaction(event.getReaction());
     }
 
 }

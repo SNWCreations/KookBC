@@ -16,45 +16,36 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.event.user;
+ package snw.kookbc.impl.serializer.event.channel;
 
 import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.event.user.UserAddReactionEvent;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.event.channel.ChannelCreateEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
-public class UserAddReactionEventDeserializer extends NormalEventDeserializer<UserAddReactionEvent> {
+public class ChannelCreateEventDeserializer extends NormalEventDeserializer<ChannelCreateEvent> {
 
-    public UserAddReactionEventDeserializer(KBCClient client) {
+    public ChannelCreateEventDeserializer(KBCClient client) {
         super(client);
     }
 
     @Override
-    protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = body.get("msg_id").getAsString();
-        User user = client.getStorage().getUser(body.get("user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
-        ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
-        return new UserAddReactionEvent(
+    protected ChannelCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        Channel newChannel = client.getEntityBuilder().buildChannel(body);
+        return new ChannelCreateEvent(
             timeStamp,
-            user,
-            messageId,
-            reaction
+            newChannel
         );
     }
 
     @Override
-    public void beforeReturn(UserAddReactionEvent event) {
-        client.getStorage().addReaction(event.getReaction());
+    protected void beforeReturn(ChannelCreateEvent event) {
+        client.getStorage().addChannel(event.getChannel());
     }
 
 }

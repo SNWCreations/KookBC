@@ -43,4 +43,5 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
         int itemId = get(object, "item_id").getAsInt();
         return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
     }
+
 }
