@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl;
 
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
@@ -48,8 +49,6 @@ import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,7 +56,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.Nullable;
+import static snw.kookbc.util.Util.isConsoleAvailable;
 
 // The client representation.
 public class KBCClient {
@@ -293,22 +292,10 @@ public class KBCClient {
     public void loop() {
         // region Check console status
         getCore().getLogger().debug("Checking console");
-        boolean consoleAvailable = true;
-        Reader reader = new InputStreamReader(System.in);
-        try {
-            if (!reader.ready()) {
-                getCore().getLogger().warn("The console is NOT available. Running WITHOUT console!");
-                consoleAvailable = false;
-            }
-            reader.close();
-        } catch (IOException e) {
-            getCore().getLogger().warn("Exception occurred while checking console status! Running WITHOUT console!", e);
-            consoleAvailable = false;
-        }
-        if (!consoleAvailable) {
+        if (!isConsoleAvailable()) {
+            getCore().getLogger().warn("The console is NOT available. Running WITHOUT console!");
             return;
         }
-        reader = null; // help GC
         // endregion
 
         getCore().getLogger().debug("Starting console");
