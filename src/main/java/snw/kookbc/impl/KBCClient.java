@@ -156,7 +156,7 @@ public class KBCClient {
     // Call this to start KookBC, then you can use JKook API.
     // WARN: Set the JKook Core by constructing CoreImpl and call getCore().setCore() using it first,
     // or you will get NullPointerException.
-    public void start() {
+    public synchronized void start() {
         // Print version information
         getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
         getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
@@ -311,7 +311,7 @@ public class KBCClient {
     }
 
     // Shutdown this client, and loop() method will return after this method completes.
-    public void shutdown() {
+    public synchronized void shutdown() {
         getCore().getLogger().debug("Client shutdown request received");
         if (!isRunning()) {
             getCore().getLogger().debug("The client has already stopped");
