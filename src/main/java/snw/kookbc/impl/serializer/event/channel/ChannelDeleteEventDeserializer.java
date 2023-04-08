@@ -40,7 +40,7 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
     protected ChannelDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelDeleteEvent(
             timeStamp,
-            body.get("id").getAsString(),
+            get(object, "id").getAsString(),
             client.getStorage().getGuild(get(object, "target_id").getAsString())
         );
     }

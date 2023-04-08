@@ -48,7 +48,7 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
         return new UserLeaveGuildEvent(
             timeStamp,
             user,
-            client.getStorage().getGuild(body.get("guild_id").getAsString())
+            client.getStorage().getGuild(get(object, "guild_id").getAsString())
         );
     }
 

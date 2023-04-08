@@ -56,8 +56,8 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
             timeStamp,
             entityStorage.getGuild(get(object, "target_id").getAsString()),
             banned,
-            entityStorage.getUser(body.get("operator_id").getAsString()),
-            body.get("remark").getAsString()
+            entityStorage.getUser(get(object, "operator_id").getAsString()),
+            get(object, "remark").getAsString()
         );
     }
 

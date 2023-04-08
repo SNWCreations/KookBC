@@ -18,16 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.event.guild.GuildUpdateEmojiEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<GuildUpdateEmojiEvent> {
 
@@ -37,7 +38,7 @@ public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<G
 
     @Override
     protected GuildUpdateEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji customEmoji = client.getStorage().getEmoji(body.get("id").getAsString(), body);
+        CustomEmoji customEmoji = client.getStorage().getEmoji(get(object, "id").getAsString(), body);
         client.getEntityUpdater().updateEmoji(body, customEmoji);
         return new GuildUpdateEmojiEvent(
             timeStamp,

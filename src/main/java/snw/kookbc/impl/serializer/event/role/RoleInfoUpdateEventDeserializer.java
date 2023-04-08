@@ -40,7 +40,7 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
     @Override
     protected RoleInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
-        int roleId = body.get("role_id").getAsInt();
+        int roleId = get(object, "role_id").getAsInt();
         client.getEntityUpdater().updateRole(body, client.getStorage().getRole(guild, roleId, body));
         return new RoleInfoUpdateEvent(
             timeStamp,

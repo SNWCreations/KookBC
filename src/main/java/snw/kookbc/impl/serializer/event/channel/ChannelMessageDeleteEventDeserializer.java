@@ -18,16 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.channel.ChannelMessageDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializer<ChannelMessageDeleteEvent> {
 
@@ -39,8 +40,8 @@ public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializ
     protected ChannelMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelMessageDeleteEvent(
             timeStamp,
-            (TextChannel) client.getStorage().getChannel(body.get("channel_id").getAsString()), // if this error, we can regard it as internal error
-            body.get("msg_id").getAsString()
+            (TextChannel) client.getStorage().getChannel(get(object, "channel_id").getAsString()), // if this error, we can regard it as internal error
+            get(object, "msg_id").getAsString()
         );
     }
 

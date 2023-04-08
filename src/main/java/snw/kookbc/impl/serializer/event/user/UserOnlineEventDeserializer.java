@@ -18,15 +18,16 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.user.UserOnlineEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnlineEvent> {
 
@@ -38,7 +39,7 @@ public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnl
     protected UserOnlineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserOnlineEvent(
             timeStamp,
-            client.getStorage().getUser(body.get("user_id").getAsString())
+            client.getStorage().getUser(get(object, "user_id").getAsString())
         );
     }
 

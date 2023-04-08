@@ -30,6 +30,8 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;
 
+import static snw.kookbc.util.GsonUtil.get;
+
 public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer<UserRemoveReactionEvent> {
 
     public UserRemoveReactionEventDeserializer(KBCClient client) {
@@ -41,24 +43,24 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
         JsonObject emojiObject = body.getAsJsonObject("emoji");
         CustomEmoji customEmoji = client.getStorage().getEmoji(emojiObject.get("id").getAsString(), emojiObject);
         Reaction reaction = client.getStorage().getReaction(
-                body.get("msg_id").getAsString(), customEmoji,
-                client.getStorage().getUser(body.get("user_id").getAsString())
+                get(object, "msg_id").getAsString(), customEmoji,
+                client.getStorage().getUser(get(object, "user_id").getAsString())
         );
         if (reaction != null) {
             client.getStorage().removeReaction(reaction);
         } else {
             reaction = new ReactionImpl(
                     client,
-                    body.get("msg.id").getAsString(),
+                    get(object, "msg.id").getAsString(),
                     customEmoji,
-                    client.getStorage().getUser(body.get("user_id").getAsString()),
+                    client.getStorage().getUser(get(object, "user_id").getAsString()),
                     -1
             );
         }
         return new UserRemoveReactionEvent(
             timeStamp,
-            client.getStorage().getUser(body.get("user_id").getAsString()),
-            body.get("msg_id").getAsString(),
+            client.getStorage().getUser(get(object, "user_id").getAsString()),
+            get(object, "msg_id").getAsString(),
             reaction
         );
     }

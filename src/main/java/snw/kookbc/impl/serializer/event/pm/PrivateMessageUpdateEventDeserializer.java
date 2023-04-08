@@ -18,15 +18,16 @@
 
 package snw.kookbc.impl.serializer.event.pm;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.pm.PrivateMessageUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class PrivateMessageUpdateEventDeserializer extends NormalEventDeserializer<PrivateMessageUpdateEvent> {
 
@@ -38,8 +39,8 @@ public class PrivateMessageUpdateEventDeserializer extends NormalEventDeserializ
     protected PrivateMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new PrivateMessageUpdateEvent(
             timeStamp,
-            body.get("msg_id").getAsString(),
-            body.get("content").getAsString()
+            get(object, "msg_id").getAsString(),
+            get(object, "content").getAsString()
         );
     }
 

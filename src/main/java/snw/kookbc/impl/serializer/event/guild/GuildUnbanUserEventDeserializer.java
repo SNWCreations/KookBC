@@ -54,7 +54,7 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
             timeStamp,
             client.getStorage().getGuild(get(object, "target_id").getAsString()),
             unbanned,
-            client.getStorage().getUser(body.get("operator_id").getAsString())
+            client.getStorage().getUser(get(object, "operator_id").getAsString())
         );
     }
 

@@ -30,6 +30,8 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;
 
+import static snw.kookbc.util.GsonUtil.get;
+
 public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializer<ChannelMessageUpdateEvent> {
 
     public ChannelMessageUpdateEventDeserializer(KBCClient client) {
@@ -40,9 +42,9 @@ public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializ
     protected ChannelMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelMessageUpdateEvent(
             timeStamp,
-            client.getStorage().getChannel(body.get("channel_id").getAsString()),
-            body.get("msg_id").getAsString(),
-            body.get("content").getAsString()
+            client.getStorage().getChannel(get(object, "channel_id").getAsString()),
+            get(object, "msg_id").getAsString(),
+            get(object, "content").getAsString()
         );
     }
 

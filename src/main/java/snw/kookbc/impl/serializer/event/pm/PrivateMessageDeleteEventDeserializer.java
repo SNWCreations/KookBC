@@ -18,15 +18,16 @@
 
 package snw.kookbc.impl.serializer.event.pm;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.pm.PrivateMessageDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class PrivateMessageDeleteEventDeserializer extends NormalEventDeserializer<PrivateMessageDeleteEvent> {
 
@@ -38,7 +39,7 @@ public class PrivateMessageDeleteEventDeserializer extends NormalEventDeserializ
     protected PrivateMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new PrivateMessageDeleteEvent(
             timeStamp,
-            body.get("msg_id").getAsString()
+            get(object, "msg_id").getAsString()
         );
     }
 

@@ -18,17 +18,18 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import java.lang.reflect.Type;
-import java.util.Objects;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.user.UserClickButtonEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+import java.util.Objects;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class UserClickButtonEventDeserializer extends NormalEventDeserializer<UserClickButtonEvent> {
 
@@ -40,13 +41,13 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
     protected UserClickButtonEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserClickButtonEvent(
             timeStamp,
-            client.getStorage().getUser(body.get("user_id").getAsString()),
-            body.get("msg_id").getAsString(),
-            body.get("value").getAsString(),
+            client.getStorage().getUser(get(object, "user_id").getAsString()),
+            get(object, "msg_id").getAsString(),
+            get(object, "value").getAsString(),
             Objects.equals(
-                body.get("user_id").getAsString(),
-                body.get("target_id").getAsString()
-            ) ? null : (TextChannel) client.getStorage().getChannel(body.get("target_id").getAsString())
+                get(object, "user_id").getAsString(),
+                get(object, "target_id").getAsString()
+            ) ? null : (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString())
         );
     }
 

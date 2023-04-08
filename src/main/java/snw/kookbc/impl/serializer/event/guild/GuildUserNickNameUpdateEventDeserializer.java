@@ -43,8 +43,8 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
         return new GuildUserNickNameUpdateEvent(
             timeStamp,
             entityStorage.getGuild(get(object, "target_id").getAsString()),
-            entityStorage.getUser(body.get("user_id").getAsString()),
-            body.get("nickname").getAsString()
+            entityStorage.getUser(get(object, "user_id").getAsString()),
+            get(object, "nickname").getAsString()
         );
     }
 
