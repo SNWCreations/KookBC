@@ -294,6 +294,9 @@ public class KBCClient {
         getCore().getLogger().debug("Checking console");
         if (!isConsoleAvailable()) {
             getCore().getLogger().warn("The console is NOT available. Running WITHOUT console!");
+            getCore().getLogger().warn("You can stop this process by creating a new file named");
+            getCore().getLogger().warn("KOOKBC_STOP in the working directory of this process.");
+            new StopSignalListener(this).start();
             return;
         }
         // endregion
@@ -439,4 +442,35 @@ public class KBCClient {
                 .register(getInternalPlugin());
     }
 
+}
+
+class StopSignalListener extends Thread {
+    private final KBCClient client;
+
+    StopSignalListener(KBCClient client) {
+        super("KookBC - StopSignalListener");
+        this.setDaemon(true);
+        this.client = client;
+    }
+
+    @Override
+    public void run() {
+        final KBCClient client = this.client;
+        final File localFile = new File("./KOOKBC_STOP");
+        while (client.isRunning()) {
+            try {
+                //noinspection BusyWait
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                continue;
+            }
+            if (localFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                localFile.delete();
+                client.getCore().getLogger().info("Received stop signal by new file. Stopping!");
+                client.shutdown();
+                return;
+            }
+        }
+    }
 }
