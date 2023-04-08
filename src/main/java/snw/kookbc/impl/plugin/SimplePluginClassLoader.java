@@ -27,6 +27,7 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.util.Validate;
+import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.util.Util;
@@ -42,10 +43,13 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import static snw.kookbc.util.Util.inputStreamToByteArray;
+
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final String CLASSLOADER_INCLUSION_KEY = "KBC_CLSLDR_INCLUDE";
     private final KBCClient client;
     private PluginDescription description;
     private final File file;
@@ -160,7 +164,28 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
             }
 
+            loadClassLoaderInclusion(jar);
+
             return loadPlugin1(file, description);
+        }
+    }
+
+    protected void loadClassLoaderInclusion(JarFile jar) {
+        if (LaunchMain.classLoader == null) {
+            return; // impossible to add!
+        }
+        JarEntry includeFileKey = jar.getJarEntry(CLASSLOADER_INCLUSION_KEY);
+        if (includeFileKey != null) {
+            String rule;
+            try {
+                rule = new String(inputStreamToByteArray(jar.getInputStream(includeFileKey)));
+            } catch (IOException e) {
+                client.getCore().getLogger().warn("Cannot load class loader inclusion rule from input file {}", jar.getName());
+                return;
+            }
+            for (String s : rule.split("\n")) {
+                LaunchMain.classLoader.addClassLoaderInclusion(s);
+            }
         }
     }
 

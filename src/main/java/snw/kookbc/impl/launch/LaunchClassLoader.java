@@ -98,9 +98,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addTransformerExclusion("com.google.common.");
         addTransformerExclusion("org.bouncycastle.");
 
-        // class loader inclusions
-        addClassLoaderInclusion("com.sun.jna.");
-
         if (GET_DEFINED_PACKAGE != null) {
             final MethodHandle gdpForThis = GET_DEFINED_PACKAGE.bindTo(this);
             packageProvider = name -> {
