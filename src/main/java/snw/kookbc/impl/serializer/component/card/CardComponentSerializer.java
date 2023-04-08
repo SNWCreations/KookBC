@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component;
+package snw.kookbc.impl.serializer.component.card;
 
 import com.google.gson.*;
 import snw.jkook.message.component.card.CardComponent;
@@ -25,29 +25,28 @@ import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.*;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.*;
 
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
-    public static final Map<String, Class<? extends BaseModule>> MODULE_MAP = new HashMap<>();
+    public static final Map<String, Class<? extends BaseModule>> MODULE_MAP;
 
     static {
-        MODULE_MAP.put("action-group", ActionGroupModule.class);
-        MODULE_MAP.put("container", ContainerModule.class);
-        MODULE_MAP.put("context", ContextModule.class);
-        MODULE_MAP.put("countdown", CountdownModule.class);
-        MODULE_MAP.put("divider", DividerModule.class);
-        MODULE_MAP.put("file", FileModule.class);
-        MODULE_MAP.put("audio", FileModule.class);
-        MODULE_MAP.put("video", FileModule.class);
-        MODULE_MAP.put("header", HeaderModule.class);
-        MODULE_MAP.put("image-group", ImageGroupModule.class);
-        MODULE_MAP.put("invite", InviteModule.class);
-        MODULE_MAP.put("section", SectionModule.class);
+        Map<String, Class<? extends BaseModule>> mutableMap = new HashMap<>();
+        mutableMap.put("action-group", ActionGroupModule.class);
+        mutableMap.put("container", ContainerModule.class);
+        mutableMap.put("context", ContextModule.class);
+        mutableMap.put("countdown", CountdownModule.class);
+        mutableMap.put("divider", DividerModule.class);
+        mutableMap.put("file", FileModule.class);
+        mutableMap.put("audio", FileModule.class);
+        mutableMap.put("video", FileModule.class);
+        mutableMap.put("header", HeaderModule.class);
+        mutableMap.put("image-group", ImageGroupModule.class);
+        mutableMap.put("invite", InviteModule.class);
+        mutableMap.put("section", SectionModule.class);
+        MODULE_MAP = Collections.unmodifiableMap(mutableMap);
     }
 
     @Override

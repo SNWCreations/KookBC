@@ -27,7 +27,7 @@ public final class PrefixLogger implements Logger {
     private final Logger logger;
 
     public PrefixLogger(String prefix, Logger logger) {
-        this.prefix = String.format("[%s]", prefix);
+        this.prefix = "[" + prefix + "]";
         this.logger = logger;
     }
 

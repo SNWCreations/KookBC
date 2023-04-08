@@ -30,6 +30,7 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class TextChannelMessageImpl extends MessageImpl implements TextChannelMessage {
@@ -129,9 +130,6 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
 
     @Override
     public void delete() {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .build();
-        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
     }
 }

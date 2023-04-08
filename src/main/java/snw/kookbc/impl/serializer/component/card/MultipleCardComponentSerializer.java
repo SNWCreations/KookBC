@@ -15,28 +15,26 @@
  *     You should have received a copy of the GNU Affero General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.module.InviteModule;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 
 import java.lang.reflect.Type;
+import static snw.kookbc.util.GsonUtil.createListType;
 
-import static snw.kookbc.util.GsonUtil.*;
+public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {
+    private static final Type LIST_CARDCOMPONENT = createListType(CardComponent.class);
 
-public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
     @Override
-    public JsonElement serialize(InviteModule module, Type typeOfSrc, JsonSerializationContext context) {
-        JsonObject moduleObj = new JsonObject();
-        moduleObj.addProperty("type", "invite");
-        moduleObj.addProperty("code", module.getCode());
-        return moduleObj;
+    public JsonElement serialize(MultipleCardComponent src, Type typeOfSrc, JsonSerializationContext context) {
+        return context.serialize(src.getComponents());
     }
 
     @Override
-    public InviteModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        JsonObject jsonObject = element.getAsJsonObject();
-        return new InviteModule(get(jsonObject, "code").getAsString());
+    public MultipleCardComponent deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonArray array = json.getAsJsonArray();
+        return new MultipleCardComponent(context.deserialize(array, LIST_CARDCOMPONENT));
     }
 }

@@ -27,6 +27,7 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.util.Validate;
+import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.util.Util;
@@ -42,11 +43,13 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import static snw.kookbc.util.Util.inputStreamToByteArray;
+
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
-    private static final Collection<SimplePluginClassLoader> INSTANCES = new LinkedList<>();
-
+    public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final String CLASSLOADER_INCLUSION_KEY = "KBC_CLSLDR_INCLUDE";
     private final KBCClient client;
     private PluginDescription description;
     private final File file;
@@ -161,7 +164,28 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
             }
 
+            loadClassLoaderInclusion(jar);
+
             return loadPlugin1(file, description);
+        }
+    }
+
+    protected void loadClassLoaderInclusion(JarFile jar) {
+        if (LaunchMain.classLoader == null) {
+            return; // impossible to add!
+        }
+        JarEntry includeFileKey = jar.getJarEntry(CLASSLOADER_INCLUSION_KEY);
+        if (includeFileKey != null) {
+            String rule;
+            try {
+                rule = new String(inputStreamToByteArray(jar.getInputStream(includeFileKey)));
+            } catch (IOException e) {
+                client.getCore().getLogger().warn("Cannot load class loader inclusion rule from input file {}", jar.getName());
+                return;
+            }
+            for (String s : rule.split("\n")) {
+                LaunchMain.classLoader.addClassLoaderInclusion(s);
+            }
         }
     }
 
@@ -179,18 +203,30 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
+        return findClass0(name, false);
+    }
+
+    public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
         try {
             return super.findClass(name);
-        } catch (ClassNotFoundException e) {
-            // Try to load class from other known instances
-            for (ClassLoader classLoader : INSTANCES) {
-                if (classLoader == this) {
-                    continue;
-                }
-                try {
-                    return classLoader.loadClass(name);
-                } catch (ClassNotFoundException ignored) {
-                }
+        } catch (ClassNotFoundException ignored) {
+        }
+
+        // Try to load class from other known instances if needed
+        if (!dontCallOther) {
+            return loadFromOther(name);
+        }
+        throw new ClassNotFoundException(name);
+    }
+
+    protected Class<?> loadFromOther(String name) throws ClassNotFoundException {
+        for (SimplePluginClassLoader classLoader : INSTANCES) {
+            if (classLoader == this) {
+                continue;
+            }
+            try {
+                return classLoader.findClass0(name, true); // use true to prevent stack over flow
+            } catch (ClassNotFoundException ignored) {
             }
         }
         throw new ClassNotFoundException(name);

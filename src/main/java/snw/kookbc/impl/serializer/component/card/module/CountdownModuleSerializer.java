@@ -16,29 +16,34 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.module.DividerModule;
+import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.*;
 
-public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
+public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override
-    public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        moduleObj.addProperty("type", "divider");
+        moduleObj.addProperty("type", "countdown");
+        moduleObj.addProperty("mode", module.getType().getValue());
+        if (module.getType() == CountdownModule.Type.SECOND) {
+            moduleObj.addProperty("startTime", module.getStartTime());
+        }
+        moduleObj.addProperty("endTime", module.getEndTime());
         return moduleObj;
     }
 
     @Override
-    public DividerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        if (has(jsonObject, "type") && get(jsonObject, "type").getAsString().equals("divider")) {
-            return DividerModule.INSTANCE;
-        }
-        throw new JsonParseException("Invalid divider module");
+        String mode = get(jsonObject, "mode").getAsString();
+        long startTime = get(jsonObject, "startTime").getAsLong();
+        long endTime = get(jsonObject, "endTime").getAsLong();
+        return new CountdownModule(CountdownModule.Type.value(mode), startTime, endTime);
     }
 }

@@ -28,6 +28,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
@@ -75,9 +76,6 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
 
     @Override
     public void delete() {
-        Map<String, Object> body = new MapBuilder()
-                .put("msg_id", getId())
-                .build();
-        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
     }
 }
