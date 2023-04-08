@@ -129,12 +129,4 @@ public class Util {
     public static boolean isStartByLaunch() {
         return Boolean.getBoolean("kookbc.launch");
     }
-
-    public static boolean isConsoleAvailable() {
-        try (Reader reader = new InputStreamReader(System.in)) {
-            return reader.ready();
-        } catch (IOException ignored) {
-        }
-        return false;
-    }
 }

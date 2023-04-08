@@ -56,8 +56,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-import static snw.kookbc.util.Util.isConsoleAvailable;
-
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
@@ -290,20 +288,17 @@ public class KBCClient {
     // Note that this method won't return until the client stopped,
     // so call it in a single thread.
     public void loop() {
-        // region Check console status
-        getCore().getLogger().debug("Checking console");
-        if (!isConsoleAvailable()) {
-            getCore().getLogger().warn("The console is NOT available. Running WITHOUT console!");
-            getCore().getLogger().warn("You can stop this process by creating a new file named");
-            getCore().getLogger().warn("KOOKBC_STOP in the working directory of this process.");
-            new StopSignalListener(this).start();
-            return;
-        }
-        // endregion
-
         getCore().getLogger().debug("Starting console");
         try {
             new Console(this).start();
+        } catch (IOException e) {
+            getCore().getLogger().error("Failed to read input from console");
+            getCore().getLogger().error("Running WITHOUT console!");
+            getCore().getLogger().error("You can stop this process by creating a new file named");
+            getCore().getLogger().error("KOOKBC_STOP in the working directory of this process.");
+            getCore().getLogger().error("Stacktrace is following:");
+            e.printStackTrace();
+            new StopSignalListener(this).start();
         } catch (Exception e) {
             getCore().getLogger().error("Unexpected situation happened during the main loop.", e);
         }
