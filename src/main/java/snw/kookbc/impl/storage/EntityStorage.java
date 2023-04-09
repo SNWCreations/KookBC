@@ -27,6 +27,7 @@ import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
@@ -279,6 +280,13 @@ public class EntityStorage {
         return funcWithRetry(original::load)::apply;
     }
 
+    public void cleanUpUserPermissionOverwrite(Guild guild, User user) {
+        channels.asMap().values()
+                .stream()
+                .filter(i -> i.getGuild() == guild)
+                .map(i -> ((ChannelImpl) i).getOverwrittenUserPermissions0())
+                .forEach(i -> i.removeIf(o -> o.getUser() == user));
+    }
 }
 
 interface UncheckedFunction<K, V> {

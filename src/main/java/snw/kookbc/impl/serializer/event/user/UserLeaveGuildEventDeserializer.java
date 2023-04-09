@@ -55,4 +55,8 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
         );
     }
 
+    @Override
+    protected void beforeReturn(UserLeaveGuildEvent event) {
+        client.getStorage().cleanUpUserPermissionOverwrite(event.getGuild(), event.getUser());
+    }
 }

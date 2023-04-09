@@ -219,6 +219,10 @@ public abstract class ChannelImpl implements Channel {
         return Collections.unmodifiableCollection(upo);
     }
 
+    public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions0() {
+        return upo;
+    }
+
     public void setOverwrittenUserPermissions(Collection<UserPermissionOverwrite> upo) {
         this.upo = upo;
     }
