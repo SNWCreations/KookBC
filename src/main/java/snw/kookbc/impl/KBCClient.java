@@ -158,6 +158,7 @@ public class KBCClient {
         // Print version information
         getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
         getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
+        getCore().getLogger().info("Working directory: {}", new File(".").getAbsolutePath());
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
