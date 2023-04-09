@@ -145,7 +145,7 @@ public class CommandManagerImpl implements CommandManager {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
+        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine))); // arguments, token " ? it's developer's work, lol
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
@@ -419,6 +419,84 @@ public class CommandManagerImpl implements CommandManager {
             }
         });
     }
+
+    // written by ChatGPT 3.5 Turbo model, made a "little" change to ensure it fits our requirements.
+    private static String[] parseCmdLine(String input) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean insideQuotes = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
+            if (c == '\"') {
+                insideQuotes = !insideQuotes;
+                sb.append(c);
+            } else if (c == ' ') {
+                if (!insideQuotes) {
+                    if (sb.length() > 0) {
+                        tokens.add(sb.toString());
+                        sb.setLength(0);
+                    }
+                } else {
+                    if (sb.charAt(sb.length() - 1) == '"') {
+                        tokens.add(sb.toString());
+                        sb.setLength(0);
+                        insideQuotes = false;
+                    } else {
+                        sb.append(c);
+                    }
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+
+        if (sb.length() > 0) {
+            String currentResult = sb.toString();
+            if (tokens.isEmpty()) {
+                if (currentResult.startsWith("\"") && currentResult.endsWith("\"")) {
+                    tokens.add(currentResult);
+                } else {
+                    tokens.addAll(Arrays.asList(sb.toString().split(" ")));
+                }
+            } else {
+                tokens.add(currentResult);
+            }
+        }
+
+        // second iteration - prevent remaining space problems
+
+        List<String> secondIter = new ArrayList<>();
+        for (String s : tokens) {
+            int quoteCount = countQuotes(s);
+            if (quoteCount == 2) {
+                if (!s.startsWith("\"") || !s.endsWith("\"")) {
+                    secondIter.addAll(Arrays.asList(s.split(" ")));
+                    continue;
+                }
+            }
+            if (quoteCount == 1) {
+                secondIter.addAll(Arrays.asList(s.split(" ")));
+                continue;
+            }
+
+            secondIter.add(s);
+        }
+
+        return secondIter.toArray(new String[0]);
+    }
+
+    private static int countQuotes(String s) {
+        int count = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '\"') {
+                count++;
+            }
+        }
+        return count;
+    }
+
 
     // execute the runnable, if it fails, a CommandException will be thrown
     private void exec(Runnable runnable, long startTimeStamp, String cmdLine) throws CommandException {
