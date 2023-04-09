@@ -245,6 +245,10 @@ public class EntityStorage {
         roles.invalidate(role.getGuild().getId() + "#" + role.getId());
     }
 
+    public void removeEmoji(CustomEmoji emoji) {
+        emojis.invalidate(emoji.getId());
+    }
+
     private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
         return Caffeine.newBuilder()
                 .weakValues()

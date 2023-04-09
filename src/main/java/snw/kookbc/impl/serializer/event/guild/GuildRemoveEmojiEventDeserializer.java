@@ -46,4 +46,8 @@ public class GuildRemoveEmojiEventDeserializer extends NormalEventDeserializer<G
         );
     }
 
+    @Override
+    protected void beforeReturn(GuildRemoveEmojiEvent event) {
+        client.getStorage().removeEmoji(event.getEmoji());
+    }
 }
