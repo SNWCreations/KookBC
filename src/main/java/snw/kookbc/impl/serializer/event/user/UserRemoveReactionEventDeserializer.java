@@ -40,8 +40,8 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
 
     @Override
     protected UserRemoveReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        JsonObject emojiObject = body.getAsJsonObject("emoji");
-        CustomEmoji customEmoji = client.getStorage().getEmoji(emojiObject.get("id").getAsString(), emojiObject);
+        JsonObject emojiObject = get(body, "emoji").getAsJsonObject();
+        CustomEmoji customEmoji = client.getStorage().getEmoji(get(emojiObject, "id").getAsString(), emojiObject);
         Reaction reaction = client.getStorage().getReaction(
                 get(object, "msg_id").getAsString(), customEmoji,
                 client.getStorage().getUser(get(object, "user_id").getAsString())

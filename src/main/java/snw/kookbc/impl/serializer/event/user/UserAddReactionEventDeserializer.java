@@ -40,10 +40,10 @@ public class UserAddReactionEventDeserializer extends NormalEventDeserializer<Us
 
     @Override
     protected UserAddReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String messageId = get(object, "msg_id").getAsString();
-        User user = client.getStorage().getUser(get(object, "user_id").getAsString());
-        JsonObject rawEmoji = body.getAsJsonObject("emoji");
-        CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").getAsString(), rawEmoji);
+        String messageId = get(body, "msg_id").getAsString();
+        User user = client.getStorage().getUser(get(body, "user_id").getAsString());
+        JsonObject rawEmoji = get(body, "emoji").getAsJsonObject();
+        CustomEmoji emoji = client.getStorage().getEmoji(get(rawEmoji, "id").getAsString(), rawEmoji);
         ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
         return new UserAddReactionEvent(
             timeStamp,
