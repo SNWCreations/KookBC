@@ -43,15 +43,15 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
 
     @Override
     protected GuildBanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        EntityStorage entityStorage = client.getStorage();
         List<User> banned = Collections.unmodifiableList(
                 body.getAsJsonArray("user_id")
                         .asList()
                         .stream()
                         .map(JsonElement::getAsString)
-                        .map(i -> client.getStorage().getUser(i))
+                        .map(entityStorage::getUser)
                         .collect(Collectors.toList())
         );
-        EntityStorage entityStorage = client.getStorage();
         return new GuildBanUserEvent(
             timeStamp,
             entityStorage.getGuild(get(object, "target_id").getAsString()),
