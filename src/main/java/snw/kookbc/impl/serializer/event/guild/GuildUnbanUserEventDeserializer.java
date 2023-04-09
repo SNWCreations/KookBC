@@ -26,6 +26,7 @@ import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildUnbanUserEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import snw.kookbc.impl.storage.EntityStorage;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -42,19 +43,20 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
 
     @Override
     protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        EntityStorage storage = client.getStorage();
         List<User> unbanned = Collections.unmodifiableList(
                 body.getAsJsonArray("user_id")
                         .asList()
                         .stream()
                         .map(JsonElement::getAsString)
-                        .map(i -> client.getStorage().getUser(i))
+                        .map(storage::getUser)
                         .collect(Collectors.toList())
         );
         return new GuildUnbanUserEvent(
             timeStamp,
-            client.getStorage().getGuild(get(object, "target_id").getAsString()),
+            storage.getGuild(get(object, "target_id").getAsString()),
             unbanned,
-            client.getStorage().getUser(get(object, "operator_id").getAsString())
+            storage.getUser(get(object, "operator_id").getAsString())
         );
     }
 
