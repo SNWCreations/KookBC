@@ -222,7 +222,7 @@ public class ListenerImpl implements Listener {
                 // load plugin data
                 WrappedCommand wrappedCommand = cmdMan.getCommandMap()
                         .getView(true)
-                        .get(cmdLine.substring(0, cmdLine.indexOf(" ") - 1));
+                        .get(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
                 PluginDescription description = wrappedCommand.getPlugin().getDescription();
                 String pluginName = description.getName();
                 String pluginVer = description.getVersion();
