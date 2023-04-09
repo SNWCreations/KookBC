@@ -53,11 +53,24 @@ public class EventFactory2 {
     }
 
     public Event createEvent(JsonObject object) {
-        Class<? extends Event> eventType = parseEventType(object);
-        if (!eventManager.isSubscribed(eventType)) {
-            return null;
+        final Class<? extends Event> eventType = parseEventType(object);
+        if (eventType == null) {
+            return null; // unknown event type
         }
-        return this.gson.fromJson(object, eventType);
+        if (!eventManager.isSubscribed(eventType)) {
+            // if not message event, ensure command system can receive event.
+            if (eventType != ChannelMessageEvent.class && eventType != PrivateMessageEvent.class) {
+                return null;
+            }
+        }
+        final Event result = this.gson.fromJson(object, eventType);
+
+        // why the second condition? see ChannelInfoUpdateEventDeserializer
+        if (result == null && !(eventType == ChannelInfoUpdateEvent.class)) {
+            client.getCore().getLogger().error("We cannot understand the frame.");
+            client.getCore().getLogger().error("Frame content: {}", object);
+        }
+        return result;
     }
 
     protected Class<? extends Event> parseEventType(JsonObject object) {
@@ -67,6 +80,11 @@ public class EventFactory2 {
         }
         if (EventTypeMap.MAP.containsKey(type)) {
             return EventTypeMap.MAP.get(type);
+        }
+        try {
+            Integer.parseInt(type);
+        } catch (NumberFormatException e) {
+            return null; // unknown event type
         }
         // must be number at this time?
         if ("PERSON".equals(get(object, "channel_type").getAsString())) {

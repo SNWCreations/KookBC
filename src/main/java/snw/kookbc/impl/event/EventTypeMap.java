@@ -51,9 +51,6 @@ public final class EventTypeMap {
                 if (!(key instanceof String)) {
                     throw new IllegalArgumentException("Event type map requires String.");
                 }
-                if (!containsKey(key)) {
-                    throw new IllegalStateException("Unknown event type: " + key);
-                }
                 return super.get(key);
             }
         };
