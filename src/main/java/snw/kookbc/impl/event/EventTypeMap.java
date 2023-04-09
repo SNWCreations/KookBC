@@ -67,7 +67,7 @@ public final class EventTypeMap {
         mutableMap.put("deleted_channel", ChannelDeleteEvent.class);
         mutableMap.put("pinned_message", ChannelMessagePinEvent.class);
         mutableMap.put("unpinned_message", ChannelMessageUnpinEvent.class);
-        mutableMap.put("updated_guild_member", UserInfoUpdateEvent.class);
+        mutableMap.put("updated_guild_member", GuildUserNickNameUpdateEvent.class);
         mutableMap.put("guild_member_online", UserOnlineEvent.class);
         mutableMap.put("guild_member_offline", UserOfflineEvent.class);
         mutableMap.put("added_role", RoleCreateEvent.class);
