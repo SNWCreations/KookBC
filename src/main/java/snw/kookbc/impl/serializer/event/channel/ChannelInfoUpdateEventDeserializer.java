@@ -45,8 +45,9 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
             channel = client.getStorage().getChannel(id);
         } catch (BadResponseException e) {
             client.getCore().getLogger().warn(
-                "Detected snw.jkook.event.channel.ChannelInfoUpdateEvent, but we are unable to fetch channel (id {}).",
-                id
+                    "Detected snw.jkook.event.channel.ChannelInfoUpdateEvent, but we are unable to fetch channel (id {}).",
+                    id,
+                    e // log the exception
             );
             return null;
         }
