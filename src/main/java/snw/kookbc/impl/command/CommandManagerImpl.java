@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
@@ -426,9 +427,8 @@ public class CommandManagerImpl implements CommandManager {
         StringBuilder sb = new StringBuilder();
         boolean insideQuotes = false;
 
-        for (int i = 0; i < input.length(); i++) {
-            char c = input.charAt(i);
-
+        char[] chars = input.toCharArray();
+        for (char c : chars) {
             if (c == '\"') {
                 insideQuotes = !insideQuotes;
                 sb.append(c);
@@ -458,43 +458,29 @@ public class CommandManagerImpl implements CommandManager {
                 if (currentResult.startsWith("\"") && currentResult.endsWith("\"")) {
                     tokens.add(currentResult);
                 } else {
-                    tokens.addAll(Arrays.asList(sb.toString().split(" ")));
+                    if (currentResult.contains(" ")) {
+                        StringTokenizer st = new StringTokenizer(currentResult, " ");
+                        while (st.hasMoreTokens()) {
+                            tokens.add(st.nextToken());
+                        }
+                    } else {
+                        tokens.add(currentResult);
+                    }
                 }
             } else {
                 tokens.add(currentResult);
             }
         }
 
-        // second iteration - prevent remaining space problems
-
-        List<String> secondIter = new ArrayList<>();
-        for (String s : tokens) {
-            int quoteCount = countQuotes(s);
-            if (quoteCount == 2) {
-                if (!s.startsWith("\"") || !s.endsWith("\"")) {
-                    secondIter.addAll(Arrays.asList(s.split(" ")));
-                    continue;
-                }
-            }
-            if (quoteCount == 1) {
-                secondIter.addAll(Arrays.asList(s.split(" ")));
-                continue;
-            }
-
-            secondIter.add(s);
-        }
-
-        return secondIter.toArray(new String[0]);
-    }
-
-    private static int countQuotes(String s) {
-        int count = 0;
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == '\"') {
-                count++;
-            }
-        }
-        return count;
+        return tokens.stream()
+                .flatMap(s -> {
+                    if (s.startsWith("\"") && s.endsWith("\"")) {
+                        return Stream.of(s.substring(1, s.length() - 1));
+                    } else {
+                        return Arrays.stream(s.split(" "));
+                    }
+                })
+                .toArray(String[]::new);
     }
 
 
