@@ -43,24 +43,24 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
         JsonObject emojiObject = get(body, "emoji").getAsJsonObject();
         CustomEmoji customEmoji = client.getStorage().getEmoji(get(emojiObject, "id").getAsString(), emojiObject);
         Reaction reaction = client.getStorage().getReaction(
-                get(object, "msg_id").getAsString(), customEmoji,
-                client.getStorage().getUser(get(object, "user_id").getAsString())
+                get(body, "msg_id").getAsString(), customEmoji,
+                client.getStorage().getUser(get(body, "user_id").getAsString())
         );
         if (reaction != null) {
             client.getStorage().removeReaction(reaction);
         } else {
             reaction = new ReactionImpl(
                     client,
-                    get(object, "msg.id").getAsString(),
+                    get(body, "msg.id").getAsString(),
                     customEmoji,
-                    client.getStorage().getUser(get(object, "user_id").getAsString()),
+                    client.getStorage().getUser(get(body, "user_id").getAsString()),
                     -1
             );
         }
         return new UserRemoveReactionEvent(
             timeStamp,
-            client.getStorage().getUser(get(object, "user_id").getAsString()),
-            get(object, "msg_id").getAsString(),
+            client.getStorage().getUser(get(body, "user_id").getAsString()),
+            get(body, "msg_id").getAsString(),
             reaction
         );
     }

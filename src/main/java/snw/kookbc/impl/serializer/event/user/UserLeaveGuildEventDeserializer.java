@@ -40,15 +40,18 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
     protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         String realType = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
         User user;
+        String guildId;
         if ("self_exited_guild".equals(realType)) {
             user = client.getCore().getUser();
+            guildId = get(body, "guild_id").getAsString();
         } else {
             user = client.getStorage().getUser(get(body, "user_id").getAsString());
+            guildId = get(object, "target_id").getAsString();
         }
         return new UserLeaveGuildEvent(
-            timeStamp,
-            user,
-            client.getStorage().getGuild(get(object, "guild_id").getAsString())
+                timeStamp,
+                user,
+                client.getStorage().getGuild(guildId)
         );
     }
 

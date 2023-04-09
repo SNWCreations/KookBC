@@ -38,9 +38,9 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
 
     @Override
     protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        UserImpl updatedUser = ((UserImpl) client.getStorage().getUser(get(object, "body_id").getAsString()));
-        updatedUser.setName(get(object, "username").getAsString());
-        updatedUser.setAvatarUrl(get(object, "avatar").getAsString());
+        UserImpl updatedUser = ((UserImpl) client.getStorage().getUser(get(body, "body_id").getAsString()));
+        updatedUser.setName(get(body, "username").getAsString());
+        updatedUser.setAvatarUrl(get(body, "avatar").getAsString());
         return new UserInfoUpdateEvent(
             timeStamp,
             updatedUser

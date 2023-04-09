@@ -38,7 +38,7 @@ public class GuildRemoveEmojiEventDeserializer extends NormalEventDeserializer<G
 
     @Override
     protected GuildRemoveEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji customEmoji = client.getStorage().getEmoji(get(object, "id").getAsString(), body);
+        CustomEmoji customEmoji = client.getStorage().getEmoji(get(body, "id").getAsString(), body);
         return new GuildRemoveEmojiEvent(
             timeStamp,
             customEmoji.getGuild(),

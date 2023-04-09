@@ -37,10 +37,10 @@ public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildD
 
     @Override
     protected GuildDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        client.getStorage().removeGuild(get(object, "id").getAsString());
+        client.getStorage().removeGuild(get(body, "id").getAsString());
         return new GuildDeleteEvent(
             timeStamp,
-            get(object, "id").getAsString()
+            get(body, "id").getAsString()
         );
     }
 

@@ -39,7 +39,7 @@ public class UserOnlineEventDeserializer extends NormalEventDeserializer<UserOnl
     protected UserOnlineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserOnlineEvent(
             timeStamp,
-            client.getStorage().getUser(get(object, "user_id").getAsString())
+            client.getStorage().getUser(get(body, "user_id").getAsString())
         );
     }
 

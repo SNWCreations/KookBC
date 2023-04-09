@@ -41,12 +41,12 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
     protected UserClickButtonEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserClickButtonEvent(
             timeStamp,
-            client.getStorage().getUser(get(object, "user_id").getAsString()),
-            get(object, "msg_id").getAsString(),
-            get(object, "value").getAsString(),
+            client.getStorage().getUser(get(body, "user_id").getAsString()),
+            get(body, "msg_id").getAsString(),
+            get(body, "value").getAsString(),
             Objects.equals(
-                get(object, "user_id").getAsString(),
-                get(object, "target_id").getAsString()
+                get(body, "user_id").getAsString(),
+                get(body, "target_id").getAsString()
             ) ? null : (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString())
         );
     }

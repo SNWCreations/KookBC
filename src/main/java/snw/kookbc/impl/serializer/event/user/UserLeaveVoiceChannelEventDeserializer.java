@@ -40,8 +40,8 @@ public class UserLeaveVoiceChannelEventDeserializer extends NormalEventDeseriali
     protected UserLeaveVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserLeaveVoiceChannelEvent(
             timeStamp,
-            client.getStorage().getUser(get(object, "user_id").getAsString()),
-            (VoiceChannel) client.getStorage().getChannel(get(object, "channel_id").getAsString())
+            client.getStorage().getUser(get(body, "user_id").getAsString()),
+            (VoiceChannel) client.getStorage().getChannel(get(body, "channel_id").getAsString())
         );
     }
 

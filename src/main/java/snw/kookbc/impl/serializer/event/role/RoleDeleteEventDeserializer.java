@@ -39,7 +39,7 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
     protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Role role = client.getStorage().getRole(
                 client.getStorage().getGuild(get(object, "target_id").getAsString()),
-                get(object, "role_id").getAsInt(),
+                get(body, "role_id").getAsInt(),
                 body
         );
         return new RoleDeleteEvent(timeStamp, role);

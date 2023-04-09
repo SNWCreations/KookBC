@@ -42,9 +42,9 @@ public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializ
     protected ChannelMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelMessageUpdateEvent(
             timeStamp,
-            client.getStorage().getChannel(get(object, "channel_id").getAsString()),
-            get(object, "msg_id").getAsString(),
-            get(object, "content").getAsString()
+            client.getStorage().getChannel(get(body, "channel_id").getAsString()),
+            get(body, "msg_id").getAsString(),
+            get(body, "content").getAsString()
         );
     }
 

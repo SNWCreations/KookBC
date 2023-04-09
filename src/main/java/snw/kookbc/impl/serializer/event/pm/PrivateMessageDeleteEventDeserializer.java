@@ -39,7 +39,7 @@ public class PrivateMessageDeleteEventDeserializer extends NormalEventDeserializ
     protected PrivateMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new PrivateMessageDeleteEvent(
             timeStamp,
-            get(object, "msg_id").getAsString()
+            get(body, "msg_id").getAsString()
         );
     }
 

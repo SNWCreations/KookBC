@@ -40,7 +40,7 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
     @Override
     protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Channel channel;
-        String id = get(object, "id").getAsString();
+        String id = get(body, "id").getAsString();
         try {
             channel = client.getStorage().getChannel(id);
         } catch (BadResponseException e) {

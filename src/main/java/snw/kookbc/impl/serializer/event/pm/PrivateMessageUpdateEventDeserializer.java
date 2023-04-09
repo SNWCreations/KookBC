@@ -39,8 +39,8 @@ public class PrivateMessageUpdateEventDeserializer extends NormalEventDeserializ
     protected PrivateMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new PrivateMessageUpdateEvent(
             timeStamp,
-            get(object, "msg_id").getAsString(),
-            get(object, "content").getAsString()
+            get(body, "msg_id").getAsString(),
+            get(body, "content").getAsString()
         );
     }
 
