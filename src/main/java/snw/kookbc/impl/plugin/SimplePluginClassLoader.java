@@ -221,6 +221,17 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     protected Class<?> loadFromOther(String name) throws ClassNotFoundException {
         for (SimplePluginClassLoader classLoader : INSTANCES) {
+            if (classLoader == null) {
+                // Suggested by ChatGPT:
+                // The keys in a WeakHashMap are held through weak references,
+                // which may be garbage collected when no strong references to them exist.
+                // If null checks are not performed while traversing the key set,
+                // it may lead to encountering null keys that have already been garbage collected,
+                // resulting in a NullPointerException.
+                // Therefore, when traversing the key set of a WeakHashMap,
+                // it is necessary to perform a null check first and process only non-null keys.
+                continue;
+            }
             if (classLoader == this) {
                 continue;
             }
