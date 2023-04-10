@@ -429,11 +429,11 @@ public class CommandManagerImpl implements CommandManager {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(input);
         while (matcher.find()) {
-            input = matcher.group().replace("\\\"","\"");
-            if (input.length() > 1 && input.startsWith("\"") && input.endsWith("\"")) {
-                tokens.add(input.substring(1, input.length() - 1));
+            String arg = matcher.group().replace("\\\"","\"");
+            if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
+                tokens.add(arg.substring(1, arg.length() - 1));
             } else {
-                tokens.add(input);
+                tokens.add(arg);
             }
         }
         return tokens.toArray(new String[0]);
