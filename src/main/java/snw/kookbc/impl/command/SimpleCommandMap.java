@@ -18,16 +18,15 @@
 
 package snw.kookbc.impl.command;
 
+import org.jetbrains.annotations.Nullable;
+import snw.jkook.command.JKookCommand;
+import snw.jkook.plugin.Plugin;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.jetbrains.annotations.Nullable;
-
-import snw.jkook.command.JKookCommand;
-import snw.jkook.plugin.Plugin;
 
 // A simple command map as the storage of the command objects.
 public class SimpleCommandMap {
@@ -36,11 +35,12 @@ public class SimpleCommandMap {
     protected final Map<String, WrappedCommand> commandsWithoutPrefixView = Collections.unmodifiableMap(commandsWithoutPrefix);
     protected final Map<String, WrappedCommand> commandsWithPrefixView = Collections.unmodifiableMap(commandsWithPrefix);
 
-    protected SimpleCommandMap() {}
-    
+    protected SimpleCommandMap() {
+    }
+
     public void register(Plugin plugin, JKookCommand command) {
         WrappedCommand wrapped = new WrappedCommand(command, plugin);
-        
+
         commandsWithoutPrefix.put(command.getRootName(), wrapped);
         for (String head : createHeaders(command)) {
             commandsWithPrefix.put(head, wrapped);
@@ -55,7 +55,6 @@ public class SimpleCommandMap {
     public void unregisterAll(Plugin plugin) {
         commandsWithPrefix.entrySet().removeIf(i -> i.getValue().getPlugin() == plugin);
         commandsWithoutPrefix.entrySet().removeIf(i -> i.getValue().getPlugin() == plugin);
-
     }
 
     public Map<String, WrappedCommand> getView(boolean withPrefix) {

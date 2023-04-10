@@ -18,8 +18,6 @@
 
 package snw.kookbc.impl;
 
-import java.util.Optional;
-
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
@@ -39,6 +37,8 @@ import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
+
+import java.util.Optional;
 
 public class CoreImpl implements Core {
     private boolean init = false;
@@ -149,13 +149,13 @@ public class CoreImpl implements Core {
 
     // pass null to an argument if you don't need to replace it using your version.
     protected synchronized void init(
-        KBCClient client,
-        @Nullable SimplePluginManager simplePluginManager,
-        @Nullable HttpAPIImpl httpApiImpl,
-        @Nullable SchedulerImpl schedulerImpl,
-        @Nullable EventManagerImpl eventManagerImpl,
-        @Nullable CommandManagerImpl commandManagerImpl,
-        @Nullable UnsafeImpl unsafeImpl
+            KBCClient client,
+            @Nullable SimplePluginManager simplePluginManager,
+            @Nullable HttpAPIImpl httpApiImpl,
+            @Nullable SchedulerImpl schedulerImpl,
+            @Nullable EventManagerImpl eventManagerImpl,
+            @Nullable CommandManagerImpl commandManagerImpl,
+            @Nullable UnsafeImpl unsafeImpl
     ) {
         Validate.isFalse(this.init, "This core implementation has already initialized.");
         Validate.notNull(client);

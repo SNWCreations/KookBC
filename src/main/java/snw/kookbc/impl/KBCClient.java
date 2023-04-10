@@ -29,7 +29,8 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.internal.HelpCommand;
+import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
@@ -434,12 +435,12 @@ public class KBCClient {
     }
 
     protected void registerHelpCommand() {
-        HelpCommand executor = new HelpCommand(this);
-        new JKookCommand("help")
-                .setDescription("获取此帮助列表。")
-                .executesUser(executor)
-                .executesConsole(executor)
-                .register(getInternalPlugin());
+        try {
+            ((CommandManagerImpl) core.getCommandManager())
+                    .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

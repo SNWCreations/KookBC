@@ -20,6 +20,7 @@ package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import snw.jkook.Core;
+import snw.jkook.JKook;
 import snw.jkook.config.file.FileConfiguration;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
@@ -38,15 +39,15 @@ public final class InternalPlugin implements Plugin {
 
     static {
         DESCRIPTION = new PluginDescription(
-            SharedConstants.IMPL_NAME,
-            SharedConstants.IMPL_VERSION,
-            SharedConstants.SPEC_VERSION,
-            "Just a placeholder. Only for internal use.",
-            SharedConstants.REPO_URL,
-            "null",
-            Collections.emptyList(),
-            Collections.emptyList(),
-            Collections.emptyList()
+                SharedConstants.IMPL_NAME,
+                SharedConstants.IMPL_VERSION,
+                SharedConstants.SPEC_VERSION,
+                "Just a placeholder. Only for internal use.",
+                SharedConstants.REPO_URL,
+                "null",
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList()
         );
     }
 
@@ -86,7 +87,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public Logger getLogger() {
-        throw new UnsupportedOperationException("Not supported.");
+        return JKook.getCore().getLogger();
     }
 
     @Override

@@ -27,7 +27,8 @@ import java.util.zip.Inflater;
 
 public class Util {
 
-    private Util() {} // cannot call constructor
+    private Util() {
+    } // cannot call constructor
 
     // -1 = Outdated
     // 0 = Latest
@@ -131,6 +132,8 @@ public class Util {
     }
 
     public static boolean isConsoleAvailable() {
+        if (System.getProperty("java.class.path").contains("idea_rt.jar"))
+            return true;
         try (Reader reader = new InputStreamReader(System.in)) {
             return reader.ready();
         } catch (IOException ignored) {
