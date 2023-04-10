@@ -424,11 +424,11 @@ public class CommandManagerImpl implements CommandManager {
 
     private static String[] parseCmdLine(String input){
         List<String> tokens = new ArrayList<>();
-        String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)";
+        String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|(\"[^\"\\\\]*(\\\\.[^\"\\\\]*)*\")|\\S+)(?=\\s|$)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(input);
         while (matcher.find()) {
-            if (matcher.group().startsWith("\"") && matcher.group().endsWith("\"")) {
+            if (matcher.group().length() > 1 && matcher.group().startsWith("\"") && matcher.group().endsWith("\"")) {
                 tokens.add(matcher.group().substring(1, matcher.group().length() - 1));
             } else {
                 tokens.add(matcher.group());
