@@ -81,7 +81,7 @@ public class CloudHelpCommand {
             message.sendToSource(finalResult);
         } else {
             if (content.isEmpty()) {
-                client.getCore().getLogger().info("Unknown command.");
+                client.getCore().getLogger().info("Commands is empty.");
             } else {
                 for (String line : content) {
                     client.getCore().getLogger().info(line);
@@ -118,7 +118,7 @@ public class CloudHelpCommand {
             result.add(""); // the blank line as the separator
             result.add("注: 在每条命令帮助的开头，括号中用空格隔开的字符为此命令的前缀。");
             result.add("如 \"(/ .)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
-        } else {
+        } else if (commands.length == 1) {
             JKookCommand command = commands[0];
             result.add(String.format("命令: %s", command.getRootName()));
             result.add(String.format("别称: %s", String.join(" ", command.getAliases())));
@@ -134,6 +134,8 @@ public class CloudHelpCommand {
                 result.add("详细帮助信息:");
                 result.add(command.getHelpContent());
             }
+        } else {
+            return Collections.emptyList();
         }
         result.add("-------------------------");
         return result;

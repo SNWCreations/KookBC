@@ -49,14 +49,24 @@ public class CommandManagerImpl implements CommandManager {
     protected final SimpleCommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
     private final Map<Plugin, CloudCommandManagerImpl> cloudCommandManagerMap = new ConcurrentHashMap<>();
+    private final boolean useCloud;
 
     public CommandManagerImpl(KBCClient client) {
-        this(client, new SimpleCommandMap());
+        this(client, false);
     }
 
     public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap) {
+        this(client, commandMap, false);
+    }
+
+    public CommandManagerImpl(KBCClient client, boolean useCloud) {
+        this(client, new SimpleCommandMap(), useCloud);
+    }
+
+    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap, boolean useCloud) {
         this.client = client;
         this.commandMap = commandMap;
+        this.useCloud = useCloud;
         registerInternalParsers();
     }
 
@@ -67,6 +77,11 @@ public class CommandManagerImpl implements CommandManager {
             checkCommand(command);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
+        }
+        if (useCloud) {
+            plugin.getLogger().warn("Registering command {}, please contact the developer to migrate to the Cloud command framework", command.getRootName());
+            getCloudCommandManager(plugin).registerJKook(command, this);
+            return;
         }
         commandMap.register(plugin, command);
     }
@@ -136,6 +151,10 @@ public class CommandManagerImpl implements CommandManager {
 
     // Cloud - Start
     public CloudCommandManagerImpl getCloudCommandManager(Plugin plugin) {
+        if (useCloud) {
+            // 统一CommandManager
+            plugin = client.getInternalPlugin();
+        }
         if (!cloudCommandManagerMap.containsKey(plugin)) {
             CloudCommandManagerImpl commandManager = CloudCommandBuilder.createManager(plugin);
             cloudCommandManagerMap.put(plugin, commandManager);
@@ -203,6 +222,11 @@ public class CommandManagerImpl implements CommandManager {
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
+        }
+
+        if (useCloud) {
+            getCloudCommandManager(client.getInternalPlugin()).executeCommandNow(sender, cmdLine, msg);
+            return true;
         }
 
         long startTimeStamp = System.currentTimeMillis(); // debug
@@ -365,7 +389,7 @@ public class CommandManagerImpl implements CommandManager {
         return commandMap.getView(true).get(cmdHeader);
     }
 
-    protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
+    public Object[] processArguments(JKookCommand command, List<String> rawArgs) {
         if (command.getArguments().isEmpty() && command.getOptionalArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
             return rawArgs.toArray(new String[0]);
@@ -508,5 +532,9 @@ public class CommandManagerImpl implements CommandManager {
                 ((User) sender).sendPrivateMessage(content);
             }
         }
+    }
+
+    public boolean useCloud() {
+        return useCloud;
     }
 }

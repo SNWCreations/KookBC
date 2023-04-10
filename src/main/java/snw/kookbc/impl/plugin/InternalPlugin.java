@@ -87,7 +87,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public Logger getLogger() {
-        return JKook.getCore().getLogger();
+        return client.getCore().getLogger();
     }
 
     @Override

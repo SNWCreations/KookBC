@@ -165,7 +165,7 @@ public class CoreImpl implements Core {
         this.httpApi = Optional.ofNullable(httpApiImpl).orElseGet(() -> new HttpAPIImpl(client));
         this.scheduler = Optional.ofNullable(schedulerImpl).orElseGet(() -> new SchedulerImpl(client));
         this.eventManager = Optional.ofNullable(eventManagerImpl).orElseGet(() -> new EventManagerImpl(client));
-        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CommandManagerImpl(client));
+        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CommandManagerImpl(client, true));
         this.unsafe = Optional.ofNullable(unsafeImpl).orElseGet(() -> new UnsafeImpl(client));
         this.init = true;
     }
