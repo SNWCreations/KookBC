@@ -20,7 +20,6 @@ package snw.kookbc.impl.command.internal;
 import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.processing.CommandContainer;
-import cloud.commandframework.annotations.specifier.Quoted;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.JKookCommand;
@@ -54,7 +53,7 @@ public class CloudHelpCommand {
     }
 
     @CommandMethod("help [target]")
-    public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable @Quoted String target) {
+    public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
         List<String> content = buildHelpContent(target);
         if (sender instanceof User) {
             String finalResult;
