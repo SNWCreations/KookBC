@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
@@ -145,7 +147,7 @@ public class CommandManagerImpl implements CommandManager {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
+        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine))); // arguments, token " ? it's developer's work, lol
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
@@ -418,6 +420,21 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
+    }
+
+    private static String[] parseCmdLine(String input){
+        List<String> tokens = new ArrayList<>();
+        String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+        while (matcher.find()) {
+            if (matcher.group().startsWith("\"") && matcher.group().endsWith("\"")) {
+                tokens.add(matcher.group().substring(1, matcher.group().length() - 1));
+            } else {
+                tokens.add(matcher.group());
+            }
+        }
+        return tokens.toArray(new String[0]);
     }
 
     // execute the runnable, if it fails, a CommandException will be thrown
