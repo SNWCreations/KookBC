@@ -38,7 +38,7 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class UserImpl implements User {
     private final KBCClient client;

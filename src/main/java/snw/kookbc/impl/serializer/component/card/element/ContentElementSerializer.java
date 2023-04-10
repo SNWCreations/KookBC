@@ -23,7 +23,7 @@ import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class ContentElementSerializer<T> implements JsonSerializer<T>, JsonDeserializer<T> {
     private final String type;

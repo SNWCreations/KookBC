@@ -231,7 +231,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             for (SimplePluginClassLoader spcl : SimplePluginClassLoader.INSTANCES) {
                 try {
                     return spcl.findClass0(name, true);
-                } catch (ClassNotFoundException ignored) {}
+                } catch (ClassNotFoundException ignored) {
+                }
             }
             // Done. No way now. Invalid class!
             invalidClasses.add(name);

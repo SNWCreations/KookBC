@@ -29,7 +29,7 @@ import snw.kookbc.impl.network.Connector;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class BotMarketPingThread extends Thread {
     private final KBCClient client;

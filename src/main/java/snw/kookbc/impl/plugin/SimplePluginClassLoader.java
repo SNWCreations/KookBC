@@ -237,5 +237,5 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.remove(this);
         super.close();
     }
-    
+
 }

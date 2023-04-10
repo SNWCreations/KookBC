@@ -107,8 +107,8 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                         String.format("(%s)%s: %s",
                                 String.join(" ",
                                         command.getPrefixes()),
-                                        command.getRootName(),
-                                        (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                                command.getRootName(),
+                                (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
                         )
                 );
             }

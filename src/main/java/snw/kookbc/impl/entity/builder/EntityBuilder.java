@@ -34,7 +34,7 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 // The class for building entities.
 public class EntityBuilder {
@@ -144,7 +144,7 @@ public class EntityBuilder {
         } else {
             String parentId = get(object, "parent_id").getAsString();
             Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-            
+
             int type = get(object, "type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = get(object, "slow_mode").getAsInt();

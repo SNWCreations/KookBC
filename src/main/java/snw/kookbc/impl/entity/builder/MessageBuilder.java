@@ -39,7 +39,8 @@ import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.CARD_GSON;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class MessageBuilder {
     private final KBCClient client;

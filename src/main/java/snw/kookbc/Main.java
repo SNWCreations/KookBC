@@ -18,7 +18,10 @@
 
 package snw.kookbc;
 
-import joptsimple.*;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.JKook;

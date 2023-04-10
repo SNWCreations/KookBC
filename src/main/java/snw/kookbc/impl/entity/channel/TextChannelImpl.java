@@ -40,7 +40,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class TextChannelImpl extends ChannelImpl implements TextChannel {
     private int chatLimitTime;

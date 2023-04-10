@@ -27,7 +27,8 @@ import snw.jkook.message.component.card.module.*;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
     public static final Map<String, Class<? extends BaseModule>> MODULE_MAP;

@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class TextChannelMessageIterator extends PageIteratorImpl<Collection<TextChannelMessage>> {
     private final TextChannel channel;

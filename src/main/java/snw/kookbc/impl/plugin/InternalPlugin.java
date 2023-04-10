@@ -20,7 +20,6 @@ package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import snw.jkook.Core;
-import snw.jkook.JKook;
 import snw.jkook.config.file.FileConfiguration;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;

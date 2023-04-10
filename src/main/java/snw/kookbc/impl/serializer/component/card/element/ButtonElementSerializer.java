@@ -27,7 +27,8 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, JsonDeserializer<ButtonElement> {
     @Override

@@ -124,7 +124,7 @@ public class NetworkClient {
 
     protected void logRequest(String method, String fullUrl, @Nullable String postBodyJson) {
         kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}",
-            method, fullUrl, postBodyJson);
+                method, fullUrl, postBodyJson);
     }
 
     // Return original object if check OK
