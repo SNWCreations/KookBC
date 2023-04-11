@@ -79,7 +79,7 @@ public class CommandManagerImpl implements CommandManager {
             throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
         }
         if (useCloud) {
-            plugin.getLogger().warn("Registering command {}, please contact the developer to migrate to the Cloud command framework", command.getRootName());
+            /*plugin.getLogger().warn("Registering command {}, please contact the developer to migrate to the Cloud command framework", command.getRootName());*/
             getCloudCommandManager(plugin).registerJKook(command, this);
             return;
         }
