@@ -422,19 +422,32 @@ public class CommandManagerImpl implements CommandManager {
         });
     }
 
-    private static String[] parseCmdLine(String input){
-        input = input.replace("\\\\\"","\\\"");
+    private static String[] parseCmdLine(String input) {
         List<String> tokens = new ArrayList<>();
+        int firstSpace = input.indexOf(" ");
+        if (firstSpace != -1) {
+            String head = input.substring(0, firstSpace);
+            if (firstSpace + 1 + 1 >= input.length()) {
+                input = input.substring(firstSpace + 1);
+            }
+            tokens.add(head);
+        }
+
+        input = input.replace("\\\\\"","\\\"");
+        
         String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(input);
         while (matcher.find()) {
             String arg = matcher.group().replace("\\\"","\"");
             if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
-                tokens.add(arg.substring(1, arg.length() - 1));
-            } else {
-                tokens.add(arg);
+                if (arg.contains(" ")) {
+                    arg = arg.substring(1, arg.length() - 1);
+                } // or ensure arguments like "123" still have quotes
             }
+
+
+            tokens.add(arg);
         }
         return tokens.toArray(new String[0]);
     }
