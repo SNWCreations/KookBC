@@ -429,6 +429,8 @@ public class CommandManagerImpl implements CommandManager {
             String head = input.substring(0, firstSpace);
             if (firstSpace + 1 + 1 >= input.length()) {
                 input = input.substring(firstSpace + 1);
+            } else {
+                return new String[]{head, ""}; // only a head and an empty string, no next word
             }
             tokens.add(head);
         }
