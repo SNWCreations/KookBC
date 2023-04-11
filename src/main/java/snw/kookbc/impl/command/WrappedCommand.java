@@ -26,7 +26,7 @@ public class WrappedCommand {
     private final JKookCommand command;
     private final Plugin plugin;
 
-    WrappedCommand(JKookCommand command, Plugin plugin) {
+    public WrappedCommand(JKookCommand command, Plugin plugin) {
         this.command = command;
         this.plugin = plugin;
     }

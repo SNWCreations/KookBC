@@ -33,6 +33,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.cloud.CloudAnnotationParser;
 import snw.kookbc.impl.command.cloud.CloudCommandBuilder;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
+import snw.kookbc.impl.command.cloud.CloudCommandMap;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,27 +47,20 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
     private final KBCClient client;
-    protected final SimpleCommandMap commandMap;
+    protected final CommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
     private final Map<Plugin, CloudCommandManagerImpl> cloudCommandManagerMap = new ConcurrentHashMap<>();
-    private final boolean useCloud;
 
     public CommandManagerImpl(KBCClient client) {
-        this(client, false);
+        this(client, new SimpleCommandMap());
     }
 
-    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap) {
-        this(client, commandMap, false);
-    }
-
-    public CommandManagerImpl(KBCClient client, boolean useCloud) {
-        this(client, new SimpleCommandMap(), useCloud);
-    }
-
-    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap, boolean useCloud) {
+    public CommandManagerImpl(KBCClient client, CommandMap commandMap) {
         this.client = client;
         this.commandMap = commandMap;
-        this.useCloud = useCloud;
+        if (this.commandMap instanceof CloudCommandMap) {
+            ((CloudCommandMap) this.commandMap).initialize(this);
+        }
         registerInternalParsers();
     }
 
@@ -77,11 +71,6 @@ public class CommandManagerImpl implements CommandManager {
             checkCommand(command);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
-        }
-        if (useCloud) {
-            /*plugin.getLogger().warn("Registering command {}, please contact the developer to migrate to the Cloud command framework", command.getRootName());*/
-            getCloudCommandManager(plugin).registerJKook(command, this);
-            return;
         }
         commandMap.register(plugin, command);
     }
@@ -151,9 +140,9 @@ public class CommandManagerImpl implements CommandManager {
 
     // Cloud - Start
     public CloudCommandManagerImpl getCloudCommandManager(Plugin plugin) {
-        if (useCloud) {
+        if (commandMap instanceof CloudCommandMap) {
             // 统一CommandManager
-            plugin = client.getInternalPlugin();
+            return ((CloudCommandMap) commandMap).cloudCommandManager();
         }
         if (!cloudCommandManagerMap.containsKey(plugin)) {
             CloudCommandManagerImpl commandManager = CloudCommandBuilder.createManager(plugin);
@@ -224,7 +213,7 @@ public class CommandManagerImpl implements CommandManager {
             return false;
         }
 
-        if (useCloud) {
+        if (commandMap instanceof CloudCommandMap) {
             getCloudCommandManager(client.getInternalPlugin()).executeCommandNow(sender, cmdLine, msg);
             return true;
         }
@@ -363,7 +352,7 @@ public class CommandManagerImpl implements CommandManager {
         return true; // ok, the command is ok, so we can return true.
     }
 
-    public SimpleCommandMap getCommandMap() {
+    public CommandMap getCommandMap() {
         return commandMap;
     }
 
@@ -532,9 +521,5 @@ public class CommandManagerImpl implements CommandManager {
                 ((User) sender).sendPrivateMessage(content);
             }
         }
-    }
-
-    public boolean useCloud() {
-        return useCloud;
     }
 }

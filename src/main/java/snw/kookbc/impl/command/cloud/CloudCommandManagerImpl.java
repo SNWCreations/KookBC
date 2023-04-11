@@ -17,6 +17,7 @@
  */
 package snw.kookbc.impl.command.cloud;
 
+import cloud.commandframework.CloudCapability;
 import cloud.commandframework.CommandManager;
 import cloud.commandframework.arguments.standard.StringArrayArgument;
 import cloud.commandframework.context.CommandContext;
@@ -52,6 +53,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
@@ -64,8 +66,10 @@ public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
 
     // JKook
-    // List<commandFullname>
+    // Map<Fullname, Prefix>
     private final Map<String, String> jKookCommandFullnameList = new ConcurrentHashMap<>();
+    private final Map<JKookCommand, Plugin> jKookCommandPluginMap = new ConcurrentHashMap<>();
+    private final Map<String, JKookCommand> jKookCommandMap = new ConcurrentHashMap<>();
 
     CloudCommandManagerImpl(@NonNull Plugin plugin) {
         super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
@@ -74,6 +78,7 @@ public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
         parameterInjectorRegistry().registerInjector(Message.class, (context, annotationAccessor) -> {
             return context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE);
         });
+        registerCapability(CloudCapability.StandardCapabilities.ROOT_COMMAND_DELETION);
     }
 
     @Override
@@ -90,14 +95,17 @@ public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
         return plugin;
     }
 
-    public void registerJKook(JKookCommand jKookCommand, CommandManagerImpl jkookManager) {
+    public void registerJKook(JKookCommand jKookCommand, Plugin registerPlugin, CommandManagerImpl jkookManager) {
         Collection<String> prefixes = jKookCommand.getPrefixes();
         List<String> commandsList = new ArrayList<>();
         commandsList.add(jKookCommand.getRootName());
         commandsList.addAll(jKookCommand.getAliases());
         for (String s : commandsList) {
             prefixes.forEach(prefix -> jKookCommandFullnameList.put(prefix + s, prefix));
+            prefixes.forEach(prefix -> jKookCommandMap.put(prefix + s, jKookCommand));
         }
+
+        jKookCommandPluginMap.put(jKookCommand, registerPlugin);
 
         StringArrayArgument<CommandSender> args = StringArrayArgument.optional("args", (commandSenderCommandContext, s) -> Collections.emptyList());
         command(
@@ -153,6 +161,41 @@ public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
                         .argument(args)
                         .build()
         );
+    }
+
+    public void unregisterJKookCommand(JKookCommand jKookCommand) {
+        jKookCommandFullnameList.entrySet().removeIf(entry -> {
+            List<String> list = collectJKookCommandNames(jKookCommand, true);
+            for (String name : list) {
+                if (entry.getKey().equals(name)) {
+                    deleteRootCommand(entry.getKey().substring(entry.getValue().length()));
+                    jKookCommandMap.remove(name);
+                    return true;
+                }
+            }
+            return false;
+        });
+        jKookCommandPluginMap.remove(jKookCommand);
+
+    }
+
+    public void unregisterJKookCommands(Plugin plugin) {
+        List<Map.Entry<JKookCommand, Plugin>> list = jKookCommandPluginMap.entrySet().stream().filter(entry -> entry.getValue().equals(plugin)).collect(Collectors.toList());
+        list.forEach(e -> unregisterJKookCommand(e.getKey()));
+    }
+
+    private List<String> collectJKookCommandNames(JKookCommand command, boolean withPrefix) {
+        List<String> list = new ArrayList<>();
+        if (withPrefix) {
+            for (String prefix : command.getPrefixes()) {
+                list.add(prefix + command.getRootName());
+                command.getAliases().forEach(alias -> list.add(prefix + alias));
+            }
+        } else {
+            list.add(command.getRootName());
+            list.addAll(command.getAliases());
+        }
+        return list;
     }
 
     public void executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) {

@@ -21,6 +21,8 @@ package snw.kookbc.impl;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
+import snw.jkook.command.ConsoleCommandExecutor;
+import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -30,6 +32,7 @@ import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.cloud.CloudCommandBuilder;
 import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
@@ -106,13 +109,13 @@ public class KBCClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.core.init(this);
+        this.internalPlugin = new InternalPlugin(this);
+        this.core.init(this, CloudCommandBuilder.createManager(internalPlugin));
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
         this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
-        this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
@@ -418,6 +421,13 @@ public class KBCClient {
         if (commandConfig.getBoolean("plugins", true)) {
             registerPluginsCommand();
         }
+        JKookCommand kookCommand = new JKookCommand("test");
+        kookCommand.executesConsole(new ConsoleCommandExecutor() {
+            @Override
+            public void onCommand(ConsoleCommandSender consoleCommandSender, Object[] objects) {
+                ((CommandManagerImpl) getCore().getCommandManager()).getCommandMap().unregister(kookCommand);
+            }
+        }).register(internalPlugin);
     }
 
     protected void registerStopCommand() {

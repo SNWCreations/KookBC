@@ -27,7 +27,7 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.SimpleCommandMap;
+import snw.kookbc.impl.command.CommandMap;
 import snw.kookbc.impl.command.WrappedCommand;
 
 import java.util.Map;
@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationHandler {
     private final Plugin plugin;
-    private final SimpleCommandMap commandMap;
+    private final CommandMap commandMap;
     private CloudCommandManagerImpl manager;
     private final Map<CommandArgument<?, ?>, JKookCommand> registeredCommands = new ConcurrentHashMap<>();
 

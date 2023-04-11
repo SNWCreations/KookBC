@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.command.CommandMap;
 import snw.kookbc.impl.command.SimpleCommandMap;
 import snw.kookbc.impl.command.WrappedCommand;
 
@@ -40,9 +41,9 @@ public class CloudKookCommandBuilder {
     private final Plugin plugin;
     private final CloudCommandManagerImpl manager;
     private final Command<CommandSender> command;
-    private final SimpleCommandMap commandMap;
+    private final CommandMap commandMap;
 
-    public CloudKookCommandBuilder(Plugin plugin, CloudCommandManagerImpl manager, Command<CommandSender> command, SimpleCommandMap commandMap) {
+    public CloudKookCommandBuilder(Plugin plugin, CloudCommandManagerImpl manager, Command<CommandSender> command, CommandMap commandMap) {
         this.plugin = plugin;
         this.manager = manager;
         this.command = command;
