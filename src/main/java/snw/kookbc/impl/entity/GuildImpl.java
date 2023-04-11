@@ -158,7 +158,7 @@ public class GuildImpl implements Guild {
 
     @Override
     public void leave() {
-        client.getNetworkClient().post(HttpAPIRoute.GUILD_LEAVE.toFullURL(), Collections.singletonMap("guild_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.GUILD_LEAVE.toFullURL(), Collections.singletonMap("guild_id", getId()));
     }
 
     @Override
