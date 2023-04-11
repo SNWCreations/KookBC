@@ -421,13 +421,6 @@ public class KBCClient {
         if (commandConfig.getBoolean("plugins", true)) {
             registerPluginsCommand();
         }
-        JKookCommand kookCommand = new JKookCommand("test");
-        kookCommand.executesConsole(new ConsoleCommandExecutor() {
-            @Override
-            public void onCommand(ConsoleCommandSender consoleCommandSender, Object[] objects) {
-                ((CommandManagerImpl) getCore().getCommandManager()).getCommandMap().unregister(kookCommand);
-            }
-        }).register(internalPlugin);
     }
 
     protected void registerStopCommand() {
