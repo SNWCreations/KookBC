@@ -21,8 +21,6 @@ package snw.kookbc.impl;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
-import snw.jkook.command.ConsoleCommandExecutor;
-import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -407,14 +405,6 @@ public class KBCClient {
     }
 
     protected void registerInternal() {
-        new JKookCommand("test").executesConsole(new ConsoleCommandExecutor() {
-            @Override
-            public void onCommand(ConsoleCommandSender consoleCommandSender, Object[] objects) {
-                for (int i = 0; i < objects.length; i++) {
-                    System.out.println(i + ": " + objects[i]);
-                }
-            }
-        }).register(internalPlugin);
         ConfigurationSection commandConfig = getConfig().getConfigurationSection("internal-commands");
         if (commandConfig == null) {
             commandConfig = getConfig().createSection("internal-commands");
