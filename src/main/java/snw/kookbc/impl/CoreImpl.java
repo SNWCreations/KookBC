@@ -51,6 +51,7 @@ public class CoreImpl implements Core {
     private HttpAPI httpApi;
     private SimplePluginManager pluginManager;
     private User botUser;
+    private ConsoleCommandSender ccs;
 
     // Note for hardcore developers:
     // Use this instead of CoreImpl(Logger) constructor, unless you want the logging output.
@@ -99,7 +100,7 @@ public class CoreImpl implements Core {
 
     @Override
     public ConsoleCommandSender getConsoleCommandSender() {
-        return ConsoleCommandSenderImpl.INSTANCE;
+        return ccs;
     }
 
     @Override
@@ -167,6 +168,7 @@ public class CoreImpl implements Core {
         this.eventManager = Optional.ofNullable(eventManagerImpl).orElseGet(() -> new EventManagerImpl(client));
         this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CommandManagerImpl(client));
         this.unsafe = Optional.ofNullable(unsafeImpl).orElseGet(() -> new UnsafeImpl(client));
+        this.ccs = ConsoleCommandSenderImpl.get(client.getInternalPlugin());
         this.init = true;
     }
 }
