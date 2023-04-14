@@ -31,8 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
@@ -421,68 +422,37 @@ public class CommandManagerImpl implements CommandManager {
         });
     }
 
-    // written by ChatGPT 3.5 Turbo model, made a "little" change to ensure it fits our requirements.
     private static String[] parseCmdLine(String input) {
         List<String> tokens = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        boolean insideQuotes = false;
-
-        char[] chars = input.toCharArray();
-        for (char c : chars) {
-            if (c == '\"') {
-                insideQuotes = !insideQuotes;
-                sb.append(c);
-            } else if (c == ' ') {
-                if (!insideQuotes) {
-                    if (sb.length() > 0) {
-                        tokens.add(sb.toString());
-                        sb.setLength(0);
-                    }
-                } else {
-                    if (sb.charAt(sb.length() - 1) == '"') {
-                        tokens.add(sb.toString());
-                        sb.setLength(0);
-                        insideQuotes = false;
-                    } else {
-                        sb.append(c);
-                    }
-                }
+        int firstSpace = input.indexOf(" ");
+        if (firstSpace != -1) {
+            String head = input.substring(0, firstSpace);
+            if (firstSpace + 1 + 1 >= input.length()) {
+                input = input.substring(firstSpace + 1);
             } else {
-                sb.append(c);
+                return new String[]{head, ""}; // only a head and an empty string, no next word
             }
+            tokens.add(head);
         }
 
-        if (sb.length() > 0) {
-            String currentResult = sb.toString();
-            if (tokens.isEmpty()) {
-                if (currentResult.startsWith("\"") && currentResult.endsWith("\"")) {
-                    tokens.add(currentResult);
-                } else {
-                    if (currentResult.contains(" ")) {
-                        StringTokenizer st = new StringTokenizer(currentResult, " ");
-                        while (st.hasMoreTokens()) {
-                            tokens.add(st.nextToken());
-                        }
-                    } else {
-                        tokens.add(currentResult);
-                    }
-                }
-            } else {
-                tokens.add(currentResult);
+        input = input.replace("\\\\\"","\\\"");
+        
+        String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+        while (matcher.find()) {
+            String arg = matcher.group().replace("\\\"","\"");
+            if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
+                if (arg.contains(" ")) {
+                    arg = arg.substring(1, arg.length() - 1);
+                } // or ensure arguments like "123" still have quotes
             }
-        }
 
-        return tokens.stream()
-                .flatMap(s -> {
-                    if (s.startsWith("\"") && s.endsWith("\"")) {
-                        return Stream.of(s.substring(1, s.length() - 1));
-                    } else {
-                        return Arrays.stream(s.split(" "));
-                    }
-                })
-                .toArray(String[]::new);
+
+            tokens.add(arg);
+        }
+        return tokens.toArray(new String[0]);
     }
-
 
     // execute the runnable, if it fails, a CommandException will be thrown
     private void exec(Runnable runnable, long startTimeStamp, String cmdLine) throws CommandException {
