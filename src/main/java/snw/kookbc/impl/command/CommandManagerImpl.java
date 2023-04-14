@@ -39,6 +39,9 @@ import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
+    private static final Pattern QUOTE_PATTERN = Pattern.compile(
+            "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)"
+    );
     private final KBCClient client;
     protected final SimpleCommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
@@ -436,10 +439,8 @@ public class CommandManagerImpl implements CommandManager {
         }
 
         input = input.replace("\\\\\"","\\\"");
-        
-        String regex = "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+
+        Matcher matcher = QUOTE_PATTERN.matcher(input);
         while (matcher.find()) {
             String arg = matcher.group().replace("\\\"","\"");
             if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
