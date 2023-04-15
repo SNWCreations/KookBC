@@ -42,6 +42,7 @@ import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.message.NullMessage;
 
@@ -57,12 +58,14 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
+    protected final KBCClient client;
     private final CloudCommandManagerImpl parent;
     private final Plugin plugin;
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
 
-    CloudBasedCommandManager(@NonNull CloudCommandManagerImpl parent, @NonNull Plugin plugin) {
+    CloudBasedCommandManager(KBCClient client, @NonNull CloudCommandManagerImpl parent, @NonNull Plugin plugin) {
         super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
+        this.client = client;
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.parent = parent;
         this.plugin = plugin;
@@ -132,7 +135,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                     NoSuchCommandException.class,
                                     (NoSuchCommandException) throwable, (c, e) -> {
                                         if (commandSender instanceof ConsoleCommandSender) {
-                                            replay(message, "Unknown command. Type \"/help\" for help.");
+                                            client.getCore().getLogger().info("Unknown command. Type \"/help\" for help.");
                                         }
                                     }
                             );

@@ -57,7 +57,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public CloudBasedCommandManager getCloudCommandManager(Plugin plugin) {
-        return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(this, plugin));
+        return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
     public void registerCloudCommands(@NotNull CloudAnnotationParser annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
