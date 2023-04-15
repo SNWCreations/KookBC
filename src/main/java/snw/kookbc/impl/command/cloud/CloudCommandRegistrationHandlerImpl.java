@@ -77,9 +77,7 @@ public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationH
             }
         }
 
-        {
-            registeredCommands.put(command.getArguments().get(0), register);
-        }
+        registeredCommands.put(command.getArguments().get(0), register);
 
         register.register(plugin);
         return true;
