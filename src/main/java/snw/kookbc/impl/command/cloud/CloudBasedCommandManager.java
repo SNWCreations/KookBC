@@ -25,7 +25,6 @@ import cloud.commandframework.context.CommandContextFactory;
 import cloud.commandframework.context.StandardCommandContextFactory;
 import cloud.commandframework.exceptions.*;
 import cloud.commandframework.execution.CommandExecutionCoordinator;
-import cloud.commandframework.execution.CommandExecutionHandler;
 import cloud.commandframework.execution.CommandResult;
 import cloud.commandframework.internal.CommandInputTokenizer;
 import cloud.commandframework.internal.CommandRegistrationHandler;
@@ -37,23 +36,18 @@ import cloud.commandframework.services.State;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import snw.jkook.JKook;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
-import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
-import snw.kookbc.impl.command.UnknownArgumentException;
 import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.message.NullMessage;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-
-import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 /**
  * @author huanmeng_qwq
@@ -90,58 +84,10 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     }
 
     public void registerJKookCommand(JKookCommand jKookCommand) {
-
         StringArrayArgument<CommandSender> args = StringArrayArgument.optional("args", (commandSenderCommandContext, s) -> Collections.emptyList());
         command(
                 commandBuilder(jKookCommand.getRootName(), jKookCommand.getAliases(), SimpleCommandMeta.builder().with(CommandMeta.DESCRIPTION, jKookCommand.getDescription()).build())
-                        .handler(new CommandExecutionHandler<CommandSender>() {
-                            private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
-                                if (sender instanceof ConsoleCommandSender) {
-                                    JKook.getCore().getLogger().info(contentForConsole);
-                                } else if (sender instanceof User) {
-                                    // contentForConsole should be null at this time
-                                    if (message != null) {
-                                        message.reply(content);
-                                    } else {
-                                        ((User) sender).sendPrivateMessage(content);
-                                    }
-                                }
-                            }
-
-                            @Override
-                            public void execute(@NonNull CommandContext<CommandSender> commandContext) {
-                                @SuppressWarnings("unchecked")
-                                String[] rawInput = ((List<String>) commandContext.get("__raw_input__")).toArray(new String[0]);
-
-                                CommandSender sender = commandContext.getSender();
-                                Message message = commandContext.get(KOOK_MESSAGE_KEY);
-                                List<String> list = new ArrayList<>(Arrays.asList(rawInput));
-                                if (!list.isEmpty()) {
-                                    list.remove(0);
-                                }
-                                Object[] arguments;
-                                try {
-                                    arguments = CloudBasedCommandManager.this.parent.processArguments(jKookCommand, list);
-                                } catch (NoSuchElementException e) {
-                                    reply("执行命令失败: 参数不足。", "Unable to execute command: No enough arguments.", sender, message);
-                                    return;
-                                } catch (UnknownArgumentException e) {
-                                    reply(
-                                            "执行命令失败: 无法解析第 " + e.argIndex() + " 个参数。",
-                                            "Unable to execute command: unable to parse the " + toEnglishNumOrder(e.argIndex()) + " argument.",
-                                            sender, message
-                                    );
-                                    return;
-                                }
-                                if (sender instanceof User && jKookCommand.getUserCommandExecutor() != null) {
-                                    jKookCommand.getUserCommandExecutor().onCommand((User) sender, arguments, message);
-                                } else if (sender instanceof ConsoleCommandSender && jKookCommand.getConsoleCommandExecutor() != null) {
-                                    jKookCommand.getConsoleCommandExecutor().onCommand((ConsoleCommandSender) sender, arguments);
-                                } else {
-                                    jKookCommand.getExecutor().onCommand(sender, arguments, message);
-                                }
-                            }
-                        })
+                        .handler(new CloudWrappedCommandExecutionHandler(parent, jKookCommand))
                         .argument(args)
                         .build()
         );
