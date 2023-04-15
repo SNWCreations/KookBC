@@ -48,6 +48,9 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
+        if (getCommand(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine) == null) {
+            return false;
+        }
         getCloudCommandManager(client.getInternalPlugin()).executeCommandNow(sender, cmdLine, msg);
         return true;
     }
