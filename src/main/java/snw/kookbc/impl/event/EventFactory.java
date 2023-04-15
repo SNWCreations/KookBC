@@ -278,7 +278,13 @@ public class EventFactory {
                 case SELF_JOINED_GUILD:
                     return new UserJoinGuildEvent(msgTimeStamp, client.getCore().getUser(), client.getStorage().getGuild(body.get("guild_id").getAsString()));
                 case SELF_LEFT_GUILD:
-                    return new UserLeaveGuildEvent(msgTimeStamp, client.getCore().getUser(), client.getStorage().getGuild(body.get("guild_id").getAsString()));
+                    String gId = body.get("guild_id").getAsString();
+                    Guild g = client.getStorage().getGuild(gId);
+                    if (g != null) { // cache hit
+                        return new UserLeaveGuildEvent(msgTimeStamp, client.getCore().getUser(), g);
+                    } else {
+                        return new UserLeaveGuildEvent(msgTimeStamp, client.getCore().getUser(), gId);
+                    }
             }
         }
         client.getCore().getLogger().error("We cannot understand the frame.");
