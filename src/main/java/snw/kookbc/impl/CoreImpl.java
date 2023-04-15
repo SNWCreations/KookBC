@@ -34,6 +34,7 @@ import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
+import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
@@ -166,7 +167,7 @@ public class CoreImpl implements Core {
         this.scheduler = Optional.ofNullable(schedulerImpl).orElseGet(() -> new SchedulerImpl(client));
         this.eventManager = Optional.ofNullable(eventManagerImpl).orElseGet(() -> new EventManagerImpl(client));
         /*Cloud*/
-        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CommandManagerImpl(client));
+        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CloudCommandManagerImpl(client));
         this.unsafe = Optional.ofNullable(unsafeImpl).orElseGet(() -> new UnsafeImpl(client));
         this.init = true;
     }
