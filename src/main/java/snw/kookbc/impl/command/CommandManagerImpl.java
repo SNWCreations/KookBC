@@ -25,7 +25,6 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.cloud.CloudCommandMap;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,9 +48,6 @@ public class CommandManagerImpl implements CommandManager {
     public CommandManagerImpl(KBCClient client, CommandMap commandMap) {
         this.client = client;
         this.commandMap = commandMap;
-        if (this.commandMap instanceof CloudCommandMap) {
-            ((CloudCommandMap) this.commandMap).initialize(this);
-        }
         registerInternalParsers();
     }
 
