@@ -25,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
+import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
@@ -49,8 +50,10 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        WrappedCommand wrapped = getCommandWithPrefix(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
+        String head = cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine;
+        WrappedCommand wrapped = sender instanceof ConsoleCommandSender ? getCommand(head) : getCommandWithPrefix(head);
         if (wrapped == null) {
+            // TODO if cloud? find the cloud command manager through the command line
             return false;
         }
         getCloudCommandManager(wrapped.getPlugin()).executeCommandNow(sender, cmdLine, msg);
