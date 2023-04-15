@@ -29,7 +29,6 @@ import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.CommandMap;
 import snw.kookbc.impl.command.WrappedCommand;
 
 import java.util.Map;
@@ -43,7 +42,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         super(client);
     }
 
-    public CloudCommandManagerImpl(KBCClient client, CommandMap commandMap) {
+    public CloudCommandManagerImpl(KBCClient client, CloudCommandMap commandMap) {
         super(client, commandMap);
     }
 
