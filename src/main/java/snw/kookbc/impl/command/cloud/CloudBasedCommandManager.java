@@ -35,13 +35,11 @@ import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.services.State;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
-import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.message.NullMessage;
@@ -60,15 +58,13 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
     protected final KBCClient client;
     private final CloudCommandManagerImpl parent;
-    private final Plugin plugin;
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
 
-    CloudBasedCommandManager(KBCClient client, @NonNull CloudCommandManagerImpl parent, @NonNull Plugin plugin) {
+    CloudBasedCommandManager(KBCClient client, @NonNull CloudCommandManagerImpl parent) {
         super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
         this.client = client;
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.parent = parent;
-        this.plugin = plugin;
         parameterInjectorRegistry().registerInjector(Message.class,
                 (context, annotationAccessor) -> context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE)
         );
@@ -83,10 +79,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     @Override
     public @NonNull CommandMeta createDefaultCommandMeta() {
         return SimpleCommandMeta.empty();
-    }
-
-    public @NotNull Plugin plugin() {
-        return plugin;
     }
 
     public void registerJKookCommand(JKookCommand jKookCommand) {
@@ -149,9 +141,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         } else if (throwable != null) {
                             message.sendToSource("An internal error occurred while attempting to perform this command");
                             unhandledException.set(throwable); // provide the unhandled exception
-                            plugin.getLogger().error("An unhandled exception was thrown during command execution",
-                                    throwable
-                            );
                         }
                     }).get();
         } catch (InterruptedException | ExecutionException ignored) { // impossible

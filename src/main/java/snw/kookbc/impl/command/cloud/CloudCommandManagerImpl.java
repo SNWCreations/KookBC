@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class CloudCommandManagerImpl extends CommandManagerImpl {
+    private final CloudBasedCommandManager manager;
     private final Map<Plugin, CloudBasedCommandManager> cloudCommandManagerMap = new ConcurrentHashMap<>();
 
     public CloudCommandManagerImpl(KBCClient client) {
@@ -46,6 +47,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     public CloudCommandManagerImpl(KBCClient client, CloudCommandMap commandMap) {
         super(client, commandMap);
+        this.manager = new CloudBasedCommandManager(client, this);
     }
 
     @Override
@@ -61,7 +63,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public CloudBasedCommandManager getCloudCommandManager(Plugin plugin) {
-        return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
+        return manager;
+        // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
     public void registerCloudCommands(@NotNull CloudAnnotationParser annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
