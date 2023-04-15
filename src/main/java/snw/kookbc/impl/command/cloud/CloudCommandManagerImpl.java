@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class CloudCommandManagerImpl extends CommandManagerImpl {
+    public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "jkook_plugin");
     private final CloudBasedCommandManager manager;
     private final Map<Plugin, CloudBasedCommandManager> cloudCommandManagerMap = new ConcurrentHashMap<>();
 
@@ -70,7 +71,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        registerCloudCommands(CloudCommandBuilder.createParser(commandManager, metaMapper), plugin, metaMapper);
+        Function<ParserParameters, CommandMeta> wrapped = wrap(plugin, metaMapper);
+        registerCloudCommands(CloudCommandBuilder.createParser(commandManager, wrapped), plugin, wrapped);
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
@@ -104,5 +106,9 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     @Override
     public CloudCommandMap getCommandMap() {
         return (CloudCommandMap) super.getCommandMap();
+    }
+
+    protected static Function<ParserParameters, CommandMeta> wrap(Plugin plugin, Function<ParserParameters, CommandMeta> origin) {
+        return p -> SimpleCommandMeta.builder().with(PLUGIN_KEY, plugin).with(origin.apply(p)).build();
     }
 }

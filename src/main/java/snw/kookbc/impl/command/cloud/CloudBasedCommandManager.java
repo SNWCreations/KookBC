@@ -52,6 +52,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.PLUGIN_KEY;
+
 /**
  * @author huanmeng_qwq
  */
@@ -191,6 +193,19 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     }
 
     public void unregisterAll(Plugin plugin) {
-        // TODO unregister all CLOUD command, not JKook API commands!
+        commands().stream()
+                .filter(i ->
+                        i.getCommandMeta().get(PLUGIN_KEY)
+                                .orElseThrow(
+                                        () -> new IllegalStateException(
+                                                "Internal error: commands does not have plugin meta!"
+                                        )
+                                )
+                                == plugin
+                )
+                .map(i -> i.getArguments().get(0))
+                .forEach(i -> {
+                    deleteRootCommand(i.getName());
+                });
     }
 }
