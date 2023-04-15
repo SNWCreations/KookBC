@@ -143,16 +143,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                             replay(message, "Invalid Command Argument: "
                                                     + finalThrowable.getCause().getMessage())
                             );
-                        } else if (throwable instanceof CommandExecutionException) {
-                            handleException(commandSender,
-                                    CommandExecutionException.class,
-                                    (CommandExecutionException) throwable, (c, e) -> {
-                                        replay(message, "An internal error occurred while attempting to perform this command");
-                                        plugin.getLogger().error(
-                                                "Exception executing command handler", finalThrowable.getCause()
-                                        );
-                                    }
-                            );
                         } else if (throwable != null) {
                             replay(message, "An internal error occurred while attempting to perform this command");
                             unhandledException.set(throwable); // provide the unhandled exception
