@@ -49,7 +49,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        WrappedCommand wrapped = getCommand(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
+        WrappedCommand wrapped = getCommandWithPrefix(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
         if (wrapped == null) {
             return false;
         }
