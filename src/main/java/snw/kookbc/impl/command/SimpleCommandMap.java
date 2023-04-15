@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 // A simple command map as the storage of the command objects.
-public class SimpleCommandMap implements CommandMap{
+public class SimpleCommandMap implements CommandMap {
     protected final Map<String, WrappedCommand> commandsWithoutPrefix = new ConcurrentHashMap<>();
     protected final Map<String, WrappedCommand> commandsWithPrefix = new ConcurrentHashMap<>();
     protected final Map<String, WrappedCommand> commandsWithoutPrefixView = Collections.unmodifiableMap(commandsWithoutPrefix);
