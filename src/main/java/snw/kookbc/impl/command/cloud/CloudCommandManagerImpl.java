@@ -42,7 +42,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     public CloudCommandManagerImpl(KBCClient client) {
         this(client, new CloudCommandMap());
-        ((CloudCommandMap) getCommandMap()).init(this);
+        getCommandMap().init(this);
     }
 
     public CloudCommandManagerImpl(KBCClient client, CloudCommandMap commandMap) {
@@ -58,11 +58,11 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
             // TODO if cloud? find the cloud command manager through the command line
             return false;
         }
-        getCloudCommandManager(wrapped.getPlugin()).executeCommandNow(sender, cmdLine, msg);
+        getCloudCommandManager().executeCommandNow(sender, cmdLine, msg);
         return true;
     }
 
-    public CloudBasedCommandManager getCloudCommandManager(Plugin plugin) {
+    public CloudBasedCommandManager getCloudCommandManager() {
         return manager;
         // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
@@ -76,7 +76,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        registerCloudCommands(getCloudCommandManager(plugin), plugin, metaMapper);
+        registerCloudCommands(getCloudCommandManager(), plugin, metaMapper);
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin) throws Exception {
@@ -92,7 +92,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
-        registerCloudCommand(getCloudCommandManager(plugin), metaMapper, instance);
+        registerCloudCommand(getCloudCommandManager(), metaMapper, instance);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) throws Exception {
@@ -103,4 +103,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         registerCloudCommand(commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
     }
 
+    @Override
+    public CloudCommandMap getCommandMap() {
+        return (CloudCommandMap) super.getCommandMap();
+    }
 }

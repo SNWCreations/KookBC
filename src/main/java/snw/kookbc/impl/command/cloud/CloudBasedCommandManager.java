@@ -40,6 +40,7 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
+import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.message.NullMessage;
@@ -189,7 +190,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         return CompletableFuture.completedFuture(null);
     }
 
-    public void unregisterAll() {
-        rootCommands().forEach(this::deleteRootCommand);
+    public void unregisterAll(Plugin plugin) {
+        // TODO unregister all CLOUD command, not JKook API commands!
     }
 }

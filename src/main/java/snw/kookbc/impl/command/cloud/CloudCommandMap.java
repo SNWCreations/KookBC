@@ -19,18 +19,18 @@ public class CloudCommandMap extends SimpleCommandMap {
 
     public void register(Plugin plugin, JKookCommand command) {
         super.register(plugin, command);
-        this.parent.getCloudCommandManager(plugin).registerJKookCommand(command);
+        this.parent.getCloudCommandManager().registerJKookCommand(command);
     }
 
     public void unregister(JKookCommand command) {
         super.unregister(command);
         Plugin plugin = getOwnerOfCommand(command);
-        this.parent.getCloudCommandManager(plugin).unregisterJKookCommand(command);
+        this.parent.getCloudCommandManager().unregisterJKookCommand(command);
     }
 
     public void unregisterAll(Plugin plugin) {
         super.unregisterAll(plugin);
-        this.parent.getCloudCommandManager(plugin).unregisterAll();
+        this.parent.getCloudCommandManager().unregisterAll(plugin);
     }
 
     protected Plugin getOwnerOfCommand(JKookCommand command) {
