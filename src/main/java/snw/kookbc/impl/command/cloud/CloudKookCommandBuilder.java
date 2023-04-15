@@ -27,7 +27,6 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.CommandMap;
-import snw.kookbc.impl.command.SimpleCommandMap;
 import snw.kookbc.impl.command.WrappedCommand;
 
 import java.util.ArrayList;
@@ -35,24 +34,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author huanmeng_qwq
+ * @author huanmeng_qwq, SNWCreations
  */
-public class CloudKookCommandBuilder {
-    private final Plugin plugin;
-    private final CloudCommandManagerImpl manager;
-    private final Command<CommandSender> command;
-    private final CommandMap commandMap;
-
-    public CloudKookCommandBuilder(Plugin plugin, CloudCommandManagerImpl manager, Command<CommandSender> command, CommandMap commandMap) {
-        this.plugin = plugin;
-        this.manager = manager;
-        this.command = command;
-        this.commandMap = commandMap;
-    }
+public interface CloudKookCommandBuilder {
 
     @SuppressWarnings("unchecked")
     @Nullable
-    public JKookCommand build() {
+    static JKookCommand build(Plugin plugin, CloudCommandManagerImpl manager, Command<CommandSender> command, CommandMap commandMap) {
         final CommandArgument<?, ?> commandArgument = command.getArguments().get(0);
         boolean overwrite = manager.getSetting(CommandManager.ManagerSettings.OVERRIDE_EXISTING_COMMANDS);
         Map<String, WrappedCommand> wrappedCommandMap = commandMap.getView(false);
@@ -79,4 +67,5 @@ public class CloudKookCommandBuilder {
 
         return kookCommand;
     }
+
 }

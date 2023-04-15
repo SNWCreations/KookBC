@@ -54,8 +54,7 @@ public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationH
     @Override
     public boolean registerCommand(@NonNull Command<?> command) {
         @SuppressWarnings("unchecked")
-        CloudKookCommandBuilder kookCommand = new CloudKookCommandBuilder(plugin, manager, (Command<CommandSender>) command, commandMap);
-        JKookCommand register = kookCommand.build();
+        JKookCommand register = CloudKookCommandBuilder.build(plugin, manager, (Command<CommandSender>) command, commandMap);
         if (register == null) {
             return false;
         }
