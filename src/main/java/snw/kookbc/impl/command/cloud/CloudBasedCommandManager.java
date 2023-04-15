@@ -116,19 +116,19 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                             handleException(commandSender,
                                     InvalidSyntaxException.class,
                                     (InvalidSyntaxException) throwable, (c, e) ->
-                                            replay(message, finalThrowable.getMessage())
+                                            message.sendToSource(finalThrowable.getMessage())
                             );
                         } else if (throwable instanceof InvalidCommandSenderException) {
                             handleException(commandSender,
                                     InvalidCommandSenderException.class,
                                     (InvalidCommandSenderException) throwable, (c, e) ->
-                                            replay(message, finalThrowable.getMessage())
+                                            message.sendToSource(finalThrowable.getMessage())
                             );
                         } else if (throwable instanceof NoPermissionException) {
                             handleException(commandSender,
                                     NoPermissionException.class,
                                     (NoPermissionException) throwable, (c, e) ->
-                                            replay(message, "You do not have permission to execute this command")
+                                            message.sendToSource("You do not have permission to execute this command")
                             );
                         } else if (throwable instanceof NoSuchCommandException) {
                             handleException(commandSender,
@@ -143,11 +143,11 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                             handleException(commandSender,
                                     ArgumentParseException.class,
                                     (ArgumentParseException) throwable, (c, e) ->
-                                            replay(message, "Invalid Command Argument: "
+                                            message.sendToSource("Invalid Command Argument: "
                                                     + finalThrowable.getCause().getMessage())
                             );
                         } else if (throwable != null) {
-                            replay(message, "An internal error occurred while attempting to perform this command");
+                            message.sendToSource("An internal error occurred while attempting to perform this command");
                             unhandledException.set(throwable); // provide the unhandled exception
                             plugin.getLogger().error("An unhandled exception was thrown during command execution",
                                     throwable
@@ -158,14 +158,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         }
         if (unhandledException.get() != null) {
             throw new CommandException("Something unexpected happened.", unhandledException.get());
-        }
-    }
-
-    private void replay(Message message, String s) {
-        if (message != null) {
-            message.reply(s);
-        } else {
-            plugin.getLogger().info(s);
         }
     }
 
