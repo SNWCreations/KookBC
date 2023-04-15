@@ -57,7 +57,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     public CloudBasedCommandManager getCloudCommandManager(Plugin plugin) {
         if (!cloudCommandManagerMap.containsKey(plugin)) {
-            CloudBasedCommandManager commandManager = CloudCommandBuilder.createManager(plugin);
+            CloudBasedCommandManager commandManager = new CloudBasedCommandManager(this, plugin);
             cloudCommandManagerMap.put(plugin, commandManager);
             return commandManager;
         }

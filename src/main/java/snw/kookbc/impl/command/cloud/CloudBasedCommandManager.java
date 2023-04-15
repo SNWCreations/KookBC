@@ -45,7 +45,6 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
-import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.UnknownArgumentException;
 import snw.kookbc.impl.message.NullMessage;
 
@@ -62,6 +61,7 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
  */
 public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
+    private final CloudCommandManagerImpl parent;
     private final Plugin plugin;
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
 
@@ -69,11 +69,11 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     // Map<Fullname, Prefix>
     private final Map<String, String> jKookCommandFullnameList = new ConcurrentHashMap<>();
     private final Map<JKookCommand, Plugin> jKookCommandPluginMap = new ConcurrentHashMap<>();
-    private final Map<String, JKookCommand> jKookCommandMap = new ConcurrentHashMap<>();
 
-    CloudBasedCommandManager(@NonNull Plugin plugin) {
+    CloudBasedCommandManager(@NonNull CloudCommandManagerImpl parent, @NonNull Plugin plugin) {
         super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
+        this.parent = parent;
         this.plugin = plugin;
         parameterInjectorRegistry().registerInjector(Message.class,
                 (context, annotationAccessor) -> context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE)
@@ -95,14 +95,13 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         return plugin;
     }
 
-    public void registerJKook(JKookCommand jKookCommand, Plugin registerPlugin, CommandManagerImpl jkookManager) {
+    public void registerJKook(JKookCommand jKookCommand, Plugin registerPlugin) {
         Collection<String> prefixes = jKookCommand.getPrefixes();
         List<String> commandsList = new ArrayList<>();
         commandsList.add(jKookCommand.getRootName());
         commandsList.addAll(jKookCommand.getAliases());
         for (String s : commandsList) {
             prefixes.forEach(prefix -> jKookCommandFullnameList.put(prefix + s, prefix));
-            prefixes.forEach(prefix -> jKookCommandMap.put(prefix + s, jKookCommand));
         }
 
         jKookCommandPluginMap.put(jKookCommand, registerPlugin);
@@ -137,7 +136,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 }
                                 Object[] arguments;
                                 try {
-                                    arguments = jkookManager.processArguments(jKookCommand, list);
+                                    arguments = CloudBasedCommandManager.this.parent.processArguments(jKookCommand, list);
                                 } catch (NoSuchElementException e) {
                                     reply("执行命令失败: 参数不足。", "Unable to execute command: No enough arguments.", sender, message);
                                     return;
@@ -169,7 +168,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             for (String name : list) {
                 if (entry.getKey().equals(name)) {
                     deleteRootCommand(entry.getKey().substring(entry.getValue().length()));
-                    jKookCommandMap.remove(name);
                     return true;
                 }
             }

@@ -34,8 +34,6 @@ import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
-import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
-import snw.kookbc.impl.command.cloud.CloudCommandMap;
 import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
@@ -147,10 +145,6 @@ public class CoreImpl implements Core {
 
     protected synchronized void init(KBCClient client) {
         this.init(client, null, null, null, null, null, null);
-    }
-
-    protected synchronized void init(KBCClient client, CloudBasedCommandManager cloudCommandManager) {
-        this.init(client, null, null, null, null, new CommandManagerImpl(client, new CloudCommandMap(cloudCommandManager)), null);
     }
 
     // pass null to an argument if you don't need to replace it using your version.

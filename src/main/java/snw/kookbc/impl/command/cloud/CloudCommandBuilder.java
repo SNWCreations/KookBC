@@ -23,7 +23,6 @@ import cloud.commandframework.meta.CommandMeta;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandSender;
-import snw.jkook.plugin.Plugin;
 
 import java.util.function.Function;
 
@@ -31,9 +30,6 @@ import java.util.function.Function;
  * @author huanmeng_qwq
  */
 public interface CloudCommandBuilder {
-    static @NotNull CloudBasedCommandManager createManager(Plugin plugin) {
-        return new CloudBasedCommandManager(plugin);
-    }
 
     static @NotNull CloudAnnotationParser createParser(@NotNull CloudBasedCommandManager commandManager,
                                                        @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {

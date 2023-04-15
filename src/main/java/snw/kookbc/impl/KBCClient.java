@@ -29,7 +29,6 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.cloud.CloudCommandBuilder;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.HelpCommand;
@@ -109,7 +108,7 @@ public class KBCClient {
             throw new RuntimeException(e);
         }
         this.internalPlugin = new InternalPlugin(this);
-        this.core.init(this, CloudCommandBuilder.createManager(internalPlugin));
+        this.core.init(this);
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
