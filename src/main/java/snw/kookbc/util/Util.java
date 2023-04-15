@@ -130,14 +130,4 @@ public class Util {
     public static boolean isStartByLaunch() {
         return Boolean.getBoolean("kookbc.launch");
     }
-
-    public static boolean isConsoleAvailable() {
-        if (System.getProperty("java.class.path").contains("idea_rt.jar"))
-            return true;
-        try (Reader reader = new InputStreamReader(System.in)) {
-            return reader.ready();
-        } catch (IOException ignored) {
-        }
-        return false;
-    }
 }

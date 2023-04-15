@@ -86,7 +86,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public Logger getLogger() {
-        return client.getCore().getLogger();
+        return getCore().getLogger();
     }
 
     @Override
