@@ -198,6 +198,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         return list;
     }
 
+    // TODO make it throws CommandException if command execution failed for other reasons
     public void executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) {
         executeCommand(commandSender, input, message)
                 .whenComplete((commandResult, throwable) -> {
