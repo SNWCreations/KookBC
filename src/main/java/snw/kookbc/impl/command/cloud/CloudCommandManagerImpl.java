@@ -30,6 +30,7 @@ import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.CommandMap;
+import snw.kookbc.impl.command.WrappedCommand;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,10 +49,11 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        if (getCommand(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine) == null) {
+        WrappedCommand wrapped = getCommand(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
+        if (wrapped == null) {
             return false;
         }
-        getCloudCommandManager(client.getInternalPlugin()).executeCommandNow(sender, cmdLine, msg);
+        getCloudCommandManager(wrapped.getPlugin()).executeCommandNow(sender, cmdLine, msg);
         return true;
     }
 
