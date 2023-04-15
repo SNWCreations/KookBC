@@ -6,9 +6,6 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.SimpleCommandMap;
 
 /**
- * 2023/4/11<br>
- * KookBC<br>
- *
  * @author huanmeng_qwq
  */
 public class CloudCommandMap extends SimpleCommandMap {
