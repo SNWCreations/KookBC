@@ -113,10 +113,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                             handleException(commandSender,
                                     InvalidSyntaxException.class,
                                     (InvalidSyntaxException) throwable, (c, e) ->
-                                            replay(message, "Invalid Command Syntax. "
-                                                    + "Correct command syntax is: /"
-                                                    + ((InvalidSyntaxException) finalThrowable)
-                                                    .getCorrectSyntax())
+                                            replay(message, finalThrowable.getMessage())
                             );
                         } else if (throwable instanceof InvalidCommandSenderException) {
                             handleException(commandSender,
