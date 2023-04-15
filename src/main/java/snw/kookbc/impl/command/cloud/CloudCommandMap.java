@@ -8,9 +8,12 @@ import snw.kookbc.impl.command.SimpleCommandMap;
  * @author huanmeng_qwq
  */
 public class CloudCommandMap extends SimpleCommandMap {
-    protected final CloudCommandManagerImpl parent;
+    protected CloudCommandManagerImpl parent;
 
-    public CloudCommandMap(CloudCommandManagerImpl parent) {
+    public void init(CloudCommandManagerImpl parent) {
+        if (this.parent != null) {
+            throw new IllegalStateException("Already initialized");
+        }
         this.parent = parent;
     }
 

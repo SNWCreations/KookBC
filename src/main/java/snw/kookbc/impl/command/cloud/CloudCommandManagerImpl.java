@@ -39,7 +39,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     private final Map<Plugin, CloudBasedCommandManager> cloudCommandManagerMap = new ConcurrentHashMap<>();
 
     public CloudCommandManagerImpl(KBCClient client) {
-        super(client);
+        this(client, new CloudCommandMap());
+        ((CloudCommandMap) getCommandMap()).init(this);
     }
 
     public CloudCommandManagerImpl(KBCClient client, CloudCommandMap commandMap) {
