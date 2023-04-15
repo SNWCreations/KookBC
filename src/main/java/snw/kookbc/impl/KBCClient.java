@@ -21,8 +21,6 @@ package snw.kookbc.impl;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
-import snw.jkook.command.ConsoleCommandExecutor;
-import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -31,9 +29,10 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.cloud.CloudCommandBuilder;
+import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.command.internal.CloudHelpCommand;
+import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
@@ -438,11 +437,20 @@ public class KBCClient {
     }
 
     protected void registerHelpCommand() {
-        try {
-            ((CommandManagerImpl) core.getCommandManager())
-                    .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
+            try {
+                ((CloudCommandManagerImpl) core.getCommandManager())
+                        .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            HelpCommand executor = new HelpCommand(this);
+            new JKookCommand("help")
+                    .setDescription("获取此帮助列表。")
+                    .executesUser(executor)
+                    .executesConsole(executor)
+                    .register(getInternalPlugin());
         }
     }
 

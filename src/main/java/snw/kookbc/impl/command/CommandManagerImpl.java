@@ -18,11 +18,6 @@
 
 package snw.kookbc.impl.command;
 
-import cloud.commandframework.arguments.parser.ParserParameters;
-import cloud.commandframework.meta.CommandMeta;
-import cloud.commandframework.meta.SimpleCommandMeta;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.*;
 import snw.jkook.entity.User;
@@ -30,9 +25,6 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.cloud.CloudAnnotationParser;
-import snw.kookbc.impl.command.cloud.CloudCommandBuilder;
-import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
 import snw.kookbc.impl.command.cloud.CloudCommandMap;
 
 import java.util.*;
@@ -46,10 +38,9 @@ import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
-    private final KBCClient client;
+    protected final KBCClient client;
     protected final CommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
-    private final Map<Plugin, CloudBasedCommandManager> cloudCommandManagerMap = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this(client, new SimpleCommandMap());
@@ -138,57 +129,6 @@ public class CommandManagerImpl implements CommandManager {
         parsers.put(clazz, parser);
     }
 
-    // Cloud - Start
-    public CloudBasedCommandManager getCloudCommandManager(Plugin plugin) {
-        if (commandMap instanceof CloudCommandMap) {
-            // 统一CommandManager
-            return ((CloudCommandMap) commandMap).cloudCommandManager();
-        }
-        if (!cloudCommandManagerMap.containsKey(plugin)) {
-            CloudBasedCommandManager commandManager = CloudCommandBuilder.createManager(plugin);
-            cloudCommandManagerMap.put(plugin, commandManager);
-            return commandManager;
-        }
-        return cloudCommandManagerMap.get(plugin);
-    }
-
-    public void registerCloudCommands(@NotNull CloudAnnotationParser annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        annotationParser.parse(plugin.getClass().getClassLoader());
-    }
-
-    public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        registerCloudCommands(CloudCommandBuilder.createParser(commandManager, metaMapper), plugin, metaMapper);
-    }
-
-    public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        registerCloudCommands(getCloudCommandManager(plugin), plugin, metaMapper);
-    }
-
-    public void registerCloudCommands(@NotNull Plugin plugin) throws Exception {
-        registerCloudCommands(plugin, parserParameters -> SimpleCommandMeta.empty());
-    }
-
-    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
-        CloudCommandBuilder.createParser(commandManager, metaMapper).parse(instance);
-    }
-
-    public void registerCloudCommand(@NotNull CloudAnnotationParser annotationParser, @NotNull Object instance) throws Exception {
-        annotationParser.parse(instance);
-    }
-
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
-        registerCloudCommand(getCloudCommandManager(plugin), metaMapper, instance);
-    }
-
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) throws Exception {
-        registerCloudCommand(plugin, parserParameters -> SimpleCommandMeta.empty(), instance);
-    }
-
-    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) throws Exception {
-        registerCloudCommand(commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
-    }
-
-    // Cloud - End
 
     // this method should only be used for executing Bot commands. And the executor is Console.
     // user commands should be handled by using executeCommand0, NOT THIS
@@ -211,11 +151,6 @@ public class CommandManagerImpl implements CommandManager {
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
-        }
-
-        if (commandMap instanceof CloudCommandMap) {
-            getCloudCommandManager(client.getInternalPlugin()).executeCommandNow(sender, cmdLine, msg);
-            return true;
         }
 
         long startTimeStamp = System.currentTimeMillis(); // debug
