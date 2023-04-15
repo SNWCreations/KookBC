@@ -60,7 +60,7 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
 /**
  * @author huanmeng_qwq
  */
-public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
+public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
     private final Plugin plugin;
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
@@ -71,13 +71,13 @@ public class CloudCommandManagerImpl extends CommandManager<CommandSender> {
     private final Map<JKookCommand, Plugin> jKookCommandPluginMap = new ConcurrentHashMap<>();
     private final Map<String, JKookCommand> jKookCommandMap = new ConcurrentHashMap<>();
 
-    CloudCommandManagerImpl(@NonNull Plugin plugin) {
+    CloudBasedCommandManager(@NonNull Plugin plugin) {
         super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.plugin = plugin;
-        parameterInjectorRegistry().registerInjector(Message.class, (context, annotationAccessor) -> {
-            return context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE);
-        });
+        parameterInjectorRegistry().registerInjector(Message.class,
+                (context, annotationAccessor) -> context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE)
+        );
         registerCapability(CloudCapability.StandardCapabilities.ROOT_COMMAND_DELETION);
     }
 

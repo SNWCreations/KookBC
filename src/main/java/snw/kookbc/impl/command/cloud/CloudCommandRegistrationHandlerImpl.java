@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationHandler {
     private final Plugin plugin;
     private final CommandMap commandMap;
-    private CloudCommandManagerImpl manager;
+    private CloudBasedCommandManager manager;
     private final Map<CommandArgument<?, ?>, JKookCommand> registeredCommands = new ConcurrentHashMap<>();
 
     public CloudCommandRegistrationHandlerImpl(Plugin plugin) {
@@ -47,7 +47,7 @@ public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationH
         this.commandMap = ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap();
     }
 
-    final void initialize(CloudCommandManagerImpl manager) {
+    final void initialize(CloudBasedCommandManager manager) {
         this.manager = manager;
     }
 

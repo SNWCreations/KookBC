@@ -9,10 +9,10 @@ import snw.kookbc.impl.command.SimpleCommandMap;
  * @author huanmeng_qwq
  */
 public class CloudCommandMap extends SimpleCommandMap {
-    protected final CloudCommandManagerImpl cloudCommandManager;
+    protected final CloudBasedCommandManager cloudCommandManager;
     protected CommandManagerImpl commandManager;
 
-    public CloudCommandMap(CloudCommandManagerImpl cloudCommandManager) {
+    public CloudCommandMap(CloudBasedCommandManager cloudCommandManager) {
         this.cloudCommandManager = cloudCommandManager;
     }
 
@@ -38,7 +38,7 @@ public class CloudCommandMap extends SimpleCommandMap {
         cloudCommandManager.unregisterJKookCommands(plugin);
     }
 
-    public CloudCommandManagerImpl cloudCommandManager() {
+    public CloudBasedCommandManager cloudCommandManager() {
         return cloudCommandManager;
     }
 }

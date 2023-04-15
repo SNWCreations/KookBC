@@ -33,11 +33,11 @@ import java.util.concurrent.CompletionException;
  */
 public class CloudCommandExecutor implements CommandExecutor {
     private final Plugin plugin;
-    private final CloudCommandManagerImpl manager;
+    private final CloudBasedCommandManager manager;
     private final JKookCommand root;
     private final String rootName;
 
-    public CloudCommandExecutor(@NotNull Plugin plugin, @NotNull CloudCommandManagerImpl manager, @NotNull JKookCommand root, @NotNull String rootName) {
+    public CloudCommandExecutor(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager manager, @NotNull JKookCommand root, @NotNull String rootName) {
         this.plugin = plugin;
         this.manager = manager;
         this.root = root;

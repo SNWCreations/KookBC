@@ -31,11 +31,11 @@ import java.util.function.Function;
  * @author huanmeng_qwq
  */
 public interface CloudCommandBuilder {
-    static @NotNull CloudCommandManagerImpl createManager(Plugin plugin) {
-        return new CloudCommandManagerImpl(plugin);
+    static @NotNull CloudBasedCommandManager createManager(Plugin plugin) {
+        return new CloudBasedCommandManager(plugin);
     }
 
-    static @NotNull CloudAnnotationParser createParser(@NotNull CloudCommandManagerImpl commandManager,
+    static @NotNull CloudAnnotationParser createParser(@NotNull CloudBasedCommandManager commandManager,
                                                        @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         return new CloudAnnotationParser(new AnnotationParser<>(commandManager, CommandSender.class, metaMapper));
     }
