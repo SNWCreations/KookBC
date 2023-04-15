@@ -36,6 +36,7 @@ import cloud.commandframework.services.State;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
+import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
@@ -48,6 +49,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author huanmeng_qwq
@@ -97,68 +100,75 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         deleteRootCommand(jKookCommand.getRootName());
     }
 
-    // TODO make it throws CommandException if command execution failed for other reasons
-    public void executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) {
-        executeCommand(commandSender, input, message)
-                .whenComplete((commandResult, throwable) -> {
-                    if (throwable instanceof CompletionException) {
-                        throwable = throwable.getCause();
-                    }
-                    final Throwable finalThrowable = throwable;
-                    if (throwable instanceof InvalidSyntaxException) {
-                        handleException(commandSender,
-                                InvalidSyntaxException.class,
-                                (InvalidSyntaxException) throwable, (c, e) ->
-                                        replay(message, "Invalid Command Syntax. "
-                                                + "Correct command syntax is: /"
-                                                + ((InvalidSyntaxException) finalThrowable)
-                                                .getCorrectSyntax())
-                        );
-                    } else if (throwable instanceof InvalidCommandSenderException) {
-                        handleException(commandSender,
-                                InvalidCommandSenderException.class,
-                                (InvalidCommandSenderException) throwable, (c, e) ->
-                                        replay(message, finalThrowable.getMessage())
-                        );
-                    } else if (throwable instanceof NoPermissionException) {
-                        handleException(commandSender,
-                                NoPermissionException.class,
-                                (NoPermissionException) throwable, (c, e) ->
-                                        replay(message, "You do not have permission to execute this command")
-                        );
-                    } else if (throwable instanceof NoSuchCommandException) {
-                        handleException(commandSender,
-                                NoSuchCommandException.class,
-                                (NoSuchCommandException) throwable, (c, e) -> {
-                                    if (commandSender instanceof ConsoleCommandSender) {
-                                        replay(message, "Unknown command. Type \"/help\" for help.");
+    public void executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) throws CommandException {
+        AtomicReference<Throwable> unhandledException = new AtomicReference<>();
+        try {
+            executeCommand(commandSender, input, message)
+                    .whenComplete((commandResult, throwable) -> {
+                        if (throwable instanceof CompletionException) {
+                            throwable = throwable.getCause();
+                        }
+                        final Throwable finalThrowable = throwable;
+                        if (throwable instanceof InvalidSyntaxException) {
+                            handleException(commandSender,
+                                    InvalidSyntaxException.class,
+                                    (InvalidSyntaxException) throwable, (c, e) ->
+                                            replay(message, "Invalid Command Syntax. "
+                                                    + "Correct command syntax is: /"
+                                                    + ((InvalidSyntaxException) finalThrowable)
+                                                    .getCorrectSyntax())
+                            );
+                        } else if (throwable instanceof InvalidCommandSenderException) {
+                            handleException(commandSender,
+                                    InvalidCommandSenderException.class,
+                                    (InvalidCommandSenderException) throwable, (c, e) ->
+                                            replay(message, finalThrowable.getMessage())
+                            );
+                        } else if (throwable instanceof NoPermissionException) {
+                            handleException(commandSender,
+                                    NoPermissionException.class,
+                                    (NoPermissionException) throwable, (c, e) ->
+                                            replay(message, "You do not have permission to execute this command")
+                            );
+                        } else if (throwable instanceof NoSuchCommandException) {
+                            handleException(commandSender,
+                                    NoSuchCommandException.class,
+                                    (NoSuchCommandException) throwable, (c, e) -> {
+                                        if (commandSender instanceof ConsoleCommandSender) {
+                                            replay(message, "Unknown command. Type \"/help\" for help.");
+                                        }
                                     }
-                                }
-                        );
-                    } else if (throwable instanceof ArgumentParseException) {
-                        handleException(commandSender,
-                                ArgumentParseException.class,
-                                (ArgumentParseException) throwable, (c, e) ->
-                                        replay(message, "Invalid Command Argument: "
-                                                + finalThrowable.getCause().getMessage())
-                        );
-                    } else if (throwable instanceof CommandExecutionException) {
-                        handleException(commandSender,
-                                CommandExecutionException.class,
-                                (CommandExecutionException) throwable, (c, e) -> {
-                                    replay(message, "An internal error occurred while attempting to perform this command");
-                                    plugin.getLogger().error(
-                                            "Exception executing command handler", finalThrowable.getCause()
-                                    );
-                                }
-                        );
-                    } else if (throwable != null) {
-                        replay(message, "An internal error occurred while attempting to perform this command");
-                        plugin.getLogger().error("An unhandled exception was thrown during command execution",
-                                throwable
-                        );
-                    }
-                });
+                            );
+                        } else if (throwable instanceof ArgumentParseException) {
+                            handleException(commandSender,
+                                    ArgumentParseException.class,
+                                    (ArgumentParseException) throwable, (c, e) ->
+                                            replay(message, "Invalid Command Argument: "
+                                                    + finalThrowable.getCause().getMessage())
+                            );
+                        } else if (throwable instanceof CommandExecutionException) {
+                            handleException(commandSender,
+                                    CommandExecutionException.class,
+                                    (CommandExecutionException) throwable, (c, e) -> {
+                                        replay(message, "An internal error occurred while attempting to perform this command");
+                                        plugin.getLogger().error(
+                                                "Exception executing command handler", finalThrowable.getCause()
+                                        );
+                                    }
+                            );
+                        } else if (throwable != null) {
+                            replay(message, "An internal error occurred while attempting to perform this command");
+                            unhandledException.set(throwable); // provide the unhandled exception
+                            plugin.getLogger().error("An unhandled exception was thrown during command execution",
+                                    throwable
+                            );
+                        }
+                    }).get();
+        } catch (InterruptedException | ExecutionException ignored) { // impossible
+        }
+        if (unhandledException.get() != null) {
+            throw new CommandException("Something unexpected happened.", unhandledException.get());
+        }
     }
 
     private void replay(Message message, String s) {
