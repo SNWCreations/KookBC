@@ -21,6 +21,7 @@ package snw.kookbc.impl.serializer.event.user;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.user.UserLeaveGuildEvent;
 import snw.kookbc.impl.KBCClient;
@@ -48,10 +49,18 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
             user = client.getStorage().getUser(get(body, "user_id").getAsString());
             guildId = get(object, "target_id").getAsString();
         }
+        Guild guild = client.getStorage().getGuild(guildId);
+//        if (guild == null) { // TODO activate it after this branch has merged into the next API development branch
+//            return new UserLeaveGuildEvent(
+//                    timeStamp,
+//                    user,
+//                    guildId
+//            );
+//        }
         return new UserLeaveGuildEvent(
                 timeStamp,
                 user,
-                client.getStorage().getGuild(guildId)
+                guild
         );
     }
 
