@@ -255,7 +255,7 @@ public class CommandManagerImpl implements CommandManager {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 exec(
-                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) realSender, arguments),
+                        () -> consoleCommandExecutor.onCommand(realSender, arguments),
                         startTimeStamp, cmdLine
                 );
                 return true;

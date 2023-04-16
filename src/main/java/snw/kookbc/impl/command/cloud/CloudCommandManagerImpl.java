@@ -82,11 +82,11 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         registerCloudCommands(plugin, parserParameters -> SimpleCommandMeta.empty());
     }
 
-    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
+    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
         CloudCommandBuilder.createParser(commandManager, metaMapper).parse(instance);
     }
 
-    public void registerCloudCommand(@NotNull CloudAnnotationParser annotationParser, @NotNull Object instance) throws Exception {
+    public void registerCloudCommand(@NotNull CloudAnnotationParser annotationParser, @NotNull Object instance) {
         annotationParser.parse(instance);
     }
 

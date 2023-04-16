@@ -136,9 +136,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         } else if (throwable instanceof NoSuchCommandException) {
                             handleException(commandSender,
                                     NoSuchCommandException.class,
-                                    (NoSuchCommandException) throwable, (c, e) -> {
-                                            foundCommand.set(false);
-                                    }
+                                    (NoSuchCommandException) throwable, (c, e) -> foundCommand.set(false)
                             );
                         } else if (throwable instanceof ArgumentParseException) {
                             handleException(commandSender,
@@ -211,8 +209,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 == plugin
                 )
                 .map(i -> i.getArguments().get(0))
-                .forEach(i -> {
-                    deleteRootCommand(i.getName());
-                });
+                .forEach(i -> deleteRootCommand(i.getName()));
     }
 }
