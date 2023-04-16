@@ -194,34 +194,44 @@ public abstract class ChannelImpl implements Channel {
 
     @Override
     public void addPermission(Role role, Permission... perms) {
+        addPermission(role.getId(), perms);
+    }
+
+    @Override
+    public void removePermission(Role role, Permission... perms) {
+        removePermission(role.getId(), perms);
+    }
+
+    @Override
+    public void addPermission(int roleId, Permission... perms) {
         if (perms.length == 0) {
             return;
         }
         int origin = 0;
         int deny = 0;
-        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(role);
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
         if (o != null) {
             origin = o.getRawAllow();
             deny = o.getRawDeny();
         }
         origin = Permission.sum(origin, perms);
-        updatePermission(role, origin, deny);
+        updatePermission(roleId, origin, deny);
     }
 
     @Override
-    public void removePermission(Role role, Permission... perms) {
+    public void removePermission(int roleId, Permission... perms) {
         if (perms.length == 0) {
             return;
         }
         int origin = 0;
         int deny = 0;
-        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(role);
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
         if (o != null) {
             origin = o.getRawAllow();
             deny = o.getRawDeny();
         }
         origin = Permission.removeFrom(origin, perms);
-        updatePermission(role, origin, deny);
+        updatePermission(roleId, origin, deny);
     }
 
     @Nullable
@@ -238,6 +248,17 @@ public abstract class ChannelImpl implements Channel {
     public RolePermissionOverwrite getRolePermissionOverwriteByRole(Role role) {
         for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
             if (o.getRoleId() == role.getId()) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(int roleId) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == roleId) {
                 return o;
             }
         }
