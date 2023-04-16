@@ -212,6 +212,16 @@ public class KBCClient {
                                 ? 1 : -1
         );
 
+        this.plugins = plugins;
+    }
+
+    private void enablePlugins() {
+        if (plugins == null) { // no plugins? do nothing!
+            // if the plugins was not loaded, we can't continue
+            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
+            return;
+        }
+
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -227,15 +237,7 @@ public class KBCClient {
             }
             // end onLoad
         }
-        this.plugins = plugins;
-    }
 
-    private void enablePlugins() {
-        if (plugins == null) { // no plugins? do nothing!
-            // if the plugins was not loaded, we can't continue
-            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
-            return;
-        }
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
