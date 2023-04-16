@@ -19,6 +19,7 @@
 package snw.kookbc.impl.entity.channel;
 
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
@@ -157,6 +158,90 @@ public abstract class ChannelImpl implements Channel {
                 .put("deny", rawDeny)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_UPDATE.toFullURL(), body);
+    }
+
+    @Override
+    public void addPermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void removePermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void addPermission(Role role, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(role);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(role, origin, deny);
+    }
+
+    @Override
+    public void removePermission(Role role, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(role);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(role, origin, deny);
+    }
+
+    @Nullable
+    public UserPermissionOverwrite getUserPermissionOverwriteByUser(User user) {
+        for (UserPermissionOverwrite o : getOverwrittenUserPermissions()) {
+            if (o.getUser() == user) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(Role role) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == role.getId()) {
+                return o;
+            }
+        }
+        return null;
     }
 
     @Override
