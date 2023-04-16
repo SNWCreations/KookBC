@@ -42,8 +42,6 @@ public class EntityStorage {
     private final LoadingCache<String, Guild> guilds;
     private final Cache<String, Channel> channels;
 
-    // The following data types can be loaded manually, but it costs too many network resource.
-    // So we won't remove them if the memory is enough.
     private final Cache<String, Role> roles;
     private final Cache<String, CustomEmoji> emojis;
     private final Cache<String, Message> msgs;
@@ -74,11 +72,11 @@ public class EntityStorage {
                     return null;
                 }));
         this.channels = newCaffeineBuilderWithWeakRef().build(); // key: channel ID
-        this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
-        this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
-        this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
-        this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
-        this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
+        this.msgs = newCaffeineBuilderWithWeakRef().build(); // key: msg id
+        this.roles = newCaffeineBuilderWithWeakRef().build(); // key format: GUILD_ID#ROLE_ID
+        this.emojis = newCaffeineBuilderWithWeakRef().build(); // key: emoji ID
+        this.reactions = newCaffeineBuilderWithWeakRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
+        this.games = newCaffeineBuilderWithWeakRef().build(); // key: game id
 
         this.channelLoader = funcWithRetry(id ->
                 client.getEntityBuilder().buildChannel(
