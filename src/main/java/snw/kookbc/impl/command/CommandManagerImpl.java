@@ -426,6 +426,9 @@ public class CommandManagerImpl implements CommandManager {
     }
 
     private static String[] parseCmdLine(String input) {
+        if (input.isEmpty()) {
+            return new String[]{""};
+        }
         List<String> tokens = new ArrayList<>();
         int firstSpace = input.indexOf(" ");
         if (firstSpace != -1) {
