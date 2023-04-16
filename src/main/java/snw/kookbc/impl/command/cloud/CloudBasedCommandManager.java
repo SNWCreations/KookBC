@@ -167,12 +167,13 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             head = input;
         }
         WrappedCommand wrappedCommand = parent.getCommandMap().getView(true).get(head);
-        if (wrappedCommand == null) {
-            return CompletableFuture.completedFuture(null);
-        } else {
+        if (wrappedCommand != null) {
             JKookCommand origin = wrappedCommand.getCommand();
             int rIndex = head.indexOf(origin.getRootName());
             input = input.substring(rIndex);
+        } else if (input.startsWith("/")) {
+            // 允许不通过CommandMap注册，通过注解注册，@CommandContainer
+            input = input.substring(1);
         }
 
         final CommandContext<CommandSender> context = commandContextFactory.create(

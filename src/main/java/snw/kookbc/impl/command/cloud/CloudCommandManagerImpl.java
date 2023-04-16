@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.command.cloud;
 
+import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
@@ -65,8 +66,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
-    public void registerCloudCommands(@NotNull CloudAnnotationParser annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
-        annotationParser.parse(plugin.getClass().getClassLoader());
+    public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
+        annotationParser.parse(plugin.getClass().getClassLoader(), plugin);
     }
 
     public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
@@ -82,24 +83,24 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         registerCloudCommands(plugin, parserParameters -> SimpleCommandMeta.empty());
     }
 
-    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
-        CloudCommandBuilder.createParser(commandManager, metaMapper).parse(instance);
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
+        CloudCommandBuilder.createParser(commandManager, metaMapper).parse(instance, plugin);
     }
 
-    public void registerCloudCommand(@NotNull CloudAnnotationParser annotationParser, @NotNull Object instance) {
-        annotationParser.parse(instance);
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Object instance) {
+        annotationParser.parse(instance, plugin);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
-        registerCloudCommand(getCloudCommandManager(), metaMapper, instance);
+        registerCloudCommand(plugin, getCloudCommandManager(), metaMapper, instance);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) throws Exception {
         registerCloudCommand(plugin, parserParameters -> SimpleCommandMeta.empty(), instance);
     }
 
-    public void registerCloudCommand(@NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) throws Exception {
-        registerCloudCommand(commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) throws Exception {
+        registerCloudCommand(plugin, commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
     }
 
     @Override
