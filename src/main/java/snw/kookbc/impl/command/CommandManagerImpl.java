@@ -155,9 +155,6 @@ public class CommandManagerImpl implements CommandManager {
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("Unknown command. Type \"help\" for help.");
-            }
             return false;
         }
 

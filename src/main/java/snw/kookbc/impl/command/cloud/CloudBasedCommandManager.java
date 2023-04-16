@@ -37,7 +37,6 @@ import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
-import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
@@ -50,6 +49,7 @@ import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.PLUGIN_KEY;
@@ -105,8 +105,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         deleteRootCommand(jKookCommand.getRootName());
     }
 
-    public void executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) throws CommandException {
+    public boolean executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) throws CommandException {
         AtomicReference<Throwable> unhandledException = new AtomicReference<>();
+        AtomicBoolean foundCommand = new AtomicBoolean(true);
         try {
             executeCommand(commandSender, input, message)
                     .whenComplete((commandResult, throwable) -> {
@@ -136,9 +137,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                             handleException(commandSender,
                                     NoSuchCommandException.class,
                                     (NoSuchCommandException) throwable, (c, e) -> {
-                                        if (commandSender instanceof ConsoleCommandSender) {
-                                            client.getCore().getLogger().info("Unknown command. Type \"/help\" for help.");
-                                        }
+                                            foundCommand.set(false);
                                     }
                             );
                         } else if (throwable instanceof ArgumentParseException) {
@@ -158,6 +157,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         if (unhandledException.get() != null) {
             throw new CommandException("Something unexpected happened.", unhandledException.get());
         }
+        return foundCommand.get();
     }
 
     @NonNull

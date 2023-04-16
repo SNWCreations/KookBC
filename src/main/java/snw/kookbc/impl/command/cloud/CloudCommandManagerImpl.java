@@ -57,8 +57,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 //            // TODO if cloud? find the cloud command manager through the command line
 //            return false;
 //        }
-        getCloudCommandManager().executeCommandNow(sender, cmdLine, msg);
-        return true;
+        return getCloudCommandManager().executeCommandNow(sender, cmdLine, msg);
     }
 
     public CloudBasedCommandManager getCloudCommandManager() {
