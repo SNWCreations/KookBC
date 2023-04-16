@@ -150,7 +150,7 @@ public class CommandManagerImpl implements CommandManager {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine))); // arguments, token " ? it's developer's work, lol
+        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine)));
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
