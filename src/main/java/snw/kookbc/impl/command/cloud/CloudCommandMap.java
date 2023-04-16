@@ -19,7 +19,7 @@ public class CloudCommandMap extends SimpleCommandMap {
 
     public void register(Plugin plugin, JKookCommand command) {
         super.register(plugin, command);
-        this.parent.getCloudCommandManager().registerJKookCommand(command);
+        this.parent.getCloudCommandManager().registerJKookCommand(plugin, command);
     }
 
     public void unregister(JKookCommand command) {

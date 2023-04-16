@@ -84,10 +84,17 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         return SimpleCommandMeta.empty();
     }
 
-    public void registerJKookCommand(JKookCommand jKookCommand) {
+    public void registerJKookCommand(Plugin plugin, JKookCommand jKookCommand) {
         StringArrayArgument<CommandSender> args = StringArrayArgument.optional("args", (commandSenderCommandContext, s) -> Collections.emptyList());
         command(
-                commandBuilder(jKookCommand.getRootName(), jKookCommand.getAliases(), SimpleCommandMeta.builder().with(CommandMeta.DESCRIPTION, jKookCommand.getDescription()).build())
+                commandBuilder(
+                        jKookCommand.getRootName(),
+                        jKookCommand.getAliases(),
+                        SimpleCommandMeta.builder()
+                                .with(CommandMeta.DESCRIPTION, jKookCommand.getDescription())
+                                .with(PLUGIN_KEY, plugin)
+                                .build()
+                )
                         .handler(new CloudWrappedCommandExecutionHandler(parent, jKookCommand))
                         .argument(args)
                         .build()
