@@ -19,6 +19,7 @@ package snw.kookbc.impl.command.cloud;
 
 import cloud.commandframework.CloudCapability;
 import cloud.commandframework.CommandManager;
+import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.standard.StringArrayArgument;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.context.CommandContextFactory;
@@ -46,11 +47,13 @@ import snw.kookbc.impl.message.NullMessage;
 
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.PLUGIN_KEY;
 
@@ -199,7 +202,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     }
 
     public void unregisterAll(Plugin plugin) {
-        commands().stream()
+        List<? extends CommandArgument<@NonNull CommandSender, ?>> list = commands().stream()
                 .filter(i ->
                         i.getCommandMeta().get(PLUGIN_KEY)
                                 .orElseThrow(
@@ -209,7 +212,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 )
                                 == plugin
                 )
-                .map(i -> i.getArguments().get(0))
-                .forEach(i -> deleteRootCommand(i.getName()));
+                .map(i -> i.getArguments().get(0)).collect(Collectors.toList());
+        for (CommandArgument<CommandSender, ?> i : list) {
+            deleteRootCommand(i.getName());
+        }
     }
 }
