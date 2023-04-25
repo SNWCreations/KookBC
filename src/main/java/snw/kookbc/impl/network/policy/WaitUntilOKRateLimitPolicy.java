@@ -16,20 +16,28 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.interfaces.network.policy;
+package snw.kookbc.impl.network.policy;
 
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.policy.TerminateRequestRateLimitPolicy;
+import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
-// Represents the rate limit policy.
-public interface RateLimitPolicy {
+// Represents the policy which will terminate request if limit is reached.
+public class WaitUntilOKRateLimitPolicy implements RateLimitPolicy {
+    public static final WaitUntilOKRateLimitPolicy INSTANCE = new WaitUntilOKRateLimitPolicy();
+
+    private WaitUntilOKRateLimitPolicy() {
+    }
     
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
-    void perform(HttpAPIRoute route, int resetTime);
-
-    static RateLimitPolicy getDefault() {
-        return TerminateRequestRateLimitPolicy.INSTANCE;
+    public void perform(HttpAPIRoute route, int resetTime) {
+        if (resetTime < 1) {
+            resetTime = 1;
+        }
+        try {
+            Thread.sleep(resetTime * 1000L);
+        } catch (InterruptedException ignored) {
+        }
     }
 }
