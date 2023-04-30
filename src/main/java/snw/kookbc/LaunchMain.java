@@ -9,6 +9,7 @@ import joptsimple.OptionSpec;
 import snw.kookbc.impl.launch.ITweaker;
 import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.impl.launch.LogWrapper;
+import snw.kookbc.impl.plugin.PluginClassLoaderDelegate;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -71,7 +72,6 @@ public class LaunchMain {
         }
         classLoader = new LaunchClassLoader(urls.toArray(new URL[0]));
         blackboard = new HashMap<>();
-        Thread.currentThread().setContextClassLoader(classLoader);
     }
 
     private void launch(String[] args) {
@@ -171,13 +171,15 @@ public class LaunchMain {
                 if (launchTarget != null && !launchTarget.isEmpty()) {
                     final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
                     final Method mainMethod = clazz.getMethod("main", String[].class);
-                    new Thread(() -> {
+                    Thread main = new Thread(() -> {
                         try {
                             mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    }, clazz.getSimpleName()).start();
+                    }, clazz.getSimpleName());
+                    main.setContextClassLoader(PluginClassLoaderDelegate.INSTANCE);
+                    main.start();
                 }
             }
         } catch (Exception e) {
