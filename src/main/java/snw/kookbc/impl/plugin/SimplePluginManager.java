@@ -75,11 +75,7 @@ public class SimplePluginManager implements PluginManager {
         Plugin plugin;
         PluginLoader loader;
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
-        try {
-            loader = createPluginLoader(file, parent);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        loader = createPluginLoader(parent);
         plugin = loader.loadPlugin(file);
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
@@ -200,7 +196,7 @@ public class SimplePluginManager implements PluginManager {
         plugins.remove(plugin);
     }
 
-    protected PluginLoader createPluginLoader(File pluginFile, ClassLoader parent) throws Exception {
-        return new SimplePluginClassLoader(client, pluginFile, parent);
+    protected PluginLoader createPluginLoader(ClassLoader parent) {
+        return new SimplePluginClassLoader(client, parent);
     }
 }
