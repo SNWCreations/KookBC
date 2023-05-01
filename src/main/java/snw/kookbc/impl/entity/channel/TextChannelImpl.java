@@ -24,6 +24,7 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
@@ -106,17 +107,13 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     @Override
     public String sendComponent(BaseComponent component, @Nullable TextChannelMessage quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("target_id", getId())
                 .put("type", result[0])
-                .put("content", result[1]);
-        if (quote != null) {
-            builder.put("quote", quote.getId());
-        }
-        if (tempTarget != null) {
-            builder.put("temp_target_id", tempTarget.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("content", result[1])
+                .putIfNotNull("quote", quote, Message::getId)
+                .putIfNotNull("temp_target_id", tempTarget, User::getId)
+                .build();
         try {
             return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
         } catch (BadResponseException e) {

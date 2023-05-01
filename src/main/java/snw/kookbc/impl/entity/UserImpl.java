@@ -26,6 +26,7 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
@@ -166,14 +167,11 @@ public class UserImpl implements User {
         Object[] serialize = MessageBuilder.serialize(component);
         int type = (int) serialize[0];
         String json = (String) serialize[1];
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("type", type)
                 .put("target_id", getId())
-                .put("content", json);
-        if (quote != null) {
-            builder.put("quote", quote.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("content", json).putIfNotNull("quote", quote, Message::getId)
+                .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
     }
 
@@ -220,16 +218,12 @@ public class UserImpl implements User {
 
     @Override
     public void setIntimacy(int i, String s, @Nullable Integer imageId) {
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
-                .put("score", i);
-        if (s != null) {
-            builder.put("social_info", s);
-        }
-        if (imageId != null) {
-            builder.put("img_id", imageId);
-        }
-        Map<String, Object> body = builder.build();
+                .put("score", i)
+                .putIfNotNull("social_info", s)
+                .putIfNotNull("img_id", imageId)
+                .build();
         client.getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
     }
 

@@ -16,38 +16,31 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.util;
+package snw.kookbc.impl.plugin;
 
-import org.jetbrains.annotations.Nullable;
+public final class PluginClassLoaderDelegate extends ClassLoader {
+    public static final PluginClassLoaderDelegate INSTANCE = new PluginClassLoaderDelegate();
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-// An easy builder for building POST body.
-public class MapBuilder {
-    private final Map<String, Object> result = new HashMap<>();
-
-    public MapBuilder put(String key, Object value) {
-        result.put(key, value);
-        return this;
+    static {
+        ClassLoader.registerAsParallelCapable();
     }
 
-    public MapBuilder putIfNotNull(String key, @Nullable Object value) {
-        if (value != null) {
-            result.put(key, value);
+    private PluginClassLoaderDelegate() {
+        super(null);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        for (SimplePluginClassLoader l : SimplePluginClassLoader.INSTANCES) {
+            if (l == null) {
+                continue;
+            }
+            try {
+                return l.findClass0(name, true);
+            } catch (ClassNotFoundException ignored) {
+            }
         }
-        return this;
+        throw new ClassNotFoundException(name);
     }
 
-    public <T> MapBuilder putIfNotNull(String key, T source, Function<T, Object> behavior) {
-        if (source != null) {
-            result.put(key, behavior.apply(source));
-        }
-        return this;
-    }
-
-    public Map<String, Object> build() {
-        return result;
-    }
 }
