@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntUnaryOperator;
 
 public class Session {
-    public static final IntUnaryOperator UPDATE_FUNC = i -> i == 65535 ? 1 : i + 1;
+    public static final IntUnaryOperator UPDATE_FUNC = i -> i;
     private final AtomicInteger sn;
     private final Set<Frame> buffer = new HashSet<>();
     private String id;
