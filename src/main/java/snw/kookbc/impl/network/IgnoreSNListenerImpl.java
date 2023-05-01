@@ -53,7 +53,7 @@ public class IgnoreSNListenerImpl extends ListenerImpl {
                 client.getCore().getLogger().warn("Duplicated message from remote. Ignored.");
                 return;
             }
-            client.getSession().getSN().updateAndGet(prev -> prev == 65535 ? frame.getSN() : Math.max(frame.getSN(), prev));
+            client.getSession().getSN().set(Session.UPDATE_FUNC.applyAsInt(frame.getSN()));
             event0(frame);
             processedSN.add(frame.getSN());
             saveSN();
