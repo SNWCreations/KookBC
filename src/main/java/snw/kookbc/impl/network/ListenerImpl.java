@@ -33,7 +33,6 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.kookbc.impl.event.EventFactory;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.network.webhook.WebHookClient;
 
@@ -95,7 +94,7 @@ public class ListenerImpl implements Listener {
             Session session = client.getSession();
             AtomicInteger sn = session.getSN();
             Set<Frame> buffer = session.getBuffer();
-            int expected = sn.get() == 65535 ? 1 : sn.get() + 1;
+            int expected = Session.UPDATE_FUNC.applyAsInt(sn.get());
             int actual = frame.getSN();
             if (actual > expected) {
                 client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
@@ -103,7 +102,7 @@ public class ListenerImpl implements Listener {
                 buffer.add(frame);
             } else if (expected == actual) {
                 event0(frame);
-                sn.getAndAdd(1);
+                session.increaseSN();
                 saveSN();
                 if (!buffer.isEmpty()) {
                     int continueId = sn.get() + 1;
@@ -116,7 +115,7 @@ public class ListenerImpl implements Listener {
                                 found = true;       // we found the frame matching the continueId,
                                 // so we will continue after the frame got processed
                                 event0(bufFrame);
-                                sn.set(continueId); // make sure the SN will update!
+                                session.increaseSN(); // make sure the SN will update!
                                 saveSN();
                                 continueId++;
                                 bufferIterator.remove(); // we won't need this frame, because it has processed
