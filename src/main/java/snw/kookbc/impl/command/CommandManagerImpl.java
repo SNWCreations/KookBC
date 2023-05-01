@@ -31,12 +31,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
+    private static final Pattern QUOTE_PATTERN = Pattern.compile(
+            "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)"
+    );
     private final KBCClient client;
     protected final SimpleCommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
@@ -152,7 +157,7 @@ public class CommandManagerImpl implements CommandManager {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
+        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine)));
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
@@ -436,6 +441,39 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
+    }
+
+    private static String[] parseCmdLine(String input) {
+        if (input.isEmpty()) {
+            return new String[]{""};
+        }
+        List<String> tokens = new ArrayList<>();
+        int firstSpace = input.indexOf(" ");
+        if (firstSpace != -1) {
+            String head = input.substring(0, firstSpace);
+            if (firstSpace + 1 == input.length()) {
+                return new String[]{head, ""}; // only a head and an empty string, no next word
+            } else {
+                input = input.substring(firstSpace + 1);
+            }
+            tokens.add(head);
+        }
+
+        input = input.replace("\\\\\"","\\\"");
+
+        Matcher matcher = QUOTE_PATTERN.matcher(input);
+        while (matcher.find()) {
+            String arg = matcher.group().replace("\\\"","\"");
+            if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
+                if (arg.contains(" ")) {
+                    arg = arg.substring(1, arg.length() - 1);
+                } // or ensure arguments like "123" still have quotes
+            }
+
+
+            tokens.add(arg);
+        }
+        return tokens.toArray(new String[0]);
     }
 
     // execute the runnable, if it fails, a CommandException will be thrown
