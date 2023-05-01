@@ -18,7 +18,7 @@
 
 package snw.kookbc.interfaces.network.policy;
 
-import snw.kookbc.impl.network.policy.TerminateRequestRateLimitPolicy;
+import snw.kookbc.impl.network.policy.WaitUntilOKRateLimitPolicy;
 
 // Represents the rate limit policy.
 public interface RateLimitPolicy {
@@ -29,6 +29,6 @@ public interface RateLimitPolicy {
     void perform(String route, int resetTime);
 
     static RateLimitPolicy getDefault() {
-        return TerminateRequestRateLimitPolicy.INSTANCE;
+        return WaitUntilOKRateLimitPolicy.INSTANCE;
     }
 }
