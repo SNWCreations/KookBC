@@ -18,7 +18,6 @@
 
 package snw.kookbc.interfaces.network.policy;
 
-import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.policy.TerminateRequestRateLimitPolicy;
 
 // Represents the rate limit policy.
@@ -27,7 +26,7 @@ public interface RateLimitPolicy {
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
-    void perform(HttpAPIRoute route, int resetTime);
+    void perform(String route, int resetTime);
 
     static RateLimitPolicy getDefault() {
         return TerminateRequestRateLimitPolicy.INSTANCE;

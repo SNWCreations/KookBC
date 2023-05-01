@@ -21,12 +21,11 @@ package snw.kookbc.impl.network;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.exceptions.TooFastException;
+import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // Represents the Bucket of Rate Limit.
@@ -38,7 +37,8 @@ public class Bucket {
 
     private final KBCClient client;
     private final String name; // defined by response header
-    final AtomicInteger availableTimes = new AtomicInteger(-1);
+    private final AtomicInteger availableTimes = new AtomicInteger(-1);
+    private final AtomicInteger resetTime = new AtomicInteger();
     private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
@@ -49,13 +49,9 @@ public class Bucket {
         this.name = name;
     }
 
-    public void scheduleUpdateAvailableTimes(int availableTimes, int after) {
-        if (!scheduledToUpdate) {
-            client.getCore().getScheduler().runTaskLater(client.getInternalPlugin(), () -> {
-                Bucket.this.availableTimes.set(availableTimes);
-                Bucket.this.scheduledToUpdate = false;
-            }, TimeUnit.SECONDS.toMillis(after));
-        }
+    public void update(int availableTimes, int resetTime) {
+        this.availableTimes.set(availableTimes);
+        this.resetTime.set(resetTime);
     }
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
@@ -66,7 +62,7 @@ public class Bucket {
             return;
         }
         if (availableTimes.get() < 0) {
-            throw new TooFastException(name);
+            RateLimitPolicy.getDefault().perform(name, resetTime.get());
         }
         availableTimes.addAndGet(-1);
     }

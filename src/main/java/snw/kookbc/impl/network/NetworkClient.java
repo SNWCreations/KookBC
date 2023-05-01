@@ -29,6 +29,7 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 
 import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
@@ -85,19 +86,11 @@ public class NetworkClient {
         bucket.check();
         try (Response res = client.newCall(request).execute()) {
 
-            // region Bucket post process
-            if (bucket.availableTimes.get() == -1) {
-                bucket.availableTimes.set(Integer.parseInt(res.header("X-Rate-Limit-Remaining")));
-            } else {
-                int limit = Integer.parseInt(res.header("X-Rate-Limit-Limit"));
-                int reset = Integer.parseInt(res.header("X-Rate-Limit-Reset"));
-                if (reset == 0) {
-                    bucket.availableTimes.set(limit);
-                } else {
-                    bucket.scheduleUpdateAvailableTimes(limit, reset);
-                }
-
-            }
+            // region Bucket process
+            int limit = Integer.parseInt(Objects.requireNonNull(res.header("X-Rate-Limit-Limit")));
+            int reset = Integer.parseInt(Objects.requireNonNull(res.header("X-Rate-Limit-Reset")));
+            bucket.update(limit, reset);
+            // endregion
 
             if (!res.isSuccessful()) {
                 throw new BadResponseException(res.code(), "UNKNOWN");
