@@ -110,11 +110,12 @@ public class SimplePluginManager implements PluginManager {
                 for (final Plugin p : plugins) {
                     if (Objects.equals(p.getDescription().getName(), plugin.getDescription().getName())) {
                         client.getCore().getLogger().error(
-                                String.format(
-                                        "We have found the same plugin name \"%s\" from two plugin files:" +
-                                                " %s and %s, the plugin inside %s won't be returned.",
-                                        plugin.getDescription().getName(), plugin.getFile(), p.getFile(), plugin.getFile()
-                                )
+                                "We have found the same plugin name \"{}\" from two plugin files:" +
+                                        " {} and {}, the plugin inside {} won't be returned.",
+                                plugin.getDescription().getName(),
+                                plugin.getFile(),
+                                p.getFile(),
+                                plugin.getFile()
                         );
                         shouldAdd = false;
                     }
