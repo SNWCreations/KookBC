@@ -18,8 +18,11 @@
 
 package snw.kookbc.util;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 // An easy builder for building POST body.
 public class MapBuilder {
@@ -27,6 +30,20 @@ public class MapBuilder {
 
     public MapBuilder put(String key, Object value) {
         result.put(key, value);
+        return this;
+    }
+
+    public MapBuilder putIfNotNull(String key, @Nullable Object value) {
+        if (value != null) {
+            result.put(key, value);
+        }
+        return this;
+    }
+
+    public <T> MapBuilder putIfNotNull(String key, T source, Function<T, Object> behavior) {
+        if (source != null) {
+            result.put(key, behavior.apply(source));
+        }
         return this;
     }
 
