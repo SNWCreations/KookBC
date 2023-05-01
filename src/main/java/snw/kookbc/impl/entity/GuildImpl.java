@@ -204,14 +204,14 @@ public class GuildImpl implements Guild {
     }
 
     @Override
-    public VoiceChannel createVoiceChannel(String s, @Nullable Category category, @Range(from = 1L, to = 99L) int i, @Range(from = 1L, to = 3L) int i1) {
+    public VoiceChannel createVoiceChannel(String s, @Nullable Category parent, @Range(from = 1L, to = 99L) int size, @Range(from = 1L, to = 3L) int quality) {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
                 .put("type", 2)
-                .put("limit_amount", i)
-                .put("voice_quality", String.valueOf(i1))
-                .putIfNotNull("parent_id", category, Channel::getId)
+                .put("limit_amount", size)
+                .put("voice_quality", String.valueOf(quality))
+                .putIfNotNull("parent_id", parent, Channel::getId)
                 .build();
         VoiceChannel channel = (VoiceChannel) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         client.getStorage().addChannel(channel);
