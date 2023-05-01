@@ -21,8 +21,10 @@ package snw.kookbc.impl.network;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntUnaryOperator;
 
 public class Session {
+    public static final IntUnaryOperator UPDATE_FUNC = i -> i;
     private final AtomicInteger sn;
     private final Set<Frame> buffer = new HashSet<>();
     private String id;
@@ -38,6 +40,10 @@ public class Session {
 
     public AtomicInteger getSN() {
         return sn;
+    }
+
+    public void increaseSN() {
+        sn.updateAndGet(UPDATE_FUNC);
     }
 
     public String getId() {
