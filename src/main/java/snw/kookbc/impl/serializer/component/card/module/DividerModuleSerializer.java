@@ -16,34 +16,29 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.element.ImageElement;
-import snw.jkook.message.component.card.module.ContainerModule;
+import snw.jkook.message.component.card.module.DividerModule;
 
 import java.lang.reflect.Type;
-import java.util.List;
 
-import static snw.kookbc.util.GsonUtil.createListType;
+import static snw.kookbc.util.GsonUtil.*;
 
-public class ContainerModuleSerializer implements JsonSerializer<ContainerModule>, JsonDeserializer<ContainerModule> {
-    static Type LIST_IMAGEELEMENT = createListType(ImageElement.class);
-
+public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override
-    public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        // This will include the size attribute
-        JsonElement elements = context.serialize(module.getImages());
-        moduleObj.addProperty("type", "container");
-        moduleObj.add("elements", elements);
+        moduleObj.addProperty("type", "divider");
         return moduleObj;
     }
 
     @Override
-    public ContainerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public DividerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        List<ImageElement> list = context.deserialize(jsonObject.get("elements"), LIST_IMAGEELEMENT);
-        return new ContainerModule(list);
+        if (has(jsonObject, "type") && get(jsonObject, "type").getAsString().equals("divider")) {
+            return DividerModule.INSTANCE;
+        }
+        throw new JsonParseException("Invalid divider module");
     }
 }

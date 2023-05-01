@@ -57,6 +57,8 @@
         <asm.version>9.3</asm.version>
         <!-- Used by JitPack CI -->
         <skipShade>false</skipShade>
+        <!-- Used by GitHub Actions -->
+        <snapshotBuild>false</snapshotBuild>
     </properties>
 
     <build>
@@ -189,10 +191,18 @@
             <version>${jkook.version}</version>
         </dependency>
 
+        <!--
+            We use a fork of TCA here, the library is made by Minecrell
+            The difference between fork and original is that
+            SimpleTerminalConsole#start method throws IOException
+            instead of catch and ignore.
+            Original repository: https://github.com/Minecrell/TerminalConsoleAppender
+            Our fork: https://github.com/SNWCreations/TerminalConsoleAppender
+        -->
         <dependency>
-            <groupId>net.minecrell</groupId>
-            <artifactId>terminalconsoleappender</artifactId>
-            <version>1.3.0</version>
+            <groupId>com.github.SNWCreations</groupId>
+            <artifactId>TerminalConsoleAppender</artifactId>
+            <version>1.3.5</version>
         </dependency>
 
         <dependency>

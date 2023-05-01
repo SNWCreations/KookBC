@@ -3,5 +3,6 @@
   "version": "${project.version}",
   "spec_name": "JKook",
   "spec_version": "${jkook.version}",
-  "repo_url": "https://github.com/SNWCreations/KookBC"
+  "repo_url": "https://github.com/SNWCreations/KookBC",
+  "is_snapshot": "${snapshotBuild}"
 }

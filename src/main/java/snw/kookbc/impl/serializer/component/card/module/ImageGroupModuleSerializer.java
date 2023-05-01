@@ -16,14 +16,14 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
 import snw.jkook.message.component.card.module.ImageGroupModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.impl.serializer.component.module.ContainerModuleSerializer.LIST_IMAGEELEMENT;
+import static snw.kookbc.impl.serializer.component.card.module.ContainerModuleSerializer.LIST_IMAGEELEMENT;
 
 public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModule>, JsonDeserializer<ImageGroupModule> {
     @Override

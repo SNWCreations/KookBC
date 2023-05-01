@@ -15,30 +15,26 @@
  *     You should have received a copy of the GNU Affero General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.module.DividerModule;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 
 import java.lang.reflect.Type;
+import static snw.kookbc.util.GsonUtil.createListType;
 
-import static snw.kookbc.util.GsonUtil.*;
+public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {
+    private static final Type LIST_CARDCOMPONENT = createListType(CardComponent.class);
 
-public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override
-    public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {
-        JsonObject moduleObj = new JsonObject();
-        moduleObj.addProperty("type", "divider");
-        return moduleObj;
+    public JsonElement serialize(MultipleCardComponent src, Type typeOfSrc, JsonSerializationContext context) {
+        return context.serialize(src.getComponents());
     }
 
     @Override
-    public DividerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        JsonObject jsonObject = element.getAsJsonObject();
-        if (has(jsonObject, "type") && get(jsonObject, "type").getAsString().equals("divider")) {
-            return DividerModule.INSTANCE;
-        }
-        throw new JsonParseException("Invalid divider module");
+    public MultipleCardComponent deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonArray array = json.getAsJsonArray();
+        return new MultipleCardComponent(context.deserialize(array, LIST_CARDCOMPONENT));
     }
 }

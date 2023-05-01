@@ -20,7 +20,6 @@ package snw.kookbc.impl.event;
 
 import net.kyori.event.EventBus;
 import net.kyori.event.PostResult;
-import net.kyori.event.PostResult.CompositeException;
 import net.kyori.event.SimpleEventBus;
 import net.kyori.event.method.MethodSubscriptionAdapter;
 import net.kyori.event.method.SimpleMethodSubscriptionAdapter;
@@ -30,10 +29,10 @@ import snw.jkook.event.Listener;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
@@ -41,7 +40,7 @@ public class EventManagerImpl implements EventManager {
     private final KBCClient client;
     private final EventBus<Event> bus;
     private final MethodSubscriptionAdapter<Listener> msa;
-    private final Map<Plugin, List<Listener>> listeners = new HashMap<>();
+    private final Map<Plugin, List<Listener>> listeners = new ConcurrentHashMap<>();
 
     public EventManagerImpl(KBCClient client) {
         this.client = client;
@@ -51,12 +50,10 @@ public class EventManagerImpl implements EventManager {
 
     @Override
     public void callEvent(Event event) {
-        PostResult result = bus.post(event);
-        try {
-            result.raise();
-        } catch (CompositeException e) {
+        final PostResult result = bus.post(event);
+        if (!result.wasSuccessful()) {
             client.getCore().getLogger().error("Unexpected exception while posting event.");
-            for (final Throwable t : e.result().exceptions().values()) {
+            for (final Throwable t : result.exceptions().values()) {
                 t.printStackTrace();
             }
         }
@@ -76,7 +73,11 @@ public class EventManagerImpl implements EventManager {
 
     @Override
     public void unregisterAllHandlers(Plugin plugin) {
+        if (!listeners.containsKey(plugin)) {
+            return; // it is not necessary to waste a List.
+        }
         getListeners(plugin).forEach(this::unregisterHandlers);
+        listeners.remove(plugin);
     }
 
     @Override

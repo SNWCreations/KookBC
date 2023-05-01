@@ -21,9 +21,7 @@ package snw.kookbc.util;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.util.Validate;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 

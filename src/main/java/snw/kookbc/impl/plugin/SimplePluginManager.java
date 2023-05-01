@@ -28,10 +28,7 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static snw.kookbc.util.Util.getVersionDifference;
 
@@ -97,10 +94,10 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin[] loadPlugins(File directory) {
-        Collection<Plugin> plugins = new ArrayList<>();
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
         File[] files = directory.listFiles(pathname -> pathname.getName().endsWith(".jar"));
         if (files != null) {
+            Collection<Plugin> plugins = new ArrayList<>(files.length);
             for (File file : files) {
                 Plugin plugin;
                 try {
@@ -109,16 +106,27 @@ public class SimplePluginManager implements PluginManager {
                     client.getCore().getLogger().error("Unable to load a plugin.", e);
                     continue;
                 }
-                Optional<Plugin> samePluginContainer = plugins.stream().filter(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName())).findFirst();
-                if (samePluginContainer.isPresent()) {
-                    client.getCore().getLogger().error(String.format("We have found the same plugin name \"%s\" from two plugin files: %s and %s, both of them won't be returned.", plugin.getDescription().getName(), plugin.getFile(), samePluginContainer.get().getFile()));
-                    plugins.remove(samePluginContainer.get());
-                } else {
+                boolean shouldAdd = true;
+                for (final Plugin p : plugins) {
+                    if (Objects.equals(p.getDescription().getName(), plugin.getDescription().getName())) {
+                        client.getCore().getLogger().error(
+                                "We have found the same plugin name \"{}\" from two plugin files:" +
+                                        " {} and {}, the plugin inside {} won't be returned.",
+                                plugin.getDescription().getName(),
+                                plugin.getFile(),
+                                p.getFile(),
+                                plugin.getFile()
+                        );
+                        shouldAdd = false;
+                    }
+                }
+                if (shouldAdd) {
                     plugins.add(plugin);
                 }
             }
+            return plugins.toArray(new Plugin[0]);
         }
-        return plugins.toArray(new Plugin[0]);
+        return new Plugin[0];
     }
 
     @Override

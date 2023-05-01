@@ -27,11 +27,13 @@ import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
-import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.message.component.TextComponent;
+import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.WrappedCommand;
+import snw.kookbc.impl.event.EventFactory;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.network.webhook.WebHookClient;
 
@@ -184,53 +186,73 @@ public class ListenerImpl implements Listener {
     protected boolean executeCommand(Event event) {
         if (!(event instanceof ChannelMessageEvent || event instanceof PrivateMessageReceivedEvent))
             return false; // not a message-related event
+
+        // region extract data
         User sender;
         Message msg;
         TextChannel channel = null;
+        BaseComponent baseComponent; // raw
         TextComponent component = null;
         if (event instanceof ChannelMessageEvent) {
             msg = ((ChannelMessageEvent) event).getMessage();
-            BaseComponent baseComponent = msg.getComponent();
             channel = ((ChannelMessageEvent) event).getChannel();
-            sender = msg.getSender();
-            if (baseComponent instanceof TextComponent) {
-                component = (TextComponent) baseComponent;
-            }
         } else {
             msg = ((PrivateMessageReceivedEvent) event).getMessage();
-            BaseComponent baseComponent = msg.getComponent();
-            sender = ((PrivateMessageReceivedEvent) event).getUser();
-            if (baseComponent instanceof TextComponent) {
-                component = (TextComponent) baseComponent;
-            }
         }
+        sender = msg.getSender();
+        baseComponent = msg.getComponent();
+        if (baseComponent instanceof TextComponent) {
+            component = (TextComponent) baseComponent;
+        }
+        // endregion
+
+        // condition check
         if (component == null) return false; // not a text component!
         if (sender == client.getCore().getUser()) return false; // prevent self call
+
+        // prepare data
+        String cmdLine = component.toString();
+        CommandManagerImpl cmdMan = (CommandManagerImpl) client.getCore().getCommandManager();
+
+        // execute command
         try {
-            return ((CommandManagerImpl) client.getCore().getCommandManager()).executeCommand0(sender, component.toString(), msg);
+            return cmdMan.executeCommand0(sender, cmdLine, msg);
         } catch (Exception e) {
             if (client.getConfig().getBoolean("allow-error-feedback", true)) {
+                // load plugin data
+                WrappedCommand wrappedCommand = cmdMan.getCommandMap()
+                        .getView(true)
+                        .get(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
+                PluginDescription description = wrappedCommand.getPlugin().getDescription();
+                String pluginName = description.getName();
+                String pluginVer = description.getVersion();
+                String pluginWebsite = description.getWebsite();
+
+                // write exception data
                 StringWriter strWrt = new StringWriter();
-                MarkdownComponent markdownComponent;
                 // remove CommandException stacktrace to make the stacktrace smaller
                 (e instanceof CommandException ? e.getCause() : e).printStackTrace(new PrintWriter(strWrt));
-                markdownComponent = new MarkdownComponent(
-                        "执行命令时发生异常，请联系 Bot 的开发者和 " + SharedConstants.IMPL_NAME + " 的开发者！\n" +
+                String content =
+                        "执行命令时发生异常，请联系 Bot 的所有者，插件的开发者和 " + SharedConstants.IMPL_NAME + " 的开发者！\n" +
+                                "命令来自于插件: " + pluginName + " (版本: " + pluginVer + ")"
+                                + (pluginWebsite.isEmpty() ? "" : "\n另外，我们发现这个插件有网站，链接在[这](" + pluginWebsite + ")。")
+                                + "\n" +
                                 "以下是堆栈信息 (可以提供给开发者，有助于其诊断问题):\n" +
                                 "---\n" +
-                                strWrt
-                );
+                                strWrt;
+
+                // send
                 try {
                     if (event instanceof ChannelMessageEvent) {
                         channel.sendComponent(
-                                markdownComponent,
+                                content,
                                 null,
                                 sender
                         );
                     } else {
-                        sender.sendPrivateMessage(markdownComponent);
+                        sender.sendPrivateMessage(content);
                     }
-                } catch (BadResponseException ex) {
+                } catch (BadResponseException ex) { // too long? or timed out? however, we won't retry.
                     client.getCore().getLogger().error("Unable to send command failure message.", ex);
                 }
             }

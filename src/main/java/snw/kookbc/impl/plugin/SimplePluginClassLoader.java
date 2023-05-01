@@ -45,8 +45,7 @@ import java.util.zip.ZipEntry;
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
-    private static final Collection<SimplePluginClassLoader> INSTANCES = new LinkedList<>();
-
+    public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
     private final KBCClient client;
     private PluginDescription description;
     private final File file;
@@ -179,18 +178,41 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
+        return findClass0(name, false);
+    }
+
+    public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
         try {
             return super.findClass(name);
-        } catch (ClassNotFoundException e) {
-            // Try to load class from other known instances
-            for (ClassLoader classLoader : INSTANCES) {
-                if (classLoader == this) {
-                    continue;
-                }
-                try {
-                    return classLoader.loadClass(name);
-                } catch (ClassNotFoundException ignored) {
-                }
+        } catch (ClassNotFoundException ignored) {
+        }
+
+        // Try to load class from other known instances if needed
+        if (!dontCallOther) {
+            return loadFromOther(name);
+        }
+        throw new ClassNotFoundException(name);
+    }
+
+    protected Class<?> loadFromOther(String name) throws ClassNotFoundException {
+        for (SimplePluginClassLoader classLoader : INSTANCES) {
+            if (classLoader == null) {
+                // Suggested by ChatGPT:
+                // The keys in a WeakHashMap are held through weak references,
+                // which may be garbage collected when no strong references to them exist.
+                // If null checks are not performed while traversing the key set,
+                // it may lead to encountering null keys that have already been garbage collected,
+                // resulting in a NullPointerException.
+                // Therefore, when traversing the key set of a WeakHashMap,
+                // it is necessary to perform a null check first and process only non-null keys.
+                continue;
+            }
+            if (classLoader == this) {
+                continue;
+            }
+            try {
+                return classLoader.findClass0(name, true); // use true to prevent stack over flow
+            } catch (ClassNotFoundException ignored) {
             }
         }
         throw new ClassNotFoundException(name);

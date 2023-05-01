@@ -118,6 +118,11 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public void setComponent(BaseComponent component) {
+        if (this.component != null) { // if this instance was constructed from Unsafe? we shouldn't check.
+            if (!component.getClass().isAssignableFrom(this.component.getClass())) {
+                throw new IllegalArgumentException("Incompatible component type");
+            }
+        }
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())

@@ -23,10 +23,6 @@ import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.util.MapBuilder;
-
-import java.util.Map;
 
 public class InvitationImpl implements Invitation {
     private final KBCClient client;
@@ -67,11 +63,7 @@ public class InvitationImpl implements Invitation {
 
     @Override
     public void delete() {
-        Map<String, Object> body = new MapBuilder()
-                .put("url_code", getUrlCode())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(), body);
-
+        client.getCore().getHttpAPI().removeInvite(getUrlCode());
     }
 
     @Override

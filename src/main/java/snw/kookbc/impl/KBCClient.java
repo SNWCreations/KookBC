@@ -53,6 +53,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 // The client representation.
@@ -69,6 +71,9 @@ public class KBCClient {
     private final File pluginsFolder;
     private final Session session = new Session(null);
     private final InternalPlugin internalPlugin;
+    private final ReentrantLock shutdownLock;
+    private final Condition shutdownCondition;
+
     protected final ExecutorService eventExecutor;
     protected Connector connector;
     protected List<Plugin> plugins;
@@ -109,6 +114,8 @@ public class KBCClient {
         this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.shutdownLock = new ReentrantLock();
+        this.shutdownCondition = this.shutdownLock.newCondition();
         this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> new EventFactory(this));
     }
 
@@ -151,16 +158,27 @@ public class KBCClient {
     // Call this to start KookBC, then you can use JKook API.
     // WARN: Set the JKook Core by constructing CoreImpl and call getCore().setCore() using it first,
     // or you will get NullPointerException.
-    public void start() {
+    public synchronized void start() {
         // Print version information
         getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
         getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
+        getCore().getLogger().info("Working directory: {}", new File(".").getAbsolutePath());
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
             getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
         } catch (NullPointerException | IOException e) {
             getCore().getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
+        }
+
+        if (SharedConstants.IS_SNAPSHOT) {
+            getCore().getLogger().warn("***********************************");
+            getCore().getLogger().warn("YOU ARE RUNNING A SNAPSHOT BUILD.");
+            getCore().getLogger().warn("DO NOT USE SNAPSHOT BUILDS IN YOUR");
+            getCore().getLogger().warn(" PRODUCTION ENVIRONMENT!");
+            getCore().getLogger().warn("If you don't know why you're seeing");
+            getCore().getLogger().warn(" this, download the stable version.");
+            getCore().getLogger().warn("***********************************");
         }
 
         core.getLogger().debug("Fetching Bot user object");
@@ -198,6 +216,16 @@ public class KBCClient {
                                 ? 1 : -1
         );
 
+        this.plugins = plugins;
+    }
+
+    private void enablePlugins() {
+        if (plugins == null) { // no plugins? do nothing!
+            // if the plugins was not loaded, we can't continue
+            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
+            return;
+        }
+
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -213,15 +241,7 @@ public class KBCClient {
             }
             // end onLoad
         }
-        this.plugins = plugins;
-    }
 
-    private void enablePlugins() {
-        if (plugins == null) { // no plugins? do nothing!
-            // if the plugins was not loaded, we can't continue
-            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
-            return;
-        }
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
@@ -278,6 +298,14 @@ public class KBCClient {
         getCore().getLogger().debug("Starting console");
         try {
             new Console(this).start();
+        } catch (IOException e) {
+            getCore().getLogger().error("Failed to read input from console");
+            getCore().getLogger().error("Running WITHOUT console!");
+            getCore().getLogger().error("You can stop this process by creating a new file named");
+            getCore().getLogger().error("KOOKBC_STOP in the working directory of this process.");
+            getCore().getLogger().error("Stacktrace is following:");
+            e.printStackTrace();
+            new StopSignalListener(this).start();
         } catch (Exception e) {
             getCore().getLogger().error("Unexpected situation happened during the main loop.", e);
         }
@@ -285,7 +313,7 @@ public class KBCClient {
     }
 
     // Shutdown this client, and loop() method will return after this method completes.
-    public void shutdown() {
+    public synchronized void shutdown() {
         getCore().getLogger().debug("Client shutdown request received");
         if (!isRunning()) {
             getCore().getLogger().debug("The client has already stopped");
@@ -302,6 +330,33 @@ public class KBCClient {
         getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
         getCore().getLogger().info("Client stopped");
+
+        // region Emit shutdown signal
+        shutdownLock.lock();
+        try {
+            shutdownCondition.signalAll();
+        } finally {
+            shutdownLock.unlock();
+        }
+        // endregion
+    }
+
+    public void waitUntilShutdown() {
+        if (!running) {
+            return;
+        }
+        shutdownLock.lock();
+        try {
+            while (isRunning()) {
+                try {
+                    shutdownCondition.await();
+                } catch (InterruptedException ignored) {
+                    // interrupted, but ignore
+                }
+            }
+        } finally {
+            shutdownLock.unlock();
+        }
     }
 
     protected void shutdownNetwork() {
@@ -393,4 +448,35 @@ public class KBCClient {
                 .register(getInternalPlugin());
     }
 
+}
+
+class StopSignalListener extends Thread {
+    private final KBCClient client;
+
+    StopSignalListener(KBCClient client) {
+        super("KookBC - StopSignalListener");
+        this.setDaemon(true);
+        this.client = client;
+    }
+
+    @Override
+    public void run() {
+        final KBCClient client = this.client;
+        final File localFile = new File("./KOOKBC_STOP");
+        while (client.isRunning()) {
+            try {
+                //noinspection BusyWait
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                continue;
+            }
+            if (localFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                localFile.delete();
+                client.getCore().getLogger().info("Received stop signal by new file. Stopping!");
+                client.shutdown();
+                return;
+            }
+        }
+    }
 }

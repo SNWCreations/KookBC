@@ -4,7 +4,6 @@
 package snw.kookbc.impl.launch;
 
 import org.spongepowered.asm.util.JavaVersion;
-
 import snw.jkook.plugin.MarkedClassLoader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -49,8 +48,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private static final MethodHandle GET_DEFINED_PACKAGE;
 
-    private static final String[] RESERVED_NAMES = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
-        "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+    private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
+            "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
     private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("mixin.debug", "false"));
 
@@ -76,6 +75,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("sun.");
         addClassLoaderExclusion("org.lwjgl.");
         addClassLoaderExclusion("org.apache.logging.");
+        addClassLoaderExclusion("org.apache.log4j.");
         addClassLoaderExclusion("org.slf4j");
         addClassLoaderExclusion("uk.org.lidalia.sysoutslf4j.");
         addClassLoaderExclusion("org.spongepowered.asm.launch.");
@@ -131,7 +131,11 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
         for (final String exception : classLoaderExceptions) {
             if (name.startsWith(exception)) {
-                return parent.loadClass(name);
+                try {
+                    return parent.loadClass(name);
+                } catch (ClassNotFoundException e) { // parent failed, let us try?
+                    break;
+                }
             }
         }
 
@@ -168,6 +172,10 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             CodeSigner[] signers = null;
 
             final byte[] classBytes = getClassBytes(untransformedName);
+            if (classBytes == null) {
+                invalidClasses.add(name);
+                throw new ClassNotFoundException(name);
+            }
             if (lastDot > -1 && !untransformedName.startsWith("snw.kookbc.impl.launch")) {
                 if (urlConnection instanceof JarURLConnection) {
                     final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
@@ -210,6 +218,13 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             cachedClasses.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
+            ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader();
+            if (ctxLoader != null) {
+                try {
+                    return ctxLoader.loadClass(name);
+                } catch (ClassNotFoundException ignored) {
+                }
+            }
             invalidClasses.add(name);
             if (DEBUG) {
                 LogWrapper.LOGGER.error("Exception encountered attempting classloading of {}", name, e);

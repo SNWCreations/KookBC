@@ -16,30 +16,34 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.serializer.component.module;
+package snw.kookbc.impl.serializer.component.card.module;
 
 import com.google.gson.*;
-import snw.jkook.message.component.card.module.CountdownModule;
+import snw.jkook.message.component.card.element.ImageElement;
+import snw.jkook.message.component.card.module.ContainerModule;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.createListType;
 
-public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
+public class ContainerModuleSerializer implements JsonSerializer<ContainerModule>, JsonDeserializer<ContainerModule> {
+    static Type LIST_IMAGEELEMENT = createListType(ImageElement.class);
+
     @Override
-    public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject moduleObj = new JsonObject();
-        moduleObj.addProperty("type", "countdown");
-        moduleObj.addProperty("mode", module.getType().getValue());
-        moduleObj.addProperty("endTime", module.getEndTime());
+        // This will include the size attribute
+        JsonElement elements = context.serialize(module.getImages());
+        moduleObj.addProperty("type", "container");
+        moduleObj.add("elements", elements);
         return moduleObj;
     }
 
     @Override
-    public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public ContainerModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String mode = get(jsonObject, "mode").getAsString();
-        long endTime = get(jsonObject, "endTime").getAsLong();
-        return new CountdownModule(CountdownModule.Type.value(mode), endTime);
+        List<ImageElement> list = context.deserialize(jsonObject.get("elements"), LIST_IMAGEELEMENT);
+        return new ContainerModule(list);
     }
 }
