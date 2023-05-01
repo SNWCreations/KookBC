@@ -21,19 +21,24 @@ package snw.kookbc.impl.plugin;
 public final class PluginClassLoaderDelegate extends ClassLoader {
     public static final PluginClassLoaderDelegate INSTANCE = new PluginClassLoaderDelegate();
 
+    static {
+        ClassLoader.registerAsParallelCapable();
+    }
+
     private PluginClassLoaderDelegate() {
         super(null);
     }
 
     @Override
-    protected final Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         for (SimplePluginClassLoader l : SimplePluginClassLoader.INSTANCES) {
             if (l == null) {
                 continue;
             }
             try {
                 return l.findClass0(name, true);
-            } catch (ClassNotFoundException e) {}
+            } catch (ClassNotFoundException ignored) {
+            }
         }
         throw new ClassNotFoundException(name);
     }

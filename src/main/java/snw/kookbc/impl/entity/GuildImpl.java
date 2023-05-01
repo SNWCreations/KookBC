@@ -163,14 +163,12 @@ public class GuildImpl implements Guild {
 
     @Override
     public void ban(User user, @Nullable String s, int i) {
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("target_id", user.getId())
-                .put("del_msg_days", i);
-        if (s != null) {
-            builder.put("remark", s);
-        }
-        Map<String, Object> body = builder.build();
+                .put("del_msg_days", i)
+                .putIfNotNull("remarks", s)
+                .build();
         client.getNetworkClient().post(HttpAPIRoute.BLACKLIST_CREATE.toFullURL(), body);
     }
 
@@ -194,31 +192,27 @@ public class GuildImpl implements Guild {
 
     @Override
     public TextChannel createTextChannel(String s, @Nullable Category category) {
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
-                .put("type", 1);
-        if (category != null) {
-            builder.put("parent_id", category.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("type", 1)
+                .putIfNotNull("parent_id", category, Channel::getId)
+                .build();
         TextChannel channel = (TextChannel) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         client.getStorage().addChannel(channel);
         return channel;
     }
 
     @Override
-    public VoiceChannel createVoiceChannel(String s, @Nullable Category category, @Range(from = 1L, to = 99L) int i, @Range(from = 1L, to = 3L) int i1) {
-        MapBuilder builder = new MapBuilder()
+    public VoiceChannel createVoiceChannel(String s, @Nullable Category parent, @Range(from = 1L, to = 99L) int size, @Range(from = 1L, to = 3L) int quality) {
+        Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
                 .put("type", 2)
-                .put("limit_amount", i)
-                .put("voice_quality", String.valueOf(i1));
-        if (category != null) {
-            builder.put("parent_id", category.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("limit_amount", size)
+                .put("voice_quality", String.valueOf(quality))
+                .putIfNotNull("parent_id", parent, Channel::getId)
+                .build();
         VoiceChannel channel = (VoiceChannel) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         client.getStorage().addChannel(channel);
         return channel;
@@ -226,11 +220,11 @@ public class GuildImpl implements Guild {
 
     @Override
     public Category createCategory(String s) {
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
-                .put("is_category", 1);
-        Map<String, Object> body = builder.build();
+                .put("is_category", 1)
+                .build();
         Category result = (Category) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
         client.getStorage().addChannel(result);
         return result;
