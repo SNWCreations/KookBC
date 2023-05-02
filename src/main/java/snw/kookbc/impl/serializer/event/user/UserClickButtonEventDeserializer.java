@@ -47,7 +47,7 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
             Objects.equals(
                 get(body, "user_id").getAsString(),
                 get(body, "target_id").getAsString()
-            ) ? null : (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString())
+            ) ? null : (TextChannel) client.getStorage().getChannel(get(body, "target_id").getAsString())
         );
     }
 
