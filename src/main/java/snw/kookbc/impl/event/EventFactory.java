@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static snw.kookbc.impl.entity.builder.EntityUpdater.*;
 import static snw.kookbc.util.GsonUtil.*;
 
 // A basic enum-based event factory, designed for Network message processor.
@@ -148,7 +149,7 @@ public class EventFactory {
                         client.getCore().getLogger().warn("Detected snw.jkook.event.channel.ChannelInfoUpdateEvent, but we are unable to fetch channel (id {}).", body.get("id").getAsString());
                         return null;
                     }
-                    client.getEntityUpdater().updateChannel(body, channel);
+                    updateChannel(body, channel);
                     return new ChannelInfoUpdateEvent(msgTimeStamp, channel);
                 case CHANNEL_DELETE:
                     client.getStorage().removeChannel(body.get("id").getAsString());
@@ -196,14 +197,14 @@ public class EventFactory {
                     return new RoleDeleteEvent(msgTimeStamp, deletedRole);
                 case GUILD_UPDATE_ROLE:
                     Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
-                    client.getEntityUpdater().updateRole(
+                    updateRole(
                             body,
                             client.getStorage().getRole(guild, body.get("role_id").getAsInt(), body)
                     );
                     return new RoleInfoUpdateEvent(msgTimeStamp, client.getStorage().getRole(guild, body.get("role_id").getAsInt()));
                 case GUILD_UPDATE:
                     Guild guild1 = client.getStorage().getGuild(body.get("id").getAsString());
-                    client.getEntityUpdater().updateGuild(body, guild1);
+                    updateGuild(body, guild1);
                     return new GuildInfoUpdateEvent(msgTimeStamp, guild1);
                 case GUILD_DELETE:
                     client.getStorage().removeGuild(body.get("id").getAsString());
@@ -228,7 +229,7 @@ public class EventFactory {
                     return new GuildRemoveEmojiEvent(msgTimeStamp, emoji2.getGuild(), emoji2);
                 case UPDATE_EMOJI:
                     CustomEmoji emoji3 = client.getStorage().getEmoji(body.get("id").getAsString(), body);
-                    client.getEntityUpdater().updateEmoji(body, emoji3);
+                    updateEmoji(body, emoji3);
                     return new GuildUpdateEmojiEvent(msgTimeStamp, emoji3.getGuild(), emoji3);
                 case PM_UPDATE:
                     return new PrivateMessageUpdateEvent(msgTimeStamp, body.get("msg_id").getAsString(), body.get("content").getAsString());

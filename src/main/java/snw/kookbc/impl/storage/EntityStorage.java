@@ -32,6 +32,8 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.util.concurrent.TimeUnit;
 
+import static snw.kookbc.impl.entity.builder.EntityUpdater.*;
+
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
 
@@ -137,7 +139,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildUser(def);
             addUser(result);
         } else {
-            client.getEntityUpdater().updateUser(def, result);
+            updateUser(def, result);
         }
         return result;
     }
@@ -148,7 +150,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildGuild(def);
             addGuild(result);
         } else {
-            client.getEntityUpdater().updateGuild(def, result);
+            updateGuild(def, result);
         }
         return result;
     }
@@ -159,7 +161,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildChannel(def);
             addChannel(result);
         } else {
-            client.getEntityUpdater().updateChannel(def, result);
+            updateChannel(def, result);
         }
         return result;
     }
@@ -171,7 +173,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildRole(guild, def);
             addRole(guild, result);
         } else {
-            client.getEntityUpdater().updateRole(def, result);
+            updateRole(def, result);
         }
         return result;
     }
@@ -182,7 +184,7 @@ public class EntityStorage {
             emoji = client.getEntityBuilder().buildEmoji(def);
             addEmoji(emoji);
         } else {
-            client.getEntityUpdater().updateEmoji(def, emoji);
+            updateEmoji(def, emoji);
         }
         return emoji;
     }

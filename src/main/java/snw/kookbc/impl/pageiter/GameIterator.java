@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import static snw.kookbc.impl.entity.builder.EntityUpdater.updateGame;
+
 public class GameIterator extends PageIteratorImpl<Collection<Game>> {
 
     public GameIterator(KBCClient client) {
@@ -49,7 +51,7 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
             int id = rawObj.get("id").getAsInt();
             Game game = client.getStorage().getGame(id);
             if (game != null) {
-                client.getEntityUpdater().updateGame(rawObj, game);
+                updateGame(rawObj, game);
             } else {
                 game = client.getEntityBuilder().buildGame(rawObj);
                 client.getStorage().addGame(game);

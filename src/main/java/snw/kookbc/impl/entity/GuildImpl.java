@@ -40,6 +40,7 @@ import snw.kookbc.impl.entity.mute.MuteDataImpl;
 import snw.kookbc.impl.entity.mute.MuteResultImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.nio.charset.StandardCharsets;
@@ -47,10 +48,10 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.*;
 
-public class GuildImpl implements Guild {
+public class GuildImpl implements Guild, Updatable {
     private final KBCClient client;
     private final String id;
-    private final NotifyType notifyType;
+    private NotifyType notifyType;
     private final User master;
     private String name;
     private boolean public_; // I know Guild owner can turn this to false,
@@ -355,6 +356,21 @@ public class GuildImpl implements Guild {
 
     public void setAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update guild by using different data");
+        synchronized (this) {
+            name = get(data, "name").getAsString();
+            public_ = get(data, "enable_open").getAsBoolean();
+            region = get(data, "region").getAsString();
+            notifyType = Objects.requireNonNull(
+                    NotifyType.value(get(data, "notify_type").getAsInt()),
+                    () -> "Unexpected NotifyType, got " + get(data, "notify_type").getAsInt()
+            );
+            avatarUrl = get(data, "icon").getAsString();
+        }
     }
 }
 
