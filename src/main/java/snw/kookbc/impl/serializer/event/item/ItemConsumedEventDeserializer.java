@@ -27,6 +27,7 @@ import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.get;
+import static com.google.gson.JsonParser.*;
 
 public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemConsumedEvent> {
 
@@ -37,7 +38,7 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
     @Override
     protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
-        JsonObject content = object.getAsJsonObject("content");
+        JsonObject content = parseString(get(object, "content").getAsString()).getAsJsonObject();
         User consumer = client.getStorage().getUser(content.get("user_id").getAsString());
         User affected = client.getStorage().getUser(content.get("target_id").getAsString());
         int itemId = get(object, "item_id").getAsInt();
