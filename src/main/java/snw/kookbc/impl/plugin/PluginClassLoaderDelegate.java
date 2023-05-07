@@ -26,11 +26,11 @@ public final class PluginClassLoaderDelegate extends ClassLoader {
     }
 
     private PluginClassLoaderDelegate() {
-        super(null);
+        super();
     }
 
     @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
         for (SimplePluginClassLoader l : SimplePluginClassLoader.INSTANCES) {
             if (l == null) {
                 continue;
