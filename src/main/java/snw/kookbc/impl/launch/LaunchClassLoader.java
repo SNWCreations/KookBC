@@ -56,6 +56,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     static {
         if (JavaVersion.current() >= JavaVersion.JAVA_9) {
             try {
+                // Ignore this if you are working on Java 9 and later
+                // noinspection JavaReflectionMemberAccess
                 Method getDefinedPackageMethod = ClassLoader.class.getMethod("getDefinedPackage", String.class);
                 GET_DEFINED_PACKAGE = MethodHandles.lookup().unreflect(getDefinedPackageMethod);
             } catch (Throwable e) {
