@@ -221,7 +221,9 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader();
             if (ctxLoader != null) {
                 try {
-                    return ctxLoader.loadClass(name);
+                    final Class<?> clazz = ctxLoader.loadClass(name);
+                    cachedClasses.put(name, clazz);
+                    return clazz;
                 } catch (ClassNotFoundException ignored) {
                 }
             }
