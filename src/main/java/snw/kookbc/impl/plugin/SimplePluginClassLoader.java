@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -100,7 +101,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
-                new File(cls.getProtectionDomain().getCodeSource().getLocation().toURI()),
+                Paths.get(cls.getProtectionDomain().getCodeSource().getLocation().toURI()).toFile(),
                 new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls)),
                 client.getCore()
         );
