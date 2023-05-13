@@ -32,8 +32,8 @@ import snw.kookbc.util.Util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -91,17 +91,21 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
-        File dataFolder = new File(client.getPluginsFolder(), description.getName());
         T plugin = cls.getDeclaredConstructor().newInstance();
         Method initMethod = cls.getMethod(
                 "init",
                 File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
         );
+        String clazzURI = cls.getProtectionDomain().getCodeSource().getLocation().toURI().getRawSchemeSpecificPart();
+        int endIndex = clazzURI.length() - (cls.getName().replace(".", "/") + ".class").length() - 2;
+        clazzURI = clazzURI.substring(0, endIndex);
+        File pluginFile = new File(new URI(clazzURI));
+        File dataFolder = new File(client.getPluginsFolder(), description.getName());
         initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
-                Paths.get(cls.getProtectionDomain().getCodeSource().getLocation().toURI()).toFile(),
+                pluginFile,
                 new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls)),
                 client.getCore()
         );
