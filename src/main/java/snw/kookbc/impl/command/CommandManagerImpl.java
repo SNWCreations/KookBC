@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -248,23 +249,17 @@ public class CommandManagerImpl implements CommandManager {
             return false;
         }
 
+        AtomicReference<CommandSender> senderRef = new AtomicReference<>(
+            sender == client.getCore().getConsoleCommandSender() ?
+            ConsoleCommandSenderImpl.get(owner) : sender
+        );
+
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
-            
-            // ensure the sender has been redirected to the correct result.
-            // Added since KookBC 0.27
-            final ConsoleCommandSender realSender;
-            if (sender == client.getCore().getConsoleCommandSender()) { // if sender is from Core
-                realSender = ConsoleCommandSenderImpl.get(owner); // redirect
-            } else {
-                realSender = (ConsoleCommandSender) sender;
-            }
-            // END console command sender redirect
-
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 exec(
-                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) realSender, arguments),
+                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) senderRef.get(), arguments),
                         startTimeStamp, cmdLine
                 );
                 return true;
@@ -294,7 +289,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         exec(
-                () -> executor.onCommand(sender, arguments, msg),
+                () -> executor.onCommand(senderRef.get(), arguments, msg),
                 startTimeStamp, cmdLine
         );
         return true; // ok, the command is ok, so we can return true.
