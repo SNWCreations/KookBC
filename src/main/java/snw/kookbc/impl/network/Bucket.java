@@ -27,6 +27,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 // Represents the Bucket of Rate Limit.
 // Not single instance. Created when network call requested.
@@ -37,7 +39,8 @@ public class Bucket {
 
     private final KBCClient client;
     private final String name; // defined by response header
-    private final AtomicInteger availableTimes = new AtomicInteger(-1);
+    private final Lock updateLock = new ReentrantLock();
+    private final AtomicInteger availableTimes = new AtomicInteger(Integer.MIN_VALUE);
     private final AtomicInteger resetTime = new AtomicInteger();
     private volatile boolean scheduledToUpdate;
 
@@ -50,21 +53,27 @@ public class Bucket {
     }
 
     public void update(int availableTimes, int resetTime) {
-        this.availableTimes.set(availableTimes);
-        this.resetTime.set(resetTime);
+        this.updateLock.lock();
+        try {
+            this.availableTimes.set(availableTimes);
+            this.resetTime.set(resetTime);
+        } finally {
+            this.updateLock.unlock();
+        }
     }
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
     public void check() {
-        if (availableTimes.get() == -1) {
+        if (availableTimes.get() == Integer.MIN_VALUE) {
             // At this time, we don't know remaining time, so we can't check it
             // We should set the time after got response
             return;
         }
-        if (availableTimes.get() < 0) {
+        if (availableTimes.get() <= 0) {
             RateLimitPolicy.getDefault().perform(name, resetTime.get());
+            return;
         }
-        availableTimes.addAndGet(-1);
+        availableTimes.decrementAndGet();
     }
 
     @Override
