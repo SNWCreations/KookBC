@@ -5,8 +5,6 @@ package snw.kookbc.impl.launch;
 
 import org.spongepowered.asm.util.JavaVersion;
 import snw.jkook.plugin.MarkedClassLoader;
-import snw.kookbc.impl.plugin.SimplePluginClassLoader;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +37,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     private final Set<String> classLoaderExceptions = new HashSet<>();
     private final Set<String> transformerExceptions = new HashSet<>();
-    private final Set<String> classLoaderInclusions = new HashSet<>();
     private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
     private final Set<String> negativeResourceCache = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
@@ -59,6 +56,8 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     static {
         if (JavaVersion.current() >= JavaVersion.JAVA_9) {
             try {
+                // Ignore this if you are working on Java 9 and later
+                // noinspection JavaReflectionMemberAccess
                 Method getDefinedPackageMethod = ClassLoader.class.getMethod("getDefinedPackage", String.class);
                 GET_DEFINED_PACKAGE = MethodHandles.lookup().unreflect(getDefinedPackageMethod);
             } catch (Throwable e) {
@@ -134,16 +133,10 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
         for (final String exception : classLoaderExceptions) {
             if (name.startsWith(exception)) {
-                boolean load = true;
-                for (final String inclusion : classLoaderInclusions) {
-                    if (name.startsWith(inclusion)) {
-                        load = false;
-                        break;
-                    }
-                }
-
-                if (load) {
+                try {
                     return parent.loadClass(name);
+                } catch (ClassNotFoundException e) { // parent failed, let us try?
+                    break;
                 }
             }
         }
@@ -227,13 +220,15 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             cachedClasses.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
-            // THE LAST WAY! -- Recall plugin class loaders!
-            for (SimplePluginClassLoader spcl : SimplePluginClassLoader.INSTANCES) {
+            ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader();
+            if (ctxLoader != null) {
                 try {
-                    return spcl.findClass0(name, true);
-                } catch (ClassNotFoundException ignored) {}
+                    final Class<?> clazz = ctxLoader.loadClass(name);
+                    cachedClasses.put(name, clazz);
+                    return clazz;
+                } catch (ClassNotFoundException ignored) {
+                }
             }
-            // Done. No way now. Invalid class!
             invalidClasses.add(name);
             if (DEBUG) {
                 LogWrapper.LOGGER.error("Exception encountered attempting classloading of {}", name, e);
@@ -360,10 +355,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     public void addClassLoaderExclusion(String toExclude) {
         classLoaderExceptions.add(toExclude);
-    }
-
-    public void addClassLoaderInclusion(String toInclude) {
-        classLoaderInclusions.add(toInclude);
     }
 
     public void addTransformerExclusion(String toExclude) {

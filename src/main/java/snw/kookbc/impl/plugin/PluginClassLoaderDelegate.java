@@ -16,45 +16,31 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.impl.plugin;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntUnaryOperator;
+public final class PluginClassLoaderDelegate extends ClassLoader {
+    public static final PluginClassLoaderDelegate INSTANCE = new PluginClassLoaderDelegate();
 
-public class Session {
-    public static final IntUnaryOperator UPDATE_FUNC = i -> i + 1;
-    private final AtomicInteger sn;
-    private final Set<Frame> buffer = new HashSet<>();
-    private String id;
-
-    public Session(String id) {
-        this(id, new AtomicInteger());
+    static {
+        ClassLoader.registerAsParallelCapable();
     }
 
-    public Session(String id, AtomicInteger sn) {
-        this.id = id;
-        this.sn = sn;
+    private PluginClassLoaderDelegate() {
+        super();
     }
 
-    public AtomicInteger getSN() {
-        return sn;
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        for (SimplePluginClassLoader l : SimplePluginClassLoader.INSTANCES) {
+            if (l == null) {
+                continue;
+            }
+            try {
+                return l.findClass0(name, true);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        throw new ClassNotFoundException(name);
     }
 
-    public void increaseSN() {
-        sn.updateAndGet(UPDATE_FUNC);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Set<Frame> getBuffer() {
-        return buffer;
-    }
 }
