@@ -27,12 +27,15 @@ import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.CustomEmojiImpl;
+import snw.kookbc.impl.entity.GuildImpl;
+import snw.kookbc.impl.entity.RoleImpl;
+import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
 import java.util.concurrent.TimeUnit;
-
-import static snw.kookbc.impl.entity.builder.EntityUpdater.*;
 
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
@@ -139,7 +142,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildUser(def);
             addUser(result);
         } else {
-            updateUser(def, result);
+            ((UserImpl) result).update(def);
         }
         return result;
     }
@@ -150,7 +153,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildGuild(def);
             addGuild(result);
         } else {
-            updateGuild(def, result);
+            ((GuildImpl) result).update(def);
         }
         return result;
     }
@@ -161,7 +164,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildChannel(def);
             addChannel(result);
         } else {
-            updateChannel(def, result);
+            ((ChannelImpl) result).update(def);
         }
         return result;
     }
@@ -173,7 +176,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildRole(guild, def);
             addRole(guild, result);
         } else {
-            updateRole(def, result);
+            ((RoleImpl) result).update(def);
         }
         return result;
     }
@@ -184,7 +187,7 @@ public class EntityStorage {
             emoji = client.getEntityBuilder().buildEmoji(def);
             addEmoji(emoji);
         } else {
-            updateEmoji(def, emoji);
+            ((CustomEmojiImpl) emoji).update(def);
         }
         return emoji;
     }
