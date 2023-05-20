@@ -38,6 +38,7 @@ import snw.kookbc.impl.serializer.event.role.*;
 import snw.kookbc.impl.serializer.event.user.*;
 
 import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class EventFactory {
     protected final KBCClient client;
@@ -59,6 +60,13 @@ public class EventFactory {
             // if not message event, ensure command system can receive event.
             if (eventType != ChannelMessageEvent.class && eventType != PrivateMessageEvent.class) {
                 return null;
+            }
+        }
+        if (eventType == GuildInfoUpdateEvent.class) {
+            if (has(
+                    get(get(object, "extra").getAsJsonObject(), "body").getAsJsonObject(),
+                    "my_nickname")) {
+                return this.gson.fromJson(object, GuildUserNickNameUpdateEvent.class); // force convert
             }
         }
         final Event result = this.gson.fromJson(object, eventType);

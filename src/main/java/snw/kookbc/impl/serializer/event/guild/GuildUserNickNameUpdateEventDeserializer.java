@@ -21,6 +21,8 @@ package snw.kookbc.impl.serializer.event.guild;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildUserNickNameUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
@@ -29,6 +31,7 @@ import snw.kookbc.impl.storage.EntityStorage;
 import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeserializer<GuildUserNickNameUpdateEvent> {
 
@@ -38,12 +41,22 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
 
     @Override
     protected GuildUserNickNameUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+        String guildId;
+        User user;
+        String nickname;
         EntityStorage entityStorage = client.getStorage();
+        if (has(body, "my_nickname")) { // it is from GuildInfoUpdateEvent body...
+            guildId = get(body, "id").getAsString();
+            user = client.getCore().getUser();
+            nickname = get(body, "my_nickname").getAsString();
+        } else {
+            guildId = get(object, "target_id").getAsString();
+            user = entityStorage.getUser(get(body, "user_id").getAsString());
+            nickname = get(body, "nickname").getAsString();
+        }
+        final Guild guild = entityStorage.getGuild(guildId);
         return new GuildUserNickNameUpdateEvent(
-            timeStamp,
-            entityStorage.getGuild(get(object, "target_id").getAsString()),
-            entityStorage.getUser(get(body, "user_id").getAsString()),
-            get(body, "nickname").getAsString()
+            timeStamp, guild, user, nickname
         );
     }
 
