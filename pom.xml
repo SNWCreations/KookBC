@@ -188,7 +188,7 @@
         <dependency>
             <groupId>com.github.SNWCreations</groupId>
             <artifactId>JKook</artifactId>
-            <version>c418953a9</version>
+            <version>3a72fbe5c1c2d85ed7338073185acaa89fa366f2</version>
         </dependency>
 
         <!--

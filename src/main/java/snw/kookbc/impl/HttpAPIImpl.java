@@ -31,9 +31,15 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.PrivateMessage;
+import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
@@ -43,8 +49,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
@@ -214,32 +222,144 @@ public class HttpAPIImpl implements HttpAPI {
         client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), Collections.singletonMap("data_type", 2));
     }
 
+    @Override
+    public TextChannelMessage getTextChannelMessage(String id) throws NoSuchElementException {
+        final JsonObject object;
+        try {
+            object = client.getNetworkClient()
+                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
+        } catch (BadResponseException e) {
+            if (e.getCode() == 40000) {
+                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
+                        new NoSuchElementException("No message object with provided ID " + id + " found")
+                                .initCause(e);
+            }
+            throw e;
+        }
+        JsonObject rawSender = get(object, "author").getAsJsonObject();
+        User sender = client.getStorage().getUser(get(rawSender, "id").getAsString(), rawSender);
+        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
+        long timeStamp = get(object, "create_at").getAsLong();
+        TextChannelMessage quote = null;
+        if (has(object, "quote")) {
+            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
+            final String quoteId = get(rawQuote, "id").getAsString();
+            quote = getTextChannelMessage(quoteId);
+        }
+        final TextChannel channel = (TextChannel) getChannel(get(object, "channel_id").getAsString());
+        return new TextChannelMessageImpl(client, id, sender, component, timeStamp, quote, channel);
+    }
+
+    @Override
+    public PrivateMessage getPrivateMessage(User user, String id) throws NoSuchElementException {
+        return null;
+    }
+
+    @Override
+    public FriendState getFriendState(boolean lazyInit) {
+        return new FriendStateImpl(lazyInit);
+    }
+
+
     // -------- Friend API --------
 
-    protected static class FriendStateImpl implements HttpAPI.FriendState {
-        private final Collection<User> friends;
-        private final Collection<User> blocked;
-        private final Collection<FriendRequest> requests;
+    protected class FriendStateImpl implements HttpAPI.FriendState {
+        private final AtomicReference<Collection<User>> friends;
+        private final AtomicReference<Collection<User>> blocked;
+        private final AtomicReference<Collection<FriendRequest>> requests;
 
-        public FriendStateImpl(Collection<User> friends, Collection<User> blocked, Collection<FriendRequest> requests) {
-            this.friends = Collections.unmodifiableCollection(friends);
-            this.blocked = Collections.unmodifiableCollection(blocked);
-            this.requests = Collections.unmodifiableCollection(requests);
+        public FriendStateImpl(boolean lazyInit) {
+            this.friends = new AtomicReference<>();
+            this.blocked = new AtomicReference<>();
+            this.requests = new AtomicReference<>();
+            if (!lazyInit) {
+                JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
+                JsonArray request = get(object, "request").getAsJsonArray();
+                Collection<FriendRequest> requestCollection;
+                if (!request.isEmpty()) {
+                    requestCollection = new ArrayList<>(request.size());
+                    convertRawRequest(request, requestCollection);
+                } else {
+                    requestCollection = Collections.emptyList();
+                }
+                JsonArray blocked = get(object, "blocked").getAsJsonArray();
+                Collection<User> blockedUsers = buildUserListFromFriendStateArray(blocked);
+                JsonArray friend = get(object, "friend").getAsJsonArray();
+                Collection<User> friends = buildUserListFromFriendStateArray(friend);
+
+                this.friends.set(friends);
+                this.blocked.set(blockedUsers);
+                this.requests.set(requestCollection);
+            }
+        }
+
+        protected void convertRawRequest(JsonArray request, Collection<FriendRequest> requestCollection) {
+            for (JsonElement element : request) {
+                JsonObject obj = element.getAsJsonObject();
+                int id = get(obj, "id").getAsInt();
+                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
+                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+                FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
+                requestCollection.add(requestObj);
+            }
         }
 
         @Override
         public Collection<User> getBlockedUsers() {
-            return blocked;
+            return blocked.updateAndGet(i -> {
+                if (i == null) {
+                    JsonObject object = client.getNetworkClient()
+                            .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
+                    JsonArray friend = get(object, "block").getAsJsonArray();
+                    return buildUserListFromFriendStateArray(friend);
+                }
+                return i;
+            });
         }
 
         @Override
         public Collection<User> getFriends() {
-            return friends;
+            return friends.updateAndGet(i -> {
+                if (i == null) {
+                    JsonObject object = client.getNetworkClient()
+                            .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
+                    JsonArray friend = get(object, "friend").getAsJsonArray();
+                    return buildUserListFromFriendStateArray(friend);
+                }
+                return i;
+            });
         }
 
         @Override
         public Collection<FriendRequest> getPendingFriendRequests() {
-            return requests;
+            return requests.updateAndGet(i -> {
+                if (i == null) {
+                    JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
+                    JsonArray request = get(object, "request").getAsJsonArray();
+                    Collection<FriendRequest> requestCollection;
+                    if (!request.isEmpty()) {
+                        requestCollection = new HashSet<>(request.size());
+                        convertRawRequest(request, requestCollection);
+                    } else {
+                        requestCollection = Collections.emptySet();
+                    }
+                    return Collections.unmodifiableCollection(requestCollection);
+                }
+                return i;
+            });
+        }
+
+        protected Collection<User> buildUserListFromFriendStateArray(JsonArray array) {
+            if (!array.isEmpty()) {
+                Collection<User> c = new ArrayList<>(array.size());
+                for (JsonElement element : array) {
+                    JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
+                    User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+                    c.add(user);
+                }
+                return Collections.unmodifiableCollection(c);
+            }
+            return Collections.emptyList();
         }
 
     }
@@ -269,7 +389,8 @@ public class HttpAPIImpl implements HttpAPI {
         }}
 
     @Override
-    public void addFriend(String userCode, int method, String guildId) {
+    public void addFriend(User user, int method, String guildId) {
+        final String userCode = user.getFullName(null);
         if (method == 2) {
             if (guildId == null) {
                 throw new IllegalArgumentException("Guild ID should be NOT NULL if method is 2");
@@ -294,65 +415,11 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     @Override
-    public Collection<User> getBlockedUsers() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
-        JsonArray blocked = get(object, "blocked").getAsJsonArray();
-        return buildUserListFromFriendStateArray(blocked);
-    }
-
-    @Override
-    public FriendState getFriendState() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-        JsonArray request = get(object, "request").getAsJsonArray();
-        Collection<FriendRequest> requestCollection;
-        if (!request.isEmpty()) {
-            requestCollection = new ArrayList<>(request.size());
-            for (JsonElement element : request) {
-                JsonObject obj = element.getAsJsonObject();
-                int id = get(obj, "id").getAsInt();
-                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
-                FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
-                requestCollection.add(requestObj);
-            }
-        } else {
-            requestCollection = Collections.emptyList();
-        }
-        JsonArray blocked = get(object, "blocked").getAsJsonArray();
-        Collection<User> blockedUsers = buildUserListFromFriendStateArray(blocked);
-        JsonArray friend = get(object, "friend").getAsJsonArray();
-        Collection<User> friends = buildUserListFromFriendStateArray(friend);
-        return new FriendStateImpl(
-                friends, blockedUsers, requestCollection
-        );
-    }
-
-    @Override
-    public Collection<User> getFriends() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
-        JsonArray friend = get(object, "friend").getAsJsonArray();
-        return buildUserListFromFriendStateArray(friend);
-    }
-
-    @Override
     public void handleFriendRequest(int id, boolean accept) {
         Map<String, Object> body = new MapBuilder()
                 .put("id", id)
                 .put("accept", accept ? 1 : 0)
                 .build();
         HttpAPIImpl.this.client.getNetworkClient().post(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
-    }
-
-    protected final Collection<User> buildUserListFromFriendStateArray(JsonArray array) {
-        if (!array.isEmpty()) {
-            Collection<User> c = new ArrayList<>(array.size());
-            for (JsonElement element : array) {
-                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
-                c.add(user);
-            }
-            return Collections.unmodifiableCollection(c);
-        }
-        return Collections.emptyList();
     }
 }

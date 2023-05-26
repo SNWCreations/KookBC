@@ -21,21 +21,16 @@ package snw.kookbc.impl.entity.channel;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
-import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class ChannelImpl implements Channel {
     protected final KBCClient client;
@@ -45,24 +40,19 @@ public abstract class ChannelImpl implements Channel {
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
-    private Category parent;
     private String name;
     private int level;
 
-    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
         this.id = id;
         this.master = master;
         this.guild = guild;
         this.permSync = permSync;
-        this.parent = parent;
         this.name = name;
         this.rpo = rpo;
         this.upo = upo;
         this.level = level;
-        if (parent != null) {
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
     }
 
     @Override
@@ -84,30 +74,6 @@ public abstract class ChannelImpl implements Channel {
         this.permSync = permSync;
     }
 
-    @Override
-    public @Nullable Category getParent() {
-        return parent;
-    }
-
-    @Override
-    public void setParent(Category parent) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("parent_id", (parent == null) ? 0 : parent.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setParent0(parent);
-    }
-
-    public void setParent0(Category parent) {
-        if (this.parent != null) {
-            ((CategoryImpl) this.parent).getChannels0().remove(this);
-        }
-        this.parent = parent;
-        if (parent != null) { // if this is on the top level?
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
-    }
 
     @Override
     public void delete() {
@@ -283,11 +249,6 @@ public abstract class ChannelImpl implements Channel {
                 .put("value", String.valueOf(user.getId()))
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
-    }
-
-    @Override
-    public PageIterator<Set<Invitation>> getInvitations() {
-        return new ChannelInvitationIterator(client, this);
     }
 
     @Override

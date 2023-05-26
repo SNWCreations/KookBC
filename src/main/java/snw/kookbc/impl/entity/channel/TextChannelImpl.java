@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -41,9 +40,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.*;
-
-public class TextChannelImpl extends ChannelImpl implements TextChannel {
+public class TextChannelImpl extends NonCategoryChannelImpl implements TextChannel {
     private int chatLimitTime;
     private String topic;
 
@@ -51,17 +48,6 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.chatLimitTime = chatLimitTime;
         this.topic = topic;
-    }
-
-    @Override
-    public String createInvite(int validSeconds, int validTimes) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("duration", validSeconds)
-                .put("setting_times", validTimes)
-                .build();
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return get(object, "url").getAsString();
     }
 
     @Override

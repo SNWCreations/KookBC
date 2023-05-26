@@ -26,10 +26,7 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.*;
-import snw.kookbc.impl.entity.channel.CategoryImpl;
-import snw.kookbc.impl.entity.channel.ChannelImpl;
-import snw.kookbc.impl.entity.channel.TextChannelImpl;
-import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
+import snw.kookbc.impl.entity.channel.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -120,7 +117,7 @@ public class EntityUpdater {
         } else {
             String parentId = get(object, "parent_id").getAsString();
             Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-            ((ChannelImpl) channel).setParent0(parent);
+            ((NonCategoryChannelImpl) channel).setParent0(parent);
             int type = get(object, "type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = get(object, "slow_mode").getAsInt();

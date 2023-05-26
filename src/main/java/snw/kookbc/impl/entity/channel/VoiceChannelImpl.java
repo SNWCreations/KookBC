@@ -34,7 +34,7 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.*;
 
-public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
+public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 

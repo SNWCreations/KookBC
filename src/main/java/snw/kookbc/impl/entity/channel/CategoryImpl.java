@@ -18,53 +18,39 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import org.jetbrains.annotations.Nullable;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import snw.jkook.entity.Guild;
-import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class CategoryImpl extends ChannelImpl implements Category {
-    // Yes, this implementation provides the channel list by using self-hosted cache.
-    // Current KOOK Channel view API does NOT provide the channels under the category.
-    // So the getChannels method is UNSAFE. The result maybe not full.
-    private final Collection<Channel> channels = new HashSet<>();
 
     public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
-        super(client, id, master, guild, permSync, null, name, rpo, upo, level);
+        super(client, id, master, guild, permSync, name, rpo, upo, level);
     }
 
     @Override
     public Collection<Channel> getChannels() {
+        final JsonObject object = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId() + "&need_children=true");
+        client.getEntityUpdater().updateChannel(object, this);
+        Collection<Channel> channels = new LinkedList<>();
+        get(object, "children").getAsJsonArray()
+                .asList()
+                .stream()
+                .map(JsonElement::getAsString)
+                .forEach(id -> channels.add(client.getStorage().getChannel(id)));
         return Collections.unmodifiableCollection(channels);
-    }
-
-    // to modify channels, use this instead of getChannels()
-    public Collection<Channel> getChannels0() {
-        return channels;
-    }
-
-    @Override
-    public @Nullable Category getParent() {
-        throw new UnsupportedOperationException("No parent will be provided for Category!");
-    }
-
-    @Override
-    public void setParent(Category parent) {
-        throw new UnsupportedOperationException("No parent will be provided for Category!");
-    }
-
-    @Override
-    public PageIterator<Set<Invitation>> getInvitations() {
-        throw new UnsupportedOperationException("No invitations available for Category!");
     }
 
 }
