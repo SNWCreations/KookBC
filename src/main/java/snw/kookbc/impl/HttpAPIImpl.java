@@ -37,6 +37,7 @@ import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
@@ -252,7 +253,30 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public PrivateMessage getPrivateMessage(User user, String id) throws NoSuchElementException {
-        return null;
+        final String chatCode = get(client.getNetworkClient()
+                .post(HttpAPIRoute.USER_CHAT_SESSION_CREATE.toFullURL(), // KOOK won't create multiple session
+                        Collections.singletonMap("target_id", user.getId())), "code").getAsString();
+        final JsonObject object;
+        try {
+            object = client.getNetworkClient()
+                    .get(HttpAPIRoute.USER_CHAT_MESSAGE_INFO.toFullURL() + "?chat_code=" + chatCode + "&msg_id=" + id);
+        } catch (BadResponseException e) {
+            if (e.getCode() == 40000) {
+                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
+                        new NoSuchElementException("No message object with provided ID " + id + " found")
+                                .initCause(e);
+            }
+            throw e;
+        }
+        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
+        long timeStamp = get(object, "create_at").getAsLong();
+        PrivateMessage quote = null;
+        if (has(object, "quote")) {
+            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
+            final String quoteId = get(rawQuote, "id").getAsString();
+            quote = getPrivateMessage(user, quoteId);
+        }
+        return new PrivateMessageImpl(client, id, user, component, timeStamp, quote);
     }
 
     @Override
