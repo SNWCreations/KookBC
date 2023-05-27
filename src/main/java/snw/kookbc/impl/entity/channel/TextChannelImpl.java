@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -39,6 +40,8 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+
+import static snw.kookbc.util.GsonUtil.get;
 
 public class TextChannelImpl extends NonCategoryChannelImpl implements TextChannel {
     private int chatLimitTime;
@@ -132,4 +135,15 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
         this.chatLimitTime = chatLimitTime;
     }
 
+    @Override
+    public void update(JsonObject data) {
+        synchronized (this) {
+            super.update(data);
+            int chatLimitTime = get(data, "slow_mode").getAsInt();
+            String topic = get(data, "topic").getAsString();
+
+            this.chatLimitTime = chatLimitTime;
+            this.topic = topic;
+        }
+    }
 }

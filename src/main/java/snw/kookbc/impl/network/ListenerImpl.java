@@ -33,7 +33,6 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.kookbc.impl.event.EventFactory;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.network.webhook.WebHookClient;
 
@@ -138,7 +137,7 @@ public class ListenerImpl implements Listener {
     protected void event0(Frame frame) {
         Event event;
         try {
-            event = EventFactory.getEvent(client, frame);
+            event = client.getEventFactory().createEvent(frame.getData());
         } catch (Exception e) {
             client.getCore().getLogger().error("Unable to create event from payload.");
             client.getCore().getLogger().error("Event payload: {}", frame);

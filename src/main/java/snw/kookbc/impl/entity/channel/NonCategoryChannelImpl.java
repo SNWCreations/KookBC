@@ -81,4 +81,12 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
         return new ChannelInvitationIterator(client, this);
     }
 
+    @Override
+    public synchronized void update(JsonObject data) {
+        super.update(data);
+
+        String parentId = get(data, "parent_id").getAsString();
+        Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
+        setParent0(parent);
+    }
 }

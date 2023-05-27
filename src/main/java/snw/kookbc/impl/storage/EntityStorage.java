@@ -27,6 +27,11 @@ import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.CustomEmojiImpl;
+import snw.kookbc.impl.entity.GuildImpl;
+import snw.kookbc.impl.entity.RoleImpl;
+import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
@@ -137,7 +142,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildUser(def);
             addUser(result);
         } else {
-            client.getEntityUpdater().updateUser(def, result);
+            ((UserImpl) result).update(def);
         }
         return result;
     }
@@ -148,7 +153,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildGuild(def);
             addGuild(result);
         } else {
-            client.getEntityUpdater().updateGuild(def, result);
+            ((GuildImpl) result).update(def);
         }
         return result;
     }
@@ -159,7 +164,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildChannel(def);
             addChannel(result);
         } else {
-            client.getEntityUpdater().updateChannel(def, result);
+            ((ChannelImpl) result).update(def);
         }
         return result;
     }
@@ -171,7 +176,7 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildRole(guild, def);
             addRole(guild, result);
         } else {
-            client.getEntityUpdater().updateRole(def, result);
+            ((RoleImpl) result).update(def);
         }
         return result;
     }
@@ -182,7 +187,7 @@ public class EntityStorage {
             emoji = client.getEntityBuilder().buildEmoji(def);
             addEmoji(emoji);
         } else {
-            client.getEntityUpdater().updateEmoji(def, emoji);
+            ((CustomEmojiImpl) emoji).update(def);
         }
         return emoji;
     }
@@ -241,6 +246,14 @@ public class EntityStorage {
         guilds.invalidate(id);
     }
 
+    public void removeRole(Role role) {
+        roles.invalidate(role.getGuild().getId() + "#" + role.getId());
+    }
+
+    public void removeEmoji(CustomEmoji emoji) {
+        emojis.invalidate(emoji.getId());
+    }
+
     private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
         return Caffeine.newBuilder()
                 .weakValues()
@@ -269,6 +282,14 @@ public class EntityStorage {
 
     private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
         return funcWithRetry(original::load)::apply;
+    }
+
+    public void cleanUpUserPermissionOverwrite(Guild guild, User user) {
+        channels.asMap().values()
+                .stream()
+                .filter(i -> i.getGuild() == guild)
+                .map(i -> ((ChannelImpl) i).getOverwrittenUserPermissions0())
+                .forEach(i -> i.removeIf(o -> o.getUser() == user));
     }
 }
 

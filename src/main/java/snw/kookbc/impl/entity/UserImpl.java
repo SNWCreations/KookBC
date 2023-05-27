@@ -31,17 +31,19 @@ import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.util.PageIterator;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
-public class UserImpl implements User {
+public class UserImpl implements User, Updatable {
     private final KBCClient client;
     private final String id;
     private final boolean bot;
@@ -313,6 +315,18 @@ public class UserImpl implements User {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update user by using different data");
+        synchronized (this) {
+            name = get(data, "username").getAsString();
+            avatarUrl = get(data, "avatar").getAsString();
+            vipAvatarUrl = get(data, "vip_avatar").getAsString();
+            identify = get(data, "identify_num").getAsInt();
+            ban = get(data, "status").getAsInt() == 10;
+            vip = get(data, "is_vip").getAsBoolean();
+        }
+    }
 }
 
 class IntimacyInfoImpl implements User.IntimacyInfo {

@@ -18,21 +18,25 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
-public abstract class ChannelImpl implements Channel {
+import static snw.kookbc.util.GsonUtil.get;
+
+public abstract class ChannelImpl implements Channel, Updatable {
     protected final KBCClient client;
     private final String id;
     private final User master;
@@ -284,6 +288,10 @@ public abstract class ChannelImpl implements Channel {
         return Collections.unmodifiableCollection(upo);
     }
 
+    public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions0() {
+        return upo;
+    }
+
     public void setOverwrittenUserPermissions(Collection<UserPermissionOverwrite> upo) {
         this.upo = upo;
     }
@@ -291,5 +299,46 @@ public abstract class ChannelImpl implements Channel {
     @Override
     public User getMaster() {
         return master;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update channel by using different data");
+        synchronized (this) {
+            // basic information
+            String name = get(data, "name").getAsString();
+            boolean isPermSync = get(data, "permission_sync").getAsInt() != 0;
+            // rpo parse
+            Collection<RolePermissionOverwrite> rpo = new ArrayList<>();
+            for (JsonElement element : get(data, "permission_overwrites").getAsJsonArray()) {
+                JsonObject orpo = element.getAsJsonObject();
+                rpo.add(
+                        new RolePermissionOverwrite(
+                                orpo.get("role_id").getAsInt(),
+                                orpo.get("allow").getAsInt(),
+                                orpo.get("deny").getAsInt()
+                        )
+                );
+            }
+
+            // upo parse
+            Collection<UserPermissionOverwrite> upo = new ArrayList<>();
+            for (JsonElement element : get(data, "permission_users").getAsJsonArray()) {
+                JsonObject oupo = element.getAsJsonObject();
+                JsonObject rawUser = oupo.getAsJsonObject("user");
+                upo.add(
+                        new UserPermissionOverwrite(
+                                client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
+                                oupo.get("allow").getAsInt(),
+                                oupo.get("deny").getAsInt()
+                        )
+                );
+            }
+
+            this.name = name;
+            this.permSync = isPermSync;
+            this.rpo = rpo;
+            this.upo = upo;
+        }
     }
 }
