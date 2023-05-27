@@ -18,15 +18,19 @@
 
 package snw.kookbc.impl.entity;
 
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.entity.Game;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Map;
 
-public class GameImpl implements Game {
+import static snw.kookbc.util.GsonUtil.get;
+
+public class GameImpl implements Game, Updatable {
     private final KBCClient client;
     private final int id;
     private String name;
@@ -94,4 +98,14 @@ public class GameImpl implements Game {
         setIcon0(icon);
     }
 
+    @Override
+    public void update(JsonObject data) {
+        synchronized (this) {
+            String name = get(data, "name").getAsString();
+            String icon = get(data, "icon").getAsString();
+
+            this.name = name;
+            this.icon = icon;
+        }
+    }
 }

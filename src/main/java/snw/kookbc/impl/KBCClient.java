@@ -33,7 +33,6 @@ import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
-import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -64,7 +63,6 @@ public class KBCClient {
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
-    private final EntityUpdater entityUpdater;
     private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
@@ -78,7 +76,7 @@ public class KBCClient {
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        this(core, config, pluginsFolder, token, null, null, null, null, null);
+        this(core, config, pluginsFolder, token, null, null, null, null);
     }
 
     public KBCClient(
@@ -87,8 +85,7 @@ public class KBCClient {
             @Nullable NetworkClient networkClient,
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
-            @Nullable MessageBuilder msgBuilder,
-            @Nullable EntityUpdater entityUpdater
+            @Nullable MessageBuilder msgBuilder
     ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -108,7 +105,6 @@ public class KBCClient {
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
-        this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         this.shutdownLock = new ReentrantLock();
@@ -375,10 +371,6 @@ public class KBCClient {
 
     public MessageBuilder getMessageBuilder() {
         return msgBuilder;
-    }
-
-    public EntityUpdater getEntityUpdater() {
-        return entityUpdater;
     }
 
     public Connector getConnector() {

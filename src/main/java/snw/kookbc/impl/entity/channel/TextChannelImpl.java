@@ -146,4 +146,15 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
         this.chatLimitTime = chatLimitTime;
     }
 
+    @Override
+    public void update(JsonObject data) {
+        synchronized (this) {
+            super.update(data);
+            int chatLimitTime = get(data, "slow_mode").getAsInt();
+            String topic = get(data, "topic").getAsString();
+
+            this.chatLimitTime = chatLimitTime;
+            this.topic = topic;
+        }
+    }
 }
