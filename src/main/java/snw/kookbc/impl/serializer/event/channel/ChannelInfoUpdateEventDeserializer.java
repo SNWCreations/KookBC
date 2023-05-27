@@ -24,6 +24,7 @@ import com.google.gson.JsonParseException;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.event.channel.ChannelInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
@@ -51,7 +52,7 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
             );
             return null;
         }
-        client.getEntityUpdater().updateChannel(body, channel);
+        ((ChannelImpl) channel).update(body);
         return new ChannelInfoUpdateEvent(
             timeStamp,
             channel

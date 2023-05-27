@@ -24,6 +24,7 @@ import com.google.gson.JsonParseException;
 import snw.jkook.entity.Guild;
 import snw.jkook.event.role.RoleInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;
@@ -40,7 +41,7 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
     protected RoleInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
         int roleId = get(body, "role_id").getAsInt();
-        client.getEntityUpdater().updateRole(body, client.getStorage().getRole(guild, roleId, body));
+        ((RoleImpl) client.getStorage().getRole(guild, roleId, body)).update(body);
         return new RoleInfoUpdateEvent(
             timeStamp,
             client.getStorage().getRole(guild, roleId)

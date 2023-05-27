@@ -64,7 +64,6 @@ public class KBCClient {
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
-    private final EntityUpdater entityUpdater;
     private final EventFactory eventFactory;
     private final ConfigurationSection config;
     private final File pluginsFolder;
