@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.Game;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.GameImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
             int id = rawObj.get("id").getAsInt();
             Game game = client.getStorage().getGame(id);
             if (game != null) {
-                client.getEntityUpdater().updateGame(rawObj, game);
+                ((GameImpl) game).update(rawObj);
             } else {
                 game = client.getEntityBuilder().buildGame(rawObj);
                 client.getStorage().addGame(game);
