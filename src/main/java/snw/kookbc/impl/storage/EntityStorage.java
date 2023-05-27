@@ -246,6 +246,14 @@ public class EntityStorage {
         guilds.invalidate(id);
     }
 
+    public void removeRole(Role role) {
+        roles.invalidate(role.getGuild().getId() + "#" + role.getId());
+    }
+
+    public void removeEmoji(CustomEmoji emoji) {
+        emojis.invalidate(emoji.getId());
+    }
+
     private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
         return Caffeine.newBuilder()
                 .weakValues()
@@ -274,6 +282,14 @@ public class EntityStorage {
 
     private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
         return funcWithRetry(original::load)::apply;
+    }
+
+    public void cleanUpUserPermissionOverwrite(Guild guild, User user) {
+        channels.asMap().values()
+                .stream()
+                .filter(i -> i.getGuild() == guild)
+                .map(i -> ((ChannelImpl) i).getOverwrittenUserPermissions0())
+                .forEach(i -> i.removeIf(o -> o.getUser() == user));
     }
 }
 

@@ -45,7 +45,7 @@ public abstract class MessageImpl implements Message {
     protected final KBCClient client;
     private final String id;
     private final User user;
-    private final BaseComponent component;
+    private BaseComponent component;
     private final long timeStamp;
     private final Message quote;
 
@@ -132,5 +132,9 @@ public abstract class MessageImpl implements Message {
                 ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
                 body
         );
+    }
+
+    public void setComponent0(BaseComponent component) {
+        this.component = component;
     }
 }
