@@ -31,6 +31,9 @@ public class CountdownModuleSerializer implements JsonSerializer<CountdownModule
         JsonObject moduleObj = new JsonObject();
         moduleObj.addProperty("type", "countdown");
         moduleObj.addProperty("mode", module.getType().getValue());
+        if (module.getType() == CountdownModule.Type.SECOND) {
+            moduleObj.addProperty("startTime", module.getStartTime());
+        }
         moduleObj.addProperty("endTime", module.getEndTime());
         return moduleObj;
     }
@@ -39,7 +42,8 @@ public class CountdownModuleSerializer implements JsonSerializer<CountdownModule
     public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
         String mode = get(jsonObject, "mode").getAsString();
+        long startTime = get(jsonObject, "startTime").getAsLong();
         long endTime = get(jsonObject, "endTime").getAsLong();
-        return new CountdownModule(CountdownModule.Type.value(mode), endTime);
+        return new CountdownModule(CountdownModule.Type.value(mode), startTime, endTime);
     }
 }

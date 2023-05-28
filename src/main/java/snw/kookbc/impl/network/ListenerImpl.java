@@ -215,7 +215,7 @@ public class ListenerImpl implements Listener {
 
         // execute command
         try {
-            return cmdMan.executeCommand0(sender, cmdLine, msg);
+            return cmdMan.executeCommand(sender, cmdLine, msg);
         } catch (Exception e) {
             if (client.getConfig().getBoolean("allow-error-feedback", true)) {
                 // load plugin data

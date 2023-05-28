@@ -114,6 +114,11 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
     }
 
     @Override
+    public void setComponentTemp(User user, String s) {
+        setComponentTemp(user, new MarkdownComponent(s));
+    }
+
+    @Override
     public String reply(String message) {
         return reply(new MarkdownComponent(message));
     }

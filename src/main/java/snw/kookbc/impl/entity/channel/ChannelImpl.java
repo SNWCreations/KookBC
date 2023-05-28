@@ -21,17 +21,14 @@ package snw.kookbc.impl.entity.channel;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
-import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -47,24 +44,19 @@ public abstract class ChannelImpl implements Channel, Updatable {
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
-    private Category parent;
     private String name;
     private int level;
 
-    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
         this.id = id;
         this.master = master;
         this.guild = guild;
         this.permSync = permSync;
-        this.parent = parent;
         this.name = name;
         this.rpo = rpo;
         this.upo = upo;
         this.level = level;
-        if (parent != null) {
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
     }
 
     @Override
@@ -86,30 +78,6 @@ public abstract class ChannelImpl implements Channel, Updatable {
         this.permSync = permSync;
     }
 
-    @Override
-    public @Nullable Category getParent() {
-        return parent;
-    }
-
-    @Override
-    public void setParent(Category parent) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("parent_id", (parent == null) ? 0 : parent.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setParent0(parent);
-    }
-
-    protected void setParent0(Category parent) {
-        if (this.parent != null) {
-            ((CategoryImpl) this.parent).getChannels0().remove(this);
-        }
-        this.parent = parent;
-        if (parent != null) { // if this is on the top level?
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
-    }
 
     @Override
     public void delete() {
@@ -163,6 +131,111 @@ public abstract class ChannelImpl implements Channel, Updatable {
     }
 
     @Override
+    public void addPermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void removePermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void addPermission(Role role, Permission... perms) {
+        addPermission(role.getId(), perms);
+    }
+
+    @Override
+    public void removePermission(Role role, Permission... perms) {
+        removePermission(role.getId(), perms);
+    }
+
+    @Override
+    public void addPermission(int roleId, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(roleId, origin, deny);
+    }
+
+    @Override
+    public void removePermission(int roleId, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(roleId, origin, deny);
+    }
+
+    @Nullable
+    public UserPermissionOverwrite getUserPermissionOverwriteByUser(User user) {
+        for (UserPermissionOverwrite o : getOverwrittenUserPermissions()) {
+            if (o.getUser() == user) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(Role role) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == role.getId()) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(int roleId) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == roleId) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void deletePermission(Role role) {
         Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
@@ -180,11 +253,6 @@ public abstract class ChannelImpl implements Channel, Updatable {
                 .put("value", String.valueOf(user.getId()))
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
-    }
-
-    @Override
-    public PageIterator<Set<Invitation>> getInvitations() {
-        return new ChannelInvitationIterator(client, this);
     }
 
     @Override
@@ -265,12 +333,6 @@ public abstract class ChannelImpl implements Channel, Updatable {
                                 oupo.get("deny").getAsInt()
                         )
                 );
-            }
-
-            if (!(this instanceof Category)) {
-                String parentId = get(data, "parent_id").getAsString();
-                Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-                setParent0(parent);
             }
 
             this.name = name;

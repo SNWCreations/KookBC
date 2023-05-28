@@ -28,9 +28,9 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
@@ -38,9 +38,11 @@ import static snw.kookbc.util.Util.getVersionDifference;
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;
     private final Collection<Plugin> plugins = new ArrayList<>();
+    private final Map<Predicate<File>, Function<ClassLoader, PluginLoader>> loaderMap = new LinkedHashMap<>();
 
     public SimplePluginManager(KBCClient client) {
         this.client = client;
+        this.registerPluginLoader(f -> f.getName().endsWith(".jar"), this::createPluginLoader); // ensure overrides will apply
     }
 
     @Override
@@ -78,10 +80,9 @@ public class SimplePluginManager implements PluginManager {
         Plugin plugin;
         PluginLoader loader;
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
-        try {
-            loader = createPluginLoader(file, parent);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        loader = createPluginLoaderForFile(file, parent);
+        if (loader == null) {
+            throw new InvalidPluginException("There is no loader can load the file " + file);
         }
         try {
             plugin = loader.loadPlugin(file);
@@ -103,7 +104,7 @@ public class SimplePluginManager implements PluginManager {
     @Override
     public @NotNull Plugin[] loadPlugins(File directory) {
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
-        File[] files = directory.listFiles(pathname -> pathname.getName().endsWith(".jar"));
+        File[] files = directory.listFiles(File::isFile);
         if (files != null) {
             Collection<Plugin> plugins = new ArrayList<>(files.length);
             for (File file : files) {
@@ -209,7 +210,25 @@ public class SimplePluginManager implements PluginManager {
         plugins.remove(plugin);
     }
 
-    protected PluginLoader createPluginLoader(File pluginFile, ClassLoader parent) throws Exception {
-        return new SimplePluginClassLoader(client, pluginFile, parent);
+    @Override
+    public void registerPluginLoader(Predicate<File> predicate, Function<ClassLoader, PluginLoader> provider) {
+        Validate.notNull(predicate, "Predicate cannot be null");
+        Validate.notNull(provider, "Provider cannot be null");
+        loaderMap.put(predicate, provider);
+    }
+
+    protected PluginLoader createPluginLoader(ClassLoader parent) {
+        return new SimplePluginClassLoader(client, parent);
+    }
+
+    protected @Nullable PluginLoader createPluginLoaderForFile(File file, ClassLoader parent) {
+        for (Map.Entry<Predicate<File>, Function<ClassLoader, PluginLoader>> entry : loaderMap.entrySet()) {
+            final Predicate<File> condition = entry.getKey();
+            if (condition.test(file)) {
+                final Function<ClassLoader, PluginLoader> provider = entry.getValue();
+                return provider.apply(parent);
+            }
+        }
+        return null;
     }
 }

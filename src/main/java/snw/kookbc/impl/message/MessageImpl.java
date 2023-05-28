@@ -27,6 +27,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -132,6 +133,11 @@ public abstract class MessageImpl implements Message {
                 ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
                 body
         );
+    }
+
+    @Override
+    public void setComponent(String s) {
+        setComponent(new MarkdownComponent(s));
     }
 
     public void setComponent0(BaseComponent component) {

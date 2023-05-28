@@ -67,6 +67,10 @@ public class QuoteImpl implements Message {
     }
 
     @Override
+    public void setComponent(String s) {
+    }
+
+    @Override
     public @Nullable Message getQuote() {
         return null;
     }

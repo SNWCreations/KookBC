@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -139,10 +140,17 @@ public class CommandManagerImpl implements CommandManager {
     // We wish the Bot know what are they doing!
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine) throws CommandException {
-        return executeCommand0(sender, cmdLine, null);
+        return executeCommand(sender, cmdLine, null);
     }
 
+    // Deprecated because this method has been written into the API.
+    @Deprecated
     public boolean executeCommand0(CommandSender sender, String cmdLine, Message msg) throws CommandException {
+        return executeCommand(sender, cmdLine, msg);
+    }
+
+    @Override
+    public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
@@ -241,12 +249,17 @@ public class CommandManagerImpl implements CommandManager {
             return false;
         }
 
+        AtomicReference<CommandSender> senderRef = new AtomicReference<>(
+            sender == client.getCore().getConsoleCommandSender() ?
+            ConsoleCommandSenderImpl.get(owner) : sender
+        );
+
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 exec(
-                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) sender, arguments),
+                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) senderRef.get(), arguments),
                         startTimeStamp, cmdLine
                 );
                 return true;
@@ -276,7 +289,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         exec(
-                () -> executor.onCommand(sender, arguments, msg),
+                () -> executor.onCommand(senderRef.get(), arguments, msg),
                 startTimeStamp, cmdLine
         );
         return true; // ok, the command is ok, so we can return true.

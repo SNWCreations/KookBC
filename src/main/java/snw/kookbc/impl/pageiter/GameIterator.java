@@ -31,14 +31,20 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class GameIterator extends PageIteratorImpl<Collection<Game>> {
+    protected final int type;
 
     public GameIterator(KBCClient client) {
+        this(client, 0);
+    }
+
+    public GameIterator(KBCClient client, int type) {
         super(client);
+        this.type = type;
     }
 
     @Override
     protected String getRequestURL() {
-        return HttpAPIRoute.GAME_LIST.toFullURL();
+        return HttpAPIRoute.GAME_LIST.toFullURL() + "?type=" + type;
     }
 
     @Override

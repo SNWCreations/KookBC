@@ -18,11 +18,28 @@
 
 package snw.kookbc.impl.command;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
+import org.slf4j.Logger;
+
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.plugin.Plugin;
 
 public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
-    public static final ConsoleCommandSenderImpl INSTANCE = new ConsoleCommandSenderImpl();
+    private static final Map<Plugin, ConsoleCommandSenderImpl> INSTANCES = new WeakHashMap<>();
+    private final Logger logger;
 
-    protected ConsoleCommandSenderImpl() {
+    protected ConsoleCommandSenderImpl(Logger logger) {
+        this.logger = logger;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public static synchronized ConsoleCommandSender get(Plugin plugin) {
+        return INSTANCES.computeIfAbsent(plugin, i -> new ConsoleCommandSenderImpl(i.getLogger()));
     }
 }

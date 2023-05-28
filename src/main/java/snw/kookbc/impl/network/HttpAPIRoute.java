@@ -87,6 +87,7 @@ public enum HttpAPIRoute {
     USER_CHAT_MESSAGE_REACTION_LIST("/v3/direct-message/reaction-list"),
     USER_CHAT_MESSAGE_REACTION_ADD("/v3/direct-message/add-reaction"),
     USER_CHAT_MESSAGE_REACTION_REMOVE("/v3/direct-message/delete-reaction"),
+    USER_CHAT_MESSAGE_INFO("/v3/direct-message/view"),
 
     // ------ GATEWAY ------
 
@@ -142,7 +143,22 @@ public enum HttpAPIRoute {
     GAME_UPDATE("/v3/game/update"),
     GAME_DELETE("/v3/game/delete"),
     GAME_CREATE_ACTIVITY("/v3/game/activity"),
-    GAME_DELETE_ACTIVITY("/v3/game/delete-activity");
+    GAME_DELETE_ACTIVITY("/v3/game/delete-activity"),
+
+    // ------ FRIEND ------
+
+    FRIEND_HANDLE_REQUEST("/v3/friend/handle-request"),
+
+    FRIEND_REQUEST("/v3/friend/request"),
+
+    FRIEND_DELETE("/v3/friend/delete"),
+
+    FRIEND_LIST("/v3/friend"),
+
+    FRIEND_BLOCK("/v3/friend/block"),
+
+    FRIEND_UNBLOCK("/v3/friend/unblock");
+
     private static final Map<String, HttpAPIRoute> map = new HashMap<>();
 
     static {

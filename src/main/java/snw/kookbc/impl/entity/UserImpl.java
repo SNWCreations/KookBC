@@ -270,6 +270,22 @@ public class UserImpl implements User, Updatable {
     }
 
     @Override
+    public void block() {
+        Map<String, Object> body = new MapBuilder()
+                .put("user_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_BLOCK.toFullURL(), body);
+    }
+
+    @Override
+    public void unblock() {
+        Map<String, Object> body = new MapBuilder()
+                .put("user_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.FRIEND_UNBLOCK.toFullURL(), body);
+    }
+
+    @Override
     public @Nullable String getAvatarUrl(boolean b) {
         return b ? vipAvatarUrl : avatarUrl;
     }
