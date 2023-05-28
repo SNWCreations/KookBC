@@ -50,13 +50,13 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
             guildId = get(object, "target_id").getAsString();
         }
         Guild guild = client.getStorage().getGuild(guildId);
-//        if (guild == null) { // TODO activate it after this branch has merged into the next API development branch
-//            return new UserLeaveGuildEvent(
-//                    timeStamp,
-//                    user,
-//                    guildId
-//            );
-//        }
+        if (guild == null) {
+            return new UserLeaveGuildEvent(
+                    timeStamp,
+                    user,
+                    guildId
+            );
+        }
         return new UserLeaveGuildEvent(
                 timeStamp,
                 user,
