@@ -20,12 +20,8 @@ package snw.kookbc.impl.network.policy;
 
 import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
-// Represents the policy which will terminate request if limit is reached.
+// Represents the policy which will wait until the remaining limit is reset.
 public class WaitUntilOKRateLimitPolicy implements RateLimitPolicy {
-    public static final WaitUntilOKRateLimitPolicy INSTANCE = new WaitUntilOKRateLimitPolicy();
-
-    private WaitUntilOKRateLimitPolicy() {
-    }
     
     // Called when Rate Limit is reached.
     // route is the request target route enum.
@@ -34,6 +30,7 @@ public class WaitUntilOKRateLimitPolicy implements RateLimitPolicy {
         if (resetTime < 1) {
             resetTime = 1;
         }
+        resetTime += 3; // give 3 second to reset the limit
         try {
             Thread.sleep(resetTime * 1000L);
         } catch (InterruptedException ignored) {

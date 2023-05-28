@@ -18,17 +18,31 @@
 
 package snw.kookbc.interfaces.network.policy;
 
-import snw.kookbc.impl.network.policy.WaitUntilOKRateLimitPolicy;
+import snw.kookbc.LaunchMain;
+
+import java.util.ServiceLoader;
+
+import static snw.kookbc.util.Util.isStartByLaunch;
 
 // Represents the rate limit policy.
 public interface RateLimitPolicy {
-    
+
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
     void perform(String route, int resetTime);
 
     static RateLimitPolicy getDefault() {
-        return WaitUntilOKRateLimitPolicy.INSTANCE;
+        return InstanceHolder.INSTANCE;
+    }
+
+    final class InstanceHolder {
+        private InstanceHolder() { // should not be initialized, only used by getDefault method
+        }
+
+        private static final RateLimitPolicy INSTANCE = ServiceLoader
+                .load(RateLimitPolicy.class, isStartByLaunch()
+                        ? LaunchMain.classLoader : Thread.currentThread().getContextClassLoader())
+                .iterator().next();
     }
 }

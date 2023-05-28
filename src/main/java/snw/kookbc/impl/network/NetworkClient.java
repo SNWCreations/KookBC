@@ -84,18 +84,18 @@ public class NetworkClient {
     public String call(Request request) {
         Bucket bucket = getBucket(request);
         bucket.check();
-        try (Response res = client.newCall(request).execute()) {
-
+        try (Response response = client.newCall(request).execute()) {
             // region Bucket process
-            int limit = Integer.parseInt(Objects.requireNonNull(res.header("X-Rate-Limit-Limit")));
-            int reset = Integer.parseInt(Objects.requireNonNull(res.header("X-Rate-Limit-Reset")));
-            bucket.update(limit, reset);
+            int remaining = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Remaining")));
+            int reset = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Reset")));
+            bucket.update(remaining, reset);
             // endregion
 
-            if (!res.isSuccessful()) {
-                throw new BadResponseException(res.code(), "UNKNOWN");
+            final String body = Objects.requireNonNull(response.body()).string();
+            if (!response.isSuccessful()) {
+                throw new BadResponseException(response.code(), body);
             }
-            return res.body() != null ? res.body().string() : "";
+            return body;
         } catch (IOException e) {
             throw new RuntimeException("Unexpected IOException when we attempting to call request.", e);
         }

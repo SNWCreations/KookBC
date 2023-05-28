@@ -23,10 +23,6 @@ import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
 // Represents the policy which will terminate request if limit is reached.
 public class TerminateRequestRateLimitPolicy implements RateLimitPolicy {
-    public static final TerminateRequestRateLimitPolicy INSTANCE = new TerminateRequestRateLimitPolicy();
-    
-    private TerminateRequestRateLimitPolicy() {
-    }
 
     // Called when Rate Limit is reached.
     // route is the request target route enum.

@@ -27,8 +27,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 // Represents the Bucket of Rate Limit.
 // Not single instance. Created when network call requested.
@@ -36,10 +34,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Bucket {
     private static final Map<HttpAPIRoute, String> bucketNameMap = new EnumMap<>(HttpAPIRoute.class);
     private static final Map<String, Bucket> map = new ConcurrentHashMap<>();
-
     private final KBCClient client;
     private final String name; // defined by response header
-    private final Lock updateLock = new ReentrantLock();
     private final AtomicInteger availableTimes = new AtomicInteger(Integer.MIN_VALUE);
     private final AtomicInteger resetTime = new AtomicInteger();
     private volatile boolean scheduledToUpdate;
@@ -52,25 +48,22 @@ public class Bucket {
         this.name = name;
     }
 
-    public void update(int availableTimes, int resetTime) {
-        this.updateLock.lock();
-        try {
-            this.availableTimes.set(availableTimes);
-            this.resetTime.set(resetTime);
-        } finally {
-            this.updateLock.unlock();
-        }
+    public synchronized void update(int availableTimes, int resetTime) {
+        this.availableTimes.set(availableTimes);
+        this.resetTime.set(resetTime);
     }
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
-    public void check() {
+    public synchronized void check() {
         if (availableTimes.get() == Integer.MIN_VALUE) {
             // At this time, we don't know remaining time, so we can't check it
             // We should set the time after got response
             return;
         }
-        if (availableTimes.get() <= 0) {
-            RateLimitPolicy.getDefault().perform(name, resetTime.get());
+        if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
+            final int resetTime = this.resetTime.get();
+            client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+            RateLimitPolicy.getDefault().perform(name, resetTime);
             return;
         }
         availableTimes.decrementAndGet();
