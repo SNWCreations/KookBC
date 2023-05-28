@@ -28,8 +28,11 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
@@ -80,7 +83,12 @@ public class SimplePluginManager implements PluginManager {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        plugin = loader.loadPlugin(file);
+        try {
+            plugin = loader.loadPlugin(file);
+        } catch (InvalidPluginException e) {
+            closeLoaderIfPossible(loader);
+            throw e; // rethrow
+        }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {

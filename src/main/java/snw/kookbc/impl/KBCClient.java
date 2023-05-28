@@ -56,6 +56,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
+
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
@@ -252,6 +254,7 @@ public class KBCClient {
                 getCore().getPluginManager().enablePlugin(plugin);
             } catch (UnknownDependencyException e) {
                 getCore().getLogger().error("Unable to enable plugin {} because unknown dependency detected.", plugin.getDescription().getName(), e);
+                closeLoaderIfPossible(plugin);
                 iterator.remove();
                 continue;
             }
