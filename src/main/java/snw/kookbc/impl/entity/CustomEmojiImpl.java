@@ -18,16 +18,22 @@
 
 package snw.kookbc.impl.entity;
 
+import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Guild;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
-public class CustomEmojiImpl implements CustomEmoji {
+import static snw.kookbc.util.GsonUtil.get;
+
+public class CustomEmojiImpl implements CustomEmoji, Updatable {
     private final KBCClient client;
     private final String id;
     private final Guild guild;
@@ -73,5 +79,13 @@ public class CustomEmojiImpl implements CustomEmoji {
 
     public void setName0(String name) {
         this.name = name;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update the emoji by using different data");
+        synchronized (this) {
+            this.name = get(data, "name").getAsString();
+        }
     }
 }
