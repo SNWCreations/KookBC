@@ -21,12 +21,11 @@ package snw.kookbc.impl.network;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.exceptions.TooFastException;
+import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // Represents the Bucket of Rate Limit.
@@ -35,10 +34,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Bucket {
     private static final Map<HttpAPIRoute, String> bucketNameMap = new EnumMap<>(HttpAPIRoute.class);
     private static final Map<String, Bucket> map = new ConcurrentHashMap<>();
-
     private final KBCClient client;
     private final String name; // defined by response header
-    final AtomicInteger availableTimes = new AtomicInteger(-1);
+    private final AtomicInteger availableTimes = new AtomicInteger(Integer.MIN_VALUE);
+    private final AtomicInteger resetTime = new AtomicInteger();
     private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
@@ -49,26 +48,25 @@ public class Bucket {
         this.name = name;
     }
 
-    public void scheduleUpdateAvailableTimes(int availableTimes, int after) {
-        if (!scheduledToUpdate) {
-            client.getCore().getScheduler().runTaskLater(client.getInternalPlugin(), () -> {
-                Bucket.this.availableTimes.set(availableTimes);
-                Bucket.this.scheduledToUpdate = false;
-            }, TimeUnit.SECONDS.toMillis(after));
-        }
+    public synchronized void update(int availableTimes, int resetTime) {
+        this.availableTimes.set(availableTimes);
+        this.resetTime.set(resetTime);
     }
 
     // throw TooFastException if too fast, or just decrease one request remaining time.
-    public void check() {
-        if (availableTimes.get() == -1) {
+    public synchronized void check() {
+        if (availableTimes.get() == Integer.MIN_VALUE) {
             // At this time, we don't know remaining time, so we can't check it
             // We should set the time after got response
             return;
         }
-        if (availableTimes.get() < 0) {
-            throw new TooFastException(name);
+        if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
+            final int resetTime = this.resetTime.get();
+            client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+            RateLimitPolicy.getDefault().perform(client, name, resetTime);
+            return;
         }
-        availableTimes.addAndGet(-1);
+        availableTimes.decrementAndGet();
     }
 
     @Override
