@@ -63,7 +63,7 @@ public class Bucket {
         if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
             final int resetTime = this.resetTime.get();
             client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
-            RateLimitPolicy.getDefault().perform(name, resetTime);
+            RateLimitPolicy.getDefault().perform(client, name, resetTime);
             return;
         }
         availableTimes.decrementAndGet();

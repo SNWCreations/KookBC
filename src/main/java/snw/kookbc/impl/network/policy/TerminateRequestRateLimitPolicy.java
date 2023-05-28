@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.network.policy;
 
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.exceptions.TooFastException;
 import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
@@ -27,7 +28,8 @@ public class TerminateRequestRateLimitPolicy implements RateLimitPolicy {
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
-    public void perform(String route, int resetTime) {
+    @Override
+    public void perform(KBCClient client, String route, int resetTime) {
         throw new TooFastException(route);
     }
 }

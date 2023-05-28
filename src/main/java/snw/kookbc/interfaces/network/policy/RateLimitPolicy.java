@@ -19,6 +19,7 @@
 package snw.kookbc.interfaces.network.policy;
 
 import snw.kookbc.LaunchMain;
+import snw.kookbc.impl.KBCClient;
 
 import java.util.ServiceLoader;
 
@@ -30,7 +31,7 @@ public interface RateLimitPolicy {
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
-    void perform(String route, int resetTime);
+    void perform(KBCClient client, String route, int resetTime);
 
     static RateLimitPolicy getDefault() {
         return InstanceHolder.INSTANCE;

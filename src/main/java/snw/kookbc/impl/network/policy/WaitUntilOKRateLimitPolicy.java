@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.network.policy;
 
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
 // Represents the policy which will wait until the remaining limit is reset.
@@ -26,7 +27,8 @@ public class WaitUntilOKRateLimitPolicy implements RateLimitPolicy {
     // Called when Rate Limit is reached.
     // route is the request target route enum.
     // resetTime means the seconds needed to wait until limit reset.
-    public void perform(String route, int resetTime) {
+    @Override
+    public void perform(KBCClient client, String route, int resetTime) {
         if (resetTime < 1) {
             resetTime = 1;
         }
