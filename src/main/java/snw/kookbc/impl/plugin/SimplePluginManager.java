@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
@@ -83,7 +84,12 @@ public class SimplePluginManager implements PluginManager {
         if (loader == null) {
             throw new InvalidPluginException("There is no loader can load the file " + file);
         }
-        plugin = loader.loadPlugin(file);
+        try {
+            plugin = loader.loadPlugin(file);
+        } catch (InvalidPluginException e) {
+            closeLoaderIfPossible(loader);
+            throw e; // rethrow
+        }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
