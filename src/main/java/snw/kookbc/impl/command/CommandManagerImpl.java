@@ -24,6 +24,7 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
@@ -151,6 +152,9 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
+        Validate.notNull(sender, "Sender cannot be null");
+        Validate.notNull(cmdLine, "Command line cannot be null");
+        // Validate.notNull(msg, "Message object cannot be null"); // NOT activated yet
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
