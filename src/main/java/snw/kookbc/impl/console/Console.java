@@ -23,8 +23,6 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
-
 import java.nio.file.Paths;
 
 public class Console extends SimpleTerminalConsole {
@@ -43,7 +41,7 @@ public class Console extends SimpleTerminalConsole {
     protected void runCommand(String s) {
         client.getCore().getLogger().info("Console issued command: {}", s);
         try {
-            client.getCore().getCommandManager().executeCommand(ConsoleCommandSenderImpl.INSTANCE, s);
+            client.getCore().getCommandManager().executeCommand(client.getCore().getConsoleCommandSender(), s);
         } catch (Exception e) {
             client.getCore().getLogger().error("Unexpected situation happened during the execution of the command.", e);
         }

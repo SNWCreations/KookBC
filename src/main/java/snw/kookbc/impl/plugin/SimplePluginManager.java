@@ -28,19 +28,21 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;
     private final Collection<Plugin> plugins = new ArrayList<>();
+    private final Map<Predicate<File>, Function<ClassLoader, PluginLoader>> loaderMap = new LinkedHashMap<>();
 
     public SimplePluginManager(KBCClient client) {
         this.client = client;
+        this.registerPluginLoader(f -> f.getName().endsWith(".jar"), this::createPluginLoader); // ensure overrides will apply
     }
 
     @Override
@@ -78,12 +80,16 @@ public class SimplePluginManager implements PluginManager {
         Plugin plugin;
         PluginLoader loader;
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
-        try {
-            loader = createPluginLoader(file, parent);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        loader = createPluginLoaderForFile(file, parent);
+        if (loader == null) {
+            throw new InvalidPluginException("There is no loader can load the file " + file);
         }
-        plugin = loader.loadPlugin(file);
+        try {
+            plugin = loader.loadPlugin(file);
+        } catch (InvalidPluginException e) {
+            closeLoaderIfPossible(loader);
+            throw e; // rethrow
+        }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
@@ -97,10 +103,10 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin[] loadPlugins(File directory) {
-        Collection<Plugin> plugins = new ArrayList<>();
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
-        File[] files = directory.listFiles(pathname -> pathname.getName().endsWith(".jar"));
+        File[] files = directory.listFiles(File::isFile);
         if (files != null) {
+            Collection<Plugin> plugins = new ArrayList<>(files.length);
             for (File file : files) {
                 Plugin plugin;
                 try {
@@ -109,16 +115,27 @@ public class SimplePluginManager implements PluginManager {
                     client.getCore().getLogger().error("Unable to load a plugin.", e);
                     continue;
                 }
-                Optional<Plugin> samePluginContainer = plugins.stream().filter(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName())).findFirst();
-                if (samePluginContainer.isPresent()) {
-                    client.getCore().getLogger().error(String.format("We have found the same plugin name \"%s\" from two plugin files: %s and %s, both of them won't be returned.", plugin.getDescription().getName(), plugin.getFile(), samePluginContainer.get().getFile()));
-                    plugins.remove(samePluginContainer.get());
-                } else {
+                boolean shouldAdd = true;
+                for (final Plugin p : plugins) {
+                    if (Objects.equals(p.getDescription().getName(), plugin.getDescription().getName())) {
+                        client.getCore().getLogger().error(
+                                "We have found the same plugin name \"{}\" from two plugin files:" +
+                                        " {} and {}, the plugin inside {} won't be returned.",
+                                plugin.getDescription().getName(),
+                                plugin.getFile(),
+                                p.getFile(),
+                                plugin.getFile()
+                        );
+                        shouldAdd = false;
+                    }
+                }
+                if (shouldAdd) {
                     plugins.add(plugin);
                 }
             }
+            return plugins.toArray(new Plugin[0]);
         }
-        return plugins.toArray(new Plugin[0]);
+        return new Plugin[0];
     }
 
     @Override
@@ -193,7 +210,25 @@ public class SimplePluginManager implements PluginManager {
         plugins.remove(plugin);
     }
 
-    protected PluginLoader createPluginLoader(File pluginFile, ClassLoader parent) throws Exception {
-        return new SimplePluginClassLoader(client, pluginFile, parent);
+    @Override
+    public void registerPluginLoader(Predicate<File> predicate, Function<ClassLoader, PluginLoader> provider) {
+        Validate.notNull(predicate, "Predicate cannot be null");
+        Validate.notNull(provider, "Provider cannot be null");
+        loaderMap.put(predicate, provider);
+    }
+
+    protected PluginLoader createPluginLoader(ClassLoader parent) {
+        return new SimplePluginClassLoader(client, parent);
+    }
+
+    protected @Nullable PluginLoader createPluginLoaderForFile(File file, ClassLoader parent) {
+        for (Map.Entry<Predicate<File>, Function<ClassLoader, PluginLoader>> entry : loaderMap.entrySet()) {
+            final Predicate<File> condition = entry.getKey();
+            if (condition.test(file)) {
+                final Function<ClassLoader, PluginLoader> provider = entry.getValue();
+                return provider.apply(parent);
+            }
+        }
+        return null;
     }
 }

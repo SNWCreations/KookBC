@@ -27,6 +27,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -45,7 +46,7 @@ public abstract class MessageImpl implements Message {
     protected final KBCClient client;
     private final String id;
     private final User user;
-    private final BaseComponent component;
+    private BaseComponent component;
     private final long timeStamp;
     private final Message quote;
 
@@ -118,6 +119,11 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public void setComponent(BaseComponent component) {
+        if (this.component != null) { // if this instance was constructed from Unsafe? we shouldn't check.
+            if (!component.getClass().isAssignableFrom(this.component.getClass())) {
+                throw new IllegalArgumentException("Incompatible component type");
+            }
+        }
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
@@ -127,5 +133,14 @@ public abstract class MessageImpl implements Message {
                 ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
                 body
         );
+    }
+
+    @Override
+    public void setComponent(String s) {
+        setComponent(new MarkdownComponent(s));
+    }
+
+    public void setComponent0(BaseComponent component) {
+        this.component = component;
     }
 }

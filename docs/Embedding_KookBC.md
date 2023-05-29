@@ -146,9 +146,16 @@ public class KBCClient {
 
 ### KBCClient#loop
 
-此方法会启动控制台并一直循环监听用户输入。
+此方法会启动控制台并一直循环监听用户输入，会阻塞当前线程。
 
-除非 KookBC 实例终止，或此方法执行过程中出现错误，此方法永远不会返回。
+除非此方法执行过程中出现错误，否则此方法永远不会返回。
+
+**注意!** 此方法返回不代表当前客户端终止。
+若要等待客户端结束运行，使用 KBCClient#waitUntilShutdown 方法。
+
+### KBCClient#waitUntilShutdown
+
+此方法使当前线程阻塞，直到当前客户端实例终止。
 
 ### KBCClient#loadAllPlugins
 

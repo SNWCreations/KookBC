@@ -19,6 +19,7 @@
 package snw.kookbc.util;
 
 import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginLoader;
 import snw.jkook.util.Validate;
 
 import java.io.ByteArrayOutputStream;
@@ -130,5 +131,25 @@ public class Util {
 
     public static boolean isStartByLaunch() {
         return Boolean.getBoolean("kookbc.launch");
+    }
+
+    public static void closeLoaderIfPossible(Plugin plugin) {
+        final ClassLoader classLoader = plugin.getClass().getClassLoader();
+        if (classLoader instanceof AutoCloseable) {
+            closeTheAutoCloseable((AutoCloseable) classLoader);
+        }
+    }
+
+    public static void closeLoaderIfPossible(PluginLoader loader) {
+        if (loader instanceof AutoCloseable) {
+            closeTheAutoCloseable((AutoCloseable) loader);
+        }
+    }
+
+    public static void closeTheAutoCloseable(AutoCloseable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+        }
     }
 }

@@ -86,7 +86,7 @@ public final class InternalPlugin implements Plugin {
 
     @Override
     public Logger getLogger() {
-        throw new UnsupportedOperationException("Not supported.");
+        return getCore().getLogger();
     }
 
     @Override

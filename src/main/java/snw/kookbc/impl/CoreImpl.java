@@ -99,7 +99,7 @@ public class CoreImpl implements Core {
 
     @Override
     public ConsoleCommandSender getConsoleCommandSender() {
-        return ConsoleCommandSenderImpl.INSTANCE;
+        return ConsoleCommandSenderImpl.get(client.getInternalPlugin());
     }
 
     @Override

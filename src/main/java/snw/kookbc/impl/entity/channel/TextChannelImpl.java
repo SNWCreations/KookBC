@@ -24,6 +24,7 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
@@ -40,9 +41,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
-public class TextChannelImpl extends ChannelImpl implements TextChannel {
+public class TextChannelImpl extends NonCategoryChannelImpl implements TextChannel {
     private int chatLimitTime;
     private String topic;
 
@@ -50,17 +51,6 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.chatLimitTime = chatLimitTime;
         this.topic = topic;
-    }
-
-    @Override
-    public String createInvite(int validSeconds, int validTimes) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("duration", validSeconds)
-                .put("setting_times", validTimes)
-                .build();
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return get(object, "url").getAsString();
     }
 
     @Override
@@ -106,17 +96,13 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
     @Override
     public String sendComponent(BaseComponent component, @Nullable TextChannelMessage quote, @Nullable User tempTarget) {
         Object[] result = MessageBuilder.serialize(component);
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("target_id", getId())
                 .put("type", result[0])
-                .put("content", result[1]);
-        if (quote != null) {
-            builder.put("quote", quote.getId());
-        }
-        if (tempTarget != null) {
-            builder.put("temp_target_id", tempTarget.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("content", result[1])
+                .putIfNotNull("quote", quote, Message::getId)
+                .putIfNotNull("temp_target_id", tempTarget, User::getId)
+                .build();
         try {
             return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
         } catch (BadResponseException e) {
@@ -149,4 +135,15 @@ public class TextChannelImpl extends ChannelImpl implements TextChannel {
         this.chatLimitTime = chatLimitTime;
     }
 
+    @Override
+    public void update(JsonObject data) {
+        synchronized (this) {
+            super.update(data);
+            int chatLimitTime = get(data, "slow_mode").getAsInt();
+            String topic = get(data, "topic").getAsString();
+
+            this.chatLimitTime = chatLimitTime;
+            this.topic = topic;
+        }
+    }
 }

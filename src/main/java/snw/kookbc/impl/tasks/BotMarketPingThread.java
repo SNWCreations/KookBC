@@ -24,7 +24,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.Connector;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static snw.kookbc.util.GsonUtil.*;
@@ -63,6 +65,13 @@ public class BotMarketPingThread extends Thread {
             //noinspection BusyWait
             Thread.sleep(1000L * 60 * 5);
             if (!client.isRunning()) return;
+            if (
+                    !Optional.ofNullable(client.getConnector())
+                            .map(Connector::isConnected)
+                            .orElse(true) // in Webhook Mode?
+            ) {
+                continue;
+            }
             client.getCore().getLogger().debug("PING BotMarket...");
             try (Response response = networkClient.newCall(request).execute()) {
                 if (response.body() != null) {

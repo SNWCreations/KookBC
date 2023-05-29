@@ -18,25 +18,25 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
-import snw.jkook.entity.Invitation;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.PageIterator;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public abstract class ChannelImpl implements Channel {
+import static snw.kookbc.util.GsonUtil.get;
+
+public abstract class ChannelImpl implements Channel, Updatable {
     protected final KBCClient client;
     private final String id;
     private final User master;
@@ -44,24 +44,19 @@ public abstract class ChannelImpl implements Channel {
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
-    private Category parent;
     private String name;
     private int level;
 
-    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
         this.id = id;
         this.master = master;
         this.guild = guild;
         this.permSync = permSync;
-        this.parent = parent;
         this.name = name;
         this.rpo = rpo;
         this.upo = upo;
         this.level = level;
-        if (parent != null) {
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
     }
 
     @Override
@@ -83,37 +78,11 @@ public abstract class ChannelImpl implements Channel {
         this.permSync = permSync;
     }
 
-    @Override
-    public @Nullable Category getParent() {
-        return parent;
-    }
-
-    @Override
-    public void setParent(Category parent) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("parent_id", (parent == null) ? 0 : parent.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setParent0(parent);
-    }
-
-    public void setParent0(Category parent) {
-        if (this.parent != null) {
-            ((CategoryImpl) this.parent).getChannels0().remove(this);
-        }
-        this.parent = parent;
-        if (parent != null) { // if this is on the top level?
-            ((CategoryImpl) parent).getChannels0().add(this);
-        }
-    }
 
     @Override
     public void delete() {
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
-                new MapBuilder()
-                        .put("channel_id", getId())
-                        .build()
+                Collections.singletonMap("channel_id", getId())
         );
     }
 
@@ -162,6 +131,111 @@ public abstract class ChannelImpl implements Channel {
     }
 
     @Override
+    public void addPermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void removePermission(User user, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        UserPermissionOverwrite o = getUserPermissionOverwriteByUser(user);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(user, origin, deny);
+    }
+
+    @Override
+    public void addPermission(Role role, Permission... perms) {
+        addPermission(role.getId(), perms);
+    }
+
+    @Override
+    public void removePermission(Role role, Permission... perms) {
+        removePermission(role.getId(), perms);
+    }
+
+    @Override
+    public void addPermission(int roleId, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.sum(origin, perms);
+        updatePermission(roleId, origin, deny);
+    }
+
+    @Override
+    public void removePermission(int roleId, Permission... perms) {
+        if (perms.length == 0) {
+            return;
+        }
+        int origin = 0;
+        int deny = 0;
+        RolePermissionOverwrite o = getRolePermissionOverwriteByRole(roleId);
+        if (o != null) {
+            origin = o.getRawAllow();
+            deny = o.getRawDeny();
+        }
+        origin = Permission.removeFrom(origin, perms);
+        updatePermission(roleId, origin, deny);
+    }
+
+    @Nullable
+    public UserPermissionOverwrite getUserPermissionOverwriteByUser(User user) {
+        for (UserPermissionOverwrite o : getOverwrittenUserPermissions()) {
+            if (o.getUser() == user) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(Role role) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == role.getId()) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    @Nullable
+    public RolePermissionOverwrite getRolePermissionOverwriteByRole(int roleId) {
+        for (RolePermissionOverwrite o : getOverwrittenRolePermissions()) {
+            if (o.getRoleId() == roleId) {
+                return o;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void deletePermission(Role role) {
         Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
@@ -179,11 +253,6 @@ public abstract class ChannelImpl implements Channel {
                 .put("value", String.valueOf(user.getId()))
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_ROLE_DELETE.toFullURL(), body);
-    }
-
-    @Override
-    public PageIterator<Set<Invitation>> getInvitations() {
-        return new ChannelInvitationIterator(client, this);
     }
 
     @Override
@@ -219,6 +288,10 @@ public abstract class ChannelImpl implements Channel {
         return Collections.unmodifiableCollection(upo);
     }
 
+    public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions0() {
+        return upo;
+    }
+
     public void setOverwrittenUserPermissions(Collection<UserPermissionOverwrite> upo) {
         this.upo = upo;
     }
@@ -226,5 +299,46 @@ public abstract class ChannelImpl implements Channel {
     @Override
     public User getMaster() {
         return master;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update channel by using different data");
+        synchronized (this) {
+            // basic information
+            String name = get(data, "name").getAsString();
+            boolean isPermSync = get(data, "permission_sync").getAsInt() != 0;
+            // rpo parse
+            Collection<RolePermissionOverwrite> rpo = new ArrayList<>();
+            for (JsonElement element : get(data, "permission_overwrites").getAsJsonArray()) {
+                JsonObject orpo = element.getAsJsonObject();
+                rpo.add(
+                        new RolePermissionOverwrite(
+                                orpo.get("role_id").getAsInt(),
+                                orpo.get("allow").getAsInt(),
+                                orpo.get("deny").getAsInt()
+                        )
+                );
+            }
+
+            // upo parse
+            Collection<UserPermissionOverwrite> upo = new ArrayList<>();
+            for (JsonElement element : get(data, "permission_users").getAsJsonArray()) {
+                JsonObject oupo = element.getAsJsonObject();
+                JsonObject rawUser = oupo.getAsJsonObject("user");
+                upo.add(
+                        new UserPermissionOverwrite(
+                                client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
+                                oupo.get("allow").getAsInt(),
+                                oupo.get("deny").getAsInt()
+                        )
+                );
+            }
+
+            this.name = name;
+            this.permSync = isPermSync;
+            this.rpo = rpo;
+            this.upo = upo;
+        }
     }
 }
