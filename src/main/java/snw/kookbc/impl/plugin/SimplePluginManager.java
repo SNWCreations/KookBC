@@ -96,6 +96,7 @@ public class SimplePluginManager implements PluginManager {
             plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", client.getCore().getAPIVersion(), description.getApiVersion());
         }
         if (diff == 1) {
+            closeLoaderIfPossible(loader); // plugin won't be returned, so the loader should be closed to prevent resource leak
             throw new InvalidPluginException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
         }
         return plugin;
