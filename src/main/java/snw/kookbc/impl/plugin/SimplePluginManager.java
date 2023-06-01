@@ -71,6 +71,10 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
+        return loadPlugin0(file, true);
+    }
+
+    protected Plugin loadPlugin0(File file, boolean failIfNoLoader) throws InvalidPluginException {
         // We won't close the ClassLoader, because Plugin#getResource need the ClassLoader to keep open.
         // Otherwise, Plugin#getResource will not work correctly.
         // If you want to reload a plugin, or fully uninstall a plugin, close the ClassLoader manually.
@@ -88,7 +92,10 @@ public class SimplePluginManager implements PluginManager {
             plugin = loader.loadPlugin(file);
         } catch (InvalidPluginException e) {
             closeLoaderIfPossible(loader);
-            throw e; // rethrow
+            if (failIfNoLoader) {
+                throw e;
+            } // rethrow if needed
+            return null;
         }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
@@ -111,10 +118,13 @@ public class SimplePluginManager implements PluginManager {
             for (File file : files) {
                 Plugin plugin;
                 try {
-                    plugin = loadPlugin(file);
+                    plugin = loadPlugin0(file, false);
                 } catch (Throwable e) {
                     client.getCore().getLogger().error("Unable to load a plugin.", e);
                     continue;
+                }
+                if (plugin == null) {
+                    continue; // no suitable loader can be created, not a valid plugin file.
                 }
                 boolean shouldAdd = true;
                 for (final Plugin p : plugins) {
