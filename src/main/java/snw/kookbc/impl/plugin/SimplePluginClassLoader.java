@@ -26,7 +26,6 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
@@ -114,9 +113,6 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<? extends Plugin> lookForMainClass(String mainClassName, File file) throws Exception {
-        if (getParent() instanceof LaunchClassLoader) {
-            ((LaunchClassLoader) getParent()).addURL(file.toURI().toURL());
-        }
         initMixins(file);
         return super.lookForMainClass(mainClassName, file);
     }
