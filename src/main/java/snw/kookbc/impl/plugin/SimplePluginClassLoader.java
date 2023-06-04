@@ -31,7 +31,6 @@ import snw.kookbc.util.Util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -95,10 +94,18 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 "init",
                 File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
         );
-        String clazzURI = cls.getProtectionDomain().getCodeSource().getLocation().toURI().getRawSchemeSpecificPart();
-        int endIndex = clazzURI.length() - (cls.getName().replace(".", "/") + ".class").length() - 2;
-        clazzURI = clazzURI.substring(0, endIndex);
-        File pluginFile = new File(new URI(clazzURI));
+        File pluginFile;
+        final URL location = cls.getProtectionDomain().getCodeSource().getLocation();
+        if (location.getFile().endsWith(".class")) {
+            if (!location.getFile().contains("!/")) {
+                throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: " + location + ", maybe it is a single class file?");
+            }
+            String url = location.toString();
+            url = url.substring(0, url.indexOf("!/"));
+            pluginFile = new File(new URL(url).toURI());
+        } else {
+            pluginFile = new File(location.toURI());
+        }
         File dataFolder = new File(client.getPluginsFolder(), description.getName());
         initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
