@@ -242,4 +242,8 @@ public class SimplePluginManager implements PluginManager {
         }
         return null;
     }
+
+    public Map<Predicate<File>, Function<ClassLoader, PluginLoader>> getLoaderProviders() {
+        return Collections.unmodifiableMap(loaderMap);
+    }
 }

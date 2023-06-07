@@ -24,6 +24,7 @@ import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
+import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -41,6 +42,7 @@ import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
+import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
@@ -217,12 +219,19 @@ public class KBCClient {
         this.plugins = plugins;
     }
 
+    // just for backward compatibility.
     private void enablePlugins() {
+        enablePlugins(this.plugins);
+    }
+
+    private void enablePlugins(@Nullable List<Plugin> plugins) {
         if (plugins == null) { // no plugins? do nothing!
             // if the plugins was not loaded, we can't continue
             // the loadPlugins method is protected, NOT private, so it is possible to be empty!
             return;
         }
+
+        int beforeLoadProviderCount = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
 
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
@@ -266,6 +275,32 @@ public class KBCClient {
             }
             // end onEnable
         }
+
+        int nowProviderCount = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+
+        if (nowProviderCount > beforeLoadProviderCount) { // new loader providers added
+            @SuppressWarnings("DataFlowIssue")
+            List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
+            for (Plugin plugin : plugins) {
+                newIncomingFiles.removeIf(i -> i.equals(plugin.getFile())); // remove already loaded file
+            }
+
+            if (!newIncomingFiles.isEmpty()) {
+                List<Plugin> newPlugins = new ArrayList<>();
+                for (File fileToLoad : newIncomingFiles) {
+                    final Plugin plugin;
+                    try {
+                        plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
+                    } catch (InvalidPluginException e) {
+                        continue;
+                    }
+                    newPlugins.add(plugin);
+                }
+                enablePlugins(newPlugins); // recursive call
+            }
+        }
+        // why not !=
+        // If someone use the reflect API to remove the provider? It's strange but possible.
     }
 
     protected void startNetwork() {
