@@ -120,7 +120,7 @@ public class SimplePluginManager implements PluginManager {
                 try {
                     plugin = loadPlugin0(file, false);
                 } catch (Throwable e) {
-                    client.getCore().getLogger().error("Unable to load a plugin.", e);
+                    client.getCore().getLogger().error("Unable to load a plugin in the provided file {}", file, e);
                     continue;
                 }
                 if (plugin == null) {
