@@ -302,6 +302,7 @@ public class KBCClient {
                 continue;
             }
             if (!plugin.isEnabled()) {
+                closeLoaderIfPossible(plugin);
                 iterator.remove();
             } else {
                 // Add the plugin into the known list to ensure the dependency system will work correctly
