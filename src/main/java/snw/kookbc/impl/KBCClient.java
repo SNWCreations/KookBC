@@ -219,9 +219,45 @@ public class KBCClient {
         this.plugins = plugins;
     }
 
-    // just for backward compatibility.
     private void enablePlugins() {
-        enablePlugins(this.plugins);
+        @SuppressWarnings("DataFlowIssue")
+        List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
+
+        for (Plugin plugin : getCore().getPluginManager().getPlugins()) {
+            newIncomingFiles.removeIf(i -> i.equals(plugin.getFile())); // remove already loaded file
+        }
+
+        int before = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+
+        List<Plugin> pluginsToEnable = this.plugins;
+
+        boolean shouldContinue = false;
+
+        do {
+            enablePlugins(pluginsToEnable);
+            int after = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+            if (after > before) { // new loader providers added
+                if (!newIncomingFiles.isEmpty()) {
+                    List<Plugin> newPlugins = new ArrayList<>();
+                    for (Iterator<File> iterator = newIncomingFiles.iterator(); iterator.hasNext(); ) {
+                        File fileToLoad = iterator.next();
+                        final Plugin plugin;
+                        try {
+                            plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
+                        } catch (InvalidPluginException e) {
+                            continue; // don't remove, maybe it will be loaded in next loop?
+                        }
+                        newPlugins.add(plugin);
+                        iterator.remove(); // prevent next loop load this again
+                    }
+                    if (!newPlugins.isEmpty()) {
+                        pluginsToEnable = newPlugins;
+                        shouldContinue = true;
+                    }
+                }
+            }
+            before = after;
+        } while (shouldContinue);
     }
 
     private void enablePlugins(@Nullable List<Plugin> plugins) {
@@ -230,8 +266,6 @@ public class KBCClient {
             // the loadPlugins method is protected, NOT private, so it is possible to be empty!
             return;
         }
-
-        int beforeLoadProviderCount = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
 
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
@@ -275,32 +309,6 @@ public class KBCClient {
             }
             // end onEnable
         }
-
-        int nowProviderCount = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
-
-        if (nowProviderCount > beforeLoadProviderCount) { // new loader providers added
-            @SuppressWarnings("DataFlowIssue")
-            List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
-            for (Plugin plugin : plugins) {
-                newIncomingFiles.removeIf(i -> i.equals(plugin.getFile())); // remove already loaded file
-            }
-
-            if (!newIncomingFiles.isEmpty()) {
-                List<Plugin> newPlugins = new ArrayList<>();
-                for (File fileToLoad : newIncomingFiles) {
-                    final Plugin plugin;
-                    try {
-                        plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
-                    } catch (InvalidPluginException e) {
-                        continue;
-                    }
-                    newPlugins.add(plugin);
-                }
-                enablePlugins(newPlugins); // recursive call
-            }
-        }
-        // why not !=
-        // If someone use the reflect API to remove the provider? It's strange but possible.
     }
 
     protected void startNetwork() {
