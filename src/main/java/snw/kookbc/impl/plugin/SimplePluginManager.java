@@ -28,9 +28,11 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.jar.JarFile;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
@@ -42,7 +44,15 @@ public class SimplePluginManager implements PluginManager {
 
     public SimplePluginManager(KBCClient client) {
         this.client = client;
-        this.registerPluginLoader(f -> f.getName().endsWith(".jar"), this::createPluginLoader); // ensure overrides will apply
+        this.registerPluginLoader(f -> {
+            if (!f.getName().endsWith(".jar"))
+                return false;
+            try (JarFile jarFile = new JarFile(f)) {
+                return jarFile.getJarEntry("plugin.yml") != null;
+            } catch (IOException e) {
+                return false;
+            }
+        }, this::createPluginLoader); // ensure overrides will apply
     }
 
     @Override
@@ -86,16 +96,16 @@ public class SimplePluginManager implements PluginManager {
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
         loader = createPluginLoaderForFile(file, parent);
         if (loader == null) {
-            throw new InvalidPluginException("There is no loader can load the file " + file);
+            if (failIfNoLoader) {
+                throw new InvalidPluginException("There is no loader can load the file " + file);
+            }
+            return null;
         }
         try {
             plugin = loader.loadPlugin(file);
         } catch (InvalidPluginException e) {
             closeLoaderIfPossible(loader);
-            if (failIfNoLoader) {
-                throw e;
-            } // rethrow if needed
-            return null;
+            throw e; // loader created, but plugin not valid
         }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());

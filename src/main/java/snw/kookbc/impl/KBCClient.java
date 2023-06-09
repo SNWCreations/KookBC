@@ -223,21 +223,29 @@ public class KBCClient {
         @SuppressWarnings("DataFlowIssue")
         List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
 
-        for (Plugin plugin : getCore().getPluginManager().getPlugins()) {
-            newIncomingFiles.removeIf(i -> i.equals(plugin.getFile())); // remove already loaded file
+        getCore().getLogger().debug("Before filtering: {}", newIncomingFiles);
+        getCore().getLogger().debug("Current known plugins: {}", this.plugins);
+        for (Plugin plugin : this.plugins) {
+            getCore().getLogger().debug("Checking file: {}", plugin.getFile());
+            newIncomingFiles.removeIf(i -> i.getAbsolutePath().equals(plugin.getFile().getAbsolutePath())); // remove already loaded file
         }
+        getCore().getLogger().debug("After filtering: {}", newIncomingFiles);
 
         int before = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
 
         List<Plugin> pluginsToEnable = this.plugins;
+        getCore().getLogger().debug("Plugins to be enabled: {}", pluginsToEnable);
 
-        boolean shouldContinue = false;
+        boolean shouldContinue;
 
         do {
+            shouldContinue = false;
             enablePlugins(pluginsToEnable);
             int after = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
             if (after > before) { // new loader providers added
+                getCore().getLogger().debug("Found new plugin loader providers, trying to load more plugins");
                 if (!newIncomingFiles.isEmpty()) {
+                    getCore().getLogger().debug("Files to be loaded: {}", newIncomingFiles);
                     List<Plugin> newPlugins = new ArrayList<>();
                     for (Iterator<File> iterator = newIncomingFiles.iterator(); iterator.hasNext(); ) {
                         File fileToLoad = iterator.next();
@@ -245,11 +253,14 @@ public class KBCClient {
                         try {
                             plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
                         } catch (InvalidPluginException e) {
+                            getCore().getLogger().debug("Exception appeared", e);
                             continue; // don't remove, maybe it will be loaded in next loop?
                         }
+                        getCore().getLogger().debug("Successfully loaded {} from file {}", plugin, fileToLoad);
                         newPlugins.add(plugin);
                         iterator.remove(); // prevent next loop load this again
                     }
+                    getCore().getLogger().debug("New plugins to be enabled in next round: {}", newPlugins);
                     if (!newPlugins.isEmpty()) {
                         pluginsToEnable = newPlugins;
                         shouldContinue = true;
