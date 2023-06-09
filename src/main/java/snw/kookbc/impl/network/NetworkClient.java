@@ -93,6 +93,7 @@ public class NetworkClient {
 
             final String body = Objects.requireNonNull(response.body()).string();
             if (!response.isSuccessful()) {
+                kbcClient.getCore().getLogger().debug("Request failed. Full response object: {}", response);
                 throw new BadResponseException(response.code(), body);
             }
             return body;
