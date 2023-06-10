@@ -85,6 +85,10 @@ public class EventManagerImpl implements EventManager {
         msa.unregister(listener);
     }
 
+    public boolean isSubscribed(Class<? extends Event> type) {
+        return bus.hasSubscribers(type);
+    }
+
     private List<Listener> getListeners(Plugin plugin) {
         return listeners.computeIfAbsent(plugin, p -> new LinkedList<>());
     }

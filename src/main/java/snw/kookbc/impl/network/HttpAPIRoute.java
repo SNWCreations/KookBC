@@ -87,6 +87,7 @@ public enum HttpAPIRoute {
     USER_CHAT_MESSAGE_REACTION_LIST("/v3/direct-message/reaction-list"),
     USER_CHAT_MESSAGE_REACTION_ADD("/v3/direct-message/add-reaction"),
     USER_CHAT_MESSAGE_REACTION_REMOVE("/v3/direct-message/delete-reaction"),
+    USER_CHAT_MESSAGE_INFO("/v3/direct-message/view"),
 
     // ------ GATEWAY ------
 

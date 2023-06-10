@@ -20,65 +20,53 @@ package snw.kookbc.impl.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 import snw.jkook.Core;
 import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
-import snw.jkook.util.Validate;
-import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
-import static snw.kookbc.util.Util.inputStreamToByteArray;
 
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
-    private static final String CLASSLOADER_INCLUSION_KEY = "KBC_CLSLDR_INCLUDE";
+    private final Map<String, Class<?>> cache = new ConcurrentHashMap<>();
     private final KBCClient client;
     private PluginDescription description;
-    private final File file;
 
-    public SimplePluginClassLoader(KBCClient client, File file, ClassLoader parent) throws MalformedURLException {
-        super(new URL[]{file.toURI().toURL()}, parent);
-        this.file = file;
+    public SimplePluginClassLoader(KBCClient client, ClassLoader parent) {
+        super(new URL[]{}, parent);
         this.client = client;
-        if (parent instanceof LaunchClassLoader) {
-            ((LaunchClassLoader) parent).addURL(file.toURI().toURL());
-        }
         INSTANCES.add(this);
     }
 
-    private void initMixins() {
-        Map<String, File> map = new HashMap<>();
+    private void initMixins(File file) {
+        Set<String> confNameSet = new HashSet<>();
         try (JarFile jarFile = new JarFile(file)) {
             Enumeration<JarEntry> enumeration = jarFile.entries();
             while (enumeration.hasMoreElements()) {
                 JarEntry jarEntry = enumeration.nextElement();
                 String name = jarEntry.getName();
                 if (name.startsWith("mixin.") && name.endsWith(".json")) {
-                    map.put(name, file);
+                    confNameSet.add(name);
                 }
             }
         } catch (IOException e) {
             throw new InvalidPluginException(e);
         }
-        if (!map.isEmpty()) {
+        if (!confNameSet.isEmpty()) {
             if (!Util.isStartByLaunch()) {
                 client.getCore().getLogger().warn(
                         "[{}] {} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
@@ -89,8 +77,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 return;
             }
             try {
-                for (Map.Entry<String, File> entry : map.entrySet()) {
-                    String name = entry.getKey();
+                for (String name : confNameSet) {
                     try (JarFile jarFile = new JarFile(file)) {
                         ZipEntry zipEntry = jarFile.getEntry(name);
                         client.getPluginMixinConfigManager().add(description, name, jarFile.getInputStream(zipEntry));
@@ -104,17 +91,29 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
-        File dataFolder = new File(client.getPluginsFolder(), description.getName());
         T plugin = cls.getDeclaredConstructor().newInstance();
         Method initMethod = cls.getMethod(
                 "init",
                 File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
         );
+        File pluginFile;
+        final URL location = cls.getProtectionDomain().getCodeSource().getLocation();
+        if (location.getFile().endsWith(".class")) {
+            if (!location.getFile().contains("!/")) {
+                throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: " + location + ", maybe it is a single class file?");
+            }
+            String url = location.toString();
+            url = url.substring(0, url.indexOf("!/"));
+            pluginFile = new File(new URL(url).toURI());
+        } else {
+            pluginFile = new File(location.toURI());
+        }
+        File dataFolder = new File(client.getPluginsFolder(), description.getName());
         initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
                 dataFolder,
                 description,
-                file,
+                pluginFile,
                 new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls)),
                 client.getCore()
         );
@@ -122,83 +121,9 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     @Override
-    protected Plugin loadPlugin0(File file) throws Exception {
-        Validate.isTrue(file.exists(), "The Plugin file does not exists.");
-        Validate.isTrue(file.isFile(), "The Plugin file is invalid.");
-        Validate.isTrue(file.canRead(), "The Plugin file does not accessible. (We can't read it!)");
-
-        // load the given file as JarFile
-        try (final JarFile jar = new JarFile(file)) { // try-with-resources!
-            // try to find plugin.yml
-            JarEntry entry = jar.getJarEntry("plugin.yml");
-            if (entry == null) {
-                throw new IllegalArgumentException("We cannot find plugin.yml ."); // plugin.yml is not found, so we don't know where is the main class
-            }
-            // or we should read the plugin.yml and parse it to get information
-            final InputStream plugin = jar.getInputStream(entry);
-            final Yaml parser = new Yaml();
-
-            try {
-                final Map<String, Object> ymlContent = parser.load(plugin);
-                // noinspection unchecked
-                description = new PluginDescription(
-                        Objects.requireNonNull(ymlContent.get("name"), "name is missing").toString(),
-                        Objects.requireNonNull(ymlContent.get("version"), "version is missing").toString(),
-                        Objects.requireNonNull(ymlContent.get("api-version"), "api-version is missing").toString(),
-                        ymlContent.getOrDefault("description", "").toString(),
-                        ymlContent.getOrDefault("website", "").toString(),
-                        Objects.requireNonNull(ymlContent.get("main"), "main is missing").toString(),
-                        (List<String>) ymlContent.getOrDefault("authors", Collections.emptyList()),
-                        (List<String>) ymlContent.getOrDefault("depend", Collections.emptyList()),
-                        (List<String>) ymlContent.getOrDefault("softdepend", Collections.emptyList())
-                );
-            } catch (ClassCastException e) {
-                throw new IllegalArgumentException("Invalid plugin.yml", e);
-            }
-
-            initMixins(); // Mixin support - Init mixins
-
-            // if the class has already loaded, a conflict has been found.
-            // so many things can cause the conflict, such as a class with the same binary name, or the Plugin author trying to use internal classes (e.g. java.lang.Object)
-            if (findLoadedClass(description.getMainClassName()) != null) {
-                throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
-            }
-
-            loadClassLoaderInclusion(jar);
-
-            return loadPlugin1(file, description);
-        }
-    }
-
-    protected void loadClassLoaderInclusion(JarFile jar) {
-        if (LaunchMain.classLoader == null) {
-            return; // impossible to add!
-        }
-        JarEntry includeFileKey = jar.getJarEntry(CLASSLOADER_INCLUSION_KEY);
-        if (includeFileKey != null) {
-            String rule;
-            try {
-                rule = new String(inputStreamToByteArray(jar.getInputStream(includeFileKey)));
-            } catch (IOException e) {
-                client.getCore().getLogger().warn("Cannot load class loader inclusion rule from input file {}", jar.getName());
-                return;
-            }
-            for (String s : rule.split("\n")) {
-                LaunchMain.classLoader.addClassLoaderInclusion(s);
-            }
-        }
-    }
-
-    @Override
-    protected Plugin loadPlugin1(File file, PluginDescription description) throws Exception {
-        // No check, because the Exception will be handled by the caller
-        Class<? extends Plugin> main = loadClass(description.getMainClassName(), true).asSubclass(Plugin.class);
-
-        if (main.getDeclaredConstructors().length != 1) {
-            throw new IllegalAccessException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
-        }
-
-        return construct(main, description);
+    protected Class<? extends Plugin> lookForMainClass(String mainClassName, File file) throws Exception {
+        initMixins(file);
+        return super.lookForMainClass(mainClassName, file);
     }
 
     @Override
@@ -207,14 +132,25 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
+        if (cache.containsKey(name)) {
+            return cache.get(name);
+        }
         try {
-            return super.findClass(name);
+            Class<?> result = super.findClass(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         } catch (ClassNotFoundException ignored) {
         }
 
         // Try to load class from other known instances if needed
         if (!dontCallOther) {
-            return loadFromOther(name);
+            Class<?> result =  loadFromOther(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         }
         throw new ClassNotFoundException(name);
     }

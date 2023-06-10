@@ -29,6 +29,7 @@ import snw.kookbc.impl.network.exceptions.BadResponseException;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 
 import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
@@ -83,26 +84,19 @@ public class NetworkClient {
     public String call(Request request) {
         Bucket bucket = getBucket(request);
         bucket.check();
-        try (Response res = client.newCall(request).execute()) {
+        try (Response response = client.newCall(request).execute()) {
+            // region Bucket process
+            int remaining = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Remaining")));
+            int reset = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Reset")));
+            bucket.update(remaining, reset);
+            // endregion
 
-            // region Bucket post process
-            if (bucket.availableTimes.get() == -1) {
-                bucket.availableTimes.set(Integer.parseInt(res.header("X-Rate-Limit-Remaining")));
-            } else {
-                int limit = Integer.parseInt(res.header("X-Rate-Limit-Limit"));
-                int reset = Integer.parseInt(res.header("X-Rate-Limit-Reset"));
-                if (reset == 0) {
-                    bucket.availableTimes.set(limit);
-                } else {
-                    bucket.scheduleUpdateAvailableTimes(limit, reset);
-                }
-
+            final String body = Objects.requireNonNull(response.body()).string();
+            if (!response.isSuccessful()) {
+                kbcClient.getCore().getLogger().debug("Request failed. Full response object: {}", response);
+                throw new BadResponseException(response.code(), body);
             }
-
-            if (!res.isSuccessful()) {
-                throw new BadResponseException(res.code(), "UNKNOWN");
-            }
-            return res.body() != null ? res.body().string() : "";
+            return body;
         } catch (IOException e) {
             throw new RuntimeException("Unexpected IOException when we attempting to call request.", e);
         }

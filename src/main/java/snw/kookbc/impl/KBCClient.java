@@ -24,6 +24,7 @@ import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
+import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -35,14 +36,15 @@ import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
-import snw.kookbc.impl.entity.builder.EntityUpdater;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.event.EventFactory;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
+import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
@@ -58,6 +60,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
+
 // The client representation.
 public class KBCClient {
     private volatile boolean running = true;
@@ -66,7 +70,7 @@ public class KBCClient {
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
     private final MessageBuilder msgBuilder;
-    private final EntityUpdater entityUpdater;
+    private final EventFactory eventFactory;
     private final ConfigurationSection config;
     private final File pluginsFolder;
     private final Session session = new Session(null);
@@ -90,7 +94,7 @@ public class KBCClient {
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
             @Nullable MessageBuilder msgBuilder,
-            @Nullable EntityUpdater entityUpdater
+            @Nullable EventFactory eventFactory
     ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -111,10 +115,10 @@ public class KBCClient {
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
-        this.entityUpdater = Optional.ofNullable(entityUpdater).orElseGet(() -> new EntityUpdater(this));
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
+        this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> new EventFactory(this));
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -214,6 +218,68 @@ public class KBCClient {
                                 ? 1 : -1
         );
 
+        this.plugins = plugins;
+    }
+
+    private void enablePlugins() {
+        @SuppressWarnings("DataFlowIssue")
+        List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
+
+        getCore().getLogger().debug("Before filtering: {}", newIncomingFiles);
+        getCore().getLogger().debug("Current known plugins: {}", this.plugins);
+        for (Plugin plugin : this.plugins) {
+            getCore().getLogger().debug("Checking file: {}", plugin.getFile());
+            newIncomingFiles.removeIf(i -> i.getAbsolutePath().equals(plugin.getFile().getAbsolutePath())); // remove already loaded file
+        }
+        getCore().getLogger().debug("After filtering: {}", newIncomingFiles);
+
+        int before = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+
+        List<Plugin> pluginsToEnable = this.plugins;
+        getCore().getLogger().debug("Plugins to be enabled: {}", pluginsToEnable);
+
+        boolean shouldContinue;
+
+        do {
+            shouldContinue = false;
+            enablePlugins(pluginsToEnable);
+            int after = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+            if (after > before) { // new loader providers added
+                getCore().getLogger().debug("Found new plugin loader providers, trying to load more plugins");
+                if (!newIncomingFiles.isEmpty()) {
+                    getCore().getLogger().debug("Files to be loaded: {}", newIncomingFiles);
+                    List<Plugin> newPlugins = new ArrayList<>();
+                    for (Iterator<File> iterator = newIncomingFiles.iterator(); iterator.hasNext(); ) {
+                        File fileToLoad = iterator.next();
+                        final Plugin plugin;
+                        try {
+                            plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
+                        } catch (InvalidPluginException e) {
+                            getCore().getLogger().debug("Exception appeared", e);
+                            continue; // don't remove, maybe it will be loaded in next loop?
+                        }
+                        getCore().getLogger().debug("Successfully loaded {} from file {}", plugin, fileToLoad);
+                        newPlugins.add(plugin);
+                        iterator.remove(); // prevent next loop load this again
+                    }
+                    getCore().getLogger().debug("New plugins to be enabled in next round: {}", newPlugins);
+                    if (!newPlugins.isEmpty()) {
+                        pluginsToEnable = newPlugins;
+                        shouldContinue = true;
+                    }
+                }
+            }
+            before = after;
+        } while (shouldContinue);
+    }
+
+    private void enablePlugins(@Nullable List<Plugin> plugins) {
+        if (plugins == null) { // no plugins? do nothing!
+            // if the plugins was not loaded, we can't continue
+            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
+            return;
+        }
+
         // we must call onLoad() first.
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
@@ -229,15 +295,7 @@ public class KBCClient {
             }
             // end onLoad
         }
-        this.plugins = plugins;
-    }
 
-    private void enablePlugins() {
-        if (plugins == null) { // no plugins? do nothing!
-            // if the plugins was not loaded, we can't continue
-            // the loadPlugins method is protected, NOT private, so it is possible to be empty!
-            return;
-        }
         for (Iterator<Plugin> iterator = plugins.iterator(); iterator.hasNext(); ) {
             Plugin plugin = iterator.next();
 
@@ -252,10 +310,12 @@ public class KBCClient {
                 getCore().getPluginManager().enablePlugin(plugin);
             } catch (UnknownDependencyException e) {
                 getCore().getLogger().error("Unable to enable plugin {} because unknown dependency detected.", plugin.getDescription().getName(), e);
+                closeLoaderIfPossible(plugin);
                 iterator.remove();
                 continue;
             }
             if (!plugin.isEnabled()) {
+                closeLoaderIfPossible(plugin);
                 iterator.remove();
             } else {
                 // Add the plugin into the known list to ensure the dependency system will work correctly
@@ -377,10 +437,6 @@ public class KBCClient {
         return msgBuilder;
     }
 
-    public EntityUpdater getEntityUpdater() {
-        return entityUpdater;
-    }
-
     public Connector getConnector() {
         return connector;
     }
@@ -399,6 +455,10 @@ public class KBCClient {
 
     public PluginMixinConfigManager getPluginMixinConfigManager() {
         return pluginMixinConfigManager;
+    }
+
+    public EventFactory getEventFactory() {
+        return eventFactory;
     }
 
     protected void registerInternal() {

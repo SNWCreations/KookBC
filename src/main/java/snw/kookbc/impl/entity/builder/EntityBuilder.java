@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Category;
@@ -31,9 +30,10 @@ import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
 import static snw.kookbc.util.GsonUtil.get;
 
 // The class for building entities.
@@ -107,31 +107,10 @@ public class EntityBuilder {
         int level = get(object, "level").getAsInt();
 
         // rpo parse
-        Collection<Channel.RolePermissionOverwrite> rpo = new ArrayList<>();
-        for (JsonElement element : get(object, "permission_overwrites").getAsJsonArray()) {
-            JsonObject orpo = element.getAsJsonObject();
-            rpo.add(
-                    new Channel.RolePermissionOverwrite(
-                            orpo.get("role_id").getAsInt(),
-                            orpo.get("allow").getAsInt(),
-                            orpo.get("deny").getAsInt()
-                    )
-            );
-        }
+        Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(object);
 
         // upo parse
-        Collection<Channel.UserPermissionOverwrite> upo = new ArrayList<>();
-        for (JsonElement element : get(object, "permission_users").getAsJsonArray()) {
-            JsonObject oupo = element.getAsJsonObject();
-            JsonObject rawUser = oupo.getAsJsonObject("user");
-            upo.add(
-                    new Channel.UserPermissionOverwrite(
-                            client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
-                            oupo.get("allow").getAsInt(),
-                            oupo.get("deny").getAsInt()
-                    )
-            );
-        }
+        Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, object);
 
         if (get(object, "is_category").getAsBoolean()) {
             return new CategoryImpl(

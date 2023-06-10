@@ -24,7 +24,7 @@ import com.google.gson.JsonObject;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.InvitationImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -34,9 +34,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChannelInvitationIterator extends PageIteratorImpl<Set<Invitation>> {
-    private final Channel channel;
+    private final NonCategoryChannel channel;
 
-    public ChannelInvitationIterator(KBCClient client, Channel channel) {
+    public ChannelInvitationIterator(KBCClient client, NonCategoryChannel channel) {
         super(client);
         this.channel = channel;
     }

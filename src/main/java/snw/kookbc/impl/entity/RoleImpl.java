@@ -18,16 +18,21 @@
 
 package snw.kookbc.impl.entity;
 
+import com.google.gson.JsonObject;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Map;
 
-public class RoleImpl implements Role {
+import static snw.kookbc.util.GsonUtil.get;
+
+public class RoleImpl implements Role, Updatable {
     private final KBCClient client;
     private final Guild guild;
     private final int id;
@@ -154,5 +159,25 @@ public class RoleImpl implements Role {
 
     public void setMentionable0(boolean mentionable) {
         this.mentionable = mentionable;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(getId() == get(data, "role_id").getAsInt(), "You can't update the role by using different data");
+        synchronized (this) {
+            String name = get(data, "name").getAsString();
+            int color = get(data, "color").getAsInt();
+            int pos = get(data, "position").getAsInt();
+            boolean hoist = get(data, "hoist").getAsInt() == 1;
+            boolean mentionable = get(data, "mentionable").getAsInt() == 1;
+            int permissions = get(data, "permissions").getAsInt();
+
+            this.name = name;
+            this.color = color;
+            this.position = pos;
+            this.hoist = hoist;
+            this.mentionable = mentionable;
+            this.permSum = permissions;
+        }
     }
 }

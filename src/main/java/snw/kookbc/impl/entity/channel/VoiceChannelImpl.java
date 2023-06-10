@@ -34,7 +34,7 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
+public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
 
@@ -92,5 +92,16 @@ public class VoiceChannelImpl extends ChannelImpl implements VoiceChannel {
 
     public void setPasswordProtected(boolean passwordProtected) {
         this.passwordProtected = passwordProtected;
+    }
+
+    @Override
+    public void update(JsonObject data) {
+        synchronized (this) {
+            super.update(data);
+            boolean hasPassword = has(data, "has_password") && get(data, "has_password").getAsBoolean();
+            int size = has(data, "limit_amount") ? get(data, "limit_amount").getAsInt() : 0;
+            this.passwordProtected = hasPassword;
+            this.maxSize = size;
+        }
     }
 }

@@ -28,19 +28,31 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.jar.JarFile;
 
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
     private final KBCClient client;
     private final Collection<Plugin> plugins = new ArrayList<>();
+    private final Map<Predicate<File>, Function<ClassLoader, PluginLoader>> loaderMap = new LinkedHashMap<>();
 
     public SimplePluginManager(KBCClient client) {
         this.client = client;
+        this.registerPluginLoader(f -> {
+            if (!f.getName().endsWith(".jar"))
+                return false;
+            try (JarFile jarFile = new JarFile(f)) {
+                return jarFile.getJarEntry("plugin.yml") != null;
+            } catch (IOException e) {
+                return false;
+            }
+        }, this::createPluginLoader); // ensure overrides will apply
     }
 
     @Override
@@ -69,6 +81,10 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin loadPlugin(File file) throws InvalidPluginException {
+        return loadPlugin0(file, true);
+    }
+
+    protected Plugin loadPlugin0(File file, boolean failIfNoLoader) throws InvalidPluginException {
         // We won't close the ClassLoader, because Plugin#getResource need the ClassLoader to keep open.
         // Otherwise, Plugin#getResource will not work correctly.
         // If you want to reload a plugin, or fully uninstall a plugin, close the ClassLoader manually.
@@ -78,18 +94,26 @@ public class SimplePluginManager implements PluginManager {
         Plugin plugin;
         PluginLoader loader;
         ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
-        try {
-            loader = createPluginLoader(file, parent);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        loader = createPluginLoaderForFile(file, parent);
+        if (loader == null) {
+            if (failIfNoLoader) {
+                throw new InvalidPluginException("There is no loader can load the file " + file);
+            }
+            return null;
         }
-        plugin = loader.loadPlugin(file);
+        try {
+            plugin = loader.loadPlugin(file);
+        } catch (InvalidPluginException e) {
+            closeLoaderIfPossible(loader);
+            throw e; // loader created, but plugin not valid
+        }
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
             plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", client.getCore().getAPIVersion(), description.getApiVersion());
         }
         if (diff == 1) {
+            closeLoaderIfPossible(loader); // plugin won't be returned, so the loader should be closed to prevent resource leak
             throw new InvalidPluginException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
         }
         return plugin;
@@ -97,28 +121,42 @@ public class SimplePluginManager implements PluginManager {
 
     @Override
     public @NotNull Plugin[] loadPlugins(File directory) {
-        Collection<Plugin> plugins = new ArrayList<>();
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
-        File[] files = directory.listFiles(pathname -> pathname.getName().endsWith(".jar"));
+        File[] files = directory.listFiles(File::isFile);
         if (files != null) {
+            Collection<Plugin> plugins = new ArrayList<>(files.length);
             for (File file : files) {
                 Plugin plugin;
                 try {
-                    plugin = loadPlugin(file);
+                    plugin = loadPlugin0(file, false);
                 } catch (Throwable e) {
-                    client.getCore().getLogger().error("Unable to load a plugin.", e);
+                    client.getCore().getLogger().error("Unable to load a plugin in the provided file {}", file, e);
                     continue;
                 }
-                Optional<Plugin> samePluginContainer = plugins.stream().filter(IT -> Objects.equals(IT.getDescription().getName(), plugin.getDescription().getName())).findFirst();
-                if (samePluginContainer.isPresent()) {
-                    client.getCore().getLogger().error(String.format("We have found the same plugin name \"%s\" from two plugin files: %s and %s, both of them won't be returned.", plugin.getDescription().getName(), plugin.getFile(), samePluginContainer.get().getFile()));
-                    plugins.remove(samePluginContainer.get());
-                } else {
+                if (plugin == null) {
+                    continue; // no suitable loader can be created, not a valid plugin file.
+                }
+                boolean shouldAdd = true;
+                for (final Plugin p : plugins) {
+                    if (Objects.equals(p.getDescription().getName(), plugin.getDescription().getName())) {
+                        client.getCore().getLogger().error(
+                                "We have found the same plugin name \"{}\" from two plugin files:" +
+                                        " {} and {}, the plugin inside {} won't be returned.",
+                                plugin.getDescription().getName(),
+                                plugin.getFile(),
+                                p.getFile(),
+                                plugin.getFile()
+                        );
+                        shouldAdd = false;
+                    }
+                }
+                if (shouldAdd) {
                     plugins.add(plugin);
                 }
             }
+            return plugins.toArray(new Plugin[0]);
         }
-        return plugins.toArray(new Plugin[0]);
+        return new Plugin[0];
     }
 
     @Override
@@ -193,7 +231,29 @@ public class SimplePluginManager implements PluginManager {
         plugins.remove(plugin);
     }
 
-    protected PluginLoader createPluginLoader(File pluginFile, ClassLoader parent) throws Exception {
-        return new SimplePluginClassLoader(client, pluginFile, parent);
+    @Override
+    public void registerPluginLoader(Predicate<File> predicate, Function<ClassLoader, PluginLoader> provider) {
+        Validate.notNull(predicate, "Predicate cannot be null");
+        Validate.notNull(provider, "Provider cannot be null");
+        loaderMap.put(predicate, provider);
+    }
+
+    protected PluginLoader createPluginLoader(ClassLoader parent) {
+        return new SimplePluginClassLoader(client, parent);
+    }
+
+    protected @Nullable PluginLoader createPluginLoaderForFile(File file, ClassLoader parent) {
+        for (Map.Entry<Predicate<File>, Function<ClassLoader, PluginLoader>> entry : loaderMap.entrySet()) {
+            final Predicate<File> condition = entry.getKey();
+            if (condition.test(file)) {
+                final Function<ClassLoader, PluginLoader> provider = entry.getValue();
+                return provider.apply(parent);
+            }
+        }
+        return null;
+    }
+
+    public Map<Predicate<File>, Function<ClassLoader, PluginLoader>> getLoaderProviders() {
+        return Collections.unmodifiableMap(loaderMap);
     }
 }

@@ -26,21 +26,24 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.jkook.util.PageIterator;
+import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
+import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class UserImpl implements User {
+public class UserImpl implements User, Updatable {
     private final KBCClient client;
     private final String id;
     private final boolean bot;
@@ -166,14 +169,11 @@ public class UserImpl implements User {
         Object[] serialize = MessageBuilder.serialize(component);
         int type = (int) serialize[0];
         String json = (String) serialize[1];
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("type", type)
                 .put("target_id", getId())
-                .put("content", json);
-        if (quote != null) {
-            builder.put("quote", quote.getId());
-        }
-        Map<String, Object> body = builder.build();
+                .put("content", json).putIfNotNull("quote", quote, Message::getId)
+                .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
     }
 
@@ -220,16 +220,12 @@ public class UserImpl implements User {
 
     @Override
     public void setIntimacy(int i, String s, @Nullable Integer imageId) {
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("user_id", getId())
-                .put("score", i);
-        if (s != null) {
-            builder.put("social_info", s);
-        }
-        if (imageId != null) {
-            builder.put("img_id", imageId);
-        }
-        Map<String, Object> body = builder.build();
+                .put("score", i)
+                .putIfNotNull("social_info", s)
+                .putIfNotNull("img_id", imageId)
+                .build();
         client.getNetworkClient().post(HttpAPIRoute.INTIMACY_UPDATE.toFullURL(), body);
     }
 
@@ -319,6 +315,18 @@ public class UserImpl implements User {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
+    @Override
+    public void update(JsonObject data) {
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update user by using different data");
+        synchronized (this) {
+            name = get(data, "username").getAsString();
+            avatarUrl = get(data, "avatar").getAsString();
+            vipAvatarUrl = get(data, "vip_avatar").getAsString();
+            identify = get(data, "identify_num").getAsInt();
+            ban = get(data, "status").getAsInt() == 10;
+            vip = get(data, "is_vip").getAsBoolean();
+        }
+    }
 }
 
 class IntimacyInfoImpl implements User.IntimacyInfo {
