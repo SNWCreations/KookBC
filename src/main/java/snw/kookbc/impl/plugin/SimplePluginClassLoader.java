@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -41,6 +42,7 @@ import java.util.zip.ZipEntry;
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
+    private final Map<String, Class<?>> cache = new ConcurrentHashMap<>();
     private final KBCClient client;
     private PluginDescription description;
 
@@ -130,14 +132,25 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
+        if (cache.containsKey(name)) {
+            return cache.get(name);
+        }
         try {
-            return super.findClass(name);
+            Class<?> result = super.findClass(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         } catch (ClassNotFoundException ignored) {
         }
 
         // Try to load class from other known instances if needed
         if (!dontCallOther) {
-            return loadFromOther(name);
+            Class<?> result =  loadFromOther(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         }
         throw new ClassNotFoundException(name);
     }
