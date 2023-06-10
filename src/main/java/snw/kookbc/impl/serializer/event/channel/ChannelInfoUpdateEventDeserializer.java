@@ -54,8 +54,8 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
         }
         ((ChannelImpl) channel).update(body);
         return new ChannelInfoUpdateEvent(
-            timeStamp,
-            channel
+                timeStamp,
+                channel
         );
     }
 

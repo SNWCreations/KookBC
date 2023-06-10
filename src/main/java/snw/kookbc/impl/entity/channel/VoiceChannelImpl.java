@@ -33,6 +33,7 @@ import snw.kookbc.util.MapBuilder;
 import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;

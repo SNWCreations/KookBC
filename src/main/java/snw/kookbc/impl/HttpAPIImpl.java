@@ -18,12 +18,11 @@
 
 package snw.kookbc.impl;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.HttpAPI;
@@ -32,18 +31,29 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.PrivateMessage;
+import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.message.PrivateMessageImpl;
+import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
@@ -400,7 +410,8 @@ public class HttpAPIImpl implements HttpAPI {
         @Override
         public void handle(boolean accept) {
             HttpAPIImpl.this.handleFriendRequest(getId(), accept);
-        }}
+        }
+    }
 
     @Override
     public void addFriend(User user, int method, String guildId) {
@@ -435,148 +446,5 @@ public class HttpAPIImpl implements HttpAPI {
                 .put("accept", accept ? 1 : 0)
                 .build();
         HttpAPIImpl.this.client.getNetworkClient().post(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
-    }
-
-    // -------- Friend API --------
-
-    protected static class FriendStateImpl implements HttpAPI.FriendState {
-        private final Collection<User> friends;
-        private final Collection<User> blocked;
-        private final Collection<FriendRequest> requests;
-
-        public FriendStateImpl(Collection<User> friends, Collection<User> blocked, Collection<FriendRequest> requests) {
-            this.friends = Collections.unmodifiableCollection(friends);
-            this.blocked = Collections.unmodifiableCollection(blocked);
-            this.requests = Collections.unmodifiableCollection(requests);
-        }
-
-        @Override
-        public Collection<User> getBlockedUsers() {
-            return blocked;
-        }
-
-        @Override
-        public Collection<User> getFriends() {
-            return friends;
-        }
-
-        @Override
-        public Collection<FriendRequest> getPendingFriendRequests() {
-            return requests;
-        }
-
-    }
-
-    protected class FriendRequestImpl implements HttpAPI.FriendRequest {
-        private final int id;
-        private final User requester;
-
-        public FriendRequestImpl(int id, User requester) {
-            this.id = id;
-            this.requester = requester;
-        }
-
-        @Override
-        public int getId() {
-            return id;
-        }
-
-        @Override
-        public User getRequester() {
-            return requester;
-        }
-
-        @Override
-        public void handle(boolean accept) {
-            HttpAPIImpl.this.handleFriendRequest(getId(), accept);
-        }
-    }
-
-    @Override
-    public void addFriend(String userCode, int method, String guildId) {
-        if (method == 2) {
-            if (guildId == null) {
-                throw new IllegalArgumentException("Guild ID should be NOT NULL if method is 2");
-            }
-        }
-        MapBuilder builder = new MapBuilder()
-                .put("user_code", userCode)
-                .put("from", method);
-        if (guildId != null) {
-            builder.put("guild_id", guildId);
-        }
-        Map<String, Object> body = builder.build();
-        client.getNetworkClient().post(HttpAPIRoute.FRIEND_REQUEST.toFullURL(), body);
-    }
-
-    @Override
-    public void deleteFriend(User target) {
-        Map<String, Object> body = new MapBuilder()
-                .put("user_id", target.getId())
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.FRIEND_DELETE.toFullURL(), body);
-    }
-
-    @Override
-    public Collection<User> getBlockedUsers() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
-        JsonArray blocked = get(object, "blocked").getAsJsonArray();
-        return buildUserListFromFriendStateArray(blocked);
-    }
-
-    @Override
-    public FriendState getFriendState() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-        JsonArray request = get(object, "request").getAsJsonArray();
-        Collection<FriendRequest> requestCollection;
-        if (!request.isEmpty()) {
-            requestCollection = new ArrayList<>(request.size());
-            for (JsonElement element : request) {
-                JsonObject obj = element.getAsJsonObject();
-                int id = get(obj, "id").getAsInt();
-                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
-                FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
-                requestCollection.add(requestObj);
-            }
-        } else {
-            requestCollection = Collections.emptyList();
-        }
-        JsonArray blocked = get(object, "blocked").getAsJsonArray();
-        Collection<User> blockedUsers = buildUserListFromFriendStateArray(blocked);
-        JsonArray friend = get(object, "friend").getAsJsonArray();
-        Collection<User> friends = buildUserListFromFriendStateArray(friend);
-        return new FriendStateImpl(
-                friends, blockedUsers, requestCollection
-        );
-    }
-
-    @Override
-    public Collection<User> getFriends() {
-        JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
-        JsonArray friend = get(object, "friend").getAsJsonArray();
-        return buildUserListFromFriendStateArray(friend);
-    }
-
-    @Override
-    public void handleFriendRequest(int id, boolean accept) {
-        Map<String, Object> body = new MapBuilder()
-                .put("id", id)
-                .put("accept", accept ? 1 : 0)
-                .build();
-        HttpAPIImpl.this.client.getNetworkClient().post(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
-    }
-
-    protected final Collection<User> buildUserListFromFriendStateArray(JsonArray array) {
-        if (!array.isEmpty()) {
-            Collection<User> c = new ArrayList<>(array.size());
-            for (JsonElement element : array) {
-                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
-                c.add(user);
-            }
-            return Collections.unmodifiableCollection(c);
-        }
-        return Collections.emptyList();
     }
 }

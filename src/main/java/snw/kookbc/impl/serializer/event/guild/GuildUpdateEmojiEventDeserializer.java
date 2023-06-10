@@ -42,9 +42,9 @@ public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<G
         CustomEmoji customEmoji = client.getStorage().getEmoji(get(body, "id").getAsString(), body);
         ((CustomEmojiImpl) customEmoji).update(body);
         return new GuildUpdateEmojiEvent(
-            timeStamp,
-            customEmoji.getGuild(),
-            customEmoji
+                timeStamp,
+                customEmoji.getGuild(),
+                customEmoji
         );
     }
 

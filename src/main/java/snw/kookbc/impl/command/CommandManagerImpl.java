@@ -241,7 +241,7 @@ public class CommandManagerImpl implements CommandManager {
 
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
-            
+
             // ensure the sender has been redirected to the correct result.
             // Added since KookBC 0.27
             final ConsoleCommandSender realSender;

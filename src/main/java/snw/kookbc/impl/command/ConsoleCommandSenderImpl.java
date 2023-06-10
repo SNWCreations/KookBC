@@ -18,13 +18,12 @@
 
 package snw.kookbc.impl.command;
 
-import java.util.Map;
-import java.util.WeakHashMap;
-
 import org.slf4j.Logger;
-
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.plugin.Plugin;
+
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
     private static final Map<Plugin, ConsoleCommandSenderImpl> INSTANCES = new WeakHashMap<>();

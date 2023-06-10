@@ -23,6 +23,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
+
 import java.nio.file.Paths;
 
 public class Console extends SimpleTerminalConsole {

@@ -42,8 +42,8 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
         updatedUser.setName(get(body, "username").getAsString());
         updatedUser.setAvatarUrl(get(body, "avatar").getAsString());
         return new UserInfoUpdateEvent(
-            timeStamp,
-            updatedUser
+                timeStamp,
+                updatedUser
         );
     }
 

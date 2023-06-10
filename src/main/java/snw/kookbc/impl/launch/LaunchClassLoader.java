@@ -5,6 +5,7 @@ package snw.kookbc.impl.launch;
 
 import org.spongepowered.asm.util.JavaVersion;
 import snw.jkook.plugin.MarkedClassLoader;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;

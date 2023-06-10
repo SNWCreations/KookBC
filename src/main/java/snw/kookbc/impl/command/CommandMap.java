@@ -39,8 +39,8 @@ public interface CommandMap {
     Map<String, WrappedCommand> getView(boolean withPrefix);
 
     @Nullable // return null if nothing matches the head.
-    // If withPrefix is true, regard the head as the result of prefix + root name
-    // Otherwise, just regard the head as the root name
+        // If withPrefix is true, regard the head as the result of prefix + root name
+        // Otherwise, just regard the head as the root name
     JKookCommand getByRootName(String head, boolean withPrefix);
 
 }
