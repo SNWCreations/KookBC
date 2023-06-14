@@ -18,13 +18,18 @@
 
 package snw.kookbc.util;
 
+import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginLoader;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.CommandManagerImpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -152,4 +157,22 @@ public class Util {
         } catch (Exception ignored) {
         }
     }
+
+    public static List<String> listCommandsHelp(KBCClient client) {
+        CommandManagerImpl commandManager = (CommandManagerImpl) client.getCore().getCommandManager();
+        JKookCommand[] commands = commandManager.getCommandSet().toArray(new JKookCommand[0]);
+        List<String> result = new LinkedList<>();
+        for (JKookCommand command : commands) {
+            result.add(
+                    String.format("(%s)%s: %s",
+                            String.join(" ",
+                                    command.getPrefixes()),
+                            command.getRootName(),
+                            (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                    )
+            );
+        }
+        return result;
+    }
+
 }
