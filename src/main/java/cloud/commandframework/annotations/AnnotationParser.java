@@ -159,7 +159,14 @@ public final class AnnotationParser<C> {
         );
         this.getParameterInjectorRegistry().registerInjector(
                 Message.class,
-                (context, annotations) -> context.getOrDefault(CloudBasedCommandManager.KOOK_MESSAGE_KEY, null)
+                (context, annotations) -> {
+                    if (!context.contains("ignore_null")) {
+                        context.store("ignore_null", new ArrayList<>());
+                    }
+                    ArrayList<Class<?>> list = context.get("ignore_null");
+                    list.add(Message.class);
+                    return context.getOrDefault(CloudBasedCommandManager.KOOK_MESSAGE_KEY, null);
+                }
         );
         this.stringProcessor = StringProcessor.noOp();
     }
