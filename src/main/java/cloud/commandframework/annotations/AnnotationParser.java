@@ -392,15 +392,19 @@ public final class AnnotationParser<C> {
                 try {
                     // Then we try to find a no-arg constructor.
                     instance = commandContainer.getConstructor().newInstance();
-                } catch (final NoSuchMethodException e) {
-                    // If neither are found, we panic!
-                    throw new IllegalStateException(
-                            String.format(
-                                    "Command container %s has no valid constructors",
-                                    commandContainer
-                            ),
-                            e
-                    );
+                } catch (final NoSuchMethodException ignored2) {
+                    try {
+                        instance = commandContainer.getConstructor(Plugin.class).newInstance(plugin);
+                    } catch (final NoSuchMethodException e) {
+                        // If neither are found, we panic!
+                        throw new IllegalStateException(
+                                String.format(
+                                        "Command container %s has no valid constructors",
+                                        commandContainer
+                                ),
+                                e
+                        );
+                    }
                 }
             }
             commands.addAll(this.parse(instance, plugin));
@@ -570,7 +574,7 @@ public final class AnnotationParser<C> {
                 while (iterator.hasNext()) {
                     stringBuilder.append("|").append(iterator.next()).append(str);
                 }
-                if(suffix!=null){
+                if (suffix != null) {
                     stringBuilder.append(' ').append(suffix);
                 }
                 syntax = stringBuilder.toString();
@@ -593,7 +597,7 @@ public final class AnnotationParser<C> {
                 while (iterator.hasNext()) {
                     stringBuilder.append("|").append(iterator.next()).append(str);
                 }
-                if(suffix!=null){
+                if (suffix != null) {
                     stringBuilder.append(' ').append(suffix);
                 }
                 syntax = stringBuilder.toString();
