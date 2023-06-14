@@ -54,6 +54,7 @@ import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
+import snw.kookbc.impl.command.cloud.annotations.CommandPrefix;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -552,7 +553,51 @@ public final class AnnotationParser<C> {
         for (final CommandMethodPair commandMethodPair : methodPairs) {
             final CommandMethod commandMethod = commandMethodPair.getCommandMethod();
             final Method method = commandMethodPair.getMethod();
-            final String syntax = syntaxPrefix + this.processString(commandMethod.value());
+            String methodSyntax = commandMethod.value();
+            String processed = this.processString(methodSyntax);
+            String syntax = syntaxPrefix + processed;
+            CommandPrefix commandPrefix = classAnnotations.annotation(CommandPrefix.class);
+            if (commandPrefix != null) {
+                String str = syntax;
+                String suffix = null;
+                if (str.contains(" ")) {
+                    String[] split = str.split(" ", 2);
+                    str = split[0];
+                    suffix = split[1];
+                }
+                StringBuilder stringBuilder = new StringBuilder(str);
+                Iterator<String> iterator = Arrays.stream(commandPrefix.value()).iterator();
+                while (iterator.hasNext()) {
+                    stringBuilder.append("|").append(iterator.next()).append(str);
+                }
+                if(suffix!=null){
+                    stringBuilder.append(' ').append(suffix);
+                }
+                syntax = stringBuilder.toString();
+            }
+            CommandPrefix methodPrefix = commandMethodPair.getMethod().getAnnotation(CommandPrefix.class);
+            if (methodPrefix != null) {
+                String str = processed;
+                if (str.contains(" ")) {
+                    str = str.split(" ", 2)[0];
+                }
+                String prefix = syntax;
+                String suffix = null;
+                if (prefix.contains(" ")) {
+                    String[] split = prefix.split(" ", 2);
+                    prefix = split[0];
+                    suffix = split[1];
+                }
+                StringBuilder stringBuilder = new StringBuilder(prefix);
+                Iterator<String> iterator = Arrays.stream(methodPrefix.value()).iterator();
+                while (iterator.hasNext()) {
+                    stringBuilder.append("|").append(iterator.next()).append(str);
+                }
+                if(suffix!=null){
+                    stringBuilder.append(' ').append(suffix);
+                }
+                syntax = stringBuilder.toString();
+            }
             final List<SyntaxFragment> tokens = this.syntaxParser.apply(syntax);
             /* Determine command name */
             final String commandToken = syntax.split(" ")[0].split("\\|")[0];
