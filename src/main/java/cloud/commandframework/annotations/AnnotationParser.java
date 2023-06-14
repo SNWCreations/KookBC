@@ -50,7 +50,9 @@ import org.apiguardian.api.API;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 
 import java.io.BufferedReader;
@@ -150,6 +152,14 @@ public final class AnnotationParser<C> {
                 (context, annotations) -> annotations.annotation(RawArgs.class) == null
                         ? null
                         : context.getRawInput().toArray(new String[0])
+        );
+        this.getParameterInjectorRegistry().registerInjector(
+                Plugin.class,
+                (context, annotations) -> context.get(CloudCommandManagerImpl.PLUGIN_KEY)
+        );
+        this.getParameterInjectorRegistry().registerInjector(
+                Message.class,
+                (context, annotations) -> context.getOrDefault(CloudBasedCommandManager.KOOK_MESSAGE_KEY, null)
         );
         this.stringProcessor = StringProcessor.noOp();
     }

@@ -36,6 +36,7 @@ import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.services.State;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.JKookCommand;
@@ -43,11 +44,8 @@ import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.kookbc.impl.message.NullMessage;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +58,7 @@ import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.PLUGIN_KEY;
 /**
  * @author huanmeng_qwq
  */
+@SuppressWarnings("unused")
 public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
     protected final KBCClient client;
@@ -71,9 +70,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         this.client = client;
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.parent = parent;
-        parameterInjectorRegistry().registerInjector(Message.class,
-                (context, annotationAccessor) -> context.getOrDefault(KOOK_MESSAGE_KEY, NullMessage.INSTANCE)
-        );
         registerCapability(CloudCapability.StandardCapabilities.ROOT_COMMAND_DELETION);
     }
 
@@ -89,10 +85,19 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
 
     public void registerJKookCommand(Plugin plugin, JKookCommand jKookCommand) {
         StringArrayArgument<CommandSender> args = StringArrayArgument.optional("args", (commandSenderCommandContext, s) -> Collections.emptyList());
+        Iterator<String> iterator = withPrefix(jKookCommand, jKookCommand.getRootName()).iterator();
+        if (!iterator.hasNext()) {
+            return;
+        }
+        List<String> alias = new ArrayList<>();
+        String mainCommand = iterator.next();
+        while (iterator.hasNext()) {
+            alias.add(iterator.next());
+        }
         command(
                 commandBuilder(
-                        jKookCommand.getRootName(),
-                        jKookCommand.getAliases(),
+                        mainCommand,
+                        alias,
                         SimpleCommandMeta.builder()
                                 .with(CommandMeta.DESCRIPTION, jKookCommand.getDescription())
                                 .with(PLUGIN_KEY, plugin)
@@ -105,7 +110,22 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     }
 
     public void unregisterJKookCommand(JKookCommand jKookCommand) {
-        deleteRootCommand(jKookCommand.getRootName());
+        for (String commandName : withPrefix(jKookCommand, jKookCommand.getRootName())) {
+            deleteRootCommand(commandName);
+        }
+    }
+
+    protected List<String> withPrefixes(JKookCommand jKookCommand, Collection<String> commands) {
+        return commands.stream().flatMap(command -> withPrefix(jKookCommand, command).stream()).collect(Collectors.toList());
+    }
+
+    protected List<String> withPrefix(JKookCommand jKookCommand, String cmd) {
+        Collection<String> prefixes = jKookCommand.getPrefixes();
+        ArrayList<String> list = new ArrayList<>(prefixes.size());
+        for (String prefix : prefixes) {
+            list.add(prefix + cmd);
+        }
+        return list;
     }
 
     public boolean executeCommandNow(@NonNull CommandSender commandSender, @NonNull String input, Message message) throws CommandException {
@@ -114,44 +134,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         try {
             executeCommand(commandSender, input, message)
                     .whenComplete((commandResult, throwable) -> {
-                        if (throwable instanceof CompletionException) {
-                            throwable = throwable.getCause();
-                        }
-                        final Throwable finalThrowable = throwable;
-                        if (throwable instanceof InvalidSyntaxException) {
-                            handleException(commandSender,
-                                    InvalidSyntaxException.class,
-                                    (InvalidSyntaxException) throwable, (c, e) ->
-                                            message.sendToSource(finalThrowable.getMessage())
-                            );
-                        } else if (throwable instanceof InvalidCommandSenderException) {
-                            handleException(commandSender,
-                                    InvalidCommandSenderException.class,
-                                    (InvalidCommandSenderException) throwable, (c, e) ->
-                                            message.sendToSource(finalThrowable.getMessage())
-                            );
-                        } else if (throwable instanceof NoPermissionException) {
-                            handleException(commandSender,
-                                    NoPermissionException.class,
-                                    (NoPermissionException) throwable, (c, e) ->
-                                            message.sendToSource("You do not have permission to execute this command")
-                            );
-                        } else if (throwable instanceof NoSuchCommandException) {
-                            handleException(commandSender,
-                                    NoSuchCommandException.class,
-                                    (NoSuchCommandException) throwable, (c, e) -> foundCommand.set(false)
-                            );
-                        } else if (throwable instanceof ArgumentParseException) {
-                            handleException(commandSender,
-                                    ArgumentParseException.class,
-                                    (ArgumentParseException) throwable, (c, e) ->
-                                            message.sendToSource("Invalid Command Argument: "
-                                                    + finalThrowable.getCause().getMessage())
-                            );
-                        } else if (throwable != null) {
-                            message.sendToSource("An internal error occurred while attempting to perform this command");
-                            unhandledException.set(throwable); // provide the unhandled exception
-                        }
+                        handleThrowable(commandSender, message, unhandledException, foundCommand, throwable);
                     }).get();
         } catch (InterruptedException | ExecutionException ignored) { // impossible
         }
@@ -159,6 +142,66 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             throw new CommandException("Something unexpected happened.", unhandledException.get());
         }
         return foundCommand.get();
+    }
+
+    protected void handleThrowable(@NotNull CommandSender commandSender, Message message, AtomicReference<Throwable> unhandledException, AtomicBoolean foundCommand, Throwable throwable) {
+        if (throwable instanceof CompletionException) {
+            throwable = throwable.getCause();
+        }
+        final Throwable finalThrowable = throwable;
+        if (throwable instanceof InvalidSyntaxException) {
+            handleException(commandSender,
+                    InvalidSyntaxException.class,
+                    (InvalidSyntaxException) throwable, (c, e) -> {
+                        if (message != null) {
+                            message.sendToSource(finalThrowable.getMessage());
+                        }
+                    }
+            );
+        } else if (throwable instanceof InvalidCommandSenderException) {
+            handleException(commandSender,
+                    InvalidCommandSenderException.class,
+                    (InvalidCommandSenderException) throwable, (c, e) -> {
+                        if (message != null) {
+                            message.sendToSource(finalThrowable.getMessage());
+                        }
+                    }
+            );
+        } else if (throwable instanceof NoPermissionException) {
+            handleException(commandSender,
+                    NoPermissionException.class,
+                    (NoPermissionException) throwable, (c, e) -> {
+                        if (message != null) {
+                            message.sendToSource("您没有执行此命令的权限");
+                        }
+                    }
+            );
+        } else if (throwable instanceof NoSuchCommandException) {
+            handleException(commandSender,
+                    NoSuchCommandException.class,
+                    (NoSuchCommandException) throwable, (c, e) -> foundCommand.set(false)
+            );
+        } else if (throwable instanceof ArgumentParseException) {
+            handleException(commandSender,
+                    ArgumentParseException.class,
+                    (ArgumentParseException) throwable, (c, e) -> {
+                        if (message != null) {
+                            message.sendToSource("无效的命令参数: "
+                                    + finalThrowable.getCause().getMessage());
+                        }
+                    }
+            );
+        } else if (throwable != null) {
+            if (message != null) {
+                message.sendToSource("尝试执行此命令时发生内部错误");
+            }
+            unhandledException.set(throwable); // provide the unhandled exception
+        }
+    }
+
+    @Override
+    public final @NonNull CompletableFuture<CommandResult<CommandSender>> executeCommand(@NonNull CommandSender commandSender, @NonNull String input) {
+        throw new UnsupportedOperationException();
     }
 
     @NonNull
@@ -184,21 +227,31 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                 commandSender,
                 this
         );
-        context.set(KOOK_MESSAGE_KEY, message != null ? message : NullMessage.INSTANCE);
+        if (message != null) {
+            context.set(KOOK_MESSAGE_KEY, message);
+        }
         final LinkedList<String> inputQueue = new CommandInputTokenizer(input).tokenize();
         /* Store a copy of the input queue in the context */
         context.store("__raw_input__", new LinkedList<>(inputQueue));
         try {
+            CompletableFuture<CommandResult<CommandSender>> future = new CompletableFuture<>();
             if (this.preprocessContext(context, inputQueue) == State.ACCEPTED) {
-                return commandExecutionCoordinator().coordinateExecution(context, inputQueue);
+                commandExecutionCoordinator().coordinateExecution(context, inputQueue).whenComplete(((commandSenderCommandResult, throwable) -> {
+                    if (commandSenderCommandResult != null) {
+                        future.complete(commandSenderCommandResult);
+                    } else if (throwable != null) {
+                        future.completeExceptionally(throwable);
+                    }
+                }));
             }
+            return future;
         } catch (final Exception e) {
             final CompletableFuture<CommandResult<CommandSender>> future = new CompletableFuture<>();
-            future.completeExceptionally(e);
+            if (!future.completeExceptionally(e)) {
+                throw e;
+            }
             return future;
         }
-        /* Wasn't allowed to execute the command */
-        return CompletableFuture.completedFuture(null);
     }
 
     public void unregisterAll(Plugin plugin) {

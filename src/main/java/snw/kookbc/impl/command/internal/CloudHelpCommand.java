@@ -29,6 +29,7 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
+import snw.kookbc.impl.command.cloud.annotations.CommandPrefix;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -37,7 +38,9 @@ import java.util.List;
 /**
  * @author huanmeng_qwq
  */
+@SuppressWarnings("unused")
 @CommandContainer
+@CommandPrefix({"-", "#"})
 public class CloudHelpCommand {
     private static final String[] EMPTY_STRING_ARRAY = new String[]{};
 
@@ -48,10 +51,10 @@ public class CloudHelpCommand {
     }
 
     // 这里是因为构建时会判断是否会有空构造器，否则会报错。
-    @Deprecated
     public CloudHelpCommand() {
     }
 
+    @CommandPrefix("$")
     @CommandMethod("help [target]")
     public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
         List<String> content = buildHelpContent(target);

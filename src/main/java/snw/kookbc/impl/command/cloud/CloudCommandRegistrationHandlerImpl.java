@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Cloud Command -> JKookCommand
  * @author huanmeng_qwq
  */
 public class CloudCommandRegistrationHandlerImpl implements CommandRegistrationHandler {
