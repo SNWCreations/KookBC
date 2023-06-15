@@ -24,10 +24,12 @@ import snw.jkook.plugin.PluginLoader;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.WrappedCommand;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.DataFormatException;
@@ -173,6 +175,19 @@ public class Util {
             );
         }
         return result;
+    }
+
+    public static JKookCommand findSpecificCommand(KBCClient client, String name) {
+        CommandManagerImpl commandManager = (CommandManagerImpl) client.getCore().getCommandManager();
+        if (name != null && !name.isEmpty()) {
+            WrappedCommand command = commandManager.getCommand(name);
+            if (command == null) {
+                return null;
+            }
+            return command.getCommand();
+        } else {
+            return null;
+        }
     }
 
 }

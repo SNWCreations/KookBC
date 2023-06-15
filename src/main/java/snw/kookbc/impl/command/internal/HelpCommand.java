@@ -73,13 +73,41 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
         }
 
         List<String> content = Util.listCommandsHelp(this.client);
-        MultipleCardComponent finalComponent;
-        if (content.isEmpty()) {
-            finalComponent = new CardBuilder()
+        JKookCommand specificCommand = arguments.length == 1 && arguments[0] != null && arguments[0] instanceof String ?
+                Util.findSpecificCommand(this.client, (String) arguments[0]) : null;
+        CardBuilder finalBuilder;
+        if (content.isEmpty() && specificCommand == null) {
+            finalBuilder = new CardBuilder()
                     .setTheme(Theme.DANGER)
                     .setSize(Size.LG)
-                    .addModule(new HeaderModule("找不到命令"))
-                    .build();
+                    .addModule(new HeaderModule("找不到命令"));
+        } else if (specificCommand != null) {
+            finalBuilder = new CardBuilder()
+                    .setTheme(Theme.SUCCESS)
+                    .setSize(Size.LG)
+                    .addModule(new HeaderModule("命令帮助"))
+                    .addModule(DividerModule.INSTANCE)
+                    .addModule(new SectionModule(new MarkdownElement(
+                            String.format("**命令**: %s", specificCommand.getRootName())
+                    )))
+                    .addModule(new SectionModule(new MarkdownElement(
+                            String.format("**别称**: %s", String.join(" ", specificCommand.getAliases()))
+                    )))
+                    .addModule(new SectionModule(new MarkdownElement(
+                            String.format("**可用前缀**: %s", String.join(" ", specificCommand.getPrefixes()))
+                    )))
+                    .addModule(new SectionModule(new MarkdownElement(
+                            String.format("**简介**: %s",
+                                    (specificCommand.getDescription() == null)
+                                            ? "此命令没有简介。"
+                                            : specificCommand.getDescription()
+                            )
+                    )));
+            if (specificCommand.getHelpContent() != null) {
+                finalBuilder.addModule(new SectionModule(new MarkdownElement(
+                        String.format("**详细帮助信息**:\n%s", specificCommand.getHelpContent())
+                )));
+            }
         } else {
             int totalPages = content.size() % 5 == 0 ? content.size() / 5 : content.size() / 5 + 1;
             CardBuilder builder = new CardBuilder()
@@ -135,9 +163,26 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                                 )
                         ));
             }
-            finalComponent = builder.build();
+            finalBuilder = builder;
         }
-        message.sendToSource(finalComponent);
+        if (client.getConfig().getBoolean("allow-help-ad", true)) {
+            finalBuilder.addModule(DividerModule.INSTANCE)
+                    .addModule(new ContextModule(
+                            Collections.singletonList(
+                                    new MarkdownElement(
+                                            String.format(
+                                                    "由 [%s](%s) v%s 驱动 - %s API %s",
+                                                    SharedConstants.IMPL_NAME,
+                                                    SharedConstants.REPO_URL,
+                                                    SharedConstants.IMPL_VERSION,
+                                                    SharedConstants.SPEC_NAME,
+                                                    client.getCore().getAPIVersion()
+                                            )
+                                    )
+                            )
+                    ));
+        }
+        message.sendToSource(finalBuilder.build());
     }
 
     private List<String> buildHelpContent(@Nullable String target) {
