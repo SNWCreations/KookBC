@@ -39,6 +39,9 @@ import java.util.NoSuchElementException;
 import static snw.kookbc.impl.command.cloud.CloudBasedCommandManager.KOOK_MESSAGE_KEY;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
+/**
+ * @author huanmeng_qwq
+ */
 public class CloudWrappedCommandExecutionHandler implements CommandExecutionHandler<CommandSender> {
     private final CommandManagerImpl parent;
     private final JKookCommand commandObject;
