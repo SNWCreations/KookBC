@@ -66,20 +66,20 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
-    public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
+    public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         annotationParser.parse(plugin.getClass().getClassLoader(), plugin);
     }
 
-    public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
+    public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         Function<ParserParameters, CommandMeta> wrapped = wrap(plugin, metaMapper);
         registerCloudCommands(CloudCommandBuilder.createParser(commandManager, wrapped), plugin, wrapped);
     }
 
-    public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) throws Exception {
+    public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         registerCloudCommands(getCloudCommandManager(), plugin, metaMapper);
     }
 
-    public void registerCloudCommands(@NotNull Plugin plugin) throws Exception {
+    public void registerCloudCommands(@NotNull Plugin plugin) {
         registerCloudCommands(plugin, parserParameters -> SimpleCommandMeta.empty());
     }
 
@@ -91,15 +91,15 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         annotationParser.parse(instance, plugin);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) throws Exception {
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
         registerCloudCommand(plugin, getCloudCommandManager(), metaMapper, instance);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) throws Exception {
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) {
         registerCloudCommand(plugin, parserParameters -> SimpleCommandMeta.empty(), instance);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) throws Exception {
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) {
         registerCloudCommand(plugin, commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
     }
 
