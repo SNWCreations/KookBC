@@ -33,6 +33,9 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 
 import java.util.function.Function;
 
+/**
+ * @author huanmeng_qwq
+ */
 public class CloudCommandManagerImpl extends CommandManagerImpl {
     public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "jkook_plugin");
     private final CloudBasedCommandManager manager;
