@@ -22,6 +22,8 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.SimpleCommandMap;
 
+import java.util.List;
+
 /**
  * @author huanmeng_qwq
  */
@@ -53,5 +55,9 @@ public class CloudCommandMap extends SimpleCommandMap {
 
     protected Plugin getOwnerOfCommand(JKookCommand command) {
         return getView(false).get(command.getRootName()).getPlugin();
+    }
+
+    public List<CloudCommandInfo> getCommandsInfo(){
+        return parent.getCommandsInfo();
     }
 }

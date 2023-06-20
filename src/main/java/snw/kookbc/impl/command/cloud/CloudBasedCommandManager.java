@@ -18,6 +18,7 @@
 package snw.kookbc.impl.command.cloud;
 
 import cloud.commandframework.CloudCapability;
+import cloud.commandframework.Command;
 import cloud.commandframework.CommandManager;
 import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.standard.StringArrayArgument;
@@ -52,7 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.PLUGIN_KEY;
+import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.*;
 
 /**
  * @author huanmeng_qwq
@@ -84,7 +85,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
 
     public void registerJKookCommand(Plugin plugin, JKookCommand jKookCommand) {
         StringArrayArgument<CommandSender> args = StringArrayArgument.optional("args", (commandSenderCommandContext, s) -> Collections.emptyList());
-        Iterator<String> iterator = withPrefix(jKookCommand, jKookCommand.getRootName()).iterator();
+        List<String> commands = withPrefix(jKookCommand, jKookCommand.getRootName());
+        commands.addAll(withPrefixes(jKookCommand, jKookCommand.getAliases()));
+        Iterator<String> iterator = commands.iterator();
         if (!iterator.hasNext()) {
             return;
         }
@@ -93,6 +96,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         while (iterator.hasNext()) {
             alias.add(iterator.next());
         }
+        Collection<String> prefixes = jKookCommand.getPrefixes();
         command(
                 commandBuilder(
                         mainCommand,
@@ -100,6 +104,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         SimpleCommandMeta.builder()
                                 .with(CommandMeta.DESCRIPTION, jKookCommand.getDescription())
                                 .with(PLUGIN_KEY, plugin)
+                                .with(PREFIX_KEY, prefixes)
+                                .with(ALIAS_KEY, alias)
+                                .with(JKOOK_COMMAND_KEY, true)
                                 .build()
                 )
                         .handler(new CloudWrappedCommandExecutionHandler(parent, jKookCommand))
@@ -123,6 +130,26 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         ArrayList<String> list = new ArrayList<>(prefixes.size());
         for (String prefix : prefixes) {
             list.add(prefix + cmd);
+        }
+        return list;
+    }
+
+    protected List<String> removePrefix(String[] prefixes, String... commands) {
+        if (prefixes.length == 0) {
+            return Arrays.asList(commands);
+        }
+        List<String> list = new ArrayList<>(commands.length);
+        for (String command : commands) {
+            boolean match = false;
+            for (String prefix : prefixes) {
+                if (command.startsWith(prefix)) {
+                    match = true;
+                    list.add(command.substring(prefix.length()));
+                }
+            }
+            if (!match) {
+                list.add(command);
+            }
         }
         return list;
     }
@@ -252,5 +279,24 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         for (CommandArgument<CommandSender, ?> i : list) {
             deleteRootCommand(i.getName());
         }
+    }
+
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public List<CloudCommandInfo> getCommandsInfo() {
+        List<CloudCommandInfo> result = new ArrayList<>();
+        for (Command<CommandSender> command : commands().stream().filter(i -> i.getCommandMeta().get(PLUGIN_KEY).isPresent()).collect(Collectors.toList())) {
+            String[] prefixes = command.getCommandMeta().get(PREFIX_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
+            String[] aliases = command.getCommandMeta().get(ALIAS_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
+            String rootName = removePrefix(prefixes, command.getArguments().get(0).getName()).get(0);
+            String[] finalAliases = removePrefix(prefixes, aliases).stream().distinct().filter(e -> !e.equals(rootName)).toArray(String[]::new);
+            result.add(new CloudCommandInfo(
+                    command.getCommandMeta().get(PLUGIN_KEY).get(),
+                    rootName,
+                    finalAliases,
+                    prefixes,
+                    command.getCommandMeta().get(CommandMeta.DESCRIPTION).orElse(""),
+                    command.getCommandMeta().getOrDefault(JKOOK_COMMAND_KEY, false)));
+        }
+        return result;
     }
 }

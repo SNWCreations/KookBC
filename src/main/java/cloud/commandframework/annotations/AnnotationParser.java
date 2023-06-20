@@ -70,6 +70,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.*;
+
 /**
  * Parser that parses class instances {@link Command commands}
  *
@@ -612,11 +614,22 @@ public final class AnnotationParser<C> {
                 metaBuilder.with(CommandConfirmationManager.META_CONFIRMATION_REQUIRED, true);
             }
             metaBuilder.with(CloudCommandManagerImpl.PLUGIN_KEY, plugin);
-
+            List<String> prefixes = new ArrayList<>();
+            List<@NonNull String> minor = tokens.get(0).getMinor();
+            List<String> aliases = new ArrayList<>(minor);
+            if (methodPrefix != null) {
+                prefixes.addAll(Arrays.asList(methodPrefix.value()));
+            }
+            if (commandPrefix != null) {
+                prefixes.addAll(Arrays.asList(commandPrefix.value()));
+            }
+            metaBuilder.with(ALIAS_KEY, aliases);
+            metaBuilder.with(PREFIX_KEY, prefixes);
+            metaBuilder.with(JKOOK_COMMAND_KEY, false);
             @SuppressWarnings("rawtypes")
             Command.Builder builder = manager.commandBuilder(
                     commandToken,
-                    tokens.get(0).getMinor(),
+                    minor,
                     metaBuilder.build()
             );
             final Collection<ArgumentParameterPair> arguments = this.argumentExtractor.apply(method);

@@ -153,4 +153,8 @@ public class Util {
         } catch (Exception ignored) {
         }
     }
+
+    public static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }

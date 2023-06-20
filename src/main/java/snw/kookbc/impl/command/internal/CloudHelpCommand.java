@@ -22,18 +22,20 @@ import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.processing.CommandContainer;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
-import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.WrappedCommand;
+import snw.kookbc.impl.command.cloud.CloudCommandInfo;
+import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.command.cloud.annotations.CommandPrefix;
+import snw.kookbc.util.Util;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author huanmeng_qwq
@@ -94,49 +96,48 @@ public class CloudHelpCommand {
     }
 
     private List<String> buildHelpContent(@Nullable String target) {
-        JKookCommand[] commands;
-        CommandManagerImpl commandManager = (CommandManagerImpl) client.getCore().getCommandManager();
+        List<CloudCommandInfo> commands = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
         if (target != null && !target.isEmpty()) {
-            WrappedCommand command = commandManager.getCommand(target);
-            if (command == null) {
-                return Collections.emptyList();
-            }
-            commands = new JKookCommand[]{command.getCommand()};
-        } else {
-            commands = commandManager.getCommandSet().toArray(new JKookCommand[0]);
+            commands = commands.stream()
+                    .filter(command -> command.rootName().equalsIgnoreCase(target) ||
+                            Arrays.stream(command.aliases())
+                                    .anyMatch(alias -> alias.equalsIgnoreCase(target))
+                    )
+                    .collect(Collectors.toList());
         }
         List<String> result = new LinkedList<>();
         result.add("-------- 命令帮助 --------");
-        if (commands.length > 1) {
-            for (JKookCommand command : commands) {
+        if (commands.size() > 1) {
+            for (CloudCommandInfo command : commands) {
                 result.add(
                         String.format("(%s)%s: %s",
                                 String.join(" ",
-                                        command.getPrefixes()),
-                                command.getRootName(),
-                                (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                                        command.prefixes()),
+                                command.rootName(),
+                                (Util.isBlank(command.description())) ? "此命令没有简介。" : command.description()
                         )
                 );
             }
             result.add(""); // the blank line as the separator
             result.add("注: 在每条命令帮助的开头，括号中用空格隔开的字符为此命令的前缀。");
             result.add("如 \"(/ .)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
-        } else if (commands.length == 1) {
-            JKookCommand command = commands[0];
-            result.add(String.format("命令: %s", command.getRootName()));
-            result.add(String.format("别称: %s", String.join(" ", command.getAliases())));
-            result.add(String.format("可用前缀: %s", String.join(" ", command.getPrefixes())));
+        } else if (commands.size() == 1) {
+            CloudCommandInfo command = commands.get(0);
+            result.add(String.format("命令: %s", command.rootName()));
+            result.add(String.format("别称: %s", String.join(" ", command.aliases())));
+            result.add(String.format("可用前缀: %s", String.join(" ", command.prefixes())));
             result.add(
                     String.format("简介: %s",
-                            (command.getDescription() == null)
+                            (Util.isBlank(command.description()))
                                     ? "此命令没有简介。"
-                                    : command.getDescription()
+                                    : command.description()
                     )
             );
-            if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()) {
+            //todo: add help content
+            /*if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()) {
                 result.add("详细帮助信息:");
                 result.add(command.getHelpContent());
-            }
+            }*/
         } else {
             return Collections.emptyList();
         }

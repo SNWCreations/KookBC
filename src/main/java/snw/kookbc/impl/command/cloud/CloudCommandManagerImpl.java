@@ -22,6 +22,7 @@ import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
+import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
@@ -31,13 +32,21 @@ import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 /**
  * @author huanmeng_qwq
  */
 public class CloudCommandManagerImpl extends CommandManagerImpl {
-    public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "jkook_plugin");
+    public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "kookbc_plugin");
+    public static final CommandMeta.Key<Collection<String>> PREFIX_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
+    }, "kookbc_prefixes");
+    public static final CommandMeta.Key<Collection<String>> ALIAS_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
+    }, "kookbc_aliases");
+    public static final CommandMeta.Key<Boolean> JKOOK_COMMAND_KEY = CommandMeta.Key.of(Boolean.class, "kookbc_jkook_command");
     private final CloudBasedCommandManager manager;
 
     public CloudCommandManagerImpl(KBCClient client) {
@@ -110,5 +119,9 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     protected static Function<ParserParameters, CommandMeta> wrap(Plugin plugin, Function<ParserParameters, CommandMeta> origin) {
         return p -> SimpleCommandMeta.builder().with(PLUGIN_KEY, plugin).with(origin.apply(p)).build();
+    }
+
+    public List<CloudCommandInfo> getCommandsInfo() {
+        return getCloudCommandManager().getCommandsInfo();
     }
 }

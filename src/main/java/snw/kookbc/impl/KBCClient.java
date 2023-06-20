@@ -492,21 +492,22 @@ public class KBCClient {
     }
 
     protected void registerHelpCommand() {
-/*        if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
+        if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
             try {
                 ((CloudCommandManagerImpl) core.getCommandManager())
                         .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } else {*/
+        } else {
             HelpCommand executor = new HelpCommand(this);
             new JKookCommand("help")
                     .setDescription("获取此帮助列表。")
+                    .addAlias("hp")
                     .executesUser(executor)
                     .executesConsole(executor)
                     .register(getInternalPlugin());
-        /*}*/
+        }
     }
 
 }
