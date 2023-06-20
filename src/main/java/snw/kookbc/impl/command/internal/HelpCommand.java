@@ -146,23 +146,6 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
 
                         ));
             }
-            if (client.getConfig().getBoolean("allow-help-ad", true)) {
-                builder.addModule(DividerModule.INSTANCE)
-                        .addModule(new ContextModule(
-                                Collections.singletonList(
-                                        new MarkdownElement(
-                                                String.format(
-                                                        "由 [%s](%s) v%s 驱动 - %s API %s",
-                                                        SharedConstants.IMPL_NAME,
-                                                        SharedConstants.REPO_URL,
-                                                        SharedConstants.IMPL_VERSION,
-                                                        SharedConstants.SPEC_NAME,
-                                                        client.getCore().getAPIVersion()
-                                                )
-                                        )
-                                )
-                        ));
-            }
             finalBuilder = builder;
         }
         if (client.getConfig().getBoolean("allow-help-ad", true)) {
