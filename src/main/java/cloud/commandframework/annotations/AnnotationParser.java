@@ -54,6 +54,7 @@ import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
+import snw.kookbc.impl.command.cloud.annotations.CommandHelpContent;
 import snw.kookbc.impl.command.cloud.annotations.CommandPrefix;
 
 import java.io.BufferedReader;
@@ -626,6 +627,12 @@ public final class AnnotationParser<C> {
             metaBuilder.with(ALIAS_KEY, aliases);
             metaBuilder.with(PREFIX_KEY, prefixes);
             metaBuilder.with(JKOOK_COMMAND_KEY, false);
+            if (methodOrClassHasAnnotation(method, CommandHelpContent.class)) {
+                String[] strings = method.getAnnotation(CommandHelpContent.class).value();
+                metaBuilder.with(HELP_CONTENT_KEY, String.join("\n", strings));
+            } else {
+                metaBuilder.with(HELP_CONTENT_KEY, "无前缀也可以执行。");
+            }
             @SuppressWarnings("rawtypes")
             Command.Builder builder = manager.commandBuilder(
                     commandToken,

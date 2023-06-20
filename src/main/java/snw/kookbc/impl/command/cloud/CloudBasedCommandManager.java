@@ -107,6 +107,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 .with(PREFIX_KEY, prefixes)
                                 .with(ALIAS_KEY, alias)
                                 .with(JKOOK_COMMAND_KEY, true)
+                                .with(HELP_CONTENT_KEY, jKookCommand.getHelpContent())
                                 .build()
                 )
                         .handler(new CloudWrappedCommandExecutionHandler(parent, jKookCommand))
@@ -295,6 +296,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                     finalAliases,
                     prefixes,
                     command.getCommandMeta().get(CommandMeta.DESCRIPTION).orElse(""),
+                    command.getCommandMeta().get(HELP_CONTENT_KEY).orElse(""),
                     command.getCommandMeta().getOrDefault(JKOOK_COMMAND_KEY, false)));
         }
         return result;

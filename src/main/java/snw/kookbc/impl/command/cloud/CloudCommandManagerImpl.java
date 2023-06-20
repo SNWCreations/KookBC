@@ -34,7 +34,6 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 /**
@@ -46,7 +45,8 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }, "kookbc_prefixes");
     public static final CommandMeta.Key<Collection<String>> ALIAS_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
     }, "kookbc_aliases");
-    public static final CommandMeta.Key<Boolean> JKOOK_COMMAND_KEY = CommandMeta.Key.of(Boolean.class, "kookbc_jkook_command");
+    public static final CommandMeta.Key<Boolean> JKOOK_COMMAND_KEY = CommandMeta.Key.of(Boolean.class, "is_jkook_command");
+    public static final CommandMeta.Key<String> HELP_CONTENT_KEY = CommandMeta.Key.of(String.class, "jkook_help_content");
     private final CloudBasedCommandManager manager;
 
     public CloudCommandManagerImpl(KBCClient client) {

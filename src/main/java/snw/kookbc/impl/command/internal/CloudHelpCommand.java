@@ -18,6 +18,7 @@
 package snw.kookbc.impl.command.internal;
 
 import cloud.commandframework.annotations.Argument;
+import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.processing.CommandContainer;
 import org.jetbrains.annotations.Nullable;
@@ -58,6 +59,7 @@ public class CloudHelpCommand {
 
     @CommandPrefix("$")
     @CommandMethod("help [target]")
+    @CommandDescription("获取此帮助列表。")
     public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
         List<String> content = buildHelpContent(target);
         if (sender instanceof User) {
@@ -124,7 +126,9 @@ public class CloudHelpCommand {
         } else if (commands.size() == 1) {
             CloudCommandInfo command = commands.get(0);
             result.add(String.format("命令: %s", command.rootName()));
-            result.add(String.format("别称: %s", String.join(" ", command.aliases())));
+            if (command.aliases().length > 0) {
+                result.add(String.format("别称: %s", String.join(" ", command.aliases())));
+            }
             result.add(String.format("可用前缀: %s", String.join(" ", command.prefixes())));
             result.add(
                     String.format("简介: %s",
@@ -133,11 +137,10 @@ public class CloudHelpCommand {
                                     : command.description()
                     )
             );
-            //todo: add help content
-            /*if (command.getHelpContent() != null && !command.getHelpContent().isEmpty()) {
+            if (!Util.isBlank(command.helpContent())) {
                 result.add("详细帮助信息:");
-                result.add(command.getHelpContent());
-            }*/
+                result.add(command.helpContent());
+            }
         } else {
             return Collections.emptyList();
         }
