@@ -57,7 +57,7 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         String[] rawInput = ((List<String>) commandContext.get("__raw_input__")).toArray(new String[0]);
 
         CommandSender sender = commandContext.getSender();
-        Message message = commandContext.get(KOOK_MESSAGE_KEY);
+        Message message = commandContext.getOrDefault(KOOK_MESSAGE_KEY, null);
         List<String> list = new ArrayList<>(Arrays.asList(rawInput));
         if (!list.isEmpty()) {
             list.remove(0); // remove head

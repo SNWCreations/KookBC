@@ -43,7 +43,6 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.WrappedCommand;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -206,22 +205,6 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
 
     @NonNull
     public CompletableFuture<CommandResult<CommandSender>> executeCommand(@NonNull CommandSender commandSender, @NonNull String input, Message message) {
-        String head;
-        if (input.contains(" ")) {
-            head = input.substring(0, input.indexOf(" "));
-        } else {
-            head = input;
-        }
-        WrappedCommand wrappedCommand = parent.getCommandMap().getView(true).get(head);
-        if (wrappedCommand != null) {
-            JKookCommand origin = wrappedCommand.getCommand();
-            int rIndex = head.indexOf(origin.getRootName());
-            input = input.substring(rIndex);
-        }/* else if (input.startsWith("/")) {
-            // 允许不通过CommandMap注册，通过注解注册，@CommandContainer
-            input = input.substring(1);
-        }*/
-
         final CommandContext<CommandSender> context = commandContextFactory.create(
                 false,
                 commandSender,
