@@ -503,7 +503,6 @@ public class KBCClient {
             HelpCommand executor = new HelpCommand(this);
             new JKookCommand("help")
                     .setDescription("获取此帮助列表。")
-                    .addAlias("hp")
                     .executesUser(executor)
                     .executesConsole(executor)
                     .register(getInternalPlugin());
