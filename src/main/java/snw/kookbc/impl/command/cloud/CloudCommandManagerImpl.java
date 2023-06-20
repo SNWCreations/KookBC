@@ -22,7 +22,6 @@ import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
-import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
@@ -32,21 +31,15 @@ import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+
+import static snw.kookbc.impl.command.cloud.CloudConstants.PLUGIN_KEY;
 
 /**
  * @author huanmeng_qwq
  */
 public class CloudCommandManagerImpl extends CommandManagerImpl {
-    public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "kookbc_plugin");
-    public static final CommandMeta.Key<Collection<String>> PREFIX_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
-    }, "kookbc_prefixes");
-    public static final CommandMeta.Key<Collection<String>> ALIAS_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
-    }, "kookbc_aliases");
-    public static final CommandMeta.Key<Boolean> JKOOK_COMMAND_KEY = CommandMeta.Key.of(Boolean.class, "is_jkook_command");
-    public static final CommandMeta.Key<String> HELP_CONTENT_KEY = CommandMeta.Key.of(String.class, "jkook_help_content");
     private final CloudBasedCommandManager manager;
 
     public CloudCommandManagerImpl(KBCClient client) {

@@ -52,8 +52,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
-import snw.kookbc.impl.command.cloud.CloudBasedCommandManager;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.command.cloud.annotations.CommandHelpContent;
 import snw.kookbc.impl.command.cloud.annotations.CommandPrefix;
 
@@ -71,7 +69,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.*;
+import static snw.kookbc.impl.command.cloud.CloudConstants.*;
 
 /**
  * Parser that parses class instances {@link Command commands}
@@ -159,7 +157,7 @@ public final class AnnotationParser<C> {
         );
         this.getParameterInjectorRegistry().registerInjector(
                 Plugin.class,
-                (context, annotations) -> context.get(CloudCommandManagerImpl.PLUGIN_KEY)
+                (context, annotations) -> context.get(PLUGIN_KEY)
         );
         this.getParameterInjectorRegistry().registerInjector(
                 Message.class,
@@ -169,7 +167,7 @@ public final class AnnotationParser<C> {
                     }
                     ArrayList<Class<?>> list = context.get("ignore_null");
                     list.add(Message.class);
-                    return context.getOrDefault(CloudBasedCommandManager.KOOK_MESSAGE_KEY, null);
+                    return context.getOrDefault(KOOK_MESSAGE_KEY, null);
                 }
         );
         this.stringProcessor = StringProcessor.noOp();
@@ -614,7 +612,7 @@ public final class AnnotationParser<C> {
             if (methodOrClassHasAnnotation(method, Confirmation.class)) {
                 metaBuilder.with(CommandConfirmationManager.META_CONFIRMATION_REQUIRED, true);
             }
-            metaBuilder.with(CloudCommandManagerImpl.PLUGIN_KEY, plugin);
+            metaBuilder.with(PLUGIN_KEY, plugin);
             List<String> prefixes = new ArrayList<>();
             List<@NonNull String> minor = tokens.get(0).getMinor();
             List<String> aliases = new ArrayList<>(minor);

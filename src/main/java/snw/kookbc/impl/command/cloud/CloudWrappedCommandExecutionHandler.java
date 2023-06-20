@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static snw.kookbc.impl.command.cloud.CloudBasedCommandManager.KOOK_MESSAGE_KEY;
+import static snw.kookbc.impl.command.cloud.CloudConstants.KOOK_MESSAGE_KEY;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 /**

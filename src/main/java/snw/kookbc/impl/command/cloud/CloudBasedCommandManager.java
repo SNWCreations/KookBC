@@ -30,12 +30,9 @@ import cloud.commandframework.execution.CommandExecutionCoordinator;
 import cloud.commandframework.execution.CommandResult;
 import cloud.commandframework.internal.CommandInputTokenizer;
 import cloud.commandframework.internal.CommandRegistrationHandler;
-import cloud.commandframework.keys.CloudKey;
-import cloud.commandframework.keys.SimpleCloudKey;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.services.State;
-import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
@@ -53,14 +50,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static snw.kookbc.impl.command.cloud.CloudCommandManagerImpl.*;
+import static snw.kookbc.impl.command.cloud.CloudConstants.*;
 
 /**
  * @author huanmeng_qwq
  */
 @SuppressWarnings("unused")
 public class CloudBasedCommandManager extends CommandManager<CommandSender> {
-    public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
     protected final KBCClient client;
     private final CloudCommandManagerImpl parent;
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
