@@ -15,7 +15,7 @@ import java.util.Collection;
  *
  * @author huanmeng_qwq
  */
-public class CloudConstants {
+public final class CloudConstants {
     public static final CommandMeta.Key<Plugin> PLUGIN_KEY = CommandMeta.Key.of(Plugin.class, "kookbc_plugin");
     public static final CommandMeta.Key<Collection<String>> PREFIX_KEY = CommandMeta.Key.of(new TypeToken<Collection<String>>() {
     }, "kookbc_prefixes");
@@ -25,4 +25,6 @@ public class CloudConstants {
     public static final CommandMeta.Key<String> HELP_CONTENT_KEY = CommandMeta.Key.of(String.class, "jkook_help_content");
     public static final CloudKey<Message> KOOK_MESSAGE_KEY = SimpleCloudKey.of("kook_message", TypeToken.get(Message.class));
 
+    private CloudConstants() {
+    }
 }
