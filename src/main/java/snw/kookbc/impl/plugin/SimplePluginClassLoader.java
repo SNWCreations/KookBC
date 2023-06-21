@@ -26,15 +26,14 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.launch.LaunchClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -43,6 +42,7 @@ import java.util.zip.ZipEntry;
 // Call close method on unused instances to ensure the instance will be fully destroyed.
 public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
+    private final Map<String, Class<?>> cache = new ConcurrentHashMap<>();
     private final KBCClient client;
     private PluginDescription description;
 
@@ -96,10 +96,18 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 "init",
                 File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
         );
-        String clazzURI = cls.getProtectionDomain().getCodeSource().getLocation().toURI().getRawSchemeSpecificPart();
-        int endIndex = clazzURI.length() - (cls.getName().replace(".", "/") + ".class").length() - 2;
-        clazzURI = clazzURI.substring(0, endIndex);
-        File pluginFile = new File(new URI(clazzURI));
+        File pluginFile;
+        final URL location = cls.getProtectionDomain().getCodeSource().getLocation();
+        if (location.getFile().endsWith(".class")) {
+            if (!location.getFile().contains("!/")) {
+                throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: " + location + ", maybe it is a single class file?");
+            }
+            String url = location.toString();
+            url = url.substring(0, url.indexOf("!/"));
+            pluginFile = new File(new URL(url).toURI());
+        } else {
+            pluginFile = new File(location.toURI());
+        }
         File dataFolder = new File(client.getPluginsFolder(), description.getName());
         initMethod.invoke(plugin,
                 new File(dataFolder, "config.yml"),
@@ -114,9 +122,6 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<? extends Plugin> lookForMainClass(String mainClassName, File file) throws Exception {
-        if (getParent() instanceof LaunchClassLoader) {
-            ((LaunchClassLoader) getParent()).addURL(file.toURI().toURL());
-        }
         initMixins(file);
         return super.lookForMainClass(mainClassName, file);
     }
@@ -127,14 +132,25 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
+        if (cache.containsKey(name)) {
+            return cache.get(name);
+        }
         try {
-            return super.findClass(name);
+            Class<?> result = super.findClass(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         } catch (ClassNotFoundException ignored) {
         }
 
         // Try to load class from other known instances if needed
         if (!dontCallOther) {
-            return loadFromOther(name);
+            Class<?> result =  loadFromOther(name);
+            if (result != null) {
+                cache.put(name, result);
+                return result;
+            }
         }
         throw new ClassNotFoundException(name);
     }

@@ -24,6 +24,7 @@ import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
+import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
@@ -41,6 +42,7 @@ import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
+import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
@@ -218,6 +220,58 @@ public class KBCClient {
     }
 
     private void enablePlugins() {
+        @SuppressWarnings("DataFlowIssue")
+        List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
+
+        getCore().getLogger().debug("Before filtering: {}", newIncomingFiles);
+        getCore().getLogger().debug("Current known plugins: {}", this.plugins);
+        for (Plugin plugin : this.plugins) {
+            getCore().getLogger().debug("Checking file: {}", plugin.getFile());
+            newIncomingFiles.removeIf(i -> i.getAbsolutePath().equals(plugin.getFile().getAbsolutePath())); // remove already loaded file
+        }
+        getCore().getLogger().debug("After filtering: {}", newIncomingFiles);
+
+        int before = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+
+        List<Plugin> pluginsToEnable = this.plugins;
+        getCore().getLogger().debug("Plugins to be enabled: {}", pluginsToEnable);
+
+        boolean shouldContinue;
+
+        do {
+            shouldContinue = false;
+            enablePlugins(pluginsToEnable);
+            int after = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
+            if (after > before) { // new loader providers added
+                getCore().getLogger().debug("Found new plugin loader providers, trying to load more plugins");
+                if (!newIncomingFiles.isEmpty()) {
+                    getCore().getLogger().debug("Files to be loaded: {}", newIncomingFiles);
+                    List<Plugin> newPlugins = new ArrayList<>();
+                    for (Iterator<File> iterator = newIncomingFiles.iterator(); iterator.hasNext(); ) {
+                        File fileToLoad = iterator.next();
+                        final Plugin plugin;
+                        try {
+                            plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
+                        } catch (InvalidPluginException e) {
+                            getCore().getLogger().debug("Exception appeared", e);
+                            continue; // don't remove, maybe it will be loaded in next loop?
+                        }
+                        getCore().getLogger().debug("Successfully loaded {} from file {}", plugin, fileToLoad);
+                        newPlugins.add(plugin);
+                        iterator.remove(); // prevent next loop load this again
+                    }
+                    getCore().getLogger().debug("New plugins to be enabled in next round: {}", newPlugins);
+                    if (!newPlugins.isEmpty()) {
+                        pluginsToEnable = newPlugins;
+                        shouldContinue = true;
+                    }
+                }
+            }
+            before = after;
+        } while (shouldContinue);
+    }
+
+    private void enablePlugins(@Nullable List<Plugin> plugins) {
         if (plugins == null) { // no plugins? do nothing!
             // if the plugins was not loaded, we can't continue
             // the loadPlugins method is protected, NOT private, so it is possible to be empty!
@@ -259,6 +313,7 @@ public class KBCClient {
                 continue;
             }
             if (!plugin.isEnabled()) {
+                closeLoaderIfPossible(plugin);
                 iterator.remove();
             } else {
                 // Add the plugin into the known list to ensure the dependency system will work correctly
