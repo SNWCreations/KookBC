@@ -37,6 +37,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
+import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
@@ -229,6 +230,39 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
 
     @NonNull
     public CompletableFuture<CommandResult<CommandSender>> executeCommand(@NonNull CommandSender commandSender, @NonNull String input, Message message) {
+        return executeCommand(commandSender, input, message, commandSender instanceof ConsoleCommandSender);
+    }
+
+    // prefix:full_command_name
+    public Map<String, LinkedHashSet<String>> collectCommands() {
+        LinkedHashMap<String, LinkedHashSet<String>> map = new LinkedHashMap<>();
+        map.put("", new LinkedHashSet<>());
+        for (Command<CommandSender> command : commands()) {
+            map.get("").add(command.getArguments().get(0).getName());
+            Collection<String> prefixes = command.getCommandMeta().get(PREFIX_KEY).orElse(null);
+            if (prefixes == null) {
+                continue;
+            }
+            Collection<String> aliases = command.getCommandMeta().get(ALIAS_KEY).orElse(Collections.emptyList());
+            checkPrefix(map, prefixes.toArray(new String[0]));
+            for (String prefix : prefixes) {
+                map.get(prefix).addAll(aliases);
+                map.get(prefix).add(command.getArguments().get(0).getName());
+            }
+        }
+        return map;
+    }
+
+    private void checkPrefix(Map<String, LinkedHashSet<String>> map, String... prefixes) {
+        for (String prefix : prefixes) {
+            if (!map.containsKey(prefix)) {
+                map.put(prefix, new LinkedHashSet<>());
+            }
+        }
+    }
+
+    @NonNull
+    public CompletableFuture<CommandResult<CommandSender>> executeCommand(@NonNull CommandSender commandSender, @NonNull String input, Message message, boolean ignorePrefix) {
         final CommandContext<CommandSender> context = commandContextFactory.create(
                 false,
                 commandSender,
@@ -240,6 +274,21 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         final LinkedList<String> inputQueue = new CommandInputTokenizer(input).tokenize();
         /* Store a copy of the input queue in the context */
         context.store("__raw_input__", new LinkedList<>(inputQueue));
+        if (ignorePrefix && !inputQueue.isEmpty()) {
+            String command = inputQueue.getFirst();
+            EACH:
+            for (Map.Entry<String, LinkedHashSet<String>> entry : collectCommands().entrySet()) {
+                String prefix = entry.getKey();
+                LinkedHashSet<String> commands = entry.getValue();
+                for (String cmd : commands) {
+                    if (cmd.substring(prefix.length()).equalsIgnoreCase(command)) {
+                        command = cmd;
+                        break EACH;
+                    }
+                }
+            }
+            inputQueue.set(0, command);
+        }
         try {
             CompletableFuture<CommandResult<CommandSender>> future = new CompletableFuture<>();
             if (this.preprocessContext(context, inputQueue) == State.ACCEPTED) {
