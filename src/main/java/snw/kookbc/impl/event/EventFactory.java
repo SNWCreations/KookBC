@@ -66,7 +66,7 @@ public class EventFactory {
         }
         if (!eventManager.isSubscribed(eventType)) {
             // if not message event, ensure command system can receive event.
-            if (eventType != ChannelMessageEvent.class && eventType != PrivateMessageEvent.class) {
+            if (eventType != ChannelMessageEvent.class && eventType != PrivateMessageReceivedEvent.class) {
                 return null;
             }
         }

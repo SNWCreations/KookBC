@@ -507,6 +507,8 @@ public class KBCClient {
                     .executesConsole(executor)
                     .register(getInternalPlugin());
         }
+        this.core.getEventManager()
+                .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }
 
 }

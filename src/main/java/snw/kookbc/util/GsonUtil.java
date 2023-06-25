@@ -43,7 +43,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class GsonUtil {
+public final class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
             // Card
             .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
