@@ -53,7 +53,7 @@ import static snw.kookbc.impl.command.internal.HelpCommand.HELP_VALUE_HEADER;
  */
 @SuppressWarnings("unused")
 @CommandContainer
-@CommandPrefix({"-", "#"})
+@CommandPrefix({"/", "-", "#"})
 public class CloudHelpCommand {
     private static final String[] EMPTY_STRING_ARRAY = new String[]{};
 
