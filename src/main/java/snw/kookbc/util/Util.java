@@ -173,7 +173,7 @@ public class Util {
                                     command.getRootName(),
                                     (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
                             ),
-                            5000
+                            4997
                     )
             );
         }
