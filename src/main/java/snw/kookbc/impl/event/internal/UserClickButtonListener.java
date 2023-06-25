@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static snw.kookbc.impl.command.internal.HelpCommand.HELP_VALUE_HEADER;
+
 public final class UserClickButtonListener implements Listener {
     private static final PlainTextElement EMPTY_PLAIN_TEXT_ELEMENT = new PlainTextElement(" ");
 
@@ -35,10 +37,10 @@ public final class UserClickButtonListener implements Listener {
     @EventHandler
     public void event(UserClickButtonEvent event) {
         String value = event.getValue();
-        if (!value.startsWith("kookbc-help")) {
+        if (!value.startsWith(HELP_VALUE_HEADER)) {
             return;
         }
-        JsonObject detail = JsonParser.parseString(value.substring(11)).getAsJsonObject();
+        JsonObject detail = JsonParser.parseString(value.substring(HELP_VALUE_HEADER.length())).getAsJsonObject();
         int page = detail.get("page").getAsInt();
         int currentPage = detail.get("current").getAsInt();
         if (page == currentPage) {
@@ -76,7 +78,7 @@ public final class UserClickButtonListener implements Listener {
                                 Arrays.asList(
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                String.format("kookbc-help{\"page\": %d, \"current\": %d}", page - 1, page), // Placeholder
+                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d}", page - 1, page), // Placeholder
                                                 page > 1 ? ButtonElement.EventType.RETURN_VAL : ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("上一页")
                                         ),
@@ -84,7 +86,7 @@ public final class UserClickButtonListener implements Listener {
                                         new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                String.format("kookbc-help{\"page\": %d, \"current\": %d}", page + 1, page),
+                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d}", page + 1, page),
                                                 (5 * page) < content.size() ? ButtonElement.EventType.RETURN_VAL : ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("下一页")
                                         )

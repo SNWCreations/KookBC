@@ -26,7 +26,6 @@ import snw.jkook.command.UserCommandExecutor;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.card.CardBuilder;
-import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.element.ButtonElement;
@@ -45,6 +44,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExecutor {
+    public static final String HELP_VALUE_HEADER = "kookbc-help";
     private static final String[] EMPTY_STRING_ARRAY = new String[]{};
     private static final PlainTextElement EMPTY_PLAIN_TEXT_ELEMENT = new PlainTextElement(" ");
     private final KBCClient client;
@@ -130,7 +130,7 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                                 Arrays.asList(
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                "kookbc-help{\"page\": 0, \"current\": 1}", // Placeholder
+                                                HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1}", // Placeholder
                                                 ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("上一页")
                                         ),
@@ -138,29 +138,12 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                                         new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                "kookbc-help{\"page\": 2, \"current\": 1}",
+                                                HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1}",
                                                 ButtonElement.EventType.RETURN_VAL,
                                                 new PlainTextElement("下一页")
                                         )
                                 )
 
-                        ));
-            }
-            if (client.getConfig().getBoolean("allow-help-ad", true)) {
-                builder.addModule(DividerModule.INSTANCE)
-                        .addModule(new ContextModule(
-                                Collections.singletonList(
-                                        new MarkdownElement(
-                                                String.format(
-                                                        "由 [%s](%s) v%s 驱动 - %s API %s",
-                                                        SharedConstants.IMPL_NAME,
-                                                        SharedConstants.REPO_URL,
-                                                        SharedConstants.IMPL_VERSION,
-                                                        SharedConstants.SPEC_NAME,
-                                                        client.getCore().getAPIVersion()
-                                                )
-                                        )
-                                )
                         ));
             }
             finalBuilder = builder;
