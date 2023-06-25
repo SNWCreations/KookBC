@@ -97,10 +97,13 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                             String.format("**可用前缀**: %s", String.join(" ", specificCommand.getPrefixes()))
                     )))
                     .addModule(new SectionModule(new MarkdownElement(
-                            String.format("**简介**: %s",
-                                    (specificCommand.getDescription() == null)
-                                            ? "此命令没有简介。"
-                                            : Util.limit(specificCommand.getDescription(), 4997)
+                            Util.limit(
+                                    String.format("**简介**: %s",
+                                            (specificCommand.getDescription() == null)
+                                                    ? "此命令没有简介。"
+                                                    : specificCommand.getDescription()
+                                    ),
+                                    4997
                             )
                     )));
             if (specificCommand.getHelpContent() != null) {
