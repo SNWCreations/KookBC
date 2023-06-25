@@ -214,7 +214,14 @@ public class Util {
     public static CloudCommandInfo findSpecificCloudCommand(KBCClient client, String name) {
         List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
         if (!isBlank(name)) {
-            return commandsInfo.stream().filter(info -> info.rootName().equalsIgnoreCase(name)).findFirst().orElse(null);
+            return commandsInfo.stream()
+                    .filter(info ->
+                            info.rootName().equalsIgnoreCase(name) ||
+                                    Arrays.stream(info.aliases())
+                                            .anyMatch(
+                                                    alias -> alias.equalsIgnoreCase(name)
+                                            )
+                    ).findFirst().orElse(null);
         } else {
             return null;
         }
