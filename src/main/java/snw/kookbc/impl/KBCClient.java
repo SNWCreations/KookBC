@@ -39,6 +39,7 @@ import snw.kookbc.impl.entity.EntityStorage;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
+import snw.kookbc.impl.event.internal.UserClickButtonListener;
 import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
@@ -493,12 +494,8 @@ public class KBCClient {
 
     protected void registerHelpCommand() {
         if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
-            try {
-                ((CloudCommandManagerImpl) core.getCommandManager())
-                        .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            ((CloudCommandManagerImpl) core.getCommandManager())
+                    .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
         } else {
             HelpCommand executor = new HelpCommand(this);
             new JKookCommand("help")

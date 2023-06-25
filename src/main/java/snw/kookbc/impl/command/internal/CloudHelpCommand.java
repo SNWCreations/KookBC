@@ -25,6 +25,13 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.message.component.card.CardBuilder;
+import snw.jkook.message.component.card.Size;
+import snw.jkook.message.component.card.Theme;
+import snw.jkook.message.component.card.element.ButtonElement;
+import snw.jkook.message.component.card.element.MarkdownElement;
+import snw.jkook.message.component.card.element.PlainTextElement;
+import snw.jkook.message.component.card.module.*;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.cloud.CloudCommandInfo;
@@ -37,6 +44,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static snw.kookbc.impl.command.internal.HelpCommand.EMPTY_PLAIN_TEXT_ELEMENT;
+import static snw.kookbc.impl.command.internal.HelpCommand.HELP_VALUE_HEADER;
 
 /**
  * @author huanmeng_qwq
@@ -61,32 +71,105 @@ public class CloudHelpCommand {
     @CommandMethod("help [target]")
     @CommandDescription("获取此帮助列表。")
     public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
-        List<String> content = buildHelpContent(target);
         if (sender instanceof User) {
-            String finalResult;
-            if (content.isEmpty()) {
-                finalResult = "找不到命令。";
-            } else {
-                content.removeIf(IT -> IT.startsWith("(/)stop:"));
-
-                if (client.getConfig().getBoolean("allow-help-ad", true)) {
-                    content.add(
-                            String.format(
-                                    "由 [%s](%s) v%s 驱动 - %s API %s",
-                                    SharedConstants.IMPL_NAME,
-                                    SharedConstants.REPO_URL,
-                                    SharedConstants.IMPL_VERSION,
-                                    SharedConstants.SPEC_NAME,
-                                    client.getCore().getAPIVersion()
-                            )
-                    );
-                } else {
-                    content.remove(content.size() - 1);
+            List<String> content = Util.listCloudCommandsHelp(this.client);
+            CloudCommandInfo specificCommand = Util.findSpecificCloudCommand(this.client, target);
+            CardBuilder finalBuilder;
+            if (content.isEmpty() && specificCommand == null) {
+                finalBuilder = new CardBuilder()
+                        .setTheme(Theme.DANGER)
+                        .setSize(Size.LG)
+                        .addModule(new HeaderModule("找不到命令"));
+            } else if (specificCommand != null) {
+                finalBuilder = new CardBuilder()
+                        .setTheme(Theme.SUCCESS)
+                        .setSize(Size.LG)
+                        .addModule(new HeaderModule("命令帮助"))
+                        .addModule(DividerModule.INSTANCE)
+                        .addModule(new SectionModule(new MarkdownElement(
+                                String.format("**命令**: %s", specificCommand.rootName())
+                        )))
+                        .addModule(new SectionModule(new MarkdownElement(
+                                String.format("**别称**: %s", String.join(" ", specificCommand.aliases()))
+                        )))
+                        .addModule(new SectionModule(new MarkdownElement(
+                                String.format("**可用前缀**: %s", String.join(" ", specificCommand.prefixes()))
+                        )))
+                        .addModule(new SectionModule(new MarkdownElement(
+                                Util.limit(
+                                        String.format("**简介**: %s",
+                                                (Util.isBlank(specificCommand.description()))
+                                                        ? "此命令没有简介。"
+                                                        : specificCommand.description()
+                                        ),
+                                        4997
+                                )
+                        )));
+                if (!Util.isBlank(specificCommand.helpContent())) {
+                    finalBuilder.addModule(new SectionModule(new MarkdownElement(
+                            Util.limit(String.format("**详细帮助信息**:\n%s", specificCommand.helpContent()), 4997)
+                    )));
                 }
-                finalResult = String.join("\n", content.toArray(EMPTY_STRING_ARRAY));
+            } else {
+                int totalPages = content.size() % 5 == 0 ? content.size() / 5 : content.size() / 5 + 1;
+                CardBuilder builder = new CardBuilder()
+                        .setTheme(Theme.SUCCESS)
+                        .setSize(Size.LG)
+                        .addModule(new HeaderModule(String.format("命令帮助 (1/%d)", totalPages)))
+                        .addModule(DividerModule.INSTANCE);
+                content.removeIf(IT -> IT.startsWith("(/)stop:"));
+                if (content.size() <= 5) {
+                    content.stream()
+                            .map(SectionModule::new)
+                            .forEachOrdered(builder::addModule);
+                } else {
+                    content.stream()
+                            .limit(5L)
+                            .map(SectionModule::new)
+                            .forEachOrdered(builder::addModule);
+                    builder.addModule(DividerModule.INSTANCE)
+                            .addModule(new ActionGroupModule(
+                                    Arrays.asList(
+                                            new ButtonElement(
+                                                    Theme.PRIMARY,
+                                                    HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1}", // Placeholder
+                                                    ButtonElement.EventType.NO_ACTION,
+                                                    new PlainTextElement("上一页")
+                                            ),
+                                            new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
+                                            new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
+                                            new ButtonElement(
+                                                    Theme.PRIMARY,
+                                                    HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1}",
+                                                    ButtonElement.EventType.RETURN_VAL,
+                                                    new PlainTextElement("下一页")
+                                            )
+                                    )
+
+                            ));
+                }
+                finalBuilder = builder;
             }
-            message.sendToSource(finalResult);
+            if (client.getConfig().getBoolean("allow-help-ad", true)) {
+                finalBuilder.addModule(DividerModule.INSTANCE)
+                        .addModule(new ContextModule(
+                                Collections.singletonList(
+                                        new MarkdownElement(
+                                                String.format(
+                                                        "由 [%s](%s) v%s 驱动 - %s API %s",
+                                                        SharedConstants.IMPL_NAME,
+                                                        SharedConstants.REPO_URL,
+                                                        SharedConstants.IMPL_VERSION,
+                                                        SharedConstants.SPEC_NAME,
+                                                        client.getCore().getAPIVersion()
+                                                )
+                                        )
+                                )
+                        ));
+            }
+            message.sendToSource(finalBuilder.build());
         } else {
+            List<String> content = buildHelpContent(target);
             if (content.isEmpty()) {
                 client.getCore().getLogger().info("Commands is empty.");
             } else {
