@@ -18,13 +18,20 @@
 
 package snw.kookbc.util;
 
+import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginLoader;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.WrappedCommand;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -152,4 +159,44 @@ public class Util {
         } catch (Exception ignored) {
         }
     }
+
+    public static List<String> listCommandsHelp(KBCClient client) {
+        CommandManagerImpl commandManager = (CommandManagerImpl) client.getCore().getCommandManager();
+        JKookCommand[] commands = commandManager.getCommandSet().toArray(new JKookCommand[0]);
+        List<String> result = new LinkedList<>();
+        for (JKookCommand command : commands) {
+            result.add(
+                    limit(
+                            String.format("(%s)%s: %s",
+                                    String.join(" ",
+                                            command.getPrefixes()),
+                                    command.getRootName(),
+                                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                            ),
+                            4997
+                    )
+            );
+        }
+        return result;
+    }
+
+    public static JKookCommand findSpecificCommand(KBCClient client, String name) {
+        CommandManagerImpl commandManager = (CommandManagerImpl) client.getCore().getCommandManager();
+        if (name != null && !name.isEmpty()) {
+            WrappedCommand command = commandManager.getCommand(name);
+            if (command == null) {
+                return null;
+            }
+            return command.getCommand();
+        } else {
+            return null;
+        }
+    }
+
+    public static String limit(String original, int maxLength) {
+        if (maxLength < 0 || original.length() <= maxLength)
+            return original;
+        return String.format("%s...", original.substring(0, maxLength));
+    }
+
 }
