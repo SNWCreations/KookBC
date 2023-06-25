@@ -166,11 +166,14 @@ public class Util {
         List<String> result = new LinkedList<>();
         for (JKookCommand command : commands) {
             result.add(
-                    String.format("(%s)%s: %s",
-                            String.join(" ",
-                                    command.getPrefixes()),
-                            command.getRootName(),
-                            (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                    limit(
+                            String.format("(%s)%s: %s",
+                                    String.join(" ",
+                                            command.getPrefixes()),
+                                    command.getRootName(),
+                                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                            ),
+                            5000
                     )
             );
         }
@@ -188,6 +191,12 @@ public class Util {
         } else {
             return null;
         }
+    }
+
+    public static String limit(String original, int maxLength) {
+        if (maxLength < 0 || original.length() <= maxLength)
+            return original;
+        return String.format("%s...", original.substring(0, maxLength));
     }
 
 }

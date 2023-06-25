@@ -100,7 +100,7 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                             String.format("**简介**: %s",
                                     (specificCommand.getDescription() == null)
                                             ? "此命令没有简介。"
-                                            : specificCommand.getDescription()
+                                            : Util.limit(specificCommand.getDescription(), 5000)
                             )
                     )));
             if (specificCommand.getHelpContent() != null) {
