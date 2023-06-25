@@ -108,7 +108,7 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                     )));
             if (specificCommand.getHelpContent() != null) {
                 finalBuilder.addModule(new SectionModule(new MarkdownElement(
-                        String.format("**详细帮助信息**:\n%s", specificCommand.getHelpContent())
+                        Util.limit(String.format("**详细帮助信息**:\n%s", specificCommand.getHelpContent()), 4997)
                 )));
             }
         } else {
