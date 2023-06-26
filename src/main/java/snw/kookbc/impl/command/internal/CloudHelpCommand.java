@@ -21,6 +21,7 @@ import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
 import cloud.commandframework.annotations.processing.CommandContainer;
+import cloud.commandframework.annotations.specifier.Quoted;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
 import snw.jkook.entity.User;
@@ -67,12 +68,12 @@ public class CloudHelpCommand {
     public CloudHelpCommand() {
     }
 
-    @CommandMethod("[target]")
+    @CommandMethod("[command]")
     @CommandDescription("获取此帮助列表。")
-    public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
+    public void consoleHelp(CommandSender sender, Message message, @Argument("command") @Quoted @Nullable String command) {
         if (sender instanceof User) {
             List<String> content = Util.listCloudCommandsHelp(this.client);
-            CloudCommandInfo specificCommand = Util.findSpecificCloudCommand(this.client, target);
+            CloudCommandInfo specificCommand = Util.findSpecificCloudCommand(this.client, command);
             CardBuilder finalBuilder;
             if (content.isEmpty() && specificCommand == null) {
                 finalBuilder = new CardBuilder()
@@ -86,7 +87,7 @@ public class CloudHelpCommand {
                         .addModule(new HeaderModule("命令帮助"))
                         .addModule(DividerModule.INSTANCE)
                         .addModule(new SectionModule(new MarkdownElement(
-                                String.format("**命令**: %s", specificCommand.rootName())
+                                String.format("**命令**: %s", specificCommand.syntax())
                         )))
                         .addModule(new SectionModule(new MarkdownElement(
                                 String.format("**别称**: %s", String.join(" ", specificCommand.aliases()))
@@ -168,7 +169,7 @@ public class CloudHelpCommand {
             }
             message.sendToSource(finalBuilder.build());
         } else {
-            List<String> content = buildHelpContent(target);
+            List<String> content = buildHelpContent(command);
             if (content.isEmpty()) {
                 client.getCore().getLogger().info("Commands is empty.");
             } else {
@@ -184,6 +185,7 @@ public class CloudHelpCommand {
         if (target != null && !target.isEmpty()) {
             commands = commands.stream()
                     .filter(command -> command.rootName().equalsIgnoreCase(target) ||
+                            command.syntax().equalsIgnoreCase(target) ||
                             Arrays.stream(command.aliases())
                                     .anyMatch(alias -> alias.equalsIgnoreCase(target))
                     )
@@ -197,7 +199,7 @@ public class CloudHelpCommand {
                         String.format("(%s)%s: %s",
                                 String.join(" ",
                                         command.prefixes()),
-                                command.rootName(),
+                                command.syntax(),
                                 (Util.isBlank(command.description())) ? "此命令没有简介。" : command.description()
                         )
                 );
@@ -207,7 +209,7 @@ public class CloudHelpCommand {
             result.add("如 \"(/ .)blah\" 即 \"/blah\", \".blah\" 为同一条命令。");
         } else if (commands.size() == 1) {
             CloudCommandInfo command = commands.get(0);
-            result.add(String.format("命令: %s", command.rootName()));
+            result.add(String.format("命令: %s", command.syntax()));
             if (command.aliases().length > 0) {
                 result.add(String.format("别称: %s", String.join(" ", command.aliases())));
             }

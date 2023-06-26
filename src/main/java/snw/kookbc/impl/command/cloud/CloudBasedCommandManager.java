@@ -187,7 +187,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                     InvalidSyntaxException.class,
                     (InvalidSyntaxException) throwable, (c, e) -> {
                         if (message != null) {
-                            message.sendToSource(finalThrowable.getMessage());
+                            message.sendToSource("指令语法错误。正确的用法: "
+                                    + ((InvalidSyntaxException) finalThrowable)
+                                    .getCorrectSyntax());
                         }
                     }
             );
@@ -343,27 +345,21 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             String[] prefixes = command.getCommandMeta().get(PREFIX_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String[] aliases = command.getCommandMeta().get(ALIAS_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String rootName = removePrefix(prefixes, command.getArguments().get(0).getName()).get(0);
-            String firstRootName = rootName;
-            String[] finalAliases = removePrefix(prefixes, aliases).stream().distinct().filter(e -> !e.equals(firstRootName)).toArray(String[]::new);
-            if (result.stream().anyMatch(e -> e.rootName().equals(firstRootName))) {
-                rootName = command.getArguments().stream().map(arg -> {
-                    if (arg.getName().equals(firstRootName)) {
-                        return arg.getName();
-                    }
-                    if (arg.isRequired()) {
-                        return "<" + arg.getName() + ">";
-                    }
-                    return "[" + arg.getName() + "]";
-                }).collect(Collectors.joining(" "));
+            String syntax = rootName;
+            String[] finalAliases = removePrefix(prefixes, aliases).stream().distinct().filter(e -> !e.equals(rootName)).toArray(String[]::new);
+            Boolean jKookCommand = command.getCommandMeta().getOrDefault(JKOOK_COMMAND_KEY, false);
+            if (!jKookCommand) {
+                syntax = commandSyntaxFormatter().apply(command.getArguments(), null);
             }
             result.add(new CloudCommandInfo(
                     command.getCommandMeta().get(PLUGIN_KEY).get(),
                     rootName,
+                    syntax,
                     finalAliases,
                     prefixes,
                     command.getCommandMeta().get(CommandMeta.DESCRIPTION).orElse(""),
                     command.getCommandMeta().get(HELP_CONTENT_KEY).orElse(""),
-                    command.getCommandMeta().getOrDefault(JKOOK_COMMAND_KEY, false)));
+                    jKookCommand));
         }
         return result;
     }

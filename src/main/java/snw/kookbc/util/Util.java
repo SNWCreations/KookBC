@@ -179,7 +179,7 @@ public class Util {
 
         List<String> result = new LinkedList<>();
         for (CloudCommandInfo command : commandsInfo) {
-            insertCommandHelpContent(result, command.rootName(), Arrays.asList(command.prefixes()), command.description());
+            insertCommandHelpContent(result, command.syntax(), Arrays.asList(command.prefixes()), command.description());
         }
         return result;
     }
@@ -217,6 +217,7 @@ public class Util {
             return commandsInfo.stream()
                     .filter(info ->
                             info.rootName().equalsIgnoreCase(name) ||
+                                    info.syntax().equalsIgnoreCase(name) ||
                                     Arrays.stream(info.aliases())
                                             .anyMatch(
                                                     alias -> alias.equalsIgnoreCase(name)

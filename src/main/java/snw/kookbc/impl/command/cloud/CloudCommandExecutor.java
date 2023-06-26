@@ -60,8 +60,8 @@ public class CloudCommandExecutor implements CommandExecutor {
                         manager.handleException(sender,
                                 InvalidSyntaxException.class,
                                 (InvalidSyntaxException) throwable, (c, e) ->
-                                        replay(message, "Invalid Command Syntax. "
-                                                + "Correct command syntax is: " + root.getPrefixes().iterator().next()
+                                        replay(message, "指令语法错误。正确的用法: "
+                                                + root.getPrefixes().iterator().next()
                                                 + ((InvalidSyntaxException) finalThrowable)
                                                 .getCorrectSyntax())
                         );
@@ -69,13 +69,15 @@ public class CloudCommandExecutor implements CommandExecutor {
                         manager.handleException(sender,
                                 InvalidCommandSenderException.class,
                                 (InvalidCommandSenderException) throwable, (c, e) ->
-                                        replay(message, finalThrowable.getMessage())
+                                        replay(message, e.getRequiredSender().equals(CommandSender.class)
+                                                ? "该指令只能由玩家执行"
+                                                : "该指令只能由控制台执行")
                         );
                     } else if (throwable instanceof NoPermissionException) {
                         manager.handleException(sender,
                                 NoPermissionException.class,
                                 (NoPermissionException) throwable, (c, e) ->
-                                        replay(message, "You do not have permission to execute this command")
+                                        replay(message, "你没有权限执行该指令")
                         );
                     }/* else if (throwable instanceof NoSuchCommandException) {
                                 manager.handleException(sender,
@@ -87,21 +89,21 @@ public class CloudCommandExecutor implements CommandExecutor {
                         manager.handleException(sender,
                                 ArgumentParseException.class,
                                 (ArgumentParseException) throwable, (c, e) ->
-                                        replay(message, "Invalid Command Argument: "
+                                        replay(message, "无效的命令参数: "
                                                 + finalThrowable.getCause().getMessage())
                         );
                     } else if (throwable instanceof CommandExecutionException) {
                         manager.handleException(sender,
                                 CommandExecutionException.class,
                                 (CommandExecutionException) throwable, (c, e) -> {
-                                    replay(message, "An internal error occurred while attempting to perform this command");
+                                    replay(message, "尝试执行此命令时发生内部错误");
                                     plugin.getLogger().error(
                                             "Exception executing command handler", finalThrowable.getCause()
                                     );
                                 }
                         );
                     } else if (throwable != null) {
-                        replay(message, "An internal error occurred while attempting to perform this command");
+                        replay(message, "尝试执行此命令时发生内部错误");
                         plugin.getLogger().error("An unhandled exception was thrown during command execution",
                                 throwable
                         );

@@ -10,15 +10,17 @@ import java.util.Arrays;
 public class CloudCommandInfo {
     private final Plugin owningPlugin;
     private final String rootName;
+    private final String syntax;
     private final String[] aliases;
     private final String[] prefixes;
     private final String description;
     private final String helpContent;
     private final boolean isJKookCommand;
 
-    public CloudCommandInfo(Plugin owningPlugin, String rootName, String[] aliases, String[] prefixes, String description, String helpContent, boolean isJKookCommand) {
+    public CloudCommandInfo(Plugin owningPlugin, String rootName, String syntax, String[] aliases, String[] prefixes, String description, String helpContent, boolean isJKookCommand) {
         this.owningPlugin = owningPlugin;
         this.rootName = rootName;
+        this.syntax = syntax;
         this.aliases = aliases;
         this.prefixes = prefixes;
         this.description = description;
@@ -32,6 +34,10 @@ public class CloudCommandInfo {
 
     public String rootName() {
         return rootName;
+    }
+
+    public String syntax() {
+        return syntax;
     }
 
     public String[] aliases() {
@@ -59,6 +65,7 @@ public class CloudCommandInfo {
         return "CloudCommandInfo{" +
                 "owningPlugin=" + owningPlugin.getDescription().getName() +
                 ", rootName='" + rootName + '\'' +
+                ", syntax='" + syntax + '\'' +
                 ", aliases=" + Arrays.toString(aliases) +
                 ", prefixes=" + Arrays.toString(prefixes) +
                 ", description='" + description + '\'' +
