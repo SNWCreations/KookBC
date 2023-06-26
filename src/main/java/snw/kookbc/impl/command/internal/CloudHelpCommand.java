@@ -54,7 +54,6 @@ import static snw.kookbc.impl.command.internal.HelpCommand.HELP_VALUE_HEADER;
 @CommandContainer
 @CommandPrefix("/")
 @CommandMethod("help")
-@CommandDescription("获取此帮助列表。")
 public class CloudHelpCommand {
     private static final String[] EMPTY_STRING_ARRAY = new String[]{};
 
@@ -69,6 +68,7 @@ public class CloudHelpCommand {
     }
 
     @CommandMethod("[target]")
+    @CommandDescription("获取此帮助列表。")
     public void consoleHelp(CommandSender sender, Message message, @Argument("target") @Nullable String target) {
         if (sender instanceof User) {
             List<String> content = Util.listCloudCommandsHelp(this.client);

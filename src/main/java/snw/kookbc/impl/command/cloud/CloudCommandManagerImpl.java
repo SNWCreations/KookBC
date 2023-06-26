@@ -20,6 +20,7 @@ package snw.kookbc.impl.command.cloud;
 
 import cloud.commandframework.annotations.AnnotationParser;
 import cloud.commandframework.arguments.parser.ParserParameters;
+import cloud.commandframework.arguments.parser.StandardParameters;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -68,13 +69,13 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
-    public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
+    public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin) {
         annotationParser.parse(plugin.getClass().getClassLoader(), plugin);
     }
 
     public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         Function<ParserParameters, CommandMeta> wrapped = wrap(plugin, metaMapper);
-        registerCloudCommands(CloudCommandBuilder.createParser(commandManager, wrapped), plugin, wrapped);
+        registerCloudCommands(CloudCommandBuilder.createParser(commandManager, wrapped), plugin);
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
@@ -82,7 +83,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin) {
-        registerCloudCommands(plugin, parserParameters -> SimpleCommandMeta.empty());
+        registerCloudCommands(plugin, wrap(plugin, null));
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
@@ -98,11 +99,11 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) {
-        registerCloudCommand(plugin, parserParameters -> SimpleCommandMeta.empty(), instance);
+        registerCloudCommand(plugin, wrap(plugin, null), instance);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) {
-        registerCloudCommand(plugin, commandManager, parserParameters -> SimpleCommandMeta.empty(), instance);
+        registerCloudCommand(plugin, commandManager, wrap(plugin, null), instance);
     }
 
     @Override
@@ -111,7 +112,15 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
     }
 
     protected static Function<ParserParameters, CommandMeta> wrap(Plugin plugin, Function<ParserParameters, CommandMeta> origin) {
-        return p -> SimpleCommandMeta.builder().with(PLUGIN_KEY, plugin).with(origin.apply(p)).build();
+        return p -> {
+            SimpleCommandMeta.Builder builder = SimpleCommandMeta.builder()
+                    .with(PLUGIN_KEY, plugin)
+                    .with(CommandMeta.DESCRIPTION, p.get(StandardParameters.DESCRIPTION, "123"));
+            if (origin != null) {
+                builder.with(origin.apply(p));
+            }
+            return builder.build();
+        };
     }
 
     public List<CloudCommandInfo> getCommandsInfo() {
