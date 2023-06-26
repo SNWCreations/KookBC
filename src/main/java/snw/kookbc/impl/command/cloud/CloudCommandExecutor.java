@@ -70,7 +70,7 @@ public class CloudCommandExecutor implements CommandExecutor {
                                 InvalidCommandSenderException.class,
                                 (InvalidCommandSenderException) throwable, (c, e) ->
                                         replay(message, e.getRequiredSender().equals(CommandSender.class)
-                                                ? "该指令只能由玩家执行"
+                                                ? "该指令只能由KOOK 用户执行"
                                                 : "该指令只能由控制台执行")
                         );
                     } else if (throwable instanceof NoPermissionException) {
