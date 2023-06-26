@@ -408,7 +408,7 @@ public final class AnnotationParser<C> {
                     }
                 }
             }
-            commands.addAll(this.parse(instance, plugin));
+            commands.addAll(this.parse(instance));
         }
 
         return Collections.unmodifiableList(commands);
@@ -423,7 +423,7 @@ public final class AnnotationParser<C> {
      * @return Collection of parsed commands
      */
     @SuppressWarnings({"deprecation", "unchecked", "rawtypes"})
-    public <T> @NonNull Collection<@NonNull Command<C>> parse(final @NonNull T instance, Plugin plugin) {
+    public <T> @NonNull Collection<@NonNull Command<C>> parse(final @NonNull T instance) {
         /* Start by registering all @Suggestion annotated methods */
         this.parseSuggestions(instance);
         /* Then register all parsers */
@@ -447,7 +447,7 @@ public final class AnnotationParser<C> {
             }
             commandMethodPairs.add(new CommandMethodPair(method, commandMethod));
         }
-        final Collection<Command<C>> commands = this.construct(instance, commandMethodPairs, plugin);
+        final Collection<Command<C>> commands = this.construct(instance, commandMethodPairs);
         for (final Command<C> command : commands) {
             ((CommandManager) this.manager).command(command);
         }
@@ -549,8 +549,7 @@ public final class AnnotationParser<C> {
     @SuppressWarnings("unchecked")
     private @NonNull Collection<@NonNull Command<C>> construct(
             final @NonNull Object instance,
-            final @NonNull Collection<@NonNull CommandMethodPair> methodPairs,
-            final @NonNull Plugin plugin) {
+            final @NonNull Collection<@NonNull CommandMethodPair> methodPairs) {
         final AnnotationAccessor classAnnotations = AnnotationAccessor.of(instance.getClass());
         final CommandMethod classCommandMethod = classAnnotations.annotation(CommandMethod.class);
         final String syntaxPrefix = classCommandMethod == null ? "" : (this.processString(classCommandMethod.value()) + " ");
@@ -612,7 +611,6 @@ public final class AnnotationParser<C> {
             if (methodOrClassHasAnnotation(method, Confirmation.class)) {
                 metaBuilder.with(CommandConfirmationManager.META_CONFIRMATION_REQUIRED, true);
             }
-            metaBuilder.with(PLUGIN_KEY, plugin);
             List<String> prefixes = new ArrayList<>();
             List<@NonNull String> minor = tokens.get(0).getMinor();
             List<String> aliases = new ArrayList<>(minor);

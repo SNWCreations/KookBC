@@ -57,7 +57,7 @@ public class CloudCommandInfo {
     @Override
     public String toString() {
         return "CloudCommandInfo{" +
-                "owningPlugin=" + owningPlugin +
+                "owningPlugin=" + owningPlugin.getDescription().getName() +
                 ", rootName='" + rootName + '\'' +
                 ", aliases=" + Arrays.toString(aliases) +
                 ", prefixes=" + Arrays.toString(prefixes) +

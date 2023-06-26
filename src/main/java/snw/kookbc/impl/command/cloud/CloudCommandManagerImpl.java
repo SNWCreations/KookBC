@@ -25,6 +25,7 @@ import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.message.Message;
@@ -55,55 +56,48 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-//        String head = cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine;
-//        WrappedCommand wrapped = sender instanceof ConsoleCommandSender ? getCommand(head) : getCommandWithPrefix(head);
-//        if (wrapped == null) {
-//            // TODO if cloud? find the cloud command manager through the command line
-//            return false;
-//        }
         return getCloudCommandManager().executeCommandNow(sender, cmdLine, msg);
     }
 
     public CloudBasedCommandManager getCloudCommandManager() {
         return manager;
-        // return cloudCommandManagerMap.computeIfAbsent(plugin, i -> new CloudBasedCommandManager(client, this, plugin));
     }
 
     public void registerCloudCommands(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Plugin plugin) {
-        annotationParser.parse(plugin.getClass().getClassLoader(), plugin);
+        annotationParser.parse(plugin.getClass().getClassLoader());
     }
 
-    public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
+    public void registerCloudCommands(@NotNull CloudBasedCommandManager commandManager, @NotNull Plugin plugin, @Nullable Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         Function<ParserParameters, CommandMeta> wrapped = wrap(plugin, metaMapper);
         registerCloudCommands(CloudCommandBuilder.createParser(commandManager, wrapped), plugin);
     }
 
-    public void registerCloudCommands(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
+    public void registerCloudCommands(@NotNull Plugin plugin, @Nullable Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
         registerCloudCommands(getCloudCommandManager(), plugin, metaMapper);
     }
 
     public void registerCloudCommands(@NotNull Plugin plugin) {
-        registerCloudCommands(plugin, wrap(plugin, null));
+        registerCloudCommands(plugin, null);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
-        CloudCommandBuilder.createParser(commandManager, metaMapper).parse(instance, plugin);
+    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @Nullable Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
+        CloudCommandBuilder.createParser(commandManager, wrap(plugin, metaMapper)).parse(instance);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Object instance) {
-        annotationParser.parse(instance, plugin);
+    public void registerCloudCommand(@NotNull AnnotationParser<CommandSender> annotationParser, @NotNull Object instance) {
+        annotationParser.parse(instance);
     }
 
-    public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper, @NotNull Object instance) {
+    public void registerCloudCommand(@NotNull Plugin plugin, @Nullable Function<@NonNull ParserParameters, @Nullable CommandMeta> metaMapper, @NotNull Object instance) {
         registerCloudCommand(plugin, getCloudCommandManager(), metaMapper, instance);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull Object instance) {
-        registerCloudCommand(plugin, wrap(plugin, null), instance);
+        registerCloudCommand(plugin, (Function<ParserParameters, CommandMeta>) null, instance);
     }
 
     public void registerCloudCommand(@NotNull Plugin plugin, @NotNull CloudBasedCommandManager commandManager, @NotNull Object instance) {
-        registerCloudCommand(plugin, commandManager, wrap(plugin, null), instance);
+        registerCloudCommand(plugin, commandManager, null, instance);
     }
 
     @Override
