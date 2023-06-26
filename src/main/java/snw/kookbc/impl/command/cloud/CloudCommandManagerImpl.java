@@ -109,7 +109,7 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
         return p -> {
             SimpleCommandMeta.Builder builder = SimpleCommandMeta.builder()
                     .with(PLUGIN_KEY, plugin)
-                    .with(CommandMeta.DESCRIPTION, p.get(StandardParameters.DESCRIPTION, "123"));
+                    .with(CommandMeta.DESCRIPTION, p.get(StandardParameters.DESCRIPTION, ""));
             if (origin != null) {
                 builder.with(origin.apply(p));
             }
