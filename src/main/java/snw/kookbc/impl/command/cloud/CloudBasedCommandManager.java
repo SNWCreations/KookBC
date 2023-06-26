@@ -33,15 +33,21 @@ import cloud.commandframework.internal.CommandRegistrationHandler;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import cloud.commandframework.services.State;
+import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.cloud.parser.GuildArgumentParser;
+import snw.kookbc.impl.command.cloud.parser.PluginArgumentParser;
+import snw.kookbc.impl.command.cloud.parser.UserArgumentParser;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -68,6 +74,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.parent = parent;
         registerCapability(CloudCapability.StandardCapabilities.ROOT_COMMAND_DELETION);
+        parserRegistry().registerParserSupplier(TypeToken.get(Plugin.class), p -> new PluginArgumentParser(client));
+        parserRegistry().registerParserSupplier(TypeToken.get(User.class), p -> new UserArgumentParser(client));
+        parserRegistry().registerParserSupplier(TypeToken.get(Guild.class), p -> new GuildArgumentParser(client));
     }
 
     @Override
@@ -334,7 +343,19 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             String[] prefixes = command.getCommandMeta().get(PREFIX_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String[] aliases = command.getCommandMeta().get(ALIAS_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String rootName = removePrefix(prefixes, command.getArguments().get(0).getName()).get(0);
-            String[] finalAliases = removePrefix(prefixes, aliases).stream().distinct().filter(e -> !e.equals(rootName)).toArray(String[]::new);
+            String firstRootName = rootName;
+            String[] finalAliases = removePrefix(prefixes, aliases).stream().distinct().filter(e -> !e.equals(firstRootName)).toArray(String[]::new);
+            if (result.stream().anyMatch(e -> e.rootName().equals(firstRootName))) {
+                rootName = command.getArguments().stream().map(arg -> {
+                    if (arg.getName().equals(firstRootName)) {
+                        return arg.getName();
+                    }
+                    if (arg.isRequired()) {
+                        return "<" + arg.getName() + ">";
+                    }
+                    return "[" + arg.getName() + "]";
+                }).collect(Collectors.joining(" "));
+            }
             result.add(new CloudCommandInfo(
                     command.getCommandMeta().get(PLUGIN_KEY).get(),
                     rootName,
