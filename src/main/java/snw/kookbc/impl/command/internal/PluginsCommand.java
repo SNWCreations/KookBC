@@ -26,6 +26,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -47,9 +48,9 @@ public final class PluginsCommand implements CommandExecutor {
                 (sender instanceof ConsoleCommandSender) ? "Installed and running plugins" : "已安装并正在运行的插件",
                 plugins.length,
                 String.join(", ",
-                    Arrays.stream(plugins)
-                            .map(plugin -> plugin.getDescription().getName())
-                            .collect(Collectors.toSet())
+                        Arrays.stream(plugins)
+                                .map(plugin -> plugin.getDescription().getName())
+                                .collect(Collectors.toSet())
                 )
         );
 

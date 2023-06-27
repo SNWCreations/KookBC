@@ -32,8 +32,9 @@ import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.zip.DataFormatException;
 
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 import static snw.kookbc.util.Util.decompressDeflate;
-import static snw.kookbc.util.GsonUtil.*;
 
 public class MessageProcessor extends WebSocketListener {
     private final KBCClient client;

@@ -18,15 +18,14 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.role.RoleCreateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -39,19 +38,19 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
     @Override
     protected RoleCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new RoleCreateEvent(
-            timeStamp,
-            client.getEntityBuilder().buildRole(
-                client.getStorage().getGuild(get(object, "target_id").getAsString()),
-                body
-            )
+                timeStamp,
+                client.getEntityBuilder().buildRole(
+                        client.getStorage().getGuild(get(object, "target_id").getAsString()),
+                        body
+                )
         );
     }
 
     @Override
     protected void beforeReturn(RoleCreateEvent event) {
         client.getStorage().addRole(
-            client.getStorage().getGuild(event.getRole().getGuild().getId()),
-            event.getRole()
+                client.getStorage().getGuild(event.getRole().getGuild().getId()),
+                event.getRole()
         );
     }
 

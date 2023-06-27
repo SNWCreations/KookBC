@@ -25,11 +25,14 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
+import snw.kookbc.impl.command.cloud.CloudCommandInfo;
+import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.DataFormatException;
@@ -37,7 +40,8 @@ import java.util.zip.Inflater;
 
 public class Util {
 
-    private Util() {} // cannot call constructor
+    private Util() {
+    } // cannot call constructor
 
     // -1 = Outdated
     // 0 = Latest
@@ -165,19 +169,33 @@ public class Util {
         JKookCommand[] commands = commandManager.getCommandSet().toArray(new JKookCommand[0]);
         List<String> result = new LinkedList<>();
         for (JKookCommand command : commands) {
-            result.add(
-                    limit(
-                            String.format("(%s)%s: %s",
-                                    String.join(" ",
-                                            command.getPrefixes()),
-                                    command.getRootName(),
-                                    (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
-                            ),
-                            4997
-                    )
-            );
+            insertCommandHelpContent(result, command.getRootName(), command.getPrefixes(), command.getDescription());
         }
         return result;
+    }
+
+    public static List<String> listCloudCommandsHelp(KBCClient client) {
+        List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
+
+        List<String> result = new LinkedList<>();
+        for (CloudCommandInfo command : commandsInfo) {
+            insertCommandHelpContent(result, command.syntax(), Arrays.asList(command.prefixes()), command.description());
+        }
+        return result;
+    }
+
+    private static void insertCommandHelpContent(List<String> result, String rootName, Collection<String> prefixes, String description) {
+        result.add(
+                limit(
+                        String.format("(%s)%s: %s",
+                                String.join(" ",
+                                        prefixes),
+                                rootName,
+                                (isBlank(description)) ? "此命令没有简介。" : description
+                        ),
+                        4997
+                )
+        );
     }
 
     public static JKookCommand findSpecificCommand(KBCClient client, String name) {
@@ -193,10 +211,31 @@ public class Util {
         }
     }
 
+    public static CloudCommandInfo findSpecificCloudCommand(KBCClient client, String name) {
+        List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
+        if (!isBlank(name)) {
+            return commandsInfo.stream()
+                    .filter(info ->
+                            info.rootName().equalsIgnoreCase(name) ||
+                                    info.syntax().equalsIgnoreCase(name) ||
+                                    Arrays.stream(info.aliases())
+                                            .anyMatch(
+                                                    alias -> alias.equalsIgnoreCase(name)
+                                            )
+                    ).findFirst().orElse(null);
+        } else {
+            return null;
+        }
+    }
+
     public static String limit(String original, int maxLength) {
         if (maxLength < 0 || original.length() <= maxLength)
             return original;
         return String.format("%s...", original.substring(0, maxLength));
     }
 
+
+    public static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 }

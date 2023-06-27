@@ -23,7 +23,8 @@ import snw.jkook.message.component.card.module.DividerModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override

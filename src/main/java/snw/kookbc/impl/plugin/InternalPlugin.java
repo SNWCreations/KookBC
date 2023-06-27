@@ -38,15 +38,15 @@ public final class InternalPlugin implements Plugin {
 
     static {
         DESCRIPTION = new PluginDescription(
-            SharedConstants.IMPL_NAME,
-            SharedConstants.IMPL_VERSION,
-            SharedConstants.SPEC_VERSION,
-            "Just a placeholder. Only for internal use.",
-            SharedConstants.REPO_URL,
-            "null",
-            Collections.emptyList(),
-            Collections.emptyList(),
-            Collections.emptyList()
+                SharedConstants.IMPL_NAME,
+                SharedConstants.IMPL_VERSION,
+                SharedConstants.SPEC_VERSION,
+                "Just a placeholder. Only for internal use.",
+                SharedConstants.REPO_URL,
+                "null",
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList()
         );
     }
 

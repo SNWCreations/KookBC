@@ -25,8 +25,8 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildUserNickNameUpdateEvent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.EntityStorage;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-import snw.kookbc.impl.storage.EntityStorage;
 
 import java.lang.reflect.Type;
 
@@ -56,7 +56,7 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
         }
         final Guild guild = entityStorage.getGuild(guildId);
         return new GuildUserNickNameUpdateEvent(
-            timeStamp, guild, user, nickname
+                timeStamp, guild, user, nickname
         );
     }
 

@@ -23,7 +23,7 @@ import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override

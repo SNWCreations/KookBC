@@ -30,9 +30,12 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
+import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
+import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
+import snw.kookbc.impl.entity.EntityStorage;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
@@ -45,7 +48,6 @@ import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
-import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.Util;
@@ -108,12 +110,12 @@ public class KBCClient {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
-        this.internalPlugin = new InternalPlugin(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
@@ -474,7 +476,6 @@ public class KBCClient {
         if (commandConfig.getBoolean("plugins", true)) {
             registerPluginsCommand();
         }
-
     }
 
     protected void registerStopCommand() {
@@ -492,12 +493,17 @@ public class KBCClient {
     }
 
     protected void registerHelpCommand() {
-        HelpCommand executor = new HelpCommand(this);
-        new JKookCommand("help")
-                .setDescription("获取此帮助列表。")
-                .executesUser(executor)
-                .executesConsole(executor)
-                .register(getInternalPlugin());
+        if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
+            ((CloudCommandManagerImpl) core.getCommandManager())
+                    .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
+        } else {
+            HelpCommand executor = new HelpCommand(this);
+            new JKookCommand("help")
+                    .setDescription("获取此帮助列表。")
+                    .executesUser(executor)
+                    .executesConsole(executor)
+                    .register(getInternalPlugin());
+        }
         this.core.getEventManager()
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }

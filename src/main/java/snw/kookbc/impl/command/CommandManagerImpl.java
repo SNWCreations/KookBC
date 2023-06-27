@@ -24,35 +24,28 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
-import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 public class CommandManagerImpl implements CommandManager {
-    private static final Pattern QUOTE_PATTERN = Pattern.compile(
-            "(?<=\\s|^)(\"([^\"\\\\]|\\\\.)*?\"|\\S+)(?=\\s|$)"
-    );
-    private final KBCClient client;
-    protected final SimpleCommandMap commandMap;
+    protected final KBCClient client;
+    protected final CommandMap commandMap;
     private final Map<Class<?>, Function<String, ?>> parsers = new ConcurrentHashMap<>();
 
     public CommandManagerImpl(KBCClient client) {
         this(client, new SimpleCommandMap());
     }
 
-    public CommandManagerImpl(KBCClient client, SimpleCommandMap commandMap) {
+    public CommandManagerImpl(KBCClient client, CommandMap commandMap) {
         this.client = client;
         this.commandMap = commandMap;
         registerInternalParsers();
@@ -67,8 +60,6 @@ public class CommandManagerImpl implements CommandManager {
             throw new IllegalArgumentException("The command from '" + plugin.getDescription().getName() + "' plugin does not meet our standards.", e);
         }
         commandMap.register(plugin, command);
-
-
     }
 
     // Throw exception if the provided command can NOT be registered
@@ -134,6 +125,7 @@ public class CommandManagerImpl implements CommandManager {
         parsers.put(clazz, parser);
     }
 
+
     // this method should only be used for executing Bot commands. And the executor is Console.
     // user commands should be handled by using executeCommand0, NOT THIS
     // we hope the Bot can only execute the commands they registered. Not Internal command. It is not safe.
@@ -152,9 +144,6 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
-        Validate.notNull(sender, "Sender cannot be null");
-        Validate.notNull(cmdLine, "Command line cannot be null");
-        // Validate.notNull(msg, "Message object cannot be null"); // NOT activated yet
         if (cmdLine.isEmpty()) {
             client.getCore().getLogger().debug("Received empty command!");
             return false;
@@ -162,13 +151,10 @@ public class CommandManagerImpl implements CommandManager {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        List<String> args = new ArrayList<>(Arrays.asList(parseCmdLine(cmdLine)));
+        List<String> args = new ArrayList<>(Arrays.asList(cmdLine.split(" "))); // arguments, token " ? it's developer's work, lol
         String root = args.remove(0);
         WrappedCommand commandObject = (sender instanceof User) ? getCommandWithPrefix(root) : getCommand(root); // the root command
         if (commandObject == null) {
-            if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info("Unknown command. Type \"help\" for help.");
-            }
             return false;
         }
 
@@ -253,17 +239,23 @@ public class CommandManagerImpl implements CommandManager {
             return false;
         }
 
-        AtomicReference<CommandSender> senderRef = new AtomicReference<>(
-            sender == client.getCore().getConsoleCommandSender() ?
-            ConsoleCommandSenderImpl.get(owner) : sender
-        );
-
         // region support for the syntax sugar that added in JKook 0.24.0
         if (sender instanceof ConsoleCommandSender) {
+
+            // ensure the sender has been redirected to the correct result.
+            // Added since KookBC 0.27
+            final ConsoleCommandSender realSender;
+            if (sender == client.getCore().getConsoleCommandSender()) { // if sender is from Core
+                realSender = ConsoleCommandSenderImpl.get(owner); // redirect
+            } else {
+                realSender = (ConsoleCommandSender) sender;
+            }
+            // END console command sender redirect
+
             ConsoleCommandExecutor consoleCommandExecutor = finalCommand.getConsoleCommandExecutor();
             if (consoleCommandExecutor != null) {
                 exec(
-                        () -> consoleCommandExecutor.onCommand((ConsoleCommandSender) senderRef.get(), arguments),
+                        () -> consoleCommandExecutor.onCommand(realSender, arguments),
                         startTimeStamp, cmdLine
                 );
                 return true;
@@ -293,13 +285,13 @@ public class CommandManagerImpl implements CommandManager {
 
         // alright, it is time to execute it!
         exec(
-                () -> executor.onCommand(senderRef.get(), arguments, msg),
+                () -> executor.onCommand(sender, arguments, msg),
                 startTimeStamp, cmdLine
         );
         return true; // ok, the command is ok, so we can return true.
     }
 
-    public SimpleCommandMap getCommandMap() {
+    public CommandMap getCommandMap() {
         return commandMap;
     }
 
@@ -325,7 +317,7 @@ public class CommandManagerImpl implements CommandManager {
         return commandMap.getView(true).get(cmdHeader);
     }
 
-    protected Object[] processArguments(JKookCommand command, List<String> rawArgs) {
+    public Object[] processArguments(JKookCommand command, List<String> rawArgs) {
         if (command.getArguments().isEmpty() && command.getOptionalArguments().isEmpty()) { // If this command don't want to use this feature?
             // Do nothing, but the command executor should turn the Object array into String array manually.
             return rawArgs.toArray(new String[0]);
@@ -440,39 +432,6 @@ public class CommandManagerImpl implements CommandManager {
                 return null;
             }
         });
-    }
-
-    private static String[] parseCmdLine(String input) {
-        if (input.isEmpty()) {
-            return new String[]{""};
-        }
-        List<String> tokens = new ArrayList<>();
-        int firstSpace = input.indexOf(" ");
-        if (firstSpace != -1) {
-            String head = input.substring(0, firstSpace);
-            if (firstSpace + 1 == input.length()) {
-                return new String[]{head, ""}; // only a head and an empty string, no next word
-            } else {
-                input = input.substring(firstSpace + 1);
-            }
-            tokens.add(head);
-        }
-
-        input = input.replace("\\\\\"","\\\"");
-
-        Matcher matcher = QUOTE_PATTERN.matcher(input);
-        while (matcher.find()) {
-            String arg = matcher.group().replace("\\\"","\"");
-            if (arg.length() > 1 && arg.startsWith("\"") && arg.endsWith("\"")) {
-                if (arg.contains(" ")) {
-                    arg = arg.substring(1, arg.length() - 1);
-                } // or ensure arguments like "123" still have quotes
-            }
-
-
-            tokens.add(arg);
-        }
-        return tokens.toArray(new String[0]);
     }
 
     // execute the runnable, if it fails, a CommandException will be thrown

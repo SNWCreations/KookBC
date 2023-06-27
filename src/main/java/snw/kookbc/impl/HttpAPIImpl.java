@@ -63,9 +63,9 @@ public class HttpAPIImpl implements HttpAPI {
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
         SUPPORTED_MUSIC_SOFTWARES = Collections.unmodifiableCollection(
-            Arrays.asList(
-                "cloudmusic", "qqmusic", "kugou"
-            )
+                Arrays.asList(
+                        "cloudmusic", "qqmusic", "kugou"
+                )
         );
     }
 
@@ -410,7 +410,8 @@ public class HttpAPIImpl implements HttpAPI {
         @Override
         public void handle(boolean accept) {
             HttpAPIImpl.this.handleFriendRequest(getId(), accept);
-        }}
+        }
+    }
 
     @Override
     public void addFriend(User user, int method, String guildId) {

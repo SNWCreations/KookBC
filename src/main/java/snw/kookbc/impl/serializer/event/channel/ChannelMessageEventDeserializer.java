@@ -18,7 +18,9 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.message.TextChannelMessage;
 import snw.kookbc.impl.KBCClient;
@@ -36,9 +38,9 @@ public class ChannelMessageEventDeserializer extends BaseEventDeserializer<Chann
     protected ChannelMessageEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         TextChannelMessage textChannelMessage = client.getMessageBuilder().buildTextChannelMessage(object);
         return new ChannelMessageEvent(
-            textChannelMessage.getTimeStamp(),
-            textChannelMessage.getChannel(),
-            textChannelMessage
+                textChannelMessage.getTimeStamp(),
+                textChannelMessage.getChannel(),
+                textChannelMessage
         );
     }
 

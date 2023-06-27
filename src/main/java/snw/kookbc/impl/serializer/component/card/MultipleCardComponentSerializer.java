@@ -22,6 +22,7 @@ import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 
 import java.lang.reflect.Type;
+
 import static snw.kookbc.util.GsonUtil.createListType;
 
 public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {

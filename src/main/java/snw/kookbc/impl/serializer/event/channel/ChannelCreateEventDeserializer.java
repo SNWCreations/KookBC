@@ -16,17 +16,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- package snw.kookbc.impl.serializer.event.channel;
+package snw.kookbc.impl.serializer.event.channel;
 
-import java.lang.reflect.Type;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.event.channel.ChannelCreateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
 
 public class ChannelCreateEventDeserializer extends NormalEventDeserializer<ChannelCreateEvent> {
 
@@ -38,8 +38,8 @@ public class ChannelCreateEventDeserializer extends NormalEventDeserializer<Chan
     protected ChannelCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         Channel newChannel = client.getEntityBuilder().buildChannel(body);
         return new ChannelCreateEvent(
-            timeStamp,
-            newChannel
+                timeStamp,
+                newChannel
         );
     }
 

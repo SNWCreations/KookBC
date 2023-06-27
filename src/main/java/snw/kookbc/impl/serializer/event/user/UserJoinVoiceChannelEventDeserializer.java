@@ -39,9 +39,9 @@ public class UserJoinVoiceChannelEventDeserializer extends NormalEventDeserializ
     @Override
     protected UserJoinVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new UserJoinVoiceChannelEvent(
-            timeStamp,
-            client.getStorage().getUser(get(body, "user_id").getAsString()),
-            (VoiceChannel) client.getStorage().getChannel(get(body, "channel_id").getAsString())
+                timeStamp,
+                client.getStorage().getUser(get(body, "user_id").getAsString()),
+                (VoiceChannel) client.getStorage().getChannel(get(body, "channel_id").getAsString())
         );
     }
 

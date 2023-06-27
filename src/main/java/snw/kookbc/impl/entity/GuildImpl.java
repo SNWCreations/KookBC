@@ -46,7 +46,7 @@ import snw.kookbc.util.MapBuilder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class GuildImpl implements Guild, Updatable {
     private final KBCClient client;

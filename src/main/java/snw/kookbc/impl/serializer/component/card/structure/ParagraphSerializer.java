@@ -28,7 +28,8 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class ParagraphSerializer implements JsonSerializer<Paragraph>, JsonDeserializer<Paragraph> {
     @Override

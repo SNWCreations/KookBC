@@ -58,10 +58,10 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
             );
         }
         return new UserRemoveReactionEvent(
-            timeStamp,
-            client.getStorage().getUser(get(body, "user_id").getAsString()),
-            get(body, "msg_id").getAsString(),
-            reaction
+                timeStamp,
+                client.getStorage().getUser(get(body, "user_id").getAsString()),
+                get(body, "msg_id").getAsString(),
+                reaction
         );
     }
 

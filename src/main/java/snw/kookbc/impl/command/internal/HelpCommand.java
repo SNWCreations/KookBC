@@ -46,7 +46,7 @@ import java.util.List;
 public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExecutor {
     public static final String HELP_VALUE_HEADER = "kookbc-help";
     private static final String[] EMPTY_STRING_ARRAY = new String[]{};
-    private static final PlainTextElement EMPTY_PLAIN_TEXT_ELEMENT = new PlainTextElement(" ");
+    protected static final PlainTextElement EMPTY_PLAIN_TEXT_ELEMENT = new PlainTextElement(" ");
     private final KBCClient client;
 
     public HelpCommand(KBCClient client) {
@@ -191,8 +191,8 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                         String.format("(%s)%s: %s",
                                 String.join(" ",
                                         command.getPrefixes()),
-                                        command.getRootName(),
-                                        (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
+                                command.getRootName(),
+                                (command.getDescription() == null) ? "此命令没有简介。" : command.getDescription()
                         )
                 );
             }

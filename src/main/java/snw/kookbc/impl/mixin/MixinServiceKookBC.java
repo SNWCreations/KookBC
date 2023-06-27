@@ -49,9 +49,9 @@ import org.spongepowered.include.com.google.common.collect.ImmutableList;
 import org.spongepowered.include.com.google.common.collect.Sets;
 import org.spongepowered.include.com.google.common.io.ByteStreams;
 import org.spongepowered.include.com.google.common.io.Closeables;
+import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.launch.IClassNameTransformer;
 import snw.kookbc.impl.launch.IClassTransformer;
-import snw.kookbc.LaunchMain;
 
 import java.io.IOException;
 import java.io.InputStream;

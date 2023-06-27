@@ -24,7 +24,8 @@ import snw.jkook.message.component.card.module.FileModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
 
 public class FileModuleSerializer implements JsonSerializer<FileModule>, JsonDeserializer<FileModule> {
     @Override
