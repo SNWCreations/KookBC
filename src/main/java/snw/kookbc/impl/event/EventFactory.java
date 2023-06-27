@@ -26,7 +26,6 @@ import snw.jkook.event.channel.*;
 import snw.jkook.event.guild.*;
 import snw.jkook.event.item.ItemConsumedEvent;
 import snw.jkook.event.pm.PrivateMessageDeleteEvent;
-import snw.jkook.event.pm.PrivateMessageEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.event.pm.PrivateMessageUpdateEvent;
 import snw.jkook.event.role.RoleCreateEvent;

@@ -57,7 +57,7 @@ public class CloudCommandMap extends SimpleCommandMap {
         return getView(false).get(command.getRootName()).getPlugin();
     }
 
-    public List<CloudCommandInfo> getCommandsInfo(){
+    public List<CloudCommandInfo> getCommandsInfo() {
         return parent.getCommandsInfo();
     }
 }

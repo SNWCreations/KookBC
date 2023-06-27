@@ -48,7 +48,7 @@ public class CloudCommandExecutor implements CommandExecutor {
     public void onCommand(@NotNull CommandSender sender, @NotNull Object[] objects, @Nullable Message message) {
         final StringBuilder builder = new StringBuilder(rootName);
         for (final Object obj : objects) {
-            builder.append(" ").append(obj.toString());
+            builder.append(" ").append(obj);
         }
         manager.executeCommand(sender, builder.toString(), message)
                 .whenComplete((commandResult, throwable) -> {
