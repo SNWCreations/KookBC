@@ -44,7 +44,6 @@ public class CloudCommandMap extends SimpleCommandMap {
 
     public void unregister(JKookCommand command) {
         super.unregister(command);
-        Plugin plugin = getOwnerOfCommand(command);
         this.parent.getCloudCommandManager().unregisterJKookCommand(command);
     }
 
