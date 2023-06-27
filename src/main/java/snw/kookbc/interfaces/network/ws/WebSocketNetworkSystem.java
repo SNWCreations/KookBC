@@ -22,6 +22,6 @@ import snw.kookbc.interfaces.network.NetworkSystem;
 
 public interface WebSocketNetworkSystem extends NetworkSystem {
     
-    WebSocketServerConnection getServerConnection();
+    // WebSocketServerConnection getServerConnection();
     
 }

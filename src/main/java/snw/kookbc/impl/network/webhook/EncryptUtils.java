@@ -27,7 +27,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public class EncryptUtils {
+public final class EncryptUtils {
+    private EncryptUtils() {
+    }
+
     public static String decrypt(KBCClient client, String src) {
         String key = client.getConfig().getString("webhook-encrypt-key");
         if (key != null && !key.isEmpty()) { // decryption

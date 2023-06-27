@@ -16,18 +16,20 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.impl.network.ws;
 
 import snw.kookbc.impl.KBCClient;
 
 public class Reconnector extends Thread {
     private final KBCClient client;
     private final Object lock;
+    private final Connector connector;
 
-    public Reconnector(KBCClient client, Object lock) {
+    public Reconnector(KBCClient client, Object lock, Connector connector) {
         super("Reconnect Thread");
         this.client = client;
         this.lock = lock;
+        this.connector = connector;
         this.setDaemon(true);
     }
 
@@ -35,7 +37,7 @@ public class Reconnector extends Thread {
     public void run() {
         while (client.isRunning()) {
             synchronized (lock) {
-                while (!client.getConnector().isRequireReconnect()) {
+                while (!connector.isRequireReconnect()) {
                     try {
                         lock.wait();
                     } catch (InterruptedException e) {
@@ -45,11 +47,11 @@ public class Reconnector extends Thread {
                 if (!client.isRunning()) {
                     return;
                 }
-                if (client.getConnector().isConnected()) {
+                if (connector.isConnected()) {
                     continue;
                 }
-                client.getConnector().restart();
-                client.getConnector().reconnectOk();
+                connector.restart();
+                connector.reconnectOk();
             }
         }
     }

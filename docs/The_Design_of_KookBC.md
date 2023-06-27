@@ -69,6 +69,8 @@ snw.kookbc.impl.launch (用于提供 Mixin 支持)
 
 ### Listener
 
+**已弃用。** 等效替代品为 `snw.kookbc.interfaces.network.FrameHandler` 接口。
+
 是 `snw.kookbc.impl.network.Listener` 接口，不是 `snw.jkook.event.Listener` 接口。
 
 _下文中的 `Listener` 在无特殊说明情况下也均指此接口。_
@@ -103,14 +105,13 @@ _下文中的 `Listener` 在无特殊说明情况下也均指此接口。_
 
 KookBC 支持机器人以 WebSocket 或 Webhook 模式运行。
 
-对于 WebSocket 模式，我们会 `new` 一个 `KBCClient` ，传入相应参数，然后调用其 `start` 方法。
+对于 WebSocket 模式，我们会 `new` 一个 `KBCClient` ，传入相应参数与一个 `WebSocketNetworkSystem` 的实现，然后调用其 `start` 方法。
 
-对于 Webhook 模式，我们 `new` 一个 `WebhookClient` ，传入相应参数，然后调用其 `start` 方法。
-* `WebhookClient` 位于 `snw.kookbc.impl.network.webhook` 包，是 `KBCClient` 的子类，主要重写了 `KBCClient#startNetwork` 方法，使其启动一个 HTTP Server ，而不是打开 WebSocket 连接。
+对于 Webhook 模式，我们会 `new` 一个 `KBCClient` ，传入相应参数与一个 `WebhookNetworkSystem` 的实现，然后调用其 `start` 方法。
 
-若你想了解 KookBC 的 WebSocket 连接流程的实现，请看 `snw.kookbc.impl.network.Connector` 与 `snw.kookbc.impl.network.MessageProcessor` 类。
+若你想了解 KookBC 的 WebSocket 连接流程的实现，请看 `snw.kookbc.impl.network.ws.Connector` 与 `snw.kookbc.impl.network.ws.WebSocketMessageProcessor` 类。
 
-若你想了解 KookBC 对 Webhook 模式下收到的 HTTP 请求的处理流程，请见 `snw.kookbc.impl.network.webhook.SimpleHttpHandler` 类。
+若你想了解 KookBC 对 Webhook 模式下收到的 HTTP 请求的处理流程，请见 `snw.kookbc.impl.network.webhook.JLHttpRequestHandler` 类。
 
 整个 KookBC 网络模块的工作流程主要为:
 ```text
@@ -119,7 +120,7 @@ WebSocket / Webhook 模块等待 KOOK 服务端发送事件内容
 (未禁用压缩时) 解压缩经过 Deflate 算法压缩的消息
 (Webhook 模式下) 根据 KBCClient 存储的配置信息尝试解密消息内容
 封装为 Frame
-传递给 Listener 接口的实现进一步处理
+传递给 FrameHandler 接口的实现进一步处理
 ```
 
 ### 事件系统

@@ -19,6 +19,7 @@
 package snw.kookbc.impl.network;
 
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.ws.Connector;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 public class IgnoreSNListenerImpl extends ListenerImpl {
     private final List<Integer> processedSN = new LinkedList<>();
 
-    public IgnoreSNListenerImpl(KBCClient client) {
-        super(client);
+    public IgnoreSNListenerImpl(KBCClient client, Connector connector) {
+        super(client, connector);
         new Thread(() -> {
             while (client.isRunning()) {
                 try {

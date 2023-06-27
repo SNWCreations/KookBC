@@ -18,7 +18,10 @@
 
 package snw.kookbc;
 
-import joptsimple.*;
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.JKook;
@@ -26,7 +29,6 @@ import snw.jkook.config.InvalidConfigurationException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.webhook.WebHookClient;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.*;
@@ -138,17 +140,7 @@ public class Main {
 
         CoreImpl core = new CoreImpl(logger);
         JKook.setCore(core);
-        KBCClient client;
-        String mode = config.getString("mode");
-        if (mode != null) {
-            if (mode.equalsIgnoreCase("webhook")) {
-                client = new WebHookClient(core, config, pluginsFolder, token);
-            } else {
-                client = new KBCClient(core, config, pluginsFolder, token);
-            }
-        } else {
-            throw new IllegalArgumentException("Unknown network mode!");
-        }
+        KBCClient client = new KBCClient(core, config, pluginsFolder, token);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
         Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));

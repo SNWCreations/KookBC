@@ -19,9 +19,15 @@
 package snw.kookbc.interfaces.network;
 
 import snw.kookbc.impl.network.Frame;
+import snw.kookbc.impl.network.Listener;
 
-public interface FrameHandler {
+@SuppressWarnings("deprecation")
+public interface FrameHandler extends Listener {
 
     void handle(Frame frame);
 
+    @Override
+    default void executeEvent(Frame frame) {
+        handle(frame);
+    }
 }

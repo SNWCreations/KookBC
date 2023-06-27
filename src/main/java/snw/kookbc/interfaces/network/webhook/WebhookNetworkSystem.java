@@ -21,5 +21,10 @@ package snw.kookbc.interfaces.network.webhook;
 import snw.kookbc.interfaces.network.NetworkSystem;
 
 public interface WebhookNetworkSystem extends NetworkSystem {
-    
+
+    @Override
+    default boolean isConnected() {
+        return true;
+    }
+
 }
