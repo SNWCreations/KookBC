@@ -69,9 +69,8 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
     private final CommandContextFactory<CommandSender> commandContextFactory = new StandardCommandContextFactory<>();
 
     CloudBasedCommandManager(KBCClient client, @NonNull CloudCommandManagerImpl parent) {
-        super(CommandExecutionCoordinator.simpleCoordinator(), /*new CloudCommandRegistrationHandlerImpl(plugin)*/CommandRegistrationHandler.nullCommandRegistrationHandler());
+        super(CommandExecutionCoordinator.simpleCoordinator(), CommandRegistrationHandler.nullCommandRegistrationHandler());
         this.client = client;
-        /*((CloudCommandRegistrationHandlerImpl) commandRegistrationHandler()).initialize(this);*/
         this.parent = parent;
         registerCapability(CloudCapability.StandardCapabilities.ROOT_COMMAND_DELETION);
         parserRegistry().registerParserSupplier(TypeToken.get(Plugin.class), p -> new PluginArgumentParser(client));
