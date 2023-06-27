@@ -23,7 +23,7 @@ import snw.jkook.message.component.card.module.InviteModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
     @Override

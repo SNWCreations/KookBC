@@ -19,10 +19,14 @@
 package snw.kookbc.impl.command;
 
 // Only for internal use. See CommandManagerImpl#processSingleArgument
-final class UnknownArgumentException extends RuntimeException {
+public final class UnknownArgumentException extends RuntimeException {
     final int argIndex;
 
     UnknownArgumentException(int argIndex) {
         this.argIndex = argIndex;
+    }
+
+    public int argIndex() {
+        return argIndex;
     }
 }

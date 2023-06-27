@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.GsonUtil.get;
 
 // Just for (de)serialize the CardMessages.
 public class CardBuilder {

@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- package snw.kookbc.impl.serializer.event.channel;
+package snw.kookbc.impl.serializer.event.channel;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
@@ -38,10 +38,10 @@ public class ChannelMessageUnpinEventDeserializer extends NormalEventDeserialize
     @Override
     protected ChannelMessageUnpinEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelMessageUnpinEvent(
-            timeStamp,
-            client.getStorage().getChannel(get(body, "channel_id").getAsString()),
-            get(body, "msg_id").getAsString(),
-            client.getStorage().getUser(get(body, "operator_id").getAsString())
+                timeStamp,
+                client.getStorage().getChannel(get(body, "channel_id").getAsString()),
+                get(body, "msg_id").getAsString(),
+                client.getStorage().getUser(get(body, "operator_id").getAsString())
         );
     }
 

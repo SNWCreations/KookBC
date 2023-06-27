@@ -43,8 +43,8 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
         int roleId = get(body, "role_id").getAsInt();
         ((RoleImpl) client.getStorage().getRole(guild, roleId, body)).update(body);
         return new RoleInfoUpdateEvent(
-            timeStamp,
-            client.getStorage().getRole(guild, roleId)
+                timeStamp,
+                client.getStorage().getRole(guild, roleId)
         );
     }
 

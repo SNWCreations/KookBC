@@ -226,6 +226,9 @@ public class ListenerImpl implements FrameHandler {
                 WrappedCommand wrappedCommand = cmdMan.getCommandMap()
                         .getView(true)
                         .get(cmdLine.contains(" ") ? cmdLine.substring(0, cmdLine.indexOf(" ")) : cmdLine);
+                if (wrappedCommand == null) {
+                    return true;
+                }
                 PluginDescription description = wrappedCommand.getPlugin().getDescription();
                 String pluginName = description.getName();
                 String pluginVer = description.getVersion();

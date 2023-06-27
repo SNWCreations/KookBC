@@ -42,8 +42,8 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
         Guild guild = client.getStorage().getGuild(get(body, "id").getAsString());
         ((GuildImpl) guild).update(body);
         return new GuildInfoUpdateEvent(
-            timeStamp,
-            guild
+                timeStamp,
+                guild
         );
     }
 

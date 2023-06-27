@@ -18,7 +18,9 @@
 
 package snw.kookbc.impl.serializer.event.pm;
 
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.message.PrivateMessage;
 import snw.kookbc.impl.KBCClient;
@@ -36,9 +38,9 @@ public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializ
     protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         PrivateMessage privateMessage = client.getMessageBuilder().buildPrivateMessage(object);
         return new PrivateMessageReceivedEvent(
-            privateMessage.getTimeStamp(),
-            privateMessage.getSender(),
-            privateMessage
+                privateMessage.getTimeStamp(),
+                privateMessage.getSender(),
+                privateMessage
         );
     }
 

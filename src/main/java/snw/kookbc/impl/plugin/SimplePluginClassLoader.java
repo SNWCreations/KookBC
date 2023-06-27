@@ -146,7 +146,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
         // Try to load class from other known instances if needed
         if (!dontCallOther) {
-            Class<?> result =  loadFromOther(name);
+            Class<?> result = loadFromOther(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;
@@ -184,5 +184,5 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.remove(this);
         super.close();
     }
-    
+
 }

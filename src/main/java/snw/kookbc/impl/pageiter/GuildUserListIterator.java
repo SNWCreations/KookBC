@@ -25,9 +25,6 @@ import snw.jkook.entity.User;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -72,11 +69,7 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
         if (joinedTimeFirst != null) {
             base = base + "&joined_at=" + (joinedTimeFirst ? 1 : 0);
         }
-        try {
-            return URLEncoder.encode(base, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            throw new Error("No UTF-8 encoding? Check your JVM installation!", e);
-        }
+        return base;
     }
 
     @Override

@@ -46,10 +46,10 @@ public class UserAddReactionEventDeserializer extends NormalEventDeserializer<Us
         CustomEmoji emoji = client.getStorage().getEmoji(get(rawEmoji, "id").getAsString(), rawEmoji);
         ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
         return new UserAddReactionEvent(
-            timeStamp,
-            user,
-            messageId,
-            reaction
+                timeStamp,
+                user,
+                messageId,
+                reaction
         );
     }
 

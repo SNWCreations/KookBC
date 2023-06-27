@@ -123,7 +123,7 @@ public class EntityBuilder {
         } else {
             String parentId = get(object, "parent_id").getAsString();
             Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-            
+
             int type = get(object, "type").getAsInt();
             if (type == 1) { // TextChannel
                 int chatLimitTime = get(object, "slow_mode").getAsInt();

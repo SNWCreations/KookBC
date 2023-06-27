@@ -92,5 +92,6 @@ public final class EventTypeMap {
         MAP = Collections.unmodifiableMap(mutableMap);
     }
 
-    private EventTypeMap() {} // can't call constructor
+    private EventTypeMap() {
+    } // can't call constructor
 }
