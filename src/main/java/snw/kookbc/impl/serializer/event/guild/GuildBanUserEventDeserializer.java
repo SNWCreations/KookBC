@@ -25,7 +25,7 @@ import com.google.gson.JsonParseException;
 import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildBanUserEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.EntityStorage;
+import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;

@@ -35,7 +35,7 @@ import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
-import snw.kookbc.impl.entity.EntityStorage;
+import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
