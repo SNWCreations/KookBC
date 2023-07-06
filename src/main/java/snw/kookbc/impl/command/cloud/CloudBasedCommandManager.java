@@ -189,6 +189,10 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                             message.sendToSource("指令语法错误。正确的用法: "
                                     + ((InvalidSyntaxException) finalThrowable)
                                     .getCorrectSyntax());
+                        } else {
+                            client.getCore().getLogger().info("指令语法错误。正确的用法: "
+                                    + ((InvalidSyntaxException) finalThrowable)
+                                    .getCorrectSyntax());
                         }
                     }
             );
@@ -198,6 +202,8 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                     (InvalidCommandSenderException) throwable, (c, e) -> {
                         if (message != null) {
                             message.sendToSource(finalThrowable.getMessage());
+                        } else {
+                            client.getCore().getLogger().info(finalThrowable.getMessage());
                         }
                     }
             );
@@ -207,6 +213,8 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                     (NoPermissionException) throwable, (c, e) -> {
                         if (message != null) {
                             message.sendToSource("您没有执行此命令的权限");
+                        } else {
+                            client.getCore().getLogger().info("您没有执行此命令的权限");
                         }
                     }
             );
@@ -222,12 +230,17 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         if (message != null) {
                             message.sendToSource("无效的命令参数: "
                                     + finalThrowable.getCause().getMessage());
+                        } else {
+                            client.getCore().getLogger().info("无效的命令参数: "
+                                    + finalThrowable.getCause().getMessage());
                         }
                     }
             );
         } else if (throwable != null) {
             if (message != null) {
                 message.sendToSource("尝试执行此命令时发生内部错误");
+            } else {
+                client.getCore().getLogger().info("尝试执行此命令时发生内部错误");
             }
             unhandledException.set(throwable); // provide the unhandled exception
         }
