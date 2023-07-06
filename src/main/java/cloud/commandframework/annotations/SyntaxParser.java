@@ -40,8 +40,7 @@ import java.util.regex.Pattern;
  */
 public final class SyntaxParser implements Function<@NonNull String, @NonNull List<@NonNull SyntaxFragment>> {
 
-    private static final Predicate<String> PATTERN_ARGUMENT_LITERAL = Pattern.compile("\\S+")
-            .asPredicate();
+    private static final Predicate<String> PATTERN_ARGUMENT_LITERAL = Pattern.compile("\\S+").asPredicate();
     private static final Predicate<String> PATTERN_ARGUMENT_REQUIRED = Pattern.compile("<(\\S+)>").asPredicate();
     private static final Predicate<String> PATTERN_ARGUMENT_OPTIONAL = Pattern.compile("\\[(\\S+)]").asPredicate();
 

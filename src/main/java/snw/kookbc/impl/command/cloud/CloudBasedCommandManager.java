@@ -165,9 +165,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         AtomicBoolean foundCommand = new AtomicBoolean(true);
         try {
             executeCommand(commandSender, input, message)
-                    .whenComplete((commandResult, throwable) -> {
-                        handleThrowable(commandSender, message, unhandledException, foundCommand, throwable);
-                    }).get();
+                    .whenComplete((commandResult, throwable) -> handleThrowable(commandSender, message, unhandledException, foundCommand, throwable)).get();
         } catch (InterruptedException | ExecutionException ignored) { // impossible
         }
         if (unhandledException.get() != null) {

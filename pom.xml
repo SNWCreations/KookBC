@@ -148,6 +148,12 @@
                                         <exclude>META-INF/services/cpw.*</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>cloud.commandframework:*</artifact>
+                                    <excludes>
+                                        <exclude>cloud/commandframework/arguments/CommandArgument**</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>
@@ -249,6 +255,12 @@
             <groupId>net.kyori</groupId>
             <artifactId>event-api</artifactId>
             <version>3.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>checker-qual</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

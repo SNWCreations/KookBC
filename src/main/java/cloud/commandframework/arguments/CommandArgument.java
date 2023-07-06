@@ -37,13 +37,14 @@ import io.leangen.geantyref.TypeToken;
 import org.apiguardian.api.API;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.returnsreceiver.qual.This;
 
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 /**
- * A argument that belongs to a command
+ * AN argument that belongs to a command
  *
  * @param <C> Command sender type
  * @param <T> The type that the argument parses into
@@ -55,14 +56,15 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Pattern for command argument names
      */
-    private static final Pattern NAME_PATTERN = Pattern.compile("\\S+");
+//    private static final Pattern NAME_PATTERN = Pattern.compile("\\S+");
+    private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9\\-_]+");
 
     /**
      * A typed key representing this argument
      */
     private final CloudKey<T> key;
     /**
-     * Indicates whether or not the argument is required
+     * Indicates whether the argument is required
      * or not. All arguments prior to any other required
      * argument must also be required, such that the predicate
      * (∀ c_i ∈ required)({c_0, ..., c_i-1} ⊂ required) holds true,
@@ -92,7 +94,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      */
     private final BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider;
     /**
-     * Argument preprocessors that allows for extensions to existing argument types
+     * Argument preprocessors that allows for extensions to exist argument types
      * without having to update all parsers
      */
     private final Collection<BiFunction<@NonNull CommandContext<C>,
@@ -104,7 +106,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     private final ArgumentDescription defaultDescription;
 
     /**
-     * Whether or not the argument has been used before
+     * Whether the argument has been used before
      */
     private boolean argumentRegistered = false;
 
@@ -113,7 +115,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required              Whether or not the argument is required
+     * @param required              Whether the argument is required
      * @param name                  The argument name
      * @param parser                The argument parser
      * @param defaultValue          Default value used when no value is provided by the command sender
@@ -138,7 +140,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
         this.required = required;
         this.name = Objects.requireNonNull(name, "Name may not be null");
         if (!NAME_PATTERN.asPredicate().test(name)) {
-            throw new IllegalArgumentException("Name must be alphanumeric");
+            throw new IllegalArgumentException("Name must not include space character");
         }
         this.parser = Objects.requireNonNull(parser, "Parser may not be null");
         this.defaultValue = defaultValue;
@@ -154,7 +156,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required              Whether or not the argument is required
+     * @param required              Whether the argument is required
      * @param name                  The argument name
      * @param parser                The argument parser
      * @param defaultValue          Default value used when no value is provided by the command sender
@@ -187,7 +189,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required            Whether or not the argument is required
+     * @param required            Whether the argument is required
      * @param name                The argument name
      * @param parser              The argument parser
      * @param defaultValue        Default value used when no value is provided by the command sender
@@ -208,7 +210,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required            Whether or not the argument is required
+     * @param required            Whether the argument is required
      * @param name                The argument name
      * @param parser              The argument parser
      * @param defaultValue        Default value used when no value is provided by the command sender
@@ -233,7 +235,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required            Whether or not the argument is required
+     * @param required            Whether the argument is required
      * @param name                The argument name
      * @param parser              The argument parser
      * @param defaultValue        Default value used when no value is provided by the command sender
@@ -255,7 +257,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     /**
      * Construct a new command argument
      *
-     * @param required            Whether or not the argument is required
+     * @param required            Whether the argument is required
      * @param name                The argument name
      * @param parser              The argument parser
      * @param defaultValue        Default value used when no value is provided by the command sender
@@ -338,7 +340,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     }
 
     /**
-     * Check whether or not the command argument is required
+     * Check whether the command argument is required
      *
      * @return {@code true} if the argument is required, {@code false} if not
      */
@@ -379,7 +381,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param preprocessor Preprocessor
      * @return {@code this}
      */
-    public @NonNull CommandArgument<C, T> addPreprocessor(
+    public @NonNull
+    @This CommandArgument<C, T> addPreprocessor(
             final @NonNull BiFunction<@NonNull CommandContext<C>, @NonNull Queue<String>,
                     @NonNull ArgumentParseResult<Boolean>> preprocessor
     ) {
@@ -596,7 +599,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param manager Command manager
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> manager(final @NonNull CommandManager<C> manager) {
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> manager(final @NonNull CommandManager<C> manager) {
             this.manager = manager;
             return this;
         }
@@ -610,7 +614,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          *
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> asRequired() {
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> asRequired() {
             this.required = true;
             return this;
         }
@@ -624,7 +629,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          *
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> asOptional() {
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> asOptional() {
             this.required = false;
             return this;
         }
@@ -639,7 +645,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param defaultValue Default value that will be used if none was supplied
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> asOptionalWithDefault(final @NonNull String defaultValue) {
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> asOptionalWithDefault(final @NonNull String defaultValue) {
             this.defaultValue = defaultValue;
             this.required = false;
             return this;
@@ -651,7 +658,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param parser Argument parser
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> withParser(final @NonNull ArgumentParser<@NonNull C, @NonNull T> parser) {
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> withParser(final @NonNull ArgumentParser<@NonNull C, @NonNull T> parser) {
             this.parser = Objects.requireNonNull(parser, "Parser may not be null");
             return this;
         }
@@ -662,7 +670,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param suggestionsProvider Suggestions provider
          * @return Builder instance
          */
-        public @NonNull Builder<@NonNull C, @NonNull T> withSuggestionsProvider(
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> withSuggestionsProvider(
                 final @NonNull BiFunction<@NonNull CommandContext<C>,
                         @NonNull String, @NonNull List<String>> suggestionsProvider
         ) {
@@ -680,7 +689,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @since 1.4.0
          */
         @API(status = API.Status.STABLE, since = "1.4.0")
-        public @NonNull Builder<@NonNull C, @NonNull T> withDefaultDescription(
+        public @NonNull
+        @This Builder<@NonNull C, @NonNull T> withDefaultDescription(
                 final @NonNull ArgumentDescription defaultDescription
         ) {
             this.defaultDescription = Objects.requireNonNull(defaultDescription, "Default description may not be null");
