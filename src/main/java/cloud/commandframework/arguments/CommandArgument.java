@@ -34,10 +34,6 @@ import cloud.commandframework.keys.CloudKey;
 import cloud.commandframework.keys.CloudKeyHolder;
 import cloud.commandframework.keys.SimpleCloudKey;
 import io.leangen.geantyref.TypeToken;
-import org.apiguardian.api.API;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.common.returnsreceiver.qual.This;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -50,8 +46,7 @@ import java.util.regex.Pattern;
  * @param <T> The type that the argument parses into
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-@API(status = API.Status.STABLE)
-public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>, CloudKeyHolder<T> {
+public class CommandArgument<C, T> implements Comparable<CommandArgument>, CloudKeyHolder<T> {
 
     /**
      * Pattern for command argument names
@@ -97,8 +92,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * Argument preprocessors that allows for extensions to exist argument types
      * without having to update all parsers
      */
-    private final Collection<BiFunction<@NonNull CommandContext<C>,
-            @NonNull Queue<@NonNull String>, @NonNull ArgumentParseResult<Boolean>>> argumentPreprocessors;
+    private final Collection<BiFunction<CommandContext<C>,
+            Queue<String>, ArgumentParseResult<Boolean>>> argumentPreprocessors;
 
     /**
      * A description that will be used when registering this argument if no override is provided.
@@ -125,17 +120,16 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param argumentPreprocessors Argument preprocessors
      * @since 1.4.0
      */
-    @API(status = API.Status.STABLE, since = "1.4.0")
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull TypeToken<T> valueType,
-            final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
-            final @NonNull ArgumentDescription defaultDescription,
-            final @NonNull Collection<@NonNull BiFunction<@NonNull CommandContext<C>, @NonNull Queue<@NonNull String>,
-                    @NonNull ArgumentParseResult<Boolean>>> argumentPreprocessors
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final TypeToken<T> valueType,
+            final BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
+            final ArgumentDescription defaultDescription,
+            final Collection<BiFunction<CommandContext<C>, Queue<String>,
+                    ArgumentParseResult<Boolean>>> argumentPreprocessors
     ) {
         this.required = required;
         this.name = Objects.requireNonNull(name, "Name may not be null");
@@ -166,13 +160,13 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      */
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull TypeToken<T> valueType,
-            final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
-            final @NonNull Collection<@NonNull BiFunction<@NonNull CommandContext<C>, @NonNull Queue<@NonNull String>,
-                    @NonNull ArgumentParseResult<Boolean>>> argumentPreprocessors
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final TypeToken<T> valueType,
+            final BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
+            final Collection<BiFunction<CommandContext<C>, Queue<String>,
+                    ArgumentParseResult<Boolean>>> argumentPreprocessors
     ) {
         this(
                 required,
@@ -198,11 +192,11 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      */
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull TypeToken<T> valueType,
-            final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final TypeToken<T> valueType,
+            final BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider
     ) {
         this(required, name, parser, defaultValue, valueType, suggestionsProvider, Collections.emptyList());
     }
@@ -219,15 +213,15 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param defaultDescription  Default description to use when registering
      * @since 1.4.0
      */
-    @API(status = API.Status.STABLE, since = "1.4.0")
+
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull TypeToken<T> valueType,
-            final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
-            final @NonNull ArgumentDescription defaultDescription
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final TypeToken<T> valueType,
+            final BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
+            final ArgumentDescription defaultDescription
     ) {
         this(required, name, parser, defaultValue, valueType, suggestionsProvider, defaultDescription, Collections.emptyList());
     }
@@ -244,12 +238,12 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      */
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull Class<T> valueType,
-            final @Nullable BiFunction<@NonNull CommandContext<C>,
-                    @NonNull String, @NonNull List<@NonNull String>> suggestionsProvider
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final Class<T> valueType,
+            final BiFunction<CommandContext<C>,
+                    String, List<String>> suggestionsProvider
     ) {
         this(required, name, parser, defaultValue, TypeToken.get(valueType), suggestionsProvider);
     }
@@ -266,16 +260,16 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param defaultDescription  Default description to use when registering
      * @since 1.4.0
      */
-    @API(status = API.Status.STABLE, since = "1.4.0")
+
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull String defaultValue,
-            final @NonNull Class<T> valueType,
-            final @Nullable BiFunction<@NonNull CommandContext<C>,
-                    @NonNull String, @NonNull List<@NonNull String>> suggestionsProvider,
-            final @NonNull ArgumentDescription defaultDescription
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final String defaultValue,
+            final Class<T> valueType,
+            final BiFunction<CommandContext<C>,
+                    String, List<String>> suggestionsProvider,
+            final ArgumentDescription defaultDescription
     ) {
         this(required, name, parser, defaultValue, TypeToken.get(valueType), suggestionsProvider, defaultDescription);
     }
@@ -290,15 +284,15 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      */
     public CommandArgument(
             final boolean required,
-            final @NonNull String name,
-            final @NonNull ArgumentParser<C, T> parser,
-            final @NonNull Class<T> valueType
+            final String name,
+            final ArgumentParser<C, T> parser,
+            final Class<T> valueType
     ) {
         this(required, name, parser, "", valueType, null);
     }
 
-    private static <C> @NonNull BiFunction<@NonNull CommandContext<C>, @NonNull String,
-            @NonNull List<String>> buildDefaultSuggestionsProvider(final @NonNull CommandArgument<C, ?> argument) {
+    private static <C> BiFunction<CommandContext<C>, String,
+            List<String>> buildDefaultSuggestionsProvider(final CommandArgument<C, ?> argument) {
         return new DelegatingSuggestionsProvider<>(argument.getName(), argument.getParser());
     }
 
@@ -311,9 +305,9 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param <T>   Argument Type. Used to make the compiler happy.
      * @return Argument builder
      */
-    public static <C, T> CommandArgument.@NonNull Builder<C, T> ofType(
-            final @NonNull TypeToken<T> clazz,
-            final @NonNull String name
+    public static <C, T> CommandArgument.Builder<C, T> ofType(
+            final TypeToken<T> clazz,
+            final String name
     ) {
         return new Builder<>(clazz, name);
     }
@@ -327,15 +321,15 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param <T>   Argument Type. Used to make the compiler happy.
      * @return Argument builder
      */
-    public static <C, T> CommandArgument.@NonNull Builder<@NonNull C, @NonNull T> ofType(
-            final @NonNull Class<T> clazz,
-            final @NonNull String name
+    public static <C, T> CommandArgument.Builder<C, T> ofType(
+            final Class<T> clazz,
+            final String name
     ) {
         return new Builder<>(TypeToken.get(clazz), name);
     }
 
     @Override
-    public final @NonNull CloudKey<T> getKey() {
+    public final CloudKey<T> getKey() {
         return this.key;
     }
 
@@ -353,7 +347,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Argument name
      */
-    public @NonNull String getName() {
+    public String getName() {
         return this.name;
     }
 
@@ -363,12 +357,12 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Command parser
      */
-    public @NonNull ArgumentParser<C, T> getParser() {
+    public ArgumentParser<C, T> getParser() {
         return this.parser;
     }
 
     @Override
-    public final @NonNull String toString() {
+    public final String toString() {
         return String.format("%s{name=%s}", this.getClass().getSimpleName(), this.name);
     }
 
@@ -381,10 +375,9 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param preprocessor Preprocessor
      * @return {@code this}
      */
-    public @NonNull
-    @This CommandArgument<C, T> addPreprocessor(
-            final @NonNull BiFunction<@NonNull CommandContext<C>, @NonNull Queue<String>,
-                    @NonNull ArgumentParseResult<Boolean>> preprocessor
+    public CommandArgument<C, T> addPreprocessor(
+            final BiFunction<CommandContext<C>, Queue<String>,
+                    ArgumentParseResult<Boolean>> preprocessor
     ) {
         this.argumentPreprocessors.add(preprocessor);
         return this;
@@ -398,12 +391,12 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param input   Remaining command input. None will be popped
      * @return Parsing error, or argument containing {@code true}
      */
-    public @NonNull ArgumentParseResult<Boolean> preprocess(
-            final @NonNull CommandContext<C> context,
-            final @NonNull Queue<String> input
+    public ArgumentParseResult<Boolean> preprocess(
+            final CommandContext<C> context,
+            final Queue<String> input
     ) {
-        for (final BiFunction<@NonNull CommandContext<C>, @NonNull Queue<String>,
-                @NonNull ArgumentParseResult<Boolean>> preprocessor : this.argumentPreprocessors) {
+        for (final BiFunction<CommandContext<C>, Queue<String>,
+                ArgumentParseResult<Boolean>> preprocessor : this.argumentPreprocessors) {
             final ArgumentParseResult<Boolean> result = preprocessor.apply(
                     context,
                     input
@@ -420,7 +413,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Owning command
      */
-    public @Nullable Command<C> getOwningCommand() {
+    public Command<C> getOwningCommand() {
         return this.owningCommand;
     }
 
@@ -429,7 +422,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @param owningCommand Owning command
      */
-    public void setOwningCommand(final @NonNull Command<C> owningCommand) {
+    public void setOwningCommand(final Command<C> owningCommand) {
         if (this.owningCommand != null) {
             throw new IllegalStateException("Cannot replace owning command");
         }
@@ -441,8 +434,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Suggestions provider
      */
-    public final @NonNull BiFunction<@NonNull CommandContext<C>, @NonNull String,
-            @NonNull List<String>> getSuggestionsProvider() {
+    public final BiFunction<CommandContext<C>, String,
+            List<String>> getSuggestionsProvider() {
         return this.suggestionsProvider;
     }
 
@@ -451,7 +444,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return the default description
      */
-    public final @NonNull ArgumentDescription getDefaultDescription() {
+    public final ArgumentDescription getDefaultDescription() {
         return this.defaultDescription;
     }
 
@@ -473,7 +466,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
     }
 
     @Override
-    public final int compareTo(final @NonNull CommandArgument<?, ?> o) {
+    public final int compareTo(final CommandArgument o) {
         if (this instanceof StaticArgument) {
             if (o instanceof StaticArgument) {
                 return this.getName().compareTo(o.getName());
@@ -494,7 +487,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Default value
      */
-    public @NonNull String getDefaultValue() {
+    public String getDefaultValue() {
         return this.defaultValue;
     }
 
@@ -513,7 +506,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Value type
      */
-    public @NonNull TypeToken<T> getValueType() {
+    public TypeToken<T> getValueType() {
         return this.valueType;
     }
 
@@ -522,7 +515,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      *
      * @return Copied argument
      */
-    public @NonNull CommandArgument<C, T> copy() {
+    public CommandArgument<C, T> copy() {
         CommandArgument.Builder<C, T> builder = ofType(this.valueType, this.name);
         builder = builder.withSuggestionsProvider(this.suggestionsProvider);
         builder = builder.withParser(this.parser);
@@ -561,7 +554,6 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param <C> Command sender type
      * @param <T> Argument value type
      */
-    @API(status = API.Status.STABLE)
     public static class Builder<C, T> {
 
         private final TypeToken<T> valueType;
@@ -571,23 +563,23 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
         private boolean required = true;
         private ArgumentParser<C, T> parser;
         private String defaultValue = "";
-        private BiFunction<@NonNull CommandContext<C>, @NonNull String, @NonNull List<String>> suggestionsProvider;
-        private @NonNull ArgumentDescription defaultDescription = ArgumentDescription.empty();
+        private BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider;
+        private ArgumentDescription defaultDescription = ArgumentDescription.empty();
 
-        private final Collection<BiFunction<@NonNull CommandContext<C>,
-                @NonNull String, @NonNull ArgumentParseResult<Boolean>>> argumentPreprocessors = new LinkedList<>();
+        private final Collection<BiFunction<CommandContext<C>,
+                String, ArgumentParseResult<Boolean>>> argumentPreprocessors = new LinkedList<>();
 
         protected Builder(
-                final @NonNull TypeToken<T> valueType,
-                final @NonNull String name
+                final TypeToken<T> valueType,
+                final String name
         ) {
             this.valueType = valueType;
             this.name = name;
         }
 
         protected Builder(
-                final @NonNull Class<T> valueType,
-                final @NonNull String name
+                final Class<T> valueType,
+                final String name
         ) {
             this(TypeToken.get(valueType), name);
         }
@@ -599,8 +591,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param manager Command manager
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> manager(final @NonNull CommandManager<C> manager) {
+        public Builder<C, T> manager(final CommandManager<C> manager) {
             this.manager = manager;
             return this;
         }
@@ -614,8 +605,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          *
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> asRequired() {
+        public Builder<C, T> asRequired() {
             this.required = true;
             return this;
         }
@@ -629,8 +619,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          *
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> asOptional() {
+        public Builder<C, T> asOptional() {
             this.required = false;
             return this;
         }
@@ -645,8 +634,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param defaultValue Default value that will be used if none was supplied
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> asOptionalWithDefault(final @NonNull String defaultValue) {
+        public Builder<C, T> asOptionalWithDefault(final String defaultValue) {
             this.defaultValue = defaultValue;
             this.required = false;
             return this;
@@ -658,8 +646,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param parser Argument parser
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> withParser(final @NonNull ArgumentParser<@NonNull C, @NonNull T> parser) {
+        public Builder<C, T> withParser(final ArgumentParser<C, T> parser) {
             this.parser = Objects.requireNonNull(parser, "Parser may not be null");
             return this;
         }
@@ -670,10 +657,9 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @param suggestionsProvider Suggestions provider
          * @return Builder instance
          */
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> withSuggestionsProvider(
-                final @NonNull BiFunction<@NonNull CommandContext<C>,
-                        @NonNull String, @NonNull List<String>> suggestionsProvider
+        public Builder<C, T> withSuggestionsProvider(
+                final BiFunction<CommandContext<C>,
+                        String, List<String>> suggestionsProvider
         ) {
             this.suggestionsProvider = suggestionsProvider;
             return this;
@@ -688,10 +674,9 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * @return Builder instance
          * @since 1.4.0
          */
-        @API(status = API.Status.STABLE, since = "1.4.0")
-        public @NonNull
-        @This Builder<@NonNull C, @NonNull T> withDefaultDescription(
-                final @NonNull ArgumentDescription defaultDescription
+
+        public Builder<C, T> withDefaultDescription(
+                final ArgumentDescription defaultDescription
         ) {
             this.defaultDescription = Objects.requireNonNull(defaultDescription, "Default description may not be null");
             return this;
@@ -702,7 +687,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          *
          * @return Constructed argument
          */
-        public @NonNull CommandArgument<@NonNull C, @NonNull T> build() {
+        public CommandArgument<C, T> build() {
             if (this.parser == null && this.manager != null) {
                 this.parser = this.manager.parserRegistry().createParser(this.valueType, ParserParameters.empty())
                         .orElse(null);
@@ -725,7 +710,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
             );
         }
 
-        protected final @NonNull String getName() {
+        protected final String getName() {
             return this.name;
         }
 
@@ -733,24 +718,24 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
             return this.required;
         }
 
-        protected final @NonNull ArgumentParser<@NonNull C, @NonNull T> getParser() {
+        protected final ArgumentParser<C, T> getParser() {
             return this.parser;
         }
 
-        protected final @NonNull String getDefaultValue() {
+        protected final String getDefaultValue() {
             return this.defaultValue;
         }
 
-        protected final @NonNull BiFunction<@NonNull CommandContext<C>, @NonNull String, @NonNull List<String>>
+        protected final BiFunction<CommandContext<C>, String, List<String>>
         getSuggestionsProvider() {
             return this.suggestionsProvider;
         }
 
-        protected final @NonNull ArgumentDescription getDefaultDescription() {
+        protected final ArgumentDescription getDefaultDescription() {
             return this.defaultDescription;
         }
 
-        protected final @NonNull TypeToken<T> getValueType() {
+        protected final TypeToken<T> getValueType() {
             return this.valueType;
         }
     }
@@ -763,19 +748,18 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
      * @param <B> the subclass type
      * @since 1.5.0
      */
-    @API(status = API.Status.STABLE, since = "1.5.0")
     public abstract static class TypedBuilder<C, T, B extends Builder<C, T>> extends Builder<C, T> {
 
         protected TypedBuilder(
-                final @NonNull TypeToken<T> valueType,
-                final @NonNull String name
+                final TypeToken<T> valueType,
+                final String name
         ) {
             super(valueType, name);
         }
 
         protected TypedBuilder(
-                final @NonNull Class<T> valueType,
-                final @NonNull String name
+                final Class<T> valueType,
+                final String name
         ) {
             super(valueType, name);
         }
@@ -789,7 +773,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull B manager(final @NonNull CommandManager<C> manager) {
+        public B manager(final CommandManager<C> manager) {
             super.manager(manager);
             return this.self();
         }
@@ -798,7 +782,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull B asRequired() {
+        public B asRequired() {
             super.asRequired();
             return this.self();
         }
@@ -807,7 +791,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull B asOptional() {
+        public B asOptional() {
             super.asOptional();
             return this.self();
         }
@@ -816,7 +800,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull B asOptionalWithDefault(final @NonNull String defaultValue) {
+        public B asOptionalWithDefault(final String defaultValue) {
             super.asOptionalWithDefault(defaultValue);
             return this.self();
         }
@@ -825,7 +809,7 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull B withParser(final @NonNull ArgumentParser<@NonNull C, @NonNull T> parser) {
+        public B withParser(final ArgumentParser<C, T> parser) {
             super.withParser(parser);
             return this.self();
         }
@@ -834,9 +818,9 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument<?, ?>>,
          * {@inheritDoc}
          */
         @Override
-        public @NonNull Builder<@NonNull C, @NonNull T> withSuggestionsProvider(
-                final @NonNull BiFunction<@NonNull CommandContext<C>,
-                        @NonNull String, @NonNull List<String>> suggestionsProvider
+        public Builder<C, T> withSuggestionsProvider(
+                final BiFunction<CommandContext<C>,
+                        String, List<String>> suggestionsProvider
         ) {
             super.withSuggestionsProvider(suggestionsProvider);
             return this.self();
