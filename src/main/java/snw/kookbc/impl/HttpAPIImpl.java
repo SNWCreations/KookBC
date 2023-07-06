@@ -421,13 +421,11 @@ public class HttpAPIImpl implements HttpAPI {
                 throw new IllegalArgumentException("Guild ID should be NOT NULL if method is 2");
             }
         }
-        MapBuilder builder = new MapBuilder()
+        Map<String, Object> body = new MapBuilder()
                 .put("user_code", userCode)
-                .put("from", method);
-        if (guildId != null) {
-            builder.put("guild_id", guildId);
-        }
-        Map<String, Object> body = builder.build();
+                .put("from", method)
+                .putIfNotNull("guild_id", guildId)
+                .build();
         client.getNetworkClient().post(HttpAPIRoute.FRIEND_REQUEST.toFullURL(), body);
     }
 
