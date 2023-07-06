@@ -172,7 +172,8 @@ public class UserImpl implements User, Updatable {
         Map<String, Object> body = new MapBuilder()
                 .put("type", type)
                 .put("target_id", getId())
-                .put("content", json).putIfNotNull("quote", quote, Message::getId)
+                .put("content", json)
+                .putIfNotNull("quote", quote, Message::getId)
                 .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
     }
