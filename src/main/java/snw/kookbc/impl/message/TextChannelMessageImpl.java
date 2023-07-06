@@ -96,11 +96,7 @@ public class TextChannelMessageImpl extends MessageImpl implements TextChannelMe
 
     @Override
     public void setComponentTemp(User user, BaseComponent component) {
-        if (this.getComponent() != null) { // if this instance was constructed from Unsafe? we shouldn't check.
-            if (!component.getClass().isAssignableFrom(this.getComponent().getClass())) {
-                throw new IllegalArgumentException("Incompatible component type");
-            }
-        }
+        checkCompatibleComponentType(component);
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())

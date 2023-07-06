@@ -28,6 +28,8 @@ import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -119,11 +121,7 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public void setComponent(BaseComponent component) {
-        if (this.component != null) { // if this instance was constructed from Unsafe? we shouldn't check.
-            if (!component.getClass().isAssignableFrom(this.component.getClass())) {
-                throw new IllegalArgumentException("Incompatible component type");
-            }
-        }
+        checkCompatibleComponentType(component);
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
@@ -142,5 +140,31 @@ public abstract class MessageImpl implements Message {
 
     public void setComponent0(BaseComponent component) {
         this.component = component;
+    }
+
+    protected final void checkCompatibleComponentType(BaseComponent newIncoming) {
+        if (this.component == null) {
+            return; // we don't know, let HTTP API check
+        }
+        final boolean compatible = isCompatibleComponentType(this.component, newIncoming);
+        if (!compatible) {
+            throw new IllegalArgumentException("Incompatible component type, tried updating from "
+                    + this.component.getClass() + " to " + newIncoming.getClass());
+        }
+    }
+
+    private static boolean isCompatibleComponentType(BaseComponent a, BaseComponent b) {
+        final Class<? extends BaseComponent> aClass = a.getClass();
+        final Class<? extends BaseComponent> bClass = b.getClass();
+        if (!aClass.isAssignableFrom(bClass)) {
+            if (CardComponent.class.isAssignableFrom(aClass)) {
+                return MultipleCardComponent.class.isAssignableFrom(bClass);
+            } else if (CardComponent.class.isAssignableFrom(bClass)) {
+                return MultipleCardComponent.class.isAssignableFrom(aClass);
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 }
