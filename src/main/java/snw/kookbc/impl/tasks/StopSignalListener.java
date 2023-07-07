@@ -23,7 +23,7 @@ import snw.kookbc.impl.KBCClient;
 
 import java.io.File;
 
-public class StopSignalListener extends Thread {
+public final class StopSignalListener extends Thread {
     private final KBCClient client;
 
     public StopSignalListener(KBCClient client) {
