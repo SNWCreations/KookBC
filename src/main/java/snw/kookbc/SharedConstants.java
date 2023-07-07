@@ -30,7 +30,7 @@ import java.io.InputStreamReader;
 // Want to modify them? see kookbc_version_data.json in src/main/resources folder.
 // Why I don't write them in this class?
 // The version string cannot be written as final variable, it should be loaded dynamically.
-public class SharedConstants {
+public final class SharedConstants {
     // The API name
     // Modify it if you forked JKook API
     public static final String SPEC_NAME;
@@ -68,5 +68,9 @@ public class SharedConstants {
         } catch (Exception e) {
             throw new Error("Cannot define KookBC data", e);
         }
+    }
+
+    // Constructor not available
+    private SharedConstants() {
     }
 }
