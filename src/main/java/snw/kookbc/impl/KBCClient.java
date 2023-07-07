@@ -49,6 +49,7 @@ import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
+import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.util.Util;
 
@@ -508,35 +509,4 @@ public class KBCClient {
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }
 
-}
-
-class StopSignalListener extends Thread {
-    private final KBCClient client;
-
-    StopSignalListener(KBCClient client) {
-        super("KookBC - StopSignalListener");
-        this.setDaemon(true);
-        this.client = client;
-    }
-
-    @Override
-    public void run() {
-        final KBCClient client = this.client;
-        final File localFile = new File("./KOOKBC_STOP");
-        while (client.isRunning()) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                continue;
-            }
-            if (localFile.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                localFile.delete();
-                client.getCore().getLogger().info("Received stop signal by new file. Stopping!");
-                client.shutdown();
-                return;
-            }
-        }
-    }
 }
