@@ -21,6 +21,7 @@ package snw.kookbc.impl;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
+import snw.jkook.command.CommandManager;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -35,7 +36,6 @@ import snw.kookbc.impl.command.internal.CloudHelpCommand;
 import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
-import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
@@ -48,6 +48,7 @@ import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
+import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
@@ -68,6 +69,7 @@ import static snw.kookbc.util.Util.closeLoaderIfPossible;
 public class KBCClient {
     private volatile boolean running = true;
     private final CoreImpl core;
+    private final CommandManager commandManager;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
@@ -86,12 +88,13 @@ public class KBCClient {
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        this(core, config, pluginsFolder, token, null, null, null, null, null);
+        this(core, config, pluginsFolder, token, null, null, null, null, null, null);
     }
 
     public KBCClient(
             CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
             /* Customizable components are following: */
+            @Nullable CommandManager commandManager,
             @Nullable NetworkClient networkClient,
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
@@ -113,6 +116,8 @@ public class KBCClient {
         }
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
+        /*Cloud*/
+        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> new CloudCommandManagerImpl(this));
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
@@ -509,4 +514,7 @@ public class KBCClient {
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }
 
+    public CommandManager getCommandManager() {
+        return commandManager;
+    }
 }

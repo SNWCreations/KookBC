@@ -20,11 +20,13 @@ package snw.kookbc.impl.plugin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import snw.jkook.plugin.*;
 import snw.jkook.util.Validate;
 import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
@@ -38,12 +40,18 @@ import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
-    private final KBCClient client;
+    private KBCClient client;
+    private Logger logger;
     private final Collection<Plugin> plugins = new ArrayList<>();
     private final Map<Predicate<File>, Function<ClassLoader, PluginLoader>> loaderMap = new LinkedHashMap<>();
 
     public SimplePluginManager(KBCClient client) {
+        this(client, client.getCore().getLogger());
+    }
+
+    public SimplePluginManager(KBCClient client, Logger logger) {
         this.client = client;
+        this.logger = logger;
         this.registerPluginLoader(f -> {
             if (!f.getName().endsWith(".jar"))
                 return false;
@@ -53,6 +61,13 @@ public class SimplePluginManager implements PluginManager {
                 return false;
             }
         }, this::createPluginLoader); // ensure overrides will apply
+    }
+
+    public void setClient(KBCClient client) {
+        if (this.client != null) {
+            throw new UnsupportedOperationException("Client already set");
+        }
+        this.client = client;
     }
 
     @Override
@@ -130,7 +145,7 @@ public class SimplePluginManager implements PluginManager {
                 try {
                     plugin = loadPlugin0(file, false);
                 } catch (Throwable e) {
-                    client.getCore().getLogger().error("Unable to load a plugin in the provided file {}", file, e);
+                    logger.error("Unable to load a plugin in the provided file {}", file, e);
                     continue;
                 }
                 if (plugin == null) {
@@ -139,7 +154,7 @@ public class SimplePluginManager implements PluginManager {
                 boolean shouldAdd = true;
                 for (final Plugin p : plugins) {
                     if (Objects.equals(p.getDescription().getName(), plugin.getDescription().getName())) {
-                        client.getCore().getLogger().error(
+                        logger.error(
                                 "We have found the same plugin name \"{}\" from two plugin files:" +
                                         " {} and {}, the plugin inside {} won't be returned.",
                                 plugin.getDescription().getName(),
@@ -213,7 +228,7 @@ public class SimplePluginManager implements PluginManager {
 //            try {
 //                ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
 //            } catch (IOException e) {
-//                client.getCore().getLogger().error("Unexpected IOException while we're attempting to close the PluginClassLoader.", e);
+//                logger.error("Unexpected IOException while we're attempting to close the PluginClassLoader.", e);
 //            }
 //        }
     }
@@ -239,7 +254,7 @@ public class SimplePluginManager implements PluginManager {
     }
 
     protected PluginLoader createPluginLoader(ClassLoader parent) {
-        return new SimplePluginClassLoader(client, parent);
+        return new SimplePluginClassLoader(client, AccessClassLoader.of(parent));
     }
 
     protected @Nullable PluginLoader createPluginLoaderForFile(File file, ClassLoader parent) {
