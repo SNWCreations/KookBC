@@ -18,9 +18,9 @@
 
 package snw.kookbc.interfaces.network.webhook;
 
-public interface RequestHandler {
+public interface RequestHandler<T> {
     
     // The invalid Request objects should NOT be passed to handlers.
-    void handle(Request<?> request) throws Exception;
+    void handle(Request<T> request) throws Exception;
     
 }
