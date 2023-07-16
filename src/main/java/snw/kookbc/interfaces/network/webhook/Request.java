@@ -16,17 +16,28 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.interfaces.network.webhook;
 
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.ws.Connector;
+// A interface which is designed for KOOK Webhook Event Requests.
+// Represents a HTTP POST request, and there is some KOOK-specific methods.
+// The T type means the JSON in Java object.
+public interface Request<T> {
 
-@SuppressWarnings("DeprecatedIsStillUsed")
-@Deprecated
-public class ListenerFactory {
+    // Get the decompressed (and decrypted if encrypted) data as the result.
+    String getRawBody();
 
-    public static Listener getListener(KBCClient client, Connector connector) {
-        return client.getConfig().getBoolean("ignore-sn-order", false) ? new IgnoreSNListenerImpl(client, connector) : new ListenerImpl(client, connector);
-    }
+    // To parsed Java JSON Object.
+    // No actual type for T, because it is depend on the dependency of implementation.
+    // e.g.
+    // com.google.gson.JsonObject json = request.toJson(); // it should be OK
+    T toJson();
 
+    // Only for implementation use.
+    boolean isCompressed();
+
+    void reply(int status, String content);
+    
+    // Return true if reply method is never called during its lifecycle.
+    // Only for implementation use.
+    boolean isReplyPresent();
 }

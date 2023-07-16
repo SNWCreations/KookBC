@@ -19,6 +19,9 @@
 package snw.kookbc.impl.network;
 
 // Represents the basic listener.
+// Use snw.kookbc.interfaces.network.FrameHandler instead
+@SuppressWarnings("DeprecatedIsStillUsed")
+@Deprecated
 public interface Listener {
     // The message is raw JSON format, so if you got compressed data, extract it first.
     void executeEvent(Frame frame);

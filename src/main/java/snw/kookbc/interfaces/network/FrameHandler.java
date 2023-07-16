@@ -16,17 +16,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.interfaces.network;
 
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.ws.Connector;
+import snw.kookbc.impl.network.Frame;
+import snw.kookbc.impl.network.Listener;
 
-@SuppressWarnings("DeprecatedIsStillUsed")
-@Deprecated
-public class ListenerFactory {
+@SuppressWarnings("deprecation")
+public interface FrameHandler extends Listener {
 
-    public static Listener getListener(KBCClient client, Connector connector) {
-        return client.getConfig().getBoolean("ignore-sn-order", false) ? new IgnoreSNListenerImpl(client, connector) : new ListenerImpl(client, connector);
+    void handle(Frame frame);
+
+    @Override
+    default void executeEvent(Frame frame) {
+        handle(frame);
     }
-
 }

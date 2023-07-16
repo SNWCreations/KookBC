@@ -40,10 +40,11 @@ import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
 import snw.kookbc.impl.event.internal.UserClickButtonListener;
-import snw.kookbc.impl.network.Connector;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
+import snw.kookbc.impl.network.webhook.JLHttpWebhookNetworkSystem;
+import snw.kookbc.impl.network.ws.OkhttpWebSocketNetworkSystem;
 import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.plugin.SimplePluginManager;
@@ -52,6 +53,7 @@ import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
+import snw.kookbc.interfaces.network.NetworkSystem;
 import snw.kookbc.util.Util;
 
 import java.io.File;
@@ -83,12 +85,12 @@ public class KBCClient {
     private final Condition shutdownCondition;
 
     protected final ExecutorService eventExecutor;
-    protected Connector connector;
+    protected final NetworkSystem networkSystem;
     protected List<Plugin> plugins;
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        this(core, config, pluginsFolder, token, null, null, null, null, null, null);
+        this(core, config, pluginsFolder, token, null, null, null, null, null, null, null);
     }
 
     public KBCClient(
@@ -99,7 +101,8 @@ public class KBCClient {
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
             @Nullable MessageBuilder msgBuilder,
-            @Nullable EventFactory eventFactory
+            @Nullable EventFactory eventFactory,
+            @Nullable NetworkSystem networkSystem
     ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -126,6 +129,18 @@ public class KBCClient {
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
         this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> new EventFactory(this));
+        if (networkSystem == null) {
+            final String mode = this.config.getString("mode");
+            if ("websocket".equals(mode)) {
+                this.networkSystem = new OkhttpWebSocketNetworkSystem(this);
+            } else if ("webhook".equals(mode)) {
+                this.networkSystem = new JLHttpWebhookNetworkSystem(this, null);
+            } else {
+                throw new IllegalArgumentException("Unrecognized network mode " + mode);
+            }
+        } else {
+            this.networkSystem = networkSystem;
+        }
     }
 
     // The result of this method can prevent the users to execute the console command,
@@ -333,8 +348,11 @@ public class KBCClient {
     }
 
     protected void startNetwork() {
-        connector = new Connector(this);
-        connector.start();
+        networkSystem.start();
+    }
+
+    protected void shutdownNetwork() {
+        networkSystem.stop();
     }
 
     protected void finishStart() {
@@ -345,7 +363,7 @@ public class KBCClient {
                 try {
                     //noinspection ResultOfMethodCallIgnored
                     UUID.fromString(rawBotMarketUUID);
-                    new BotMarketPingThread(this, rawBotMarketUUID).start();
+                    new BotMarketPingThread(this, rawBotMarketUUID, () -> getNetworkSystem().isConnected()).start();
                 } catch (IllegalArgumentException e) {
                     getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
                 }
@@ -422,12 +440,6 @@ public class KBCClient {
         }
     }
 
-    protected void shutdownNetwork() {
-        if (connector != null) {
-            connector.shutdown();
-        }
-    }
-
     public InternalPlugin getInternalPlugin() {
         return internalPlugin;
     }
@@ -442,10 +454,6 @@ public class KBCClient {
 
     public MessageBuilder getMessageBuilder() {
         return msgBuilder;
-    }
-
-    public Connector getConnector() {
-        return connector;
     }
 
     public NetworkClient getNetworkClient() {
@@ -466,6 +474,10 @@ public class KBCClient {
 
     public EventFactory getEventFactory() {
         return eventFactory;
+    }
+
+    public NetworkSystem getNetworkSystem() {
+        return networkSystem;
     }
 
     protected void registerInternal() {

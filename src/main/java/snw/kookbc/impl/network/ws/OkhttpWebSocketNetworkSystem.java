@@ -16,32 +16,41 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network.webhook;
+package snw.kookbc.impl.network.ws;
 
-import org.jetbrains.annotations.ApiStatus;
-import snw.jkook.config.ConfigurationSection;
-import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.interfaces.network.webhook.WebhookNetworkSystem;
+import snw.kookbc.interfaces.network.ws.WebSocketNetworkSystem;
 
-import java.io.File;
+public class OkhttpWebSocketNetworkSystem implements WebSocketNetworkSystem {
+    protected final KBCClient client;
+    protected Connector connector;
 
-@Deprecated // use KBCClient with WebhookNetworkSystem instead
-@ApiStatus.ScheduledForRemoval(inVersion = "0.29.0")
-public class WebHookClient extends KBCClient {
-    private final WebhookNetworkSystem whNetworkSystem;
-    public WebHookClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        super(core, config, pluginsFolder, token, null, null, null, null, null, null, null);
-        this.whNetworkSystem = new JLHttpWebhookNetworkSystem(this, null);
+    public OkhttpWebSocketNetworkSystem(KBCClient client) {
+        this.client = client;
     }
 
     @Override
-    protected void startNetwork() {
-        whNetworkSystem.start();
+    public void start() {
+        if (this.connector != null) {
+            return;
+        }
+        this.connector = new Connector(client);
+        this.connector.start();
     }
 
     @Override
-    protected void shutdownNetwork() {
-        whNetworkSystem.stop();
+    public void stop() {
+        if (this.connector != null) {
+            this.connector.shutdown();
+        }
+    }
+
+    public Connector getConnector() {
+        return connector;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return connector != null && connector.isConnected();
     }
 }

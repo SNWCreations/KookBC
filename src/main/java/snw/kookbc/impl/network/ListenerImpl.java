@@ -34,7 +34,9 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
-import snw.kookbc.impl.network.webhook.WebHookClient;
+import snw.kookbc.impl.network.ws.Connector;
+import snw.kookbc.interfaces.network.FrameHandler;
+import snw.kookbc.interfaces.network.webhook.WebhookNetworkSystem;
 
 import java.io.*;
 import java.util.Iterator;
@@ -43,16 +45,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class ListenerImpl implements Listener {
+public class ListenerImpl implements FrameHandler {
     protected final KBCClient client;
+    protected final Connector connector;
     protected final Object lck = new Object();
 
-    public ListenerImpl(KBCClient client) {
+    public ListenerImpl(KBCClient client, Connector connector) {
         this.client = client;
+        this.connector = connector;
     }
 
     @Override
-    public void executeEvent(Frame frame) {
+    public void handle(Frame frame) {
         if (!(frame.getType() == MessageType.PONG)) { // I hate PONG logging messages
             client.getCore().getLogger().debug("Got payload frame: {}", frame);
         }
@@ -72,14 +76,14 @@ public class ListenerImpl implements Listener {
                 break;
             case PONG:
                 client.getCore().getLogger().trace("Got PONG");
-                client.getConnector().pong();
+                connector.pong();
                 break;
             case RESUME:
                 client.getCore().getLogger().debug("Impossible Message from remote: type is RESUME.");
                 break;
             case RECONNECT:
                 client.getCore().getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
-                client.getConnector().requestReconnect();
+                connector.requestReconnect();
                 break;
             case RESUME_ACK:
                 client.getCore().getLogger().info("Resume finished");
@@ -153,7 +157,7 @@ public class ListenerImpl implements Listener {
     }
 
     protected void saveSN() {
-        if (client instanceof WebHookClient) {
+        if (client.getNetworkSystem() instanceof WebhookNetworkSystem) {
             File snfile = new File(client.getPluginsFolder(), "sn");
             try {
                 if (!snfile.exists()) {
@@ -171,13 +175,13 @@ public class ListenerImpl implements Listener {
 
     protected void hello(Frame frame) {
         client.getCore().getLogger().debug("Got HELLO");
-        client.getConnector().setConnected(true);
+        connector.setConnected(true);
         JsonObject object = frame.getData();
         int status = get(object, "code").getAsInt();
         if (status == 0) {
             client.getSession().setId(get(object, "session_id").getAsString());
         } else {
-            client.getConnector().requestReconnect();
+            connector.requestReconnect();
         }
     }
 

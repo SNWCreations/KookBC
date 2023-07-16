@@ -16,12 +16,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.impl.network.ws;
 
 import okhttp3.Request;
 import okhttp3.WebSocket;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +41,7 @@ public class Connector {
     public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
         new PingThread().start();
-        new Reconnector(kbcClient, reconnectLock).start();
+        new Reconnector(kbcClient, reconnectLock, this).start();
     }
 
     // should only be called on startup
@@ -67,7 +68,7 @@ public class Connector {
                         new Request.Builder()
                                 .url(wsLink)
                                 .build(),
-                        new MessageProcessor(kbcClient)
+                        new WebSocketMessageProcessor(kbcClient, this)
                 );
                 long ts = System.currentTimeMillis();
                 while (System.currentTimeMillis() - ts < 6000L) {

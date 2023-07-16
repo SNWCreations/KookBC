@@ -16,7 +16,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.impl.network.ws;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -27,6 +27,9 @@ import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.Frame;
+import snw.kookbc.impl.network.ListenerFactory;
+import snw.kookbc.interfaces.network.FrameHandler;
 
 import java.io.IOException;
 import java.net.ProtocolException;
@@ -36,15 +39,16 @@ import static snw.kookbc.util.GsonUtil.get;
 import static snw.kookbc.util.GsonUtil.has;
 import static snw.kookbc.util.Util.decompressDeflate;
 
-public class MessageProcessor extends WebSocketListener {
+public class WebSocketMessageProcessor extends WebSocketListener {
     private final KBCClient client;
     private final Connector connector;
-    private final Listener listener;
+    private final FrameHandler listener;
 
-    public MessageProcessor(KBCClient client) {
+    @SuppressWarnings("deprecation")
+    public WebSocketMessageProcessor(KBCClient client, Connector connector) {
         this.client = client;
-        this.connector = client.getConnector();
-        listener = ListenerFactory.getListener(client);
+        this.connector = connector;
+        this.listener = ListenerFactory.getListener(client, connector)::executeEvent;
     }
 
     @Override

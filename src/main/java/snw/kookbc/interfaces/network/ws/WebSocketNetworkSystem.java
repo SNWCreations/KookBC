@@ -16,17 +16,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.interfaces.network.ws;
 
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.ws.Connector;
+import snw.kookbc.interfaces.network.NetworkSystem;
 
-@SuppressWarnings("DeprecatedIsStillUsed")
-@Deprecated
-public class ListenerFactory {
-
-    public static Listener getListener(KBCClient client, Connector connector) {
-        return client.getConfig().getBoolean("ignore-sn-order", false) ? new IgnoreSNListenerImpl(client, connector) : new ListenerImpl(client, connector);
-    }
-
+public interface WebSocketNetworkSystem extends NetworkSystem {
 }

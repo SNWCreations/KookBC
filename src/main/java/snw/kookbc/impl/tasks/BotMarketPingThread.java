@@ -24,29 +24,30 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.Connector;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static snw.kookbc.util.GsonUtil.get;
 
 public final class BotMarketPingThread extends Thread {
     private final KBCClient client;
     private final Request request;
+    private final Supplier<Boolean> connectedPredicate;
     private static final OkHttpClient networkClient = new OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
             .callTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .build();
 
-    public BotMarketPingThread(KBCClient client, String rawBotMarketUUID) {
+    public BotMarketPingThread(KBCClient client, String rawBotMarketUUID, Supplier<Boolean> connectedPredicate) {
         this.client = client;
         this.request = new Request.Builder()
                 .get()
                 .url("https://bot.gekj.net/api/v1/online.bot")
                 .header("uuid", rawBotMarketUUID)
                 .build();
+        this.connectedPredicate = connectedPredicate;
         this.setDaemon(true);
     }
 
@@ -65,11 +66,7 @@ public final class BotMarketPingThread extends Thread {
             //noinspection BusyWait
             Thread.sleep(1000L * 60 * 5);
             if (!client.isRunning()) return;
-            if (
-                    !Optional.ofNullable(client.getConnector())
-                            .map(Connector::isConnected)
-                            .orElse(true) // in Webhook Mode?
-            ) {
+            if (!connectedPredicate.get()) {
                 continue;
             }
             client.getCore().getLogger().debug("PING BotMarket...");

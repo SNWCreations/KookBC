@@ -16,17 +16,19 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.network;
+package snw.kookbc.interfaces.network.webhook;
 
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.ws.Connector;
+import com.google.gson.JsonObject;
+import snw.kookbc.interfaces.Lifecycle;
 
-@SuppressWarnings("DeprecatedIsStillUsed")
-@Deprecated
-public class ListenerFactory {
+public interface WebhookServer extends Lifecycle {
+    
+    // Should only be called once during its lifecycle.
+    // So its implementations should be protected.
+    // Only for implementation use.
+    void setHandler(RequestHandler<JsonObject> handler);
 
-    public static Listener getListener(KBCClient client, Connector connector) {
-        return client.getConfig().getBoolean("ignore-sn-order", false) ? new IgnoreSNListenerImpl(client, connector) : new ListenerImpl(client, connector);
-    }
+    // Set the endpoint of the Webhook handler, should be called BEFORE THE SERVER STARTS.
+    void setEndpoint(String path);
 
 }
