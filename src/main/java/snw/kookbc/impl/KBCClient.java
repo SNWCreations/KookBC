@@ -90,7 +90,7 @@ public class KBCClient {
     protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
-        this(core, config, pluginsFolder, token, null, null, null, null, null, null);
+        this(core, config, pluginsFolder, token, null, null, null, null, null, null, null);
     }
 
     public KBCClient(
