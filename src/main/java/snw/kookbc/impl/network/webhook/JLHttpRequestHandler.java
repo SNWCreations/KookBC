@@ -19,7 +19,6 @@
 package snw.kookbc.impl.network.webhook;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.interfaces.network.FrameHandler;
@@ -28,13 +27,11 @@ import snw.kookbc.interfaces.network.webhook.RequestHandler;
 
 import static snw.kookbc.util.GsonUtil.*;
 
-public class JLHttpRequestHandler implements RequestHandler {
-    private final KBCClient client;
+public class JLHttpRequestHandler implements RequestHandler<JsonObject> {
     private final String ourToken;
     private final FrameHandler handler;
 
     public JLHttpRequestHandler(KBCClient client, FrameHandler handler) {
-        this.client = client;
         this.ourToken = client.getConfig().getString("webhook-verify-token", "");
         this.handler = handler;
         if (this.ourToken.isEmpty()) {
@@ -43,10 +40,8 @@ public class JLHttpRequestHandler implements RequestHandler {
     }
 
     @Override
-    public void handle(Request<?> request) {
-        final String body = request.getRawBody();
-        final String decryptedBody = EncryptUtils.decrypt(client, body);
-        JsonObject object = JsonParser.parseString(decryptedBody).getAsJsonObject();
+    public void handle(Request<JsonObject> request) {
+        final JsonObject object = request.toJson();
         final int signalType = get(object, "s").getAsInt();
         final int sn;
         if (has(object, "sn")) {
