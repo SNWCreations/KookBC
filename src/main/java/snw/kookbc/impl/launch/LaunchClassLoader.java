@@ -27,7 +27,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoader {
+public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoader, AccessClassLoader {
     public static final int BUFFER_SIZE = 1 << 12;
     private final List<URL> sources;
     private final ClassLoader parent = getClass().getClassLoader();
@@ -236,6 +236,11 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
             }
             throw new ClassNotFoundException(name, e);
         }
+    }
+
+    @Override
+    public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        return super.loadClass(name, resolve);
     }
 
     private Package getPackage0(String name) {

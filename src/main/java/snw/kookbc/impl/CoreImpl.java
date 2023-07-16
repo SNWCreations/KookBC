@@ -32,9 +32,7 @@ import snw.jkook.plugin.PluginManager;
 import snw.jkook.scheduler.Scheduler;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
@@ -44,7 +42,6 @@ import java.util.Optional;
 public class CoreImpl implements Core {
     private boolean init = false;
     private SchedulerImpl scheduler;
-    private CommandManagerImpl commandManager;
     private EventManagerImpl eventManager;
     private UnsafeImpl unsafe;
     private final Logger logger;
@@ -105,7 +102,7 @@ public class CoreImpl implements Core {
 
     @Override
     public CommandManager getCommandManager() {
-        return commandManager;
+        return client.getCommandManager();
     }
 
     @Override
@@ -145,7 +142,7 @@ public class CoreImpl implements Core {
     }
 
     protected synchronized void init(KBCClient client) {
-        this.init(client, null, null, null, null, null, null);
+        this.init(client, null, null, null, null, null);
     }
 
     // pass null to an argument if you don't need to replace it using your version.
@@ -155,7 +152,6 @@ public class CoreImpl implements Core {
             @Nullable HttpAPIImpl httpApiImpl,
             @Nullable SchedulerImpl schedulerImpl,
             @Nullable EventManagerImpl eventManagerImpl,
-            @Nullable CommandManagerImpl commandManagerImpl,
             @Nullable UnsafeImpl unsafeImpl
     ) {
         Validate.isFalse(this.init, "This core implementation has already initialized.");
@@ -166,8 +162,6 @@ public class CoreImpl implements Core {
         this.httpApi = Optional.ofNullable(httpApiImpl).orElseGet(() -> new HttpAPIImpl(client));
         this.scheduler = Optional.ofNullable(schedulerImpl).orElseGet(() -> new SchedulerImpl(client));
         this.eventManager = Optional.ofNullable(eventManagerImpl).orElseGet(() -> new EventManagerImpl(client));
-        /*Cloud*/
-        this.commandManager = Optional.ofNullable(commandManagerImpl).orElseGet(() -> new CloudCommandManagerImpl(client));
         this.unsafe = Optional.ofNullable(unsafeImpl).orElseGet(() -> new UnsafeImpl(client));
         this.init = true;
     }

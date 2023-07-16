@@ -26,10 +26,12 @@ import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
@@ -44,11 +46,13 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
     private final Map<String, Class<?>> cache = new ConcurrentHashMap<>();
     private final KBCClient client;
+    private final AccessClassLoader parentClassLoader;
     private PluginDescription description;
 
-    public SimplePluginClassLoader(KBCClient client, ClassLoader parent) {
-        super(new URL[]{}, parent);
+    public SimplePluginClassLoader(KBCClient client, AccessClassLoader parent) {
+        super(new URL[0], null);
         this.client = client;
+        this.parentClassLoader = parent;
         INSTANCES.add(this);
     }
 
@@ -62,6 +66,15 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 if (name.startsWith("mixin.") && name.endsWith(".json")) {
                     confNameSet.add(name);
                 }
+            }
+            if (this.description == null) {
+                JarEntry entry = jarFile.getJarEntry("plugin.yml");
+                if (entry == null) {
+                    throw new IllegalArgumentException("We cannot find plugin.yml");
+                }
+
+                InputStream pluginYmlStream = jarFile.getInputStream(entry);
+                this.description = this.createDescription(pluginYmlStream);
             }
         } catch (IOException e) {
             throw new InvalidPluginException(e);
@@ -103,8 +116,12 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: " + location + ", maybe it is a single class file?");
             }
             String url = location.toString();
-            url = url.substring(0, url.indexOf("!/"));
-            pluginFile = new File(new URL(url).toURI());
+            url = url.substring(0, url.indexOf("!/")).replace("jar:file:/", "");
+            try {
+                pluginFile = new File(url);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("url: " + url, e);
+            }
         } else {
             pluginFile = new File(location.toURI());
         }
@@ -122,8 +139,23 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<? extends Plugin> lookForMainClass(String mainClassName, File file) throws Exception {
-        initMixins(file);
-        return super.lookForMainClass(mainClassName, file);
+        if (this.findLoadedClass(mainClassName) != null) {
+            throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
+        } else {
+            parentClassLoader.addURL(file.toURI().toURL());
+            initMixins(file);
+            Class<? extends Plugin> main = this.loadClass(mainClassName, true).asSubclass(Plugin.class);
+            if (main.getDeclaredConstructors().length != 1) {
+                throw new IllegalStateException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
+            } else {
+                return main;
+            }
+        }
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        return parentClassLoader.loadClass(name, resolve);
     }
 
     @Override
@@ -136,7 +168,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             return cache.get(name);
         }
         try {
-            Class<?> result = super.findClass(name);
+            Class<?> result = parentClassLoader.findClass(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;

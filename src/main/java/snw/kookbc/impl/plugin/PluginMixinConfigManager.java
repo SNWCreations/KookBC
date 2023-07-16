@@ -18,6 +18,7 @@
 package snw.kookbc.impl.plugin;
 
 import org.spongepowered.asm.mixin.Mixins;
+import org.spongepowered.asm.mixin.transformer.Config;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.LaunchMain;
 

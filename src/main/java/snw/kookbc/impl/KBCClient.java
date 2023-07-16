@@ -21,6 +21,7 @@ package snw.kookbc.impl;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
+import snw.jkook.command.CommandManager;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
@@ -50,6 +51,7 @@ import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.tasks.BotMarketPingThread;
+import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
 import snw.kookbc.util.Util;
@@ -69,6 +71,7 @@ import static snw.kookbc.util.Util.closeLoaderIfPossible;
 public class KBCClient {
     private volatile boolean running = true;
     private final CoreImpl core;
+    private final CommandManager commandManager;
     private final NetworkClient networkClient;
     private final EntityStorage storage;
     private final EntityBuilder entityBuilder;
@@ -93,6 +96,7 @@ public class KBCClient {
     public KBCClient(
             CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
             /* Customizable components are following: */
+            @Nullable CommandManager commandManager,
             @Nullable NetworkClient networkClient,
             @Nullable EntityStorage storage,
             @Nullable EntityBuilder entityBuilder,
@@ -115,6 +119,8 @@ public class KBCClient {
         }
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
+        /*Cloud*/
+        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> new CloudCommandManagerImpl(this));
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
         this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
@@ -520,35 +526,7 @@ public class KBCClient {
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }
 
-}
-
-class StopSignalListener extends Thread {
-    private final KBCClient client;
-
-    StopSignalListener(KBCClient client) {
-        super("KookBC - StopSignalListener");
-        this.setDaemon(true);
-        this.client = client;
-    }
-
-    @Override
-    public void run() {
-        final KBCClient client = this.client;
-        final File localFile = new File("./KOOKBC_STOP");
-        while (client.isRunning()) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                continue;
-            }
-            if (localFile.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                localFile.delete();
-                client.getCore().getLogger().info("Received stop signal by new file. Stopping!");
-                client.shutdown();
-                return;
-            }
-        }
+    public CommandManager getCommandManager() {
+        return commandManager;
     }
 }

@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class BotMarketPingThread extends Thread {
+public final class BotMarketPingThread extends Thread {
     private final KBCClient client;
     private final Request request;
     private final Supplier<Boolean> connectedPredicate;
