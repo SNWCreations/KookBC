@@ -32,6 +32,9 @@ import static snw.kookbc.LaunchMain.blackboard;
 @SuppressWarnings("unchecked")
 public class Blackboard implements IGlobalPropertyService {
     public Blackboard() {
+        if (blackboard == null) {
+            throw new RuntimeException("Blackboard is null!");
+        }
     }
 
     public IPropertyKey resolveKey(String name) {

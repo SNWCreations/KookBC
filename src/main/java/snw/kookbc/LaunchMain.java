@@ -6,12 +6,10 @@ package snw.kookbc;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.launch.platform.CommandLineOptions;
+import org.jetbrains.annotations.NotNull;
 import snw.kookbc.impl.launch.*;
 import snw.kookbc.impl.plugin.MixinPluginManager;
 import snw.kookbc.impl.plugin.PluginClassLoaderDelegate;
-import uk.org.lidalia.sysoutslf4j.common.ReflectionUtils;
 
 import java.io.File;
 import java.lang.invoke.MethodHandle;
@@ -45,6 +43,7 @@ public class LaunchMain {
                 System.out.println("[KookBC/WARN] If you're sure you don't need Mixin support, visit the following link:");
                 System.out.println("[KookBC/WARN] https://github.com/SNWCreations/KookBC/blob/main/docs/KookBC_CommandLine.md#%E5%90%AF%E5%8A%A8%E5%85%A5%E5%8F%A3");
                 // Never part, never give up!
+                classLoader = new LaunchClassLoader(getUrls(appClassLoader).toArray(new URL[0]));
                 AccessClassLoader loader = AccessClassLoader.of(classLoader);
                 MixinPluginManager.instance().loadFolder(loader, new File("plugins"));
                 String[] finalArgs = args;
@@ -91,9 +90,16 @@ public class LaunchMain {
 
     private LaunchMain() {
         // Get classpath
+        List<URL> urls = getUrls(getClass().getClassLoader());
+        classLoader = new LaunchClassLoader(urls.toArray(new URL[0]));
+        blackboard = new HashMap<>();
+    }
+
+    @NotNull
+    private static List<URL> getUrls(ClassLoader classLoader) {
         List<URL> urls = new ArrayList<>();
-        if (getClass().getClassLoader() instanceof URLClassLoader) {
-            Collections.addAll(urls, ((URLClassLoader) getClass().getClassLoader()).getURLs());
+        if (classLoader instanceof URLClassLoader) {
+            Collections.addAll(urls, ((URLClassLoader) classLoader).getURLs());
         } else {
             for (String s : System.getProperty("java.class.path").split(File.pathSeparator)) {
                 try {
@@ -103,8 +109,7 @@ public class LaunchMain {
                 }
             }
         }
-        classLoader = new LaunchClassLoader(urls.toArray(new URL[0]));
-        blackboard = new HashMap<>();
+        return urls;
     }
 
     private void launch(String[] args) {

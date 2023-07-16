@@ -108,6 +108,12 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     private IClassNameTransformer nameTransformer;
 
     public MixinServiceKookBC() {
+        if (LaunchMain.classLoader == null) {
+            throw new RuntimeException("LaunchMain.classLoader is null");
+        }
+        if (LaunchMain.blackboard == null) {
+            throw new RuntimeException("Blackboard is null!");
+        }
         this.classLoaderUtil = new LaunchClassLoaderUtil(LaunchMain.classLoader);
     }
 

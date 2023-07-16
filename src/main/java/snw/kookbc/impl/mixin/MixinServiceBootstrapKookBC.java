@@ -38,6 +38,12 @@ public class MixinServiceBootstrapKookBC implements IMixinServiceBootstrap {
     private static final String ASM_PACKAGE = "org.objectweb.asm.";
     private static final String MIXIN_PACKAGE = "org.spongepowered.asm.mixin.";
 
+    public MixinServiceBootstrapKookBC() {
+        if (LaunchMain.blackboard == null) {
+            throw new RuntimeException("Blackboard is null!");
+        }
+    }
+
     @Override
     public String getName() {
         return "KookBC";
