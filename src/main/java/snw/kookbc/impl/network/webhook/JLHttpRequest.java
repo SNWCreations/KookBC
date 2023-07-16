@@ -69,7 +69,11 @@ public class JLHttpRequest implements Request<JsonObject> {
 
     @Override
     public JsonObject toJson() {
-        final String decryptedBody = EncryptUtils.decrypt(client, getRawBody());
+        final String rawBody = getRawBody();
+        if (rawBody.isEmpty()) {
+            return new JsonObject();
+        }
+        final String decryptedBody = EncryptUtils.decrypt(client, rawBody);
         return JsonParser.parseString(decryptedBody).getAsJsonObject();
     }
 
