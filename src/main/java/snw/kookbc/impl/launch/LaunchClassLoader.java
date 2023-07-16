@@ -29,7 +29,7 @@ import java.util.jar.Manifest;
 
 public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoader, AccessClassLoader {
     public static final int BUFFER_SIZE = 1 << 12;
-    private final List<URL> sources;
+    private final LinkedHashSet<URL> sources;
     private final ClassLoader parent = getClass().getClassLoader();
 
     private final List<IClassTransformer> transformers = new ArrayList<>(2);
@@ -71,7 +71,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     public LaunchClassLoader(URL[] sources) {
         super(sources, null);
-        this.sources = new ArrayList<>(Arrays.asList(sources));
+        this.sources = new LinkedHashSet<>(Arrays.asList(sources));
 
         // classloader exclusions
         addClassLoaderExclusion("java.");
@@ -312,11 +312,12 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
     @Override
     public void addURL(final URL url) {
-        super.addURL(url);
-        sources.add(url);
+        if (sources.add(url)) {
+            super.addURL(url);
+        }
     }
 
-    public List<URL> getSources() {
+    public LinkedHashSet<URL> getSources() {
         return sources;
     }
 

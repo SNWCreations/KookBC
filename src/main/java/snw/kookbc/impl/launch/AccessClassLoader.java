@@ -27,6 +27,7 @@ import snw.jkook.plugin.MarkedClassLoader;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.LinkedHashSet;
 
 /**
  * @author huanmeng_qwq
@@ -46,6 +47,7 @@ public interface AccessClassLoader extends MarkedClassLoader {
     Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException;
 
     class AccessClassLoaderImpl extends URLClassLoader implements AccessClassLoader {
+        private final LinkedHashSet<URL> sources = new LinkedHashSet<>();
 
         public AccessClassLoaderImpl(ClassLoader classLoader) {
             super(new URL[0], classLoader);
@@ -53,7 +55,9 @@ public interface AccessClassLoader extends MarkedClassLoader {
 
         @Override
         public void addURL(URL url) {
-            super.addURL(url);
+            if (sources.add(url)) {
+                super.addURL(url);
+            }
         }
 
         @Override

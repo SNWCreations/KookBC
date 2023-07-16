@@ -21,24 +21,21 @@ package snw.kookbc.impl.plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.Core;
-import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.launch.AccessClassLoader;
-import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
 
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
@@ -56,51 +53,6 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.add(this);
     }
 
-    private void initMixins(File file) {
-        Set<String> confNameSet = new HashSet<>();
-        try (JarFile jarFile = new JarFile(file)) {
-            Enumeration<JarEntry> enumeration = jarFile.entries();
-            while (enumeration.hasMoreElements()) {
-                JarEntry jarEntry = enumeration.nextElement();
-                String name = jarEntry.getName();
-                if (name.startsWith("mixin.") && name.endsWith(".json")) {
-                    confNameSet.add(name);
-                }
-            }
-            if (this.description == null) {
-                JarEntry entry = jarFile.getJarEntry("plugin.yml");
-                if (entry == null) {
-                    throw new IllegalArgumentException("We cannot find plugin.yml");
-                }
-
-                InputStream pluginYmlStream = jarFile.getInputStream(entry);
-                this.description = this.createDescription(pluginYmlStream);
-            }
-        } catch (IOException e) {
-            throw new InvalidPluginException(e);
-        }
-        if (!confNameSet.isEmpty()) {
-            if (!Util.isStartByLaunch()) {
-                client.getCore().getLogger().warn(
-                        "[{}] {} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
-                        description.getName(),
-                        description.getName(),
-                        description.getVersion()
-                );
-                return;
-            }
-            try {
-                for (String name : confNameSet) {
-                    try (JarFile jarFile = new JarFile(file)) {
-                        ZipEntry zipEntry = jarFile.getEntry(name);
-                        client.getPluginMixinConfigManager().add(description, name, jarFile.getInputStream(zipEntry));
-                    }
-                }
-            } catch (IOException e) {
-                throw new InvalidPluginException(e);
-            }
-        }
-    }
 
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
@@ -143,7 +95,6 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
         } else {
             parentClassLoader.addURL(file.toURI().toURL());
-            initMixins(file);
             Class<? extends Plugin> main = this.loadClass(mainClassName, true).asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
                 throw new IllegalStateException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);

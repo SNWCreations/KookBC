@@ -18,8 +18,10 @@
 
 package snw.kookbc.util;
 
+import org.yaml.snakeyaml.Yaml;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.PluginLoader;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
@@ -31,10 +33,7 @@ import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -237,5 +236,26 @@ public class Util {
 
     public static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
+    }
+
+    public static PluginDescription createDescription(InputStream stream) {
+        final Yaml parser = new Yaml();
+        try {
+            final Map<String, Object> ymlContent = parser.load(stream);
+            // noinspection unchecked
+            return new PluginDescription(
+                    Objects.requireNonNull(ymlContent.get("name"), "name is missing").toString(),
+                    Objects.requireNonNull(ymlContent.get("version"), "version is missing").toString(),
+                    Objects.requireNonNull(ymlContent.get("api-version"), "api-version is missing").toString(),
+                    ymlContent.getOrDefault("description", "").toString(),
+                    ymlContent.getOrDefault("website", "").toString(),
+                    Objects.requireNonNull(ymlContent.get("main"), "main is missing").toString(),
+                    (List<String>) ymlContent.getOrDefault("authors", Collections.emptyList()),
+                    (List<String>) ymlContent.getOrDefault("depend", Collections.emptyList()),
+                    (List<String>) ymlContent.getOrDefault("softdepend", Collections.emptyList())
+            );
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Invalid plugin.yml", e);
+        }
     }
 }

@@ -46,7 +46,6 @@ import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.network.webhook.JLHttpWebhookNetworkSystem;
 import snw.kookbc.impl.network.ws.OkhttpWebSocketNetworkSystem;
 import snw.kookbc.impl.plugin.InternalPlugin;
-import snw.kookbc.impl.plugin.PluginMixinConfigManager;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
@@ -87,7 +86,6 @@ public class KBCClient {
     protected final ExecutorService eventExecutor;
     protected final NetworkSystem networkSystem;
     protected List<Plugin> plugins;
-    protected PluginMixinConfigManager pluginMixinConfigManager;
 
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
         this(core, config, pluginsFolder, token, null, null, null, null, null, null, null);
@@ -110,13 +108,6 @@ public class KBCClient {
         this.core = core;
         this.config = config;
         this.pluginsFolder = pluginsFolder;
-        try {
-            if (Util.isStartByLaunch()) {
-                this.pluginMixinConfigManager = new PluginMixinConfigManager();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
         /*Cloud*/
@@ -466,10 +457,6 @@ public class KBCClient {
 
     public ExecutorService getEventExecutor() {
         return eventExecutor;
-    }
-
-    public PluginMixinConfigManager getPluginMixinConfigManager() {
-        return pluginMixinConfigManager;
     }
 
     public EventFactory getEventFactory() {
