@@ -95,7 +95,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
         } else {
             parentClassLoader.addURL(file.toURI().toURL());
-            Class<? extends Plugin> main = this.loadClass(mainClassName, true).asSubclass(Plugin.class);
+            Class<?> loadClass = this.loadClass(mainClassName, true);
+            Class<? extends Plugin> main = loadClass.asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
                 throw new IllegalStateException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
             } else {

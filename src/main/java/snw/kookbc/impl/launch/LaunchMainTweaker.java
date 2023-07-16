@@ -18,13 +18,14 @@
 
 package snw.kookbc.impl.launch;
 
-import snw.kookbc.impl.plugin.PluginMixinConfigManager;
+import snw.kookbc.impl.plugin.MixinPluginManager;
 
 import java.io.File;
 import java.util.List;
 
 // author: huanmeng_qwq
 public class LaunchMainTweaker implements ITweaker {
+    public static final String CLASS_NAME = "snw.kookbc.Main";
     private String[] args;
 
     @Override
@@ -34,12 +35,12 @@ public class LaunchMainTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        PluginMixinConfigManager.instance().loadFolder(classLoader, new File("plugins"));
+        MixinPluginManager.instance().loadFolder(classLoader, new File("plugins"));
     }
 
     @Override
     public String getLaunchTarget() {
-        return "snw.kookbc.Main";
+        return CLASS_NAME;
     }
 
     @Override

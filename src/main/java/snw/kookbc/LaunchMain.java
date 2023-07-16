@@ -6,13 +6,17 @@ package snw.kookbc;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import snw.kookbc.impl.launch.ITweaker;
-import snw.kookbc.impl.launch.LaunchClassLoader;
-import snw.kookbc.impl.launch.LogWrapper;
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.launch.platform.CommandLineOptions;
+import snw.kookbc.impl.launch.*;
+import snw.kookbc.impl.plugin.MixinPluginManager;
 import snw.kookbc.impl.plugin.PluginClassLoaderDelegate;
+import uk.org.lidalia.sysoutslf4j.common.ReflectionUtils;
 
 import java.io.File;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -32,8 +36,37 @@ public class LaunchMain {
     private static final String MAIN_THREAD_NAME = "Main Thread";
 
     public static void main(String[] args) {
-        LaunchMain launch = new LaunchMain();
         System.setProperty("kookbc.launch", "true");
+        try {
+            ClassLoader appClassLoader = LaunchMain.class.getClassLoader();
+            Class<?> mixinClass = Class.forName("org.spongepowered.asm.util.JavaVersion");
+            if (mixinClass.getClassLoader() != appClassLoader) {
+                System.out.println("[KookBC/WARN] Mixin support is already enabled!");
+                System.out.println("[KookBC/WARN] If you're sure you don't need Mixin support, visit the following link:");
+                System.out.println("[KookBC/WARN] https://github.com/SNWCreations/KookBC/blob/main/docs/KookBC_CommandLine.md#%E5%90%AF%E5%8A%A8%E5%85%A5%E5%8F%A3");
+                // Never part, never give up!
+                AccessClassLoader loader = AccessClassLoader.of(classLoader);
+                MixinPluginManager.instance().loadFolder(loader, new File("plugins"));
+                String[] finalArgs = args;
+                Thread thread = new Thread(() -> {
+                    try {
+                        Class<?> mainClass = Class.forName(LaunchMainTweaker.CLASS_NAME);
+                        MethodHandles.lookup().findStatic(mainClass, "main", MethodType.methodType(void.class, String[].class))
+                                .invoke((Object) finalArgs);
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                thread.setContextClassLoader(PluginClassLoaderDelegate.INSTANCE);
+                thread.start();
+                return;
+            }
+        } catch (ClassNotFoundException ignored) {
+            // good job, but not found?
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        LaunchMain launch = new LaunchMain();
         List<String> argsList = new ArrayList<>(Arrays.asList(args));
         if (argsList.stream().noneMatch(e -> e.contains("--tweakClass"))) {
             argsList.add("--tweakClass");
@@ -170,11 +203,11 @@ public class LaunchMain {
                 final String launchTarget = allTweaker.getLaunchTarget();
                 if (launchTarget != null && !launchTarget.isEmpty()) {
                     final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
-                    final Method mainMethod = clazz.getMethod("main", String[].class);
+                    MethodHandle mainMethodHandle = MethodHandles.lookup().findStatic(clazz, "main", MethodType.methodType(void.class, String[].class));
                     Thread main = new Thread(() -> {
                         try {
-                            mainMethod.invoke(null, (Object) argumentList.toArray(new String[0]));
-                        } catch (Exception e) {
+                            mainMethodHandle.invoke((Object) argumentList.toArray(new String[0]));
+                        } catch (Throwable e) {
                             e.printStackTrace();
                         }
                     }, clazz.getSimpleName());

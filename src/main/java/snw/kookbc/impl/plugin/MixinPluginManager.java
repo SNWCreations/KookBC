@@ -22,13 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixins;
 import snw.jkook.plugin.InvalidPluginException;
 import snw.jkook.plugin.PluginDescription;
-import snw.kookbc.LaunchMain;
-import snw.kookbc.impl.launch.LaunchClassLoader;
+import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
@@ -41,27 +41,39 @@ import java.util.zip.ZipEntry;
 // The mixin config manager for plugins.
 // author: huanmeng_qwq
 // added since 2023/1/24
-public class PluginMixinConfigManager {
+public class MixinPluginManager {
     private final File tempDir;
     private static Logger logger = LoggerFactory.getLogger("MixinPlugin");
-    private static final PluginMixinConfigManager INSTANCE;
+    private static final MixinPluginManager INSTANCE;
+    private AccessClassLoader cacheClassloader;
 
     static {
         try {
-            INSTANCE = new PluginMixinConfigManager();
+            INSTANCE = new MixinPluginManager();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static PluginMixinConfigManager instance() {
+    public static MixinPluginManager instance() {
         return INSTANCE;
     }
 
-    private PluginMixinConfigManager() throws IOException {
+    private MixinPluginManager() throws IOException {
         this.tempDir = Files.createTempDirectory("KookBC-Mixin").toFile();
         this.tempDir.deleteOnExit();
-        LaunchMain.classLoader.addURL(tempDir.toURI().toURL());
+    }
+
+    protected void setCacheClassloader(AccessClassLoader classloader) {
+        if (this.cacheClassloader != null) {
+            return;
+        }
+        this.cacheClassloader = classloader;
+        try {
+            this.cacheClassloader.addURL(tempDir.toURI().toURL());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void add(PluginDescription description, String name, InputStream stream) throws IOException {
@@ -84,7 +96,7 @@ public class PluginMixinConfigManager {
         }
     }
 
-    public void loadFolder(LaunchClassLoader classLoader, File folder) {
+    public void loadFolder(AccessClassLoader classLoader, File folder) {
         if (!folder.exists()) {
             return;
         }
@@ -101,13 +113,14 @@ public class PluginMixinConfigManager {
         }
     }
 
-    public void loadJarPlugin(LaunchClassLoader classLoader, File file) {
+    public void loadJarPlugin(AccessClassLoader classLoader, File file) {
         if (!file.exists()) {
             return;
         }
         if (!file.getName().endsWith(".jar")) {
             return;
         }
+        setCacheClassloader(classLoader);
         Set<String> confNameSet = new HashSet<>();
         PluginDescription description;
         try (JarFile jarFile = new JarFile(file)) {
