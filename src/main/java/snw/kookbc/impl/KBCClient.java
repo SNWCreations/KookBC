@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
@@ -53,7 +54,6 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
-import snw.kookbc.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,8 +87,25 @@ public class KBCClient {
     protected final NetworkSystem networkSystem;
     protected List<Plugin> plugins;
 
+    // Use the second one instead, that's recommended
+    // However, if you have already specified the network mode in the config object, feel free to use this one
     public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token) {
         this(core, config, pluginsFolder, token, null, null, null, null, null, null, null);
+    }
+
+    // The values below is acceptable by the networkMode argument:
+    // "websocket", "webhook"
+    // (They're same as the "mode" configuration item in kbc.yml!)
+    public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token, @NotNull String networkMode) {
+        this(core, editNetworkMode(config, networkMode), pluginsFolder, token, null, null, null, null, null, null, null);
+    }
+
+    // any other method calls can't be performed before the init method got called, so we have to wrap the edit code...
+    // just like ClassLoader() constructor (that constructor use a private constructor which accepts Void, and call a
+    //   check method to ensure you have permission to create class loader)
+    private static ConfigurationSection editNetworkMode(ConfigurationSection config, String networkMode) {
+        config.set("mode", networkMode);
+        return config;
     }
 
     public KBCClient(
