@@ -29,6 +29,7 @@ import snw.jkook.config.InvalidConfigurationException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.launcher.Launcher;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
 import java.io.*;
@@ -36,7 +37,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 
-public class Main {
+public class Main extends Launcher {
     private static final String MAIN_THREAD_NAME = "Main Thread";
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final File kbcLocal = new File("kbc.yml");
@@ -50,7 +51,15 @@ public class Main {
         }
     }
 
+    public Main() {
+        super();
+    }
+
     private static int main0(String[] args) {
+        return new Main().start(args);
+    }
+
+    private int start(String[] args) {
         Thread.currentThread().setName(MAIN_THREAD_NAME);
         SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
         SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
@@ -124,10 +133,10 @@ public class Main {
         if (!config.getBoolean("allow-help-ad", true)) {
             logger.warn("Detected allow-help-ad is false! :("); // why don't you support us?
         }
-        return main1(token, config, pluginsFolder);
+        return startClient(token, config, pluginsFolder);
     }
 
-    private static int main1(String token, YamlConfiguration config, File pluginsFolder) {
+    protected int startClient(String token, YamlConfiguration config, File pluginsFolder) {
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
         OperatingSystemMXBean osMX = ManagementFactory.getOperatingSystemMXBean();
         if (runtimeMX != null && osMX != null) {

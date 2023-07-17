@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import snw.kookbc.impl.launch.*;
 import snw.kookbc.impl.plugin.MixinPluginManager;
 import snw.kookbc.impl.plugin.PluginClassLoaderDelegate;
+import snw.kookbc.launcher.Launcher;
 
 import java.io.File;
 import java.lang.invoke.MethodHandle;
@@ -24,7 +25,7 @@ import java.util.*;
 // author: huanmeng_qwq
 // added since 2023/1/24
 // WARNING: Do not use this class in embedded environments!
-public class LaunchMain {
+public class LaunchMain extends Launcher {
     private static final String MIXIN_TWEAK = "snw.kookbc.impl.mixin.MixinTweaker";
     private static final String DEFAULT_TWEAK = "snw.kookbc.impl.launch.LaunchMainTweaker";
     public static Map<String, Object> blackboard;
@@ -89,10 +90,26 @@ public class LaunchMain {
     public static LaunchClassLoader classLoader;
 
     private LaunchMain() {
+        super();
         // Get classpath
         List<URL> urls = getUrls(getClass().getClassLoader());
         classLoader = new LaunchClassLoader(urls.toArray(new URL[0]));
         blackboard = new HashMap<>();
+    }
+
+    @Override
+    public ClassLoader getCustomLoader() {
+        return classLoader;
+    }
+
+    @Override
+    public ClassLoader getPluginClassLoader(Class<?> caller) {
+        return classLoader;
+    }
+
+    @Override
+    public ClassLoader getContextClassLoader() {
+        return classLoader;
     }
 
     @NotNull

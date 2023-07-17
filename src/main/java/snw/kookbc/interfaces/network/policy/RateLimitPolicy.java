@@ -18,12 +18,10 @@
 
 package snw.kookbc.interfaces.network.policy;
 
-import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.launcher.Launcher;
 
 import java.util.ServiceLoader;
-
-import static snw.kookbc.util.Util.isStartByLaunch;
 
 // Represents the rate limit policy.
 public interface RateLimitPolicy {
@@ -42,8 +40,7 @@ public interface RateLimitPolicy {
         }
 
         private static final RateLimitPolicy INSTANCE = ServiceLoader
-                .load(RateLimitPolicy.class, isStartByLaunch()
-                        ? LaunchMain.classLoader : Thread.currentThread().getContextClassLoader())
+                .load(RateLimitPolicy.class, Launcher.instance().getContextClassLoader())
                 .iterator().next();
     }
 }

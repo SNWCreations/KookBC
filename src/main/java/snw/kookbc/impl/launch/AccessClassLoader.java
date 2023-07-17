@@ -40,7 +40,9 @@ import java.util.jar.JarFile;
  */
 public interface AccessClassLoader extends MarkedClassLoader {
     static AccessClassLoader of(ClassLoader classLoader) {
-        if (classLoader instanceof AccessClassLoader) {
+        if (classLoader == null) {
+            return null;
+        } else if (classLoader instanceof AccessClassLoader) {
             return (AccessClassLoader) classLoader;
         } else if (Reflection.isSupported() && classLoader instanceof URLClassLoader) {
             Reflection reflection = new Reflection((URLClassLoader) classLoader);

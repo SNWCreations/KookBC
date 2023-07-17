@@ -23,11 +23,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import snw.jkook.plugin.*;
 import snw.jkook.util.Validate;
-import snw.kookbc.LaunchMain;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.launch.AccessClassLoader;
-import snw.kookbc.util.Util;
+import snw.kookbc.launcher.Launcher;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +107,10 @@ public class SimplePluginManager implements PluginManager {
         // ((URLClassLoader) plugin.getClass().getClassLoader()).close();
         Plugin plugin;
         PluginLoader loader;
-        ClassLoader parent = Util.isStartByLaunch() ? LaunchMain.classLoader : getClass().getClassLoader();
+        ClassLoader parent = Launcher.instance().getPluginClassLoader(getClass());
+        if (!(parent instanceof MarkedClassLoader)) {
+            parent = null;
+        }
         loader = createPluginLoaderForFile(file, parent);
         if (loader == null) {
             if (failIfNoLoader) {
@@ -253,11 +255,11 @@ public class SimplePluginManager implements PluginManager {
         loaderMap.put(predicate, provider);
     }
 
-    protected PluginLoader createPluginLoader(ClassLoader parent) {
+    protected PluginLoader createPluginLoader(@Nullable ClassLoader parent) {
         return new SimplePluginClassLoader(client, AccessClassLoader.of(parent));
     }
 
-    protected @Nullable PluginLoader createPluginLoaderForFile(File file, ClassLoader parent) {
+    protected @Nullable PluginLoader createPluginLoaderForFile(File file, @Nullable ClassLoader parent) {
         for (Map.Entry<Predicate<File>, Function<ClassLoader, PluginLoader>> entry : loaderMap.entrySet()) {
             final Predicate<File> condition = entry.getKey();
             if (condition.test(file)) {

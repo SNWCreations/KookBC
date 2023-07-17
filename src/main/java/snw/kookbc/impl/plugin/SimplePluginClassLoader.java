@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.plugin;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.Core;
@@ -43,11 +44,11 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     public static final Collection<SimplePluginClassLoader> INSTANCES = Collections.newSetFromMap(new WeakHashMap<>());
     private final Map<String, Class<?>> cache = new ConcurrentHashMap<>();
     private final KBCClient client;
+    @Nullable
     private final AccessClassLoader parentClassLoader;
-    private PluginDescription description;
 
-    public SimplePluginClassLoader(KBCClient client, AccessClassLoader parent) {
-        super(new URL[0], null);
+    public SimplePluginClassLoader(KBCClient client, @Nullable AccessClassLoader parent) {
+        super(new URL[0], parent != null ? null : SimplePluginManager.class.getClassLoader());
         this.client = client;
         this.parentClassLoader = parent;
         INSTANCES.add(this);
@@ -94,7 +95,11 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         if (this.findLoadedClass(mainClassName) != null) {
             throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
         } else {
-            parentClassLoader.addURL(file.toURI().toURL());
+            if (parentClassLoader == null) {
+                super.addURL(file.toURI().toURL());
+            } else {
+                parentClassLoader.addURL(file.toURI().toURL());
+            }
             Class<?> loadClass = this.loadClass(mainClassName, true);
             Class<? extends Plugin> main = loadClass.asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
@@ -107,6 +112,9 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (parentClassLoader == null) {
+            return super.loadClass(name, resolve);
+        }
         return parentClassLoader.loadClass(name, resolve);
     }
 
@@ -120,7 +128,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             return cache.get(name);
         }
         try {
-            Class<?> result = parentClassLoader.findClass(name);
+            Class<?> result = parentClassLoader == null ? super.findClass(name) : parentClassLoader.findClass(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;
@@ -168,5 +176,4 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.remove(this);
         super.close();
     }
-
 }

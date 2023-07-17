@@ -154,7 +154,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public Phase getInitialPhase() {
         System.setProperty("mixin.env.remapRefMap", "false");
 
-        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 167) {
+        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 179) {
             return Phase.DEFAULT;
         }
         return Phase.PREINIT;
