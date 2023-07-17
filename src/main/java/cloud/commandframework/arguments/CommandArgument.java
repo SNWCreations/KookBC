@@ -51,8 +51,8 @@ public class CommandArgument<C, T> implements Comparable<CommandArgument>, Cloud
     /**
      * Pattern for command argument names
      */
-//    private static final Pattern NAME_PATTERN = Pattern.compile("\\S+");
-    private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9\\-_]+");
+    private static final Pattern NAME_PATTERN = Pattern.compile("\\S+");
+//    private static final Pattern NAME_PATTERN = Pattern.compile("[A-Za-z0-9\\-_]+");
 
     /**
      * A typed key representing this argument
