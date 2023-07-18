@@ -15,7 +15,7 @@ public abstract class Launcher {
 
     protected Launcher() {
         if (launcher != null) {
-            throw new RuntimeException("Launcher has been initialized!");
+            return;
         }
         launcher = this;
     }
@@ -24,7 +24,7 @@ public abstract class Launcher {
         return this.getClass().getClassLoader();
     }
 
-    public ClassLoader getPluginClassLoader(Class<?> caller){
+    public ClassLoader getPluginClassLoader(Class<?> caller) {
         return caller.getClassLoader();
     }
 
