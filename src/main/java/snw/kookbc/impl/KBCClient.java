@@ -252,6 +252,9 @@ public class KBCClient {
     }
 
     private void enablePlugins() {
+        if (plugins == null || getPluginsFolder() == null) {
+            return; // no plugins loaded (or no plugin folder available), so no plugins can be enabled
+        }
         @SuppressWarnings("DataFlowIssue")
         List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
 
