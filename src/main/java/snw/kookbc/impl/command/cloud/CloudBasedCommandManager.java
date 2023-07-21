@@ -166,19 +166,36 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         try {
             executeCommand(commandSender, input, message)
                     .whenComplete((commandResult, throwable) -> handleThrowable(commandSender, message, unhandledException, foundCommand, throwable)).get();
+
+            if (commandSender instanceof User) {
+                if (message == null) {
+                    client.getCore().getLogger().warn("A user issued command but the message object is null. Is the plugin calling a command as the user?");
+                }else {
+                    client.getCore().getLogger().info(
+                            "{}(User ID: {}) issued command: {}",
+                            ((User) commandSender).getName(),
+                            ((User) commandSender).getId(),
+                            input
+                    );
+                }
+            }
+
         } catch (InterruptedException | ExecutionException ignored) { // impossible
         }
         if (unhandledException.get() != null) {
             throw new CommandException("Something unexpected happened.", unhandledException.get());
         }
+
         return foundCommand.get();
     }
 
     protected void handleThrowable(@NotNull CommandSender commandSender, Message message, AtomicReference<Throwable> unhandledException, AtomicBoolean foundCommand, Throwable throwable) {
+
         if (throwable instanceof CompletionException) {
             throwable = throwable.getCause();
         }
         final Throwable finalThrowable = throwable;
+
         if (throwable instanceof InvalidSyntaxException) {
             handleException(commandSender,
                     InvalidSyntaxException.class,
@@ -251,6 +268,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
 
     @NonNull
     public CompletableFuture<CommandResult<CommandSender>> executeCommand(@NonNull CommandSender commandSender, @NonNull String input, Message message) {
+
+
+
         return executeCommand(commandSender, input, message, commandSender instanceof ConsoleCommandSender);
     }
 
