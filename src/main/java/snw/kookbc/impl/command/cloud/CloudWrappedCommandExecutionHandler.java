@@ -79,10 +79,33 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         }
 
         if (sender instanceof User && commandObject.getUserCommandExecutor() != null) {
+            JKook.getCore().getLogger().info(
+                    "{}(User ID: {}) issued command: {}",
+                    ((User) sender).getName(),
+                    ((User) sender).getId(),
+                    rawInput
+            );
             commandObject.getUserCommandExecutor().onCommand((User) sender, arguments, message);
         } else if (sender instanceof ConsoleCommandSender && commandObject.getConsoleCommandExecutor() != null) {
+            JKook.getCore().getLogger().info(
+                    "Console issued command: {}",
+                    rawInput
+            );
             commandObject.getConsoleCommandExecutor().onCommand((ConsoleCommandSender) sender, arguments);
         } else {
+            if (sender instanceof User) {
+                JKook.getCore().getLogger().info(
+                        "{}(User ID: {}) issued command: {}",
+                        ((User) sender).getName(),
+                        ((User) sender).getId(),
+                        rawInput
+                );
+            } else if (sender instanceof ConsoleCommandSender) {
+                JKook.getCore().getLogger().info(
+                        "Console issued command: {}",
+                        rawInput
+                );
+            }
             commandObject.getExecutor().onCommand(sender, arguments, message);
         }
     }
@@ -99,4 +122,5 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
             }
         }
     }
+
 }
