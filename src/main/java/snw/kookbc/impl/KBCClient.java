@@ -144,7 +144,11 @@ public class KBCClient {
             } else if ("webhook".equals(mode)) {
                 this.networkSystem = new JLHttpWebhookNetworkSystem(this, null);
             } else {
-                throw new IllegalArgumentException("Unrecognized network mode " + mode);
+                getCore().getLogger().warn("***********************************");
+                getCore().getLogger().warn("Unrecognized network mode: " + mode);
+                getCore().getLogger().warn("Switch to default mode: websocket");
+                getCore().getLogger().warn("***********************************");
+                this.networkSystem = new OkhttpWebSocketNetworkSystem(this);
             }
         } else {
             this.networkSystem = networkSystem;
