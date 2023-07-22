@@ -115,7 +115,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 .with(HELP_CONTENT_KEY, jKookCommand.getHelpContent())
                                 .build()
                 )
-                        .handler(new CloudWrappedCommandExecutionHandler(parent, jKookCommand))
+                        .handler(new CloudWrappedCommandExecutionHandler(client,parent, jKookCommand))
                         .argument(args)
                         .build()
         );

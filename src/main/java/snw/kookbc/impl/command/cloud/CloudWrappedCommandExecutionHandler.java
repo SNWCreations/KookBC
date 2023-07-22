@@ -28,6 +28,7 @@ import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.UnknownArgumentException;
 
@@ -43,10 +44,14 @@ import static snw.kookbc.util.Util.toEnglishNumOrder;
  * @author huanmeng_qwq
  */
 public class CloudWrappedCommandExecutionHandler implements CommandExecutionHandler<CommandSender> {
+
+    protected final KBCClient client;
+
     private final CommandManagerImpl parent;
     private final JKookCommand commandObject;
 
-    public CloudWrappedCommandExecutionHandler(CommandManagerImpl parent, JKookCommand commandObject) {
+    public CloudWrappedCommandExecutionHandler(KBCClient client,CommandManagerImpl parent, JKookCommand commandObject) {
+        this.client = client;
         this.parent = parent;
         this.commandObject = commandObject;
     }
@@ -79,7 +84,8 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         }
 
         if (sender instanceof User && commandObject.getUserCommandExecutor() != null) {
-            JKook.getCore().getLogger().info(
+
+            client.getCore().getLogger().info(
                     "{}(User ID: {}) issued command: {}",
                     ((User) sender).getName(),
                     ((User) sender).getId(),
@@ -87,21 +93,21 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
             );
             commandObject.getUserCommandExecutor().onCommand((User) sender, arguments, message);
         } else if (sender instanceof ConsoleCommandSender && commandObject.getConsoleCommandExecutor() != null) {
-            JKook.getCore().getLogger().info(
+            client.getCore().getLogger().info(
                     "Console issued command: {}",
                     rawInput
             );
             commandObject.getConsoleCommandExecutor().onCommand((ConsoleCommandSender) sender, arguments);
         } else {
             if (sender instanceof User) {
-                JKook.getCore().getLogger().info(
+                client.getCore().getLogger().info(
                         "{}(User ID: {}) issued command: {}",
                         ((User) sender).getName(),
                         ((User) sender).getId(),
                         rawInput
                 );
             } else if (sender instanceof ConsoleCommandSender) {
-                JKook.getCore().getLogger().info(
+                client.getCore().getLogger().info(
                         "Console issued command: {}",
                         rawInput
                 );
@@ -112,7 +118,7 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
 
     private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
         if (sender instanceof ConsoleCommandSender) {
-            JKook.getCore().getLogger().info(contentForConsole);
+            client.getCore().getLogger().info(contentForConsole);
         } else if (sender instanceof User) {
             // contentForConsole should be null at this time
             if (message != null) {
