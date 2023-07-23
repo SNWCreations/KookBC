@@ -20,6 +20,7 @@ package snw.kookbc.impl.command.internal;
 import cloud.commandframework.annotations.Argument;
 import cloud.commandframework.annotations.CommandDescription;
 import cloud.commandframework.annotations.CommandMethod;
+import cloud.commandframework.annotations.Flag;
 import cloud.commandframework.annotations.processing.CommandContainer;
 import cloud.commandframework.annotations.specifier.Quoted;
 import org.jetbrains.annotations.Nullable;
@@ -69,9 +70,9 @@ public class CloudHelpCommand {
 
     @CommandMethod("[command]")
     @CommandDescription("获取此帮助列表。")
-    public void consoleHelp(CommandSender sender, Message message, @Argument("command") @Quoted @Nullable String command) {
+    public void consoleHelp(CommandSender sender, Message message, @Argument("command") @Quoted @Nullable String command, @Flag("force") boolean force) {
         if (sender instanceof User) {
-            List<String> content = Util.listCloudCommandsHelp(this.client);
+            List<String> content = Util.listCloudCommandsHelp(this.client, force);
             CloudCommandInfo specificCommand = Util.findSpecificCloudCommand(this.client, command);
             CardBuilder finalBuilder;
             if (content.isEmpty() && specificCommand == null) {
@@ -131,7 +132,7 @@ public class CloudHelpCommand {
                                     Arrays.asList(
                                             new ButtonElement(
                                                     Theme.PRIMARY,
-                                                    HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1}", // Placeholder
+                                                    HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1, \"force\": " + force + "}", // Placeholder
                                                     ButtonElement.EventType.NO_ACTION,
                                                     new PlainTextElement("上一页")
                                             ),
@@ -139,7 +140,7 @@ public class CloudHelpCommand {
                                             new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                             new ButtonElement(
                                                     Theme.PRIMARY,
-                                                    HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1}",
+                                                    HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1, \"force\": " + force + "}",
                                                     ButtonElement.EventType.RETURN_VAL,
                                                     new PlainTextElement("下一页")
                                             )
@@ -168,7 +169,7 @@ public class CloudHelpCommand {
             }
             message.sendToSource(finalBuilder.build());
         } else {
-            List<String> content = buildHelpContent(command);
+            List<String> content = buildHelpContent(command, force);
             if (content.isEmpty()) {
                 client.getCore().getLogger().info("Commands is empty.");
             } else {
@@ -179,16 +180,19 @@ public class CloudHelpCommand {
         }
     }
 
-    private List<String> buildHelpContent(@Nullable String target) {
+    private List<String> buildHelpContent(@Nullable String target, boolean force) {
         List<CloudCommandInfo> commands = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
         if (target != null && !target.isEmpty()) {
             commands = commands.stream()
-                    .filter(command -> command.rootName().equalsIgnoreCase(target) ||
+                    .filter(command -> target.equalsIgnoreCase("all") || command.rootName().equalsIgnoreCase(target) ||
                             command.syntax().equalsIgnoreCase(target) ||
                             Arrays.stream(command.aliases())
                                     .anyMatch(alias -> alias.equalsIgnoreCase(target))
                     )
                     .collect(Collectors.toList());
+        }
+        if (!force) {
+            commands = commands.stream().filter(command -> command.owningPlugin() != null && command.owningPlugin().isEnabled()).collect(Collectors.toList());
         }
         List<String> result = new LinkedList<>();
         result.add("-------- 命令帮助 --------");

@@ -45,6 +45,7 @@ import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.cloud.exception.CommandPluginDisabledException;
 import snw.kookbc.impl.command.cloud.parser.GuildArgumentParser;
 import snw.kookbc.impl.command.cloud.parser.PluginArgumentParser;
 import snw.kookbc.impl.command.cloud.parser.UserArgumentParser;
@@ -76,6 +77,11 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         parserRegistry().registerParserSupplier(TypeToken.get(Plugin.class), p -> new PluginArgumentParser(client));
         parserRegistry().registerParserSupplier(TypeToken.get(User.class), p -> new UserArgumentParser(client));
         parserRegistry().registerParserSupplier(TypeToken.get(Guild.class), p -> new GuildArgumentParser(client));
+        registerCommandPostProcessor(context -> {
+            Command<@NonNull CommandSender> command = context.getCommand();
+            CommandContext<@NonNull CommandSender> commandContext = context.getCommandContext();
+            commandContext.set(PLUGIN_KEY, command.getCommandMeta().get(PLUGIN_KEY).orElse(null));
+        });
     }
 
     @Override
@@ -115,7 +121,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                                 .with(HELP_CONTENT_KEY, jKookCommand.getHelpContent())
                                 .build()
                 )
-                        .handler(new CloudWrappedCommandExecutionHandler(client,parent, jKookCommand))
+                        .handler(new CloudWrappedCommandExecutionHandler(client, parent, jKookCommand))
                         .argument(args)
                         .build()
         );
@@ -178,6 +184,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         if (throwable instanceof CompletionException) {
             throwable = throwable.getCause();
         }
+        if (throwable instanceof CommandExecutionException) {
+            throwable = throwable.getCause();
+        }
         final Throwable finalThrowable = throwable;
         if (throwable instanceof InvalidSyntaxException) {
             handleException(commandSender,
@@ -231,6 +240,17 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         } else {
                             client.getCore().getLogger().info("无效的命令参数: "
                                     + finalThrowable.getCause().getMessage());
+                        }
+                    }
+            );
+        } else if (throwable instanceof CommandPluginDisabledException) {
+            handleException(commandSender,
+                    CommandPluginDisabledException.class,
+                    (CommandPluginDisabledException) throwable, (c, e) -> {
+                        if (message != null) {
+                            message.sendToSource("无法执行命令: 注册此命令的插件现已被禁用。");
+                        } else {
+                            client.getCore().getLogger().info("Unable to execute command: The owner plugin: ({}) of this command was disabled.", e.getPlugin()==null?"null":e.getPlugin().getDescription().getName());
                         }
                     }
             );
@@ -292,6 +312,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         if (message != null) {
             context.set(KOOK_MESSAGE_KEY, message);
         }
+        logCommand(commandSender, input);
         final LinkedList<String> inputQueue = new CommandInputTokenizer(input).tokenize();
         /* Store a copy of the input queue in the context */
         context.store("__raw_input__", new LinkedList<>(inputQueue));
@@ -331,6 +352,22 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         }
     }
 
+    private void logCommand(@NotNull CommandSender commandSender, @NotNull String input) {
+        if (commandSender instanceof ConsoleCommandSender) {
+            client.getCore().getLogger().info(
+                    "Console issued command: {}",
+                    input
+            );
+        } else if (commandSender instanceof User) {
+            client.getCore().getLogger().info(
+                    "{}(User ID: {}) issued command: {}",
+                    ((User) commandSender).getName(),
+                    ((User) commandSender).getId(),
+                    input
+            );
+        }
+    }
+
     public void unregisterAll(Plugin plugin) {
         List<? extends CommandArgument<@NonNull CommandSender, ?>> list = commands().stream()
                 .filter(i ->
@@ -348,10 +385,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         }
     }
 
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public List<CloudCommandInfo> getCommandsInfo() {
         List<CloudCommandInfo> result = new ArrayList<>();
-        for (Command<CommandSender> command : commands().stream().filter(i -> i.getCommandMeta().get(PLUGIN_KEY).isPresent()).collect(Collectors.toList())) {
+        for (Command<CommandSender> command : commands()/*.stream().filter(i -> i.getCommandMeta().get(PLUGIN_KEY).isPresent()).collect(Collectors.toList())*/) {
             String[] prefixes = command.getCommandMeta().get(PREFIX_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String[] aliases = command.getCommandMeta().get(ALIAS_KEY).map(e -> e.toArray(new String[0])).orElse(new String[0]);
             String rootName = removePrefix(prefixes, command.getArguments().get(0).getName()).get(0);
@@ -362,14 +398,17 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                 syntax = commandSyntaxFormatter().apply(command.getArguments(), null);
             }
             result.add(new CloudCommandInfo(
-                    command.getCommandMeta().get(PLUGIN_KEY).get(),
-                    rootName,
-                    syntax,
-                    finalAliases,
-                    prefixes,
-                    command.getCommandMeta().get(CommandMeta.DESCRIPTION).orElse(""),
-                    command.getCommandMeta().get(HELP_CONTENT_KEY).orElse(""),
-                    jKookCommand));
+                            command.getCommandMeta().get(PLUGIN_KEY).orElse(null),
+                            rootName,
+                            syntax,
+                            finalAliases,
+                            prefixes,
+                            command.getCommandMeta().get(CommandMeta.DESCRIPTION).orElse(""),
+                            command.getCommandMeta().get(HELP_CONTENT_KEY).orElse(""),
+                            jKookCommand,
+                            command.isHidden()
+                    )
+            );
         }
         return result;
     }

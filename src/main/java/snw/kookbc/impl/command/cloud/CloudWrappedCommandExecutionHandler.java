@@ -22,15 +22,16 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.CommandExecutionHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
-import snw.jkook.JKook;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.UnknownArgumentException;
+import snw.kookbc.impl.command.cloud.exception.CommandPluginDisabledException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static snw.kookbc.impl.command.cloud.CloudConstants.KOOK_MESSAGE_KEY;
+import static snw.kookbc.impl.command.cloud.CloudConstants.PLUGIN_KEY;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 /**
@@ -50,7 +52,7 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
     private final CommandManagerImpl parent;
     private final JKookCommand commandObject;
 
-    public CloudWrappedCommandExecutionHandler(KBCClient client,CommandManagerImpl parent, JKookCommand commandObject) {
+    public CloudWrappedCommandExecutionHandler(KBCClient client, CommandManagerImpl parent, JKookCommand commandObject) {
         this.client = client;
         this.parent = parent;
         this.commandObject = commandObject;
@@ -66,6 +68,10 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         List<String> list = new ArrayList<>(Arrays.asList(rawInput));
         if (!list.isEmpty()) {
             list.remove(0); // remove head
+        }
+        Plugin plugin = commandContext.getOptional(PLUGIN_KEY).orElse(null);
+        if (plugin == null || !plugin.isEnabled()) {
+            throw new CommandPluginDisabledException(new RuntimeException("Plugin is disabled"), commandContext, plugin);
         }
 
         Object[] arguments;
@@ -84,34 +90,10 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         }
 
         if (sender instanceof User && commandObject.getUserCommandExecutor() != null) {
-
-            client.getCore().getLogger().info(
-                    "{}(User ID: {}) issued command: {}",
-                    ((User) sender).getName(),
-                    ((User) sender).getId(),
-                    rawInput
-            );
             commandObject.getUserCommandExecutor().onCommand((User) sender, arguments, message);
         } else if (sender instanceof ConsoleCommandSender && commandObject.getConsoleCommandExecutor() != null) {
-            client.getCore().getLogger().info(
-                    "Console issued command: {}",
-                    rawInput
-            );
             commandObject.getConsoleCommandExecutor().onCommand((ConsoleCommandSender) sender, arguments);
         } else {
-            if (sender instanceof User) {
-                client.getCore().getLogger().info(
-                        "{}(User ID: {}) issued command: {}",
-                        ((User) sender).getName(),
-                        ((User) sender).getId(),
-                        rawInput
-                );
-            } else if (sender instanceof ConsoleCommandSender) {
-                client.getCore().getLogger().info(
-                        "Console issued command: {}",
-                        rawInput
-                );
-            }
             commandObject.getExecutor().onCommand(sender, arguments, message);
         }
     }

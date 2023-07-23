@@ -44,13 +44,14 @@ public final class UserClickButtonListener implements Listener {
         JsonObject detail = JsonParser.parseString(value.substring(HELP_VALUE_HEADER.length())).getAsJsonObject();
         int page = detail.get("page").getAsInt();
         int currentPage = detail.get("current").getAsInt();
+        boolean force = detail.has("force") && detail.get("force").getAsBoolean();
         if (page == currentPage) {
             return;
         }
 
         List<String> content;
         if (client.getCore().getCommandManager() instanceof CloudCommandManagerImpl) {
-            content = Util.listCloudCommandsHelp(this.client);
+            content = Util.listCloudCommandsHelp(this.client, force);
         } else {
             content = Util.listCommandsHelp(this.client);
         }

@@ -30,6 +30,8 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.execution.CommandExecutionHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.command.cloud.exception.CommandPluginDisabledException;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -39,6 +41,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static snw.kookbc.impl.command.cloud.CloudConstants.PLUGIN_KEY;
 
 /**
  * A command execution handler that invokes a method.
@@ -75,6 +79,10 @@ public class MethodCommandExecutionHandler<C> implements CommandExecutionHandler
     @Override
     public void execute(final @NonNull CommandContext<C> commandContext) {
         /* Invoke the command method */
+        Plugin plugin = commandContext.getOptional(PLUGIN_KEY).orElse(null);
+        if (plugin == null || !plugin.isEnabled()) {
+            throw new CommandPluginDisabledException(new RuntimeException("Plugin is disabled"), commandContext, plugin);
+        }
         try {
             this.methodHandle.invokeWithArguments(
                     this.createParameterValues(
