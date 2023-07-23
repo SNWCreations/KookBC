@@ -54,6 +54,7 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
+import snw.kookbc.util.ReturnNotNullFunction;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,13 +112,13 @@ public class KBCClient {
     public KBCClient(
             CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
             /* Customizable components are following: */
-            @Nullable CommandManager commandManager,
-            @Nullable NetworkClient networkClient,
-            @Nullable EntityStorage storage,
-            @Nullable EntityBuilder entityBuilder,
-            @Nullable MessageBuilder msgBuilder,
-            @Nullable EventFactory eventFactory,
-            @Nullable NetworkSystem networkSystem
+            @Nullable ReturnNotNullFunction<KBCClient, CommandManager> commandManager,
+            @Nullable ReturnNotNullFunction<KBCClient, NetworkClient> networkClient,
+            @Nullable ReturnNotNullFunction<KBCClient, EntityStorage> storage,
+            @Nullable ReturnNotNullFunction<KBCClient, EntityBuilder> entityBuilder,
+            @Nullable ReturnNotNullFunction<KBCClient, MessageBuilder> msgBuilder,
+            @Nullable ReturnNotNullFunction<KBCClient, EventFactory> eventFactory,
+            @Nullable ReturnNotNullFunction<KBCClient, NetworkSystem> networkSystem
     ) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
@@ -128,15 +129,15 @@ public class KBCClient {
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
         /*Cloud*/
-        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> new CloudCommandManagerImpl(this));
-        this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> new NetworkClient(this, token));
-        this.storage = Optional.ofNullable(storage).orElseGet(() -> new EntityStorage(this));
-        this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> new EntityBuilder(this));
-        this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> new MessageBuilder(this));
+        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> CloudCommandManagerImpl::new).apply(this);
+        this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> c -> new NetworkClient(c, token)).apply(this);
+        this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
+        this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> EntityBuilder::new).apply(this);
+        this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> MessageBuilder::new).apply(this);
         this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
-        this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> new EventFactory(this));
+        this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> EventFactory::new).apply(this);
         if (networkSystem == null) {
             final String mode = this.config.getString("mode");
             if ("websocket".equals(mode)) {
@@ -151,7 +152,7 @@ public class KBCClient {
                 this.networkSystem = new OkhttpWebSocketNetworkSystem(this);
             }
         } else {
-            this.networkSystem = networkSystem;
+            this.networkSystem = networkSystem.apply(this);
         }
     }
 
