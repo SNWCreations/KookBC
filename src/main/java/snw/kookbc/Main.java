@@ -67,6 +67,8 @@ public class Main extends Launcher {
         SysOutOverSLF4J.registerLoggingSystem("org.apache.logging");
         SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
 
+        onSetup();
+
         // KBC accepts following arguments:
         // --token <tokenValue>   --  Use the tokenValue as the token
         // --help                 --  Get help and exit

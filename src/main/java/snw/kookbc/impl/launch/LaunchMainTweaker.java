@@ -18,9 +18,8 @@
 
 package snw.kookbc.impl.launch;
 
-import snw.kookbc.impl.plugin.MixinPluginManager;
+import snw.kookbc.launcher.Launcher;
 
-import java.io.File;
 import java.util.List;
 
 // author: huanmeng_qwq
@@ -35,7 +34,7 @@ public class LaunchMainTweaker implements ITweaker {
 
     @Override
     public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        MixinPluginManager.instance().loadFolder(classLoader, new File("plugins"));
+        Launcher.instance().onSetup();
     }
 
     @Override
