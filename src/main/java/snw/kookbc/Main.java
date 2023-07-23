@@ -29,6 +29,7 @@ import snw.jkook.config.InvalidConfigurationException;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.launcher.Launcher;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
@@ -36,6 +37,8 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
+
+import static java.lang.Boolean.parseBoolean;
 
 public class Main extends Launcher {
     private static final String MAIN_THREAD_NAME = "Main Thread";
@@ -149,7 +152,9 @@ public class Main extends Launcher {
 
         CoreImpl core = new CoreImpl(logger);
         JKook.setCore(core);
-        KBCClient client = new KBCClient(core, config, pluginsFolder, token);
+        KBCClient client = new KBCClient(core, config, pluginsFolder, token,
+                parseBoolean(System.getProperty("kookbc.cloud", "true")) ? null : CommandManagerImpl::new,
+                null, null, null, null, null, null);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
         Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));
