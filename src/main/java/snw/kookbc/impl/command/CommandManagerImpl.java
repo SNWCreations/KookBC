@@ -461,4 +461,8 @@ public class CommandManagerImpl implements CommandManager {
             }
         }
     }
+
+    public KBCClient getClient() {
+        return client;
+    }
 }
