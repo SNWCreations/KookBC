@@ -22,7 +22,6 @@ import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.CommandExecutionHandler;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
-import snw.jkook.JKook;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
@@ -89,7 +88,7 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
 
     private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
         if (sender instanceof ConsoleCommandSender) {
-            JKook.getCore().getLogger().info(contentForConsole);
+            parent.getClient().getCore().getLogger().info(contentForConsole);
         } else if (sender instanceof User) {
             // contentForConsole should be null at this time
             if (message != null) {
