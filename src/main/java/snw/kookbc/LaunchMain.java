@@ -98,6 +98,11 @@ public class LaunchMain extends Launcher {
     }
 
     @Override
+    protected void doSetup() {
+        MixinPluginManager.instance().loadFolder(AccessClassLoader.of(getCustomLoader()), new File("plugins"));
+    }
+
+    @Override
     public ClassLoader getCustomLoader() {
         return classLoader;
     }
