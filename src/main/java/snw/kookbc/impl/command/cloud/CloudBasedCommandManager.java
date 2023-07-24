@@ -81,6 +81,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
             Command<@NonNull CommandSender> command = context.getCommand();
             CommandContext<@NonNull CommandSender> commandContext = context.getCommandContext();
             commandContext.set(PLUGIN_KEY, command.getCommandMeta().get(PLUGIN_KEY).orElse(null));
+            if (!(commandContext.getSender() instanceof ConsoleCommandSender)) {
+                logCommand(commandContext.getSender(), commandContext.getRawInputJoined());
+            }
         });
     }
 
@@ -250,7 +253,7 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
                         if (message != null) {
                             message.sendToSource("无法执行命令: 注册此命令的插件现已被禁用。");
                         } else {
-                            client.getCore().getLogger().info("Unable to execute command: The owner plugin: ({}) of this command was disabled.", e.getPlugin()==null?"null":e.getPlugin().getDescription().getName());
+                            client.getCore().getLogger().info("Unable to execute command: The owner plugin: ({}) of this command was disabled.", e.getPlugin() == null ? "null" : e.getPlugin().getDescription().getName());
                         }
                     }
             );
@@ -312,7 +315,9 @@ public class CloudBasedCommandManager extends CommandManager<CommandSender> {
         if (message != null) {
             context.set(KOOK_MESSAGE_KEY, message);
         }
-        logCommand(commandSender, input);
+        if (commandSender instanceof ConsoleCommandSender) {
+            logCommand(commandSender, input);
+        }
         final LinkedList<String> inputQueue = new CommandInputTokenizer(input).tokenize();
         /* Store a copy of the input queue in the context */
         context.store("__raw_input__", new LinkedList<>(inputQueue));
