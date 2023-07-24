@@ -63,9 +63,6 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
 
         long startTimeStamp = System.currentTimeMillis(); // debug
 
-        // Do not put this in the try statement because we don't know if the logging system will throw an exception.
-        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
-
         boolean result;
         try {
             result = getCloudCommandManager().executeCommandNow(sender, cmdLine, msg);
@@ -76,6 +73,9 @@ public class CloudCommandManagerImpl extends CommandManagerImpl {
             // It is OutOfMemoryError? nothing matters lol.
             throw new CommandException("Something unexpected happened.", e);
         }
+
+        // Do not put this in the try statement because we don't know if the logging system will throw an exception.
+        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
         return result;
     }
 
