@@ -27,8 +27,11 @@ import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.command.JKookCommand;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.UnknownArgumentException;
+import snw.kookbc.impl.command.cloud.exception.CommandPluginDisabledException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,16 +39,21 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static snw.kookbc.impl.command.cloud.CloudConstants.KOOK_MESSAGE_KEY;
+import static snw.kookbc.impl.command.cloud.CloudConstants.PLUGIN_KEY;
 import static snw.kookbc.util.Util.toEnglishNumOrder;
 
 /**
  * @author huanmeng_qwq
  */
 public class CloudWrappedCommandExecutionHandler implements CommandExecutionHandler<CommandSender> {
+
+    protected final KBCClient client;
+
     private final CommandManagerImpl parent;
     private final JKookCommand commandObject;
 
-    public CloudWrappedCommandExecutionHandler(CommandManagerImpl parent, JKookCommand commandObject) {
+    public CloudWrappedCommandExecutionHandler(KBCClient client, CommandManagerImpl parent, JKookCommand commandObject) {
+        this.client = client;
         this.parent = parent;
         this.commandObject = commandObject;
     }
@@ -60,6 +68,10 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
         List<String> list = new ArrayList<>(Arrays.asList(rawInput));
         if (!list.isEmpty()) {
             list.remove(0); // remove head
+        }
+        Plugin plugin = commandContext.getOptional(PLUGIN_KEY).orElse(null);
+        if (plugin == null || !plugin.isEnabled()) {
+            throw new CommandPluginDisabledException(new RuntimeException("Plugin is disabled"), commandContext, plugin);
         }
 
         Object[] arguments;
@@ -88,7 +100,7 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
 
     private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
         if (sender instanceof ConsoleCommandSender) {
-            parent.getClient().getCore().getLogger().info(contentForConsole);
+            client.getCore().getLogger().info(contentForConsole);
         } else if (sender instanceof User) {
             // contentForConsole should be null at this time
             if (message != null) {
@@ -98,4 +110,5 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
             }
         }
     }
+
 }

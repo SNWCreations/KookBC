@@ -220,8 +220,8 @@ public class SimplePluginManager implements PluginManager {
         client.getCore().getScheduler().cancelTasks(plugin);
         client.getCore().getEventManager().unregisterAllHandlers(plugin);
         // unregister commands
-        ((CommandManagerImpl) client.getCore().getCommandManager()).getCommandMap().unregisterAll(plugin);
         try {
+            ((CommandManagerImpl) client.getCore().getCommandManager()).getCommandMap().unregisterAll(plugin);
             plugin.setEnabled(false);
         } catch (Throwable e) {
             plugin.getLogger().error("Exception occurred when we are disabling this plugin", e);

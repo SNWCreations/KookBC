@@ -34,8 +34,9 @@ public class CloudCommandInfo {
     private final String description;
     private final String helpContent;
     private final boolean isJKookCommand;
+    private final boolean hidden;
 
-    public CloudCommandInfo(Plugin owningPlugin, String rootName, String syntax, String[] aliases, String[] prefixes, String description, String helpContent, boolean isJKookCommand) {
+    public CloudCommandInfo(Plugin owningPlugin, String rootName, String syntax, String[] aliases, String[] prefixes, String description, String helpContent, boolean isJKookCommand, boolean hidden) {
         this.owningPlugin = owningPlugin;
         this.rootName = rootName;
         this.syntax = syntax;
@@ -44,6 +45,7 @@ public class CloudCommandInfo {
         this.description = description;
         this.helpContent = helpContent;
         this.isJKookCommand = isJKookCommand;
+        this.hidden = hidden;
     }
 
     public Plugin owningPlugin() {
@@ -89,6 +91,11 @@ public class CloudCommandInfo {
                 ", description='" + description + '\'' +
                 ", helpContent='" + helpContent + '\'' +
                 ", isJKookCommand=" + isJKookCommand +
+                ", hidden=" + hidden +
                 '}';
+    }
+
+    public boolean hidden() {
+        return hidden;
     }
 }

@@ -173,11 +173,14 @@ public class Util {
         return result;
     }
 
-    public static List<String> listCloudCommandsHelp(KBCClient client) {
+    public static List<String> listCloudCommandsHelp(KBCClient client, boolean force) {
         List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
 
         List<String> result = new LinkedList<>();
         for (CloudCommandInfo command : commandsInfo) {
+            if (!force && (command.owningPlugin() == null || !command.owningPlugin().isEnabled() || command.hidden())) {
+                continue;
+            }
             insertCommandHelpContent(result, command.syntax(), Arrays.asList(command.prefixes()), command.description());
         }
         return result;
@@ -212,7 +215,7 @@ public class Util {
 
     public static CloudCommandInfo findSpecificCloudCommand(KBCClient client, String name) {
         List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
-        if (!isBlank(name)) {
+        if (!isBlank(name) && !name.equalsIgnoreCase("all")) {
             return commandsInfo.stream()
                     .filter(info ->
                             info.rootName().equalsIgnoreCase(name) ||
