@@ -39,6 +39,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 
 import static java.lang.Boolean.parseBoolean;
+import static snw.kookbc.util.Util.isStartByLaunch;
 
 public class Main extends Launcher {
     private static final String MAIN_THREAD_NAME = "Main Thread";
@@ -142,6 +143,14 @@ public class Main extends Launcher {
     }
 
     protected int startClient(String token, YamlConfiguration config, File pluginsFolder) {
+        if (!isStartByLaunch()) {
+            logger.warn("***************************************");
+            logger.warn("Launching KookBC WITHOUT Mixin support!");
+            logger.warn("All Mixins in plugins will be ignored.");
+            logger.warn("Tips: You can safely ignore this if you");
+            logger.warn(" don't have Mixin plugins.");
+            logger.warn("***************************************");
+        }
         RuntimeMXBean runtimeMX = ManagementFactory.getRuntimeMXBean();
         OperatingSystemMXBean osMX = ManagementFactory.getOperatingSystemMXBean();
         if (runtimeMX != null && osMX != null) {
