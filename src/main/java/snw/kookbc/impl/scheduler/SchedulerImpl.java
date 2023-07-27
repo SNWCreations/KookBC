@@ -25,6 +25,7 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.util.PrefixThreadFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +38,8 @@ public class SchedulerImpl implements Scheduler {
     public final ScheduledExecutorService pool;
     private final AtomicInteger ids = new AtomicInteger(1);
     private final Map<Integer, TaskImpl> scheduledTasks = new ConcurrentHashMap<>();
+    private boolean rejectAfterPluginInitTasks = false;
+    private final Map<Integer, AfterPluginInitTask> scheduledAfterPluginInitTasks = new HashMap<>();
 
     public SchedulerImpl(KBCClient client) {
         this(client, new PrefixThreadFactory("Scheduler Thread #"));
@@ -80,14 +83,29 @@ public class SchedulerImpl implements Scheduler {
     }
 
     @Override
+    public Task scheduleAfterPluginInitTask(Plugin plugin, Runnable runnable) throws IllegalStateException {
+        if (rejectAfterPluginInitTasks) {
+            throw new IllegalStateException("It's too late to call this method!");
+        }
+        int id = nextId();
+        final AfterPluginInitTask task = new AfterPluginInitTask(plugin, id, runnable);
+        scheduledAfterPluginInitTasks.put(id, task);
+        return task;
+    }
+
+    @Override
     public boolean isScheduled(int taskId) {
-        return scheduledTasks.containsKey(taskId);
+        return scheduledTasks.containsKey(taskId) || scheduledAfterPluginInitTasks.containsKey(taskId);
     }
 
     @Override
     public void cancelTask(int taskId) {
         if (isScheduled(taskId)) {
-            scheduledTasks.remove(taskId).cancel0();
+            if (scheduledAfterPluginInitTasks.containsKey(taskId)) {
+                scheduledAfterPluginInitTasks.remove(taskId).cancel();
+            } else {
+                scheduledTasks.remove(taskId).cancel0();
+            }
         }
     }
 
@@ -123,6 +141,17 @@ public class SchedulerImpl implements Scheduler {
                 }
             }
         };
+    }
+
+    public void runAfterPluginInitTasks() {
+        if (rejectAfterPluginInitTasks) {
+            throw new IllegalStateException("The after-plugin-init tasks are rejected at this time!");
+        }
+        for (AfterPluginInitTask task : scheduledAfterPluginInitTasks.values()) {
+            task.run();
+        }
+        scheduledAfterPluginInitTasks.clear();
+        rejectAfterPluginInitTasks = true;
     }
 
     public void shutdown() {

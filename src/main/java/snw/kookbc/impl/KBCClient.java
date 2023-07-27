@@ -226,6 +226,8 @@ public class KBCClient {
         registerInternal();
         getCore().getLogger().debug("Enabling plugins");
         enablePlugins();
+        getCore().getLogger().info("Running delayed init tasks");
+        ((SchedulerImpl) core.getScheduler()).runAfterPluginInitTasks();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
