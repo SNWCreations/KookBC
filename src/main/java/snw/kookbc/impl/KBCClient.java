@@ -224,8 +224,8 @@ public class KBCClient {
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
+        getCore().getLogger().debug("Enabling plugins");
         enablePlugins();
-        getCore().getLogger().debug("Loading all the plugins from plugins folder");
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
