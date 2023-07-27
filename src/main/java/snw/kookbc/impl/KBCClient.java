@@ -205,7 +205,7 @@ public class KBCClient {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
             getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
         } catch (NullPointerException | IOException e) {
-            getCore().getLogger().warn("Unable to read Git commit information. {}", e.getMessage());
+            getCore().getLogger().warn("Unable to read Git commit information", e);
         }
 
         if (SharedConstants.IS_SNAPSHOT) {
