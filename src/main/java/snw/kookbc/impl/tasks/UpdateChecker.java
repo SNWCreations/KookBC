@@ -73,7 +73,13 @@ public final class UpdateChecker extends Thread {
             receivedVersion = receivedVersion.substring(1);
         }
 
-        int versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
+        int versionDifference;
+        try {
+            versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
+        } catch (NumberFormatException e) {
+            client.getCore().getLogger().warn("Cannot check update! We can't recognize version! Custom build or snapshot API?");
+            return;
+        }
         if (versionDifference == -1) {
             client.getCore().getLogger().info("Update available! Information is following:");
             client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, client.getCore().getImplementationVersion());
