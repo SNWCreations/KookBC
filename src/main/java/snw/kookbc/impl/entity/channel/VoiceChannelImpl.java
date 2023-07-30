@@ -101,8 +101,25 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
             super.update(data);
             boolean hasPassword = has(data, "has_password") && get(data, "has_password").getAsBoolean();
             int size = has(data, "limit_amount") ? get(data, "limit_amount").getAsInt() : 0;
+            // KOOK does not provide voice quality value here!
             this.passwordProtected = hasPassword;
             this.maxSize = size;
         }
+    }
+
+    @Override
+    public int getQuality() { // must query because we can't update this value by update(JsonObject) method
+        final JsonObject self = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId());
+        return get(self, "voice_quality").getAsInt();
+    }
+
+    @Override
+    public void setQuality(int i) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("voice_quality", i)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
     }
 }
