@@ -71,7 +71,7 @@ public class EntityBuilder {
         String name = get(object, "name").getAsString();
         boolean isPublic = get(object, "enable_open").getAsBoolean();
         String region = get(object, "region").getAsString();
-        User master = client.getStorage().getUser(get(object, "master_id").getAsString());
+        String ownerId = get(object, "master_id").getAsString();
         int rawNotifyType = get(object, "notify_type").getAsInt();
 
         Guild.NotifyType type = null;
@@ -90,7 +90,7 @@ public class EntityBuilder {
                 name,
                 isPublic,
                 region,
-                master,
+                ownerId,
                 type,
                 avatar
         );

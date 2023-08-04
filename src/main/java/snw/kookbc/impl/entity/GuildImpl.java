@@ -45,6 +45,7 @@ import snw.kookbc.util.MapBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -52,7 +53,8 @@ public class GuildImpl implements Guild, Updatable {
     private final KBCClient client;
     private final String id;
     private NotifyType notifyType;
-    private final User master;
+    private String ownerId;
+    private final AtomicReference<User> owner = new AtomicReference<>();
     private String name;
     private boolean public_; // I know Guild owner can turn this to false,
     // but I don't have internal events to listen for that!
@@ -63,7 +65,7 @@ public class GuildImpl implements Guild, Updatable {
                      String name,
                      boolean isPublic,
                      String region,
-                     User master,
+                     String ownerId,
                      NotifyType notifyType,
                      String avatarUrl
     ) {
@@ -72,7 +74,7 @@ public class GuildImpl implements Guild, Updatable {
         this.name = name;
         this.public_ = isPublic;
         this.region = region;
-        this.master = master;
+        this.ownerId = ownerId;
         this.notifyType = notifyType;
         this.avatarUrl = avatarUrl;
     }
@@ -332,7 +334,12 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public User getMaster() {
-        return master;
+        return owner.updateAndGet(obj -> {
+            if (obj == null || !ownerId.equals(obj.getId())) {
+                return client.getStorage().getUser(ownerId);
+            }
+            return obj;
+        });
     }
 
     @Override
@@ -364,6 +371,7 @@ public class GuildImpl implements Guild, Updatable {
                     () -> "Unexpected NotifyType, got " + get(data, "notify_type").getAsInt()
             );
             avatarUrl = get(data, "icon").getAsString();
+            ownerId = get(data, "user_id").getAsString();
         }
     }
 }
