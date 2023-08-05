@@ -6,7 +6,7 @@
     <name>KookBC</name>
     <groupId>snw</groupId>
     <artifactId>kookbc</artifactId>
-    <version>0.27.2</version>
+    <version>0.27.3</version>
     <description>The Kook Bot Client standard implementation for Java.</description>
 
     <!-- Do not care the order! -->
@@ -51,7 +51,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <log4j2.version>2.19.0</log4j2.version>
-        <jkook.version>76d2640cba566eced2b4b75bae53de974d95d8a6</jkook.version>
+        <jkook.version>6c36dfa6df51d503a6aec4fd00f7bd3b8599e314</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mixin.version>0.12.4+mixin.0.8.5</mixin.version>
         <asm.version>9.3</asm.version>
