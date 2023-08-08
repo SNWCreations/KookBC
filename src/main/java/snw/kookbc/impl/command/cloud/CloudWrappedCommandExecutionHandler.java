@@ -93,8 +93,13 @@ public class CloudWrappedCommandExecutionHandler implements CommandExecutionHand
             commandObject.getUserCommandExecutor().onCommand((User) sender, arguments, message);
         } else if (sender instanceof ConsoleCommandSender && commandObject.getConsoleCommandExecutor() != null) {
             commandObject.getConsoleCommandExecutor().onCommand((ConsoleCommandSender) sender, arguments);
-        } else {
+        } else if (commandObject.getExecutor() != null) {
             commandObject.getExecutor().onCommand(sender, arguments, message);
+        } else {
+            reply(
+                    "执行命令失败: 此命令已注册，但它是一个空壳，没有可用的命令逻辑。",
+                    "No executor was registered for provided command line.",
+                    sender, message);
         }
     }
 
