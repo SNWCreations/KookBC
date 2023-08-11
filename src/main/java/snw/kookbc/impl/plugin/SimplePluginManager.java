@@ -27,22 +27,39 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.launcher.Launcher;
+import snw.kookbc.util.DependencyListBasedPluginDescriptionComparator;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
 
 public class SimplePluginManager implements PluginManager {
+    protected static final Predicate<File> STANDARD_PLUGIN_CHECKER;
     private KBCClient client;
     private Logger logger;
     private final Collection<Plugin> plugins = new ArrayList<>();
     private final Map<Predicate<File>, Function<ClassLoader, PluginLoader>> loaderMap = new LinkedHashMap<>();
+    private final Map<Predicate<File>, Supplier<PluginDescriptionResolver>> pluginDescriptionResolverMap
+            = new LinkedHashMap<>();
+
+    static {
+        STANDARD_PLUGIN_CHECKER = f -> {
+            if (!f.getName().endsWith(".jar"))
+                return false;
+            try (JarFile jarFile = new JarFile(f)) {
+                return jarFile.getJarEntry("plugin.yml") != null;
+            } catch (IOException e) {
+                return false;
+            }
+        };
+    }
 
     public SimplePluginManager(KBCClient client) {
         this(client, client.getCore().getLogger());
@@ -51,15 +68,8 @@ public class SimplePluginManager implements PluginManager {
     public SimplePluginManager(KBCClient client, Logger logger) {
         this.client = client;
         this.logger = logger;
-        this.registerPluginLoader(f -> {
-            if (!f.getName().endsWith(".jar"))
-                return false;
-            try (JarFile jarFile = new JarFile(f)) {
-                return jarFile.getJarEntry("plugin.yml") != null;
-            } catch (IOException e) {
-                return false;
-            }
-        }, this::createPluginLoader); // ensure overrides will apply
+        this.registerPluginLoader(STANDARD_PLUGIN_CHECKER, this::createPluginLoader); // ensure overrides will apply
+        this.registerPluginDescriptionResolver(STANDARD_PLUGIN_CHECKER, () -> PluginClassLoader.PluginDotYMLResolver.INSTANCE);
     }
 
     public void setClient(KBCClient client) {
@@ -141,8 +151,21 @@ public class SimplePluginManager implements PluginManager {
         Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
         File[] files = directory.listFiles(File::isFile);
         if (files != null) {
-            Collection<Plugin> plugins = new ArrayList<>(files.length);
+            final LinkedHashMap<PluginDescription, File> orderMap = new LinkedHashMap<>();
             for (File file : files) {
+                final PluginDescriptionResolver resolver = lookUpPluginDescriptionResolverForFile(file);
+                if (resolver == null) {
+                    continue;
+                }
+                final PluginDescription description = resolver.resolve(file);
+                orderMap.put(description, file);
+            }
+            final LinkedList<Map.Entry<PluginDescription, File>> orders = new LinkedList<>(orderMap.entrySet());
+            orders.sort((o1, o2) -> DependencyListBasedPluginDescriptionComparator.INSTANCE
+                    .compare(o1.getKey(), o2.getKey()));
+            Collection<Plugin> plugins = new ArrayList<>(files.length);
+            for (Map.Entry<PluginDescription, File> entry : orders) {
+                final File file = entry.getValue();
                 Plugin plugin;
                 try {
                     plugin = loadPlugin0(file, false);
@@ -255,6 +278,13 @@ public class SimplePluginManager implements PluginManager {
         loaderMap.put(predicate, provider);
     }
 
+    @Override
+    public void registerPluginDescriptionResolver(Predicate<File> predicate, Supplier<PluginDescriptionResolver> supplier) {
+        Validate.notNull(predicate, "Predicate cannot be null");
+        Validate.notNull(supplier, "Supplier cannot be null");
+        pluginDescriptionResolverMap.put(predicate, supplier);
+    }
+
     protected PluginLoader createPluginLoader(@Nullable ClassLoader parent) {
         return new SimplePluginClassLoader(client, AccessClassLoader.of(parent));
     }
@@ -265,6 +295,17 @@ public class SimplePluginManager implements PluginManager {
             if (condition.test(file)) {
                 final Function<ClassLoader, PluginLoader> provider = entry.getValue();
                 return provider.apply(parent);
+            }
+        }
+        return null;
+    }
+
+    protected @Nullable PluginDescriptionResolver lookUpPluginDescriptionResolverForFile(File file) {
+        for (Map.Entry<Predicate<File>, Supplier<PluginDescriptionResolver>> entry :
+                pluginDescriptionResolverMap.entrySet()) {
+            final Predicate<File> condition = entry.getKey();
+            if (condition.test(file)) {
+                return entry.getValue().get();
             }
         }
         return null;

@@ -261,4 +261,14 @@ public class Util {
             throw new IllegalArgumentException("Invalid plugin.yml", e);
         }
     }
+
+    @SafeVarargs
+    public static <T> boolean anyContains(T target, Collection<T>... collectionsToSearch) {
+        for (Collection<T> collection : collectionsToSearch) {
+            if (collection.contains(target)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
