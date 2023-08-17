@@ -48,6 +48,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
     private final Function<String, Package> packageProvider;
 
     private static final MethodHandle GET_DEFINED_PACKAGE;
+    private static final MethodHandle GET_SYSTEM_RESOURCE;
 
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
             "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
@@ -60,12 +61,15 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                 // Ignore this if you are working on Java 9 and later
                 // noinspection JavaReflectionMemberAccess
                 Method getDefinedPackageMethod = ClassLoader.class.getMethod("getDefinedPackage", String.class);
-                GET_DEFINED_PACKAGE = MethodHandles.lookup().unreflect(getDefinedPackageMethod);
+                MethodHandles.Lookup lookup = MethodHandles.lookup();
+                GET_DEFINED_PACKAGE = lookup.unreflect(getDefinedPackageMethod);
+                GET_SYSTEM_RESOURCE = lookup.unreflect(ClassLoader.class.getMethod("getSystemResource", String.class));
             } catch (Throwable e) {
                 throw new Error("Unable to initialize LaunchClassLoader.getPackage0 environment.", e);
             }
         } else {
             GET_DEFINED_PACKAGE = null;
+            GET_SYSTEM_RESOURCE = null;
         }
     }
 
@@ -80,6 +84,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("org.apache.logging.");
         addClassLoaderExclusion("org.apache.log4j.");
         addClassLoaderExclusion("org.slf4j");
+        addClassLoaderExclusion("okhttp3.");
         addClassLoaderExclusion("uk.org.lidalia.sysoutslf4j.");
         addClassLoaderExclusion("org.spongepowered.asm.launch.");
         addClassLoaderExclusion("ch.qos.logback");
@@ -227,6 +232,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
                 try {
                     final Class<?> clazz = ctxLoader.loadClass(name);
                     cachedClasses.put(name, clazz);
+                    invalidClasses.remove(name);
                     return clazz;
                 } catch (ClassNotFoundException ignored) {
                 }
@@ -390,7 +396,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         InputStream classStream = null;
         try {
             final String resourcePath = name.replace('.', '/').concat(".class");
-            final URL classResource = findResource(resourcePath);
+            URL classResource = findResource0(resourcePath);
 
             if (classResource == null) {
                 if (DEBUG)
@@ -408,6 +414,21 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         } finally {
             closeSilently(classStream);
         }
+    }
+
+    private URL findResource0(String name) {
+        URL resource = super.findResource(name);
+        if (resource != null) {
+            return resource;
+        }
+        if (GET_SYSTEM_RESOURCE != null) {
+            try {
+                return (URL) GET_SYSTEM_RESOURCE.invoke(name);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     private static void closeSilently(Closeable closeable) {
