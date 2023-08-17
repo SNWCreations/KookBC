@@ -41,9 +41,9 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
     protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
         JsonObject content = parseString(get(object, "content").getAsString()).getAsJsonObject();
-        User consumer = client.getStorage().getUser(content.get("user_id").getAsString());
-        User affected = client.getStorage().getUser(content.get("target_id").getAsString());
-        int itemId = get(object, "item_id").getAsInt();
+        User consumer = client.getStorage().getUser(content.getAsJsonObject("data").get("user_id").getAsString());
+        User affected = client.getStorage().getUser(content.getAsJsonObject("data").get("target_id").getAsString());
+        int itemId = content.getAsJsonObject("data").get("item_id").getAsInt();
         return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
     }
 
