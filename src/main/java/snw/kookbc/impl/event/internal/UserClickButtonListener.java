@@ -17,10 +17,6 @@ import snw.jkook.message.component.card.module.*;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
-import snw.kookbc.impl.message.MessageImpl;
-import snw.kookbc.impl.message.PrivateMessageImpl;
-import snw.kookbc.impl.message.TextChannelMessageImpl;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.Util;
 
 import java.util.Arrays;
@@ -125,10 +121,11 @@ public final class UserClickButtonListener implements Listener {
             finalComponent = builder.build();
         }
 
-        if (messageType.equals("PM")){
-            Message message = this.client.getCore().getUnsafe().getPrivateMessage(event.getMessageId());;
+        if (messageType.equals("PM")) {
+            Message message = this.client.getCore().getUnsafe().getPrivateMessage(event.getMessageId());
+            ;
             message.setComponent(finalComponent);
-        }else if (messageType.equals("CM")){
+        } else if (messageType.equals("CM")) {
             Message message = this.client.getCore().getUnsafe().getTextChannelMessage(event.getMessageId());
             message.setComponent(finalComponent);
         }
