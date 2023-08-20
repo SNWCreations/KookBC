@@ -17,7 +17,10 @@ import snw.jkook.message.component.card.module.*;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
+import snw.kookbc.impl.message.MessageImpl;
+import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
+import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.Util;
 
 import java.util.Arrays;
@@ -44,6 +47,7 @@ public final class UserClickButtonListener implements Listener {
         JsonObject detail = JsonParser.parseString(value.substring(HELP_VALUE_HEADER.length())).getAsJsonObject();
         int page = detail.get("page").getAsInt();
         int currentPage = detail.get("current").getAsInt();
+        String messageType = detail.get("messageType").getAsString();
         boolean force = detail.has("force") && detail.get("force").getAsBoolean();
         if (page == currentPage) {
             return;
@@ -85,7 +89,7 @@ public final class UserClickButtonListener implements Listener {
                                 Arrays.asList(
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d}", page - 1, page), // Placeholder
+                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d, \"messageType\": %s}", page - 1, page, messageType), // Placeholder
                                                 page > 1 ? ButtonElement.EventType.RETURN_VAL : ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("上一页")
                                         ),
@@ -93,7 +97,7 @@ public final class UserClickButtonListener implements Listener {
                                         new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d}", page + 1, page),
+                                                String.format(HELP_VALUE_HEADER + "{\"page\": %d, \"current\": %d, \"messageType\": %s}", page + 1, page, messageType),
                                                 (5 * page) < content.size() ? ButtonElement.EventType.RETURN_VAL : ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("下一页")
                                         )
@@ -120,8 +124,15 @@ public final class UserClickButtonListener implements Listener {
             }
             finalComponent = builder.build();
         }
-        Message message = new TextChannelMessageImpl(this.client, event.getMessageId(), null, null, 0L, null, null);
-        message.setComponent(finalComponent);
+
+        if (messageType.equals("PM")){
+            Message message = this.client.getCore().getUnsafe().getPrivateMessage(event.getMessageId());;
+            message.setComponent(finalComponent);
+        }else if (messageType.equals("CM")){
+            Message message = this.client.getCore().getUnsafe().getTextChannelMessage(event.getMessageId());
+            message.setComponent(finalComponent);
+        }
+
     }
 
 }

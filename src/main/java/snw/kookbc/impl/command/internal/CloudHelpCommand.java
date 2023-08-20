@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.command.CommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.card.CardBuilder;
 import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
@@ -71,6 +72,14 @@ public class CloudHelpCommand {
     @CommandMethod("[command]")
     @CommandDescription("获取此帮助列表。")
     public void consoleHelp(CommandSender sender, Message message, @Argument("command") @Quoted @Nullable String command, @Flag("force") boolean force) {
+
+        String messageType;
+        if (message instanceof PrivateMessage) {
+            messageType = "PM";
+        } else {
+            messageType = "CM";
+        }
+
         if (sender instanceof User) {
             List<String> content = Util.listCloudCommandsHelp(this.client, force);
             CloudCommandInfo specificCommand = Util.findSpecificCloudCommand(this.client, command);
@@ -132,7 +141,7 @@ public class CloudHelpCommand {
                                     Arrays.asList(
                                             new ButtonElement(
                                                     Theme.PRIMARY,
-                                                    HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1, \"force\": " + force + "}", // Placeholder
+                                                    HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1, \"force\": " + force + ",\"messageType\": " + messageType + "}", // Placeholder
                                                     ButtonElement.EventType.NO_ACTION,
                                                     new PlainTextElement("上一页")
                                             ),
@@ -140,7 +149,7 @@ public class CloudHelpCommand {
                                             new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                             new ButtonElement(
                                                     Theme.PRIMARY,
-                                                    HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1, \"force\": " + force + "}",
+                                                    HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1, \"force\": " + force + ",\"messageType\": " + messageType + "}",
                                                     ButtonElement.EventType.RETURN_VAL,
                                                     new PlainTextElement("下一页")
                                             )
