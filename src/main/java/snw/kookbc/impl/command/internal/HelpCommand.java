@@ -25,6 +25,7 @@ import snw.jkook.command.JKookCommand;
 import snw.jkook.command.UserCommandExecutor;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.card.CardBuilder;
 import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
@@ -67,9 +68,17 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
 
     @Override
     public void onCommand(User sender, Object[] arguments, @Nullable Message message) {
+
         if (message == null) {
             // executed by CommandManager#executeCommand?
             return;
+        }
+
+        String messageType;
+        if (message instanceof PrivateMessage) {
+            messageType = "PM";
+        } else {
+            messageType = "CM";
         }
 
         List<String> content = Util.listCommandsHelp(this.client);
@@ -133,7 +142,7 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                                 Arrays.asList(
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1}", // Placeholder
+                                                HELP_VALUE_HEADER + "{\"page\": 0, \"current\": 1, \"messageType\": " + messageType + "}", // Placeholder
                                                 ButtonElement.EventType.NO_ACTION,
                                                 new PlainTextElement("上一页")
                                         ),
@@ -141,7 +150,7 @@ public final class HelpCommand implements UserCommandExecutor, ConsoleCommandExe
                                         new ButtonElement(Theme.SECONDARY, "", EMPTY_PLAIN_TEXT_ELEMENT), // Placeholder
                                         new ButtonElement(
                                                 Theme.PRIMARY,
-                                                HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1}",
+                                                HELP_VALUE_HEADER + "{\"page\": 2, \"current\": 1, \"messageType\": " + messageType + "}",
                                                 ButtonElement.EventType.RETURN_VAL,
                                                 new PlainTextElement("下一页")
                                         )
