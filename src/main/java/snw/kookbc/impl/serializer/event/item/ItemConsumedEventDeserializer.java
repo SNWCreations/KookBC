@@ -43,7 +43,7 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
         JsonObject content = parseString(get(object, "content").getAsString()).getAsJsonObject();
         User consumer = client.getStorage().getUser(content.getAsJsonObject("data").get("user_id").getAsString());
         User affected = client.getStorage().getUser(content.getAsJsonObject("data").get("target_id").getAsString());
-        int itemId = content.getAsJsonObject("data").get("item_id").getAsInt();
+        int itemId = get(content, "data").getAsJsonObject().get("item_id").getAsInt();
         return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
     }
 
