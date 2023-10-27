@@ -82,19 +82,21 @@ public class MessageBuilder {
 
     public PrivateMessage buildPrivateMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
-        JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
-        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
+        final JsonObject extra = get(object, "extra").getAsJsonObject();
+        JsonObject authorObj = get(extra, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")));
+        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(extra.getAsJsonObject("quote")));
     }
 
     public TextChannelMessage buildTextChannelMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
-        JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
-        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
+        final JsonObject extra = get(object, "extra").getAsJsonObject();
+        JsonObject authorObj = get(extra, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")), channel);
+        return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(extra.getAsJsonObject("quote")), channel);
     }
 
     public Message buildQuote(JsonObject object) {
@@ -106,8 +108,8 @@ public class MessageBuilder {
 
         BaseComponent component = buildComponent(object);
         long timeStamp = get(object, "create_at").getAsLong();
-        JsonObject rawUser = object.getAsJsonObject("author");
-        User author = client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
+        JsonObject rawUser = get(object, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(rawUser, "id").getAsString(), rawUser);
         return new QuoteImpl(component, id, author, timeStamp);
     }
 
