@@ -88,7 +88,17 @@ public class MessageBuilder {
         JsonObject authorObj = get(extra, "author").getAsJsonObject();
         User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        final JsonObject quote = get(extra, "quote").getAsJsonObject();
+        final JsonObject quote;
+        JsonObject quote1;
+        try {
+            quote1 = get(extra, "quote").getAsJsonObject();
+        } catch (NoSuchElementException e) {
+            quote1 = null;
+        }
+        quote = quote1;
+        if (quote == null) {
+            return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, null);
+        }
         final String quoteId = get(quote, "rong_id").getAsString();
         Message quoteObject;
         Message quoteFromCache = client.getStorage().getMessage(quoteId);
@@ -112,7 +122,17 @@ public class MessageBuilder {
         User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        final JsonObject quote = get(extra, "quote").getAsJsonObject();
+        final JsonObject quote;
+        JsonObject quote1;
+        try {
+            quote1 = get(extra, "quote").getAsJsonObject();
+        } catch (NoSuchElementException e) {
+            quote1 = null;
+        }
+        quote = quote1;
+        if (quote == null) {
+            return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
+        }
         final String quoteId = get(quote, "rong_id").getAsString();
         Message quoteObject;
         Message quoteFromCache = client.getStorage().getMessage(quoteId);
