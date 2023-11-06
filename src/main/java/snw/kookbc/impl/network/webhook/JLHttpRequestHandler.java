@@ -56,20 +56,19 @@ public class JLHttpRequestHandler implements RequestHandler<JsonObject> {
             request.reply(400, "");
             return;
         }
-        // challenge part
         if (has(frame.getData(), "channel_type")) {
             final String channelType = get(frame.getData(), "channel_type").getAsString();
             if ("WEBHOOK_CHALLENGE".equals(channelType)) {
+                // challenge part
                 String challengeValue = frame.getData().get("challenge").getAsString();
                 JsonObject obj = new JsonObject();
                 obj.addProperty("challenge", challengeValue);
                 String challengeJson = NORMAL_GSON.toJson(obj);
                 request.reply(200, challengeJson);
+                return;
+                // end challenge part
             }
         }
-        // end challenge part
-        else {
-            handler.handle(frame);
-        }
+        handler.handle(frame);
     }
 }
