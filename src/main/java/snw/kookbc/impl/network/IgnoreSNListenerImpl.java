@@ -54,7 +54,7 @@ public class IgnoreSNListenerImpl extends ListenerImpl {
                 client.getCore().getLogger().warn("Duplicated message from remote. Ignored.");
                 return;
             }
-            client.getSession().getSN().set(Session.UPDATE_FUNC.applyAsInt(frame.getSN()));
+            client.getSession().increaseSN();
             event0(frame);
             processedSN.add(frame.getSN());
             saveSN();
