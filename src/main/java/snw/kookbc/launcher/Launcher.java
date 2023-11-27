@@ -13,7 +13,7 @@ public abstract class Launcher {
         return launcher;
     }
 
-    public void onSetup() {
+    public final void onSetup() {
         if (instance() != this) {
             return;
         }
