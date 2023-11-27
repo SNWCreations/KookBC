@@ -179,6 +179,12 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     @Override
     public void close() throws IOException {
         INSTANCES.remove(this);
+        for (Class<?> clazz : cache.values()) {
+            if (ConfigurationSerializable.class.isAssignableFrom(clazz)) {
+                //noinspection unchecked
+                ConfigurationSerialization.unregisterClass((Class<? extends ConfigurationSerializable>) clazz);
+            }
+        }
         super.close();
     }
 }
