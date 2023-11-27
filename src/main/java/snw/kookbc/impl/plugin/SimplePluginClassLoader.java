@@ -126,7 +126,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             return cache.get(name);
         }
         try {
-            Class<?> result = /*parentClassLoader == null ? */super.findClass(name)/* : parentClassLoader.findClass(name)*/;
+            Class<?> result = super.findClass(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;
