@@ -125,13 +125,15 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         if (cache.containsKey(name)) {
             return cache.get(name);
         }
+        Throwable throwable = null;
         try {
             Class<?> result = super.findClass(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;
             }
-        } catch (ClassNotFoundException ignored) {
+        } catch (NoClassDefFoundError error) {
+            throwable = error;
         }
 
         // Try to load class from other known instances if needed
@@ -142,7 +144,11 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 return result;
             }
         }
-        throw new ClassNotFoundException(name);
+        if (throwable != null) {
+            throw new ClassNotFoundException(name, throwable);
+        } else {
+            throw new ClassNotFoundException(name);
+        }
     }
 
     protected Class<?> loadFromOther(String name) throws ClassNotFoundException {
