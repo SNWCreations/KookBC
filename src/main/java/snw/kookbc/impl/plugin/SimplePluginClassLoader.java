@@ -48,6 +48,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     private final KBCClient client;
     @Nullable
     private final AccessClassLoader parentClassLoader;
+    private File file;
 
     public SimplePluginClassLoader(KBCClient client, @Nullable AccessClassLoader parent) {
         super(new URL[0], parent != null ? null : SimplePluginManager.class.getClassLoader());
@@ -101,6 +102,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             if (parentClassLoader != null) {
                 parentClassLoader.addURL(file.toURI().toURL());
             }
+            this.file = file;
             Class<?> loadClass = this.loadClass(mainClassName, true);
             Class<? extends Plugin> main = loadClass.asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
@@ -124,6 +126,11 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     public final Class<?> findClass0(String name, boolean dontCallOther) throws ClassNotFoundException {
         if (cache.containsKey(name)) {
             return cache.get(name);
+        }
+        if (parentClassLoader != null && (name.startsWith("snw.kookbc.") || name.startsWith("snw.jkook"))) {
+            Class<?> clazz = parentClassLoader.findClass(name);
+            cache.put(name, clazz);
+            return clazz;
         }
         Throwable throwable = null;
         try {
@@ -186,7 +193,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     public void close() throws IOException {
         INSTANCES.remove(this);
         for (Class<?> clazz : cache.values()) {
-            if (ConfigurationSerializable.class.isAssignableFrom(clazz)) {
+            if (clazz.getClassLoader() == this && ConfigurationSerializable.class.isAssignableFrom(clazz)) {
                 //noinspection unchecked
                 ConfigurationSerialization.unregisterClass((Class<? extends ConfigurationSerializable>) clazz);
             }
