@@ -127,7 +127,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         if (cache.containsKey(name)) {
             return cache.get(name);
         }
-        if (parentClassLoader != null && (name.startsWith("snw.kookbc.") || name.startsWith("snw.jkook"))) {
+        if (parentClassLoader != null && (name.startsWith("snw.kookbc.") || name.startsWith("snw.jkook."))) {
             Class<?> clazz = parentClassLoader.findClass(name);
             cache.put(name, clazz);
             return clazz;
