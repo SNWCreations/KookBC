@@ -139,7 +139,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 cache.put(name, result);
                 return result;
             }
-        } catch (NoClassDefFoundError error) {
+        } catch (NoClassDefFoundError | ClassNotFoundException error) {
             throwable = error;
         }
 
