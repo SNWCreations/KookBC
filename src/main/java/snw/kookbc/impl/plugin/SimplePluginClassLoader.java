@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import snw.jkook.Core;
+import snw.jkook.config.serialization.ConfigurationSerializable;
+import snw.jkook.config.serialization.ConfigurationSerialization;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
@@ -95,9 +97,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         if (this.findLoadedClass(mainClassName) != null) {
             throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
         } else {
-            if (parentClassLoader == null) {
-                super.addURL(file.toURI().toURL());
-            } else {
+            super.addURL(file.toURI().toURL());
+            if (parentClassLoader != null) {
                 parentClassLoader.addURL(file.toURI().toURL());
             }
             Class<?> loadClass = this.loadClass(mainClassName, true);
@@ -112,10 +113,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        if (parentClassLoader == null) {
-            return super.loadClass(name, resolve);
-        }
-        return parentClassLoader.loadClass(name, resolve);
+        return super.loadClass(name, resolve);
     }
 
     @Override
@@ -128,7 +126,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             return cache.get(name);
         }
         try {
-            Class<?> result = parentClassLoader == null ? super.findClass(name) : parentClassLoader.findClass(name);
+            Class<?> result = super.findClass(name);
             if (result != null) {
                 cache.put(name, result);
                 return result;
@@ -148,6 +146,13 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     }
 
     protected Class<?> loadFromOther(String name) throws ClassNotFoundException {
+        try {
+            Class<?> clazz = parentClassLoader.findClass(name);
+            if (clazz != null) {
+                return clazz;
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
         for (SimplePluginClassLoader classLoader : INSTANCES) {
             if (classLoader == null) {
                 // Suggested by ChatGPT:
@@ -174,6 +179,12 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     @Override
     public void close() throws IOException {
         INSTANCES.remove(this);
+        for (Class<?> clazz : cache.values()) {
+            if (ConfigurationSerializable.class.isAssignableFrom(clazz)) {
+                //noinspection unchecked
+                ConfigurationSerialization.unregisterClass((Class<? extends ConfigurationSerializable>) clazz);
+            }
+        }
         super.close();
     }
 }

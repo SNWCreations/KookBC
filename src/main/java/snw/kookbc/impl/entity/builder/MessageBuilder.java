@@ -39,6 +39,8 @@ import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 
+import java.util.NoSuchElementException;
+
 import static snw.kookbc.util.GsonUtil.CARD_GSON;
 import static snw.kookbc.util.GsonUtil.get;
 
@@ -82,32 +84,80 @@ public class MessageBuilder {
 
     public PrivateMessage buildPrivateMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
-        JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
-        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
+        final JsonObject extra = get(object, "extra").getAsJsonObject();
+        JsonObject authorObj = get(extra, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")));
+        final JsonObject quote;
+        JsonObject quote1;
+        try {
+            quote1 = get(extra, "quote").getAsJsonObject();
+        } catch (NoSuchElementException e) {
+            quote1 = null;
+        }
+        quote = quote1;
+        if (quote == null) {
+            return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, null);
+        }
+        final String quoteId = get(quote, "rong_id").getAsString();
+        Message quoteObject;
+        Message quoteFromCache = client.getStorage().getMessage(quoteId);
+        if (quoteFromCache != null) {
+            quoteObject = quoteFromCache; // prevent resource leak
+        } else {
+            try {
+                quoteObject = client.getCore().getHttpAPI().getPrivateMessage(author, quoteId);
+            } catch (NoSuchElementException e) {
+                quoteObject = buildQuote(quote);
+            }
+        }
+
+        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject);
     }
 
     public TextChannelMessage buildTextChannelMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
-        JsonObject authorObj = object.getAsJsonObject("extra").getAsJsonObject("author");
-        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
+        final JsonObject extra = get(object, "extra").getAsJsonObject();
+        JsonObject authorObj = get(extra, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
         TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, buildQuote(object.getAsJsonObject("extra").getAsJsonObject("quote")), channel);
+        final JsonObject quote;
+        JsonObject quote1;
+        try {
+            quote1 = get(extra, "quote").getAsJsonObject();
+        } catch (NoSuchElementException e) {
+            quote1 = null;
+        }
+        quote = quote1;
+        if (quote == null) {
+            return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
+        }
+        final String quoteId = get(quote, "rong_id").getAsString();
+        Message quoteObject;
+        Message quoteFromCache = client.getStorage().getMessage(quoteId);
+        if (quoteFromCache != null) {
+            quoteObject = quoteFromCache; // prevent resource leak
+        } else {
+            try {
+                quoteObject = client.getCore().getHttpAPI().getTextChannelMessage(quoteId);
+            } catch (NoSuchElementException e) {
+                quoteObject = buildQuote(quote);
+            }
+        }
+
+        return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
     }
 
     public Message buildQuote(JsonObject object) {
         if (object == null) return null;
 
         String id = get(object, "rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
-        Message message = client.getStorage().getMessage(id);
-        if (message != null) return message; // prevent resource leak
 
         BaseComponent component = buildComponent(object);
         long timeStamp = get(object, "create_at").getAsLong();
-        JsonObject rawUser = object.getAsJsonObject("author");
-        User author = client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser);
+        JsonObject rawUser = get(object, "author").getAsJsonObject();
+        User author = client.getStorage().getUser(get(rawUser, "id").getAsString(), rawUser);
         return new QuoteImpl(component, id, author, timeStamp);
     }
 

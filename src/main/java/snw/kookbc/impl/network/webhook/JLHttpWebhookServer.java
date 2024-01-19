@@ -34,8 +34,9 @@ public class JLHttpWebhookServer implements WebhookServer {
     private final HTTPServer server;
     private String route;
 
-    public JLHttpWebhookServer(KBCClient client, int port, FrameHandler listener) {
+    public JLHttpWebhookServer(KBCClient client, String route, int port, FrameHandler listener) {
         this.client = client;
+        this.route = route;
         this.server = new HTTPServer(port);
         this.server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
         this.setHandler(new JLHttpRequestHandler(client, listener));

@@ -41,9 +41,15 @@ public class UserArgumentParser implements ArgumentParser<CommandSender, User> {
 
     @Override
     public @NonNull ArgumentParseResult<@NonNull User> parse(@NonNull CommandContext<@NonNull CommandSender> commandContext, @NonNull Queue<@NonNull String> inputQueue) {
-        final String input = inputQueue.peek();
+        String input = inputQueue.peek();
         if (input == null) {
             return ArgumentParseResult.failure(new NoInputProvidedException(UserArgumentParser.class, commandContext));
+        }
+        if (input.startsWith("(met)")) {
+            input = input.substring(5);
+        }
+        if (input.endsWith("(met)")) {
+            input = input.substring(0, input.length() - 5);
         }
         try {
             User user = client.getCore().getHttpAPI().getUser(input);

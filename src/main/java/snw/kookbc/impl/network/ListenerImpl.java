@@ -219,7 +219,7 @@ public class ListenerImpl implements FrameHandler {
 
         // execute command
         try {
-            return cmdMan.executeCommand(sender, cmdLine, msg);
+            return cmdMan.executeCommand(sender, cmdLine.trim(), msg);
         } catch (Exception e) {
             if (client.getConfig().getBoolean("allow-error-feedback", true)) {
                 // load plugin data
