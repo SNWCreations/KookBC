@@ -34,7 +34,8 @@ import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.internal.HelpCommand;
-import snw.kookbc.impl.command.internal.PluginsCommand;
+import snw.kookbc.impl.command.litecommands.LiteKookFactory;
+import snw.kookbc.impl.command.litecommands.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
@@ -515,10 +516,14 @@ public class KBCClient {
     }
 
     protected void registerPluginsCommand() {
-        new JKookCommand("plugins")
-                .setDescription("获取已安装到此 " + SharedConstants.IMPL_NAME + " 实例的插件列表。")
-                .setExecutor(new PluginsCommand(this))
-                .register(getInternalPlugin());
+//        new JKookCommand("plugins")
+//                .setDescription("获取已安装到此 " + SharedConstants.IMPL_NAME + " 实例的插件列表。")
+//                .setExecutor(new PluginsCommand(this))
+//                .register(getInternalPlugin());
+        LiteKookFactory.builder(getInternalPlugin())
+                .commands(new PluginsCommand(this))
+                .build()
+        ;
     }
 
     protected void registerHelpCommand() {

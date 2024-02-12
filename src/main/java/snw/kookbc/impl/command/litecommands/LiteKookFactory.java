@@ -24,8 +24,10 @@ import snw.jkook.Core;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
+import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.litecommands.tools.KookMessageContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyConsoleContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyUserContextual;
 
@@ -45,11 +47,14 @@ public class LiteKookFactory {
 
     @SuppressWarnings("unchecked")
     public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteBungeeSettings) {
-        return (B) LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteBungeeSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
-                .bind(Core.class, plugin::getCore)
-                .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
-                .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
+        return (B) new WrappedLiteCommandsBuilder<>(
+                LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteBungeeSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
+                        .bind(Core.class, plugin::getCore)
+                        .context(Message.class, new KookMessageContextual())
+                        .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
+                        .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
 
-                .result(String.class, new StringHandler());
+                        .result(String.class, new StringHandler())
+        );
     }
 }
