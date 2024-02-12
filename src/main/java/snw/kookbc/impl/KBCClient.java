@@ -32,8 +32,7 @@ import snw.jkook.plugin.PluginDescription;
 import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
-import snw.kookbc.impl.command.internal.CloudHelpCommand;
+import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.internal.PluginsCommand;
 import snw.kookbc.impl.console.Console;
@@ -129,7 +128,7 @@ public class KBCClient {
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
         /*Cloud*/
-        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> CloudCommandManagerImpl::new).apply(this);
+        this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> CommandManagerImpl::new).apply(this);
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> c -> new NetworkClient(c, token)).apply(this);
         this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> EntityBuilder::new).apply(this);
@@ -523,17 +522,12 @@ public class KBCClient {
     }
 
     protected void registerHelpCommand() {
-        if (core.getCommandManager() instanceof CloudCommandManagerImpl) {
-            ((CloudCommandManagerImpl) core.getCommandManager())
-                    .registerCloudCommand(internalPlugin, new CloudHelpCommand(this));
-        } else {
-            HelpCommand executor = new HelpCommand(this);
-            new JKookCommand("help")
-                    .setDescription("获取此帮助列表。")
-                    .executesUser(executor)
-                    .executesConsole(executor)
-                    .register(getInternalPlugin());
-        }
+        HelpCommand executor = new HelpCommand(this);
+        new JKookCommand("help")
+                .setDescription("获取此帮助列表。")
+                .executesUser(executor)
+                .executesConsole(executor)
+                .register(getInternalPlugin());
         this.core.getEventManager()
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
     }
