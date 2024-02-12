@@ -8,7 +8,7 @@
 | @CommandMethod("test") | @Command(name="test") |
 | @Argument              | @Arg                  |
 
-### 实例
+### 示例
 #### Cloud
 
 ```java
