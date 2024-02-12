@@ -300,7 +300,7 @@
             <version>${mixin.version}</version>
         </dependency>
 
-        <!--Command - LiteCommands-->
+        <!--Command - litecommands-->
         <dependency>
             <groupId>dev.rollczi</groupId>
             <artifactId>litecommands-framework</artifactId>
