@@ -31,12 +31,7 @@ class StringHandler implements ResultHandler<CommandSender, String> {
     @Override
     public void handle(Invocation<CommandSender> invocation, String result, ResultHandlerChain<CommandSender> chain) {
         CommandSender sender = invocation.sender();
-        Message message = null;
-        try {
-            message = invocation.context().get(Message.class).orElse(null);
-        } catch (NullPointerException ignored) {
-        }
-        // Core core = invocation.context().get(Core.class).orElseThrow(() -> new IllegalStateException("Core is not present"));
+        Message message = invocation.context().get(Message.class).orElse(null);
         if (sender instanceof User) {
             if (message != null) {
                 message.reply(result);

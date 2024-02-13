@@ -35,11 +35,7 @@ import java.util.Optional;
 public class KookMessageContextual implements ContextProvider<CommandSender, Message> {
     @Override
     public ContextResult<Message> provide(Invocation<CommandSender> invocation) {
-        Optional<Message> message = Optional.empty();
-        try {
-            message = invocation.context().get(Message.class);
-        } catch (NullPointerException ignored) {
-        }
+        Optional<Message> message = invocation.context().get(Message.class);
         if (message.isPresent()) {
             return ContextResult.ok(message::get);
         }
