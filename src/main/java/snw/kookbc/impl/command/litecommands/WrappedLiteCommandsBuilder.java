@@ -128,25 +128,24 @@ public class WrappedLiteCommandsBuilder<SENDER, SETTINGS extends PlatformSetting
         return self();
     }
 
-    @SuppressWarnings("unchecked")
-    protected B self() {
-        return ((B) delegate);
-    }
-
-
     @Override
-    public <T> B argumentParser(Class<T> type, Parser<SENDER, ?, T> parser) {
+    public <T> B argumentParser(Class<T> type, Parser<SENDER, T> parser) {
         return delegate.argumentParser(type, parser);
     }
 
     @Override
-    public <T> B argumentParser(Class<T> type, ArgumentKey key, Parser<SENDER, ?, T> parser) {
+    public <T> B argumentParser(Class<T> type, ArgumentKey key, Parser<SENDER, T> parser) {
         return delegate.argumentParser(type, key, parser);
     }
 
     @Override
-    public <T> B argumentParser(TypeRange<T> type, ArgumentKey key, Parser<SENDER, ?, T> parser) {
+    public <T> B argumentParser(TypeRange<T> type, ArgumentKey key, Parser<SENDER, T> parser) {
         return delegate.argumentParser(type, key, parser);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected B self() {
+        return ((B) delegate);
     }
 
     @Override
@@ -180,22 +179,22 @@ public class WrappedLiteCommandsBuilder<SENDER, SETTINGS extends PlatformSetting
     }
 
     @Override
-    public <T> B argument(Class<T> type, ArgumentResolverBase<SENDER, ?, T> resolver) {
+    public <T> B argument(Class<T> type, ArgumentResolverBase<SENDER, T> resolver) {
         return delegate.argument(type, resolver);
     }
 
     @Override
-    public <T> B argument(Class<T> type, ArgumentKey key, ArgumentResolverBase<SENDER, ?, T> resolver) {
+    public <T> B argument(Class<T> type, ArgumentKey key, ArgumentResolverBase<SENDER, T> resolver) {
         return delegate.argument(type, key, resolver);
     }
 
     @Override
-    public <T> B argument(TypeRange<T> type, ArgumentResolverBase<SENDER, ?, T> resolver) {
+    public <T> B argument(TypeRange<T> type, ArgumentResolverBase<SENDER, T> resolver) {
         return delegate.argument(type, resolver);
     }
 
     @Override
-    public <T> B argument(TypeRange<T> type, ArgumentKey key, ArgumentResolverBase<SENDER, ?, T> resolver) {
+    public <T> B argument(TypeRange<T> type, ArgumentKey key, ArgumentResolverBase<SENDER, T> resolver) {
         return delegate.argument(type, key, resolver);
     }
 
