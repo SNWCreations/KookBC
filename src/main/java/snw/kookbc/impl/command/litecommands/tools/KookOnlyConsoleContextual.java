@@ -23,20 +23,19 @@ import dev.rollczi.litecommands.context.ContextResult;
 import dev.rollczi.litecommands.invocation.Invocation;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
-import snw.jkook.entity.User;
 
 import java.util.function.Supplier;
 
 public class KookOnlyConsoleContextual<MESSAGE> implements ContextProvider<CommandSender, ConsoleCommandSender> {
 
-    private final Supplier<MESSAGE> onlyPlayerMessage;
+    private final Supplier<MESSAGE> onlyConsoleMessage;
 
-    public KookOnlyConsoleContextual(Supplier<MESSAGE> onlyPlayerMessage) {
-        this.onlyPlayerMessage = onlyPlayerMessage;
+    public KookOnlyConsoleContextual(Supplier<MESSAGE> onlyConsoleMessage) {
+        this.onlyConsoleMessage = onlyConsoleMessage;
     }
 
-    public KookOnlyConsoleContextual(MESSAGE onlyPlayerMessage) {
-        this(() -> onlyPlayerMessage);
+    public KookOnlyConsoleContextual(MESSAGE onlyConsoleMessage) {
+        this(() -> onlyConsoleMessage);
     }
 
     @Override
@@ -45,7 +44,7 @@ public class KookOnlyConsoleContextual<MESSAGE> implements ContextProvider<Comma
             return ContextResult.ok(() -> (ConsoleCommandSender) invocation.sender());
         }
 
-        return ContextResult.error(onlyPlayerMessage.get());
+        return ContextResult.error(onlyConsoleMessage.get());
     }
 
 }
