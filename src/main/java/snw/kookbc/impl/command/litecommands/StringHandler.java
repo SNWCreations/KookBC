@@ -37,7 +37,7 @@ class StringHandler implements ResultHandler<CommandSender, String> {
                 message.reply(result);
             }
         } else if (sender instanceof ConsoleCommandSender) {
-            ((ConsoleCommandSender) sender).getLogger().info("命令 {} 的执行结果: {}", invocation.name(), result);
+            ((ConsoleCommandSender) sender).getLogger().info("The execution result of command {}: {}", invocation.name(), result);
         } else {
             throw new IllegalStateException("Unknown sender type: " + sender.getClass().getName());
         }
