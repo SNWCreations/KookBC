@@ -65,6 +65,8 @@ public class LiteCommandsCompleter implements Completer {
                 }
             } else if (StringUtil.startsWithIgnoreCase(command.getRootName(), rootName)) {
                 result.add(command.getRootName());
+            } else if (command.getAliases().stream().anyMatch(alias -> StringUtil.startsWithIgnoreCase(alias, rootName))) {
+                result.add(command.getRootName());
             }
         }
         return result;
