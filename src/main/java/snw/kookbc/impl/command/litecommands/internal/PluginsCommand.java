@@ -26,7 +26,6 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.litecommands.annotations.prefix.Prefix;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

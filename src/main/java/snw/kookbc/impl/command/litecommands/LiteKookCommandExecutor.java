@@ -19,6 +19,7 @@
 package snw.kookbc.impl.command.litecommands;
 
 import dev.rollczi.litecommands.argument.parser.input.ParseableInput;
+import dev.rollczi.litecommands.argument.suggester.input.SuggestionInput;
 import dev.rollczi.litecommands.command.CommandRoute;
 import dev.rollczi.litecommands.invocation.Invocation;
 import dev.rollczi.litecommands.invocation.InvocationContext;
@@ -59,12 +60,26 @@ public class LiteKookCommandExecutor implements CommandExecutor {
     public void onCommand(CommandSender commandSender, Object[] objects, @Nullable Message message) {
         ParseableInput<?> input = ParseableInput.raw(Arrays.stream(objects).map(Object::toString).toArray(String[]::new));
         KookSender platformSender = new KookSender(commandSender);
-        InvocationContext invocationContext = InvocationContext.builder()
-                .put(Message.class, message)
-                .put(Core.class, core)
-                .build();
+        InvocationContext invocationContext = createContext(message);
         Invocation<CommandSender> invocation = new Invocation<>(commandSender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
 
         this.executeListener.execute(invocation, input);
+    }
+
+    public Iterable<String> getSuggestions(CommandSender sender, String[] args) {
+        SuggestionInput<?> input = SuggestionInput.raw(args);
+        KookSender platformSender = new KookSender(sender);
+        InvocationContext invocationContext = createContext(null);
+        Invocation<CommandSender> invocation = new Invocation<>(sender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
+
+        return this.suggestionListener.suggest(invocation, input)
+                .asMultiLevelList();
+    }
+
+    private InvocationContext createContext(@Nullable Message message) {
+        InvocationContext.Builder builder = InvocationContext.builder();
+        builder.put(Core.class, core)
+                .put(Message.class, message);
+        return builder.build();
     }
 }
