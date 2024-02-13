@@ -38,12 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class KookLitePlatform extends AbstractPlatform<CommandSender, LiteKookSettings> {
     public static final MetaKey<Set<String>> PREFIX = MetaKey.of("kookbc_prefix", MetaType.set(), new HashSet<>(Collections.singletonList("/")));
 

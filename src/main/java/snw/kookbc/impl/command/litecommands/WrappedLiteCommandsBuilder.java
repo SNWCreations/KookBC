@@ -59,12 +59,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class WrappedLiteCommandsBuilder<SENDER, SETTINGS extends PlatformSettings, B extends LiteCommandsBuilder<SENDER, SETTINGS, B>> implements LiteCommandsBuilder<SENDER, SETTINGS, B> {
     private LiteCommandsBuilder<SENDER, SETTINGS, B> delegate;
 

@@ -20,12 +20,6 @@ package snw.kookbc.impl.command.litecommands;
 
 import dev.rollczi.litecommands.platform.PlatformSettings;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class LiteKookSettings implements PlatformSettings {
     private boolean nativePermissions = false;
 

@@ -33,12 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * 2024/2/13<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class LiteCommandsCompleter implements Completer {
     private static final Pattern PATTERN_ON_SPACE = Pattern.compile(" ", Pattern.LITERAL);
     private final KBCClient client;

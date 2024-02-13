@@ -31,12 +31,6 @@ import snw.kookbc.impl.command.litecommands.tools.KookMessageContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyConsoleContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyUserContextual;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class LiteKookFactory {
     private LiteKookFactory() {
     }

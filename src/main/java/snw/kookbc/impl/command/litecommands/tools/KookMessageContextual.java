@@ -26,12 +26,6 @@ import snw.jkook.message.Message;
 
 import java.util.Optional;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class KookMessageContextual implements ContextProvider<CommandSender, Message> {
     @Override
     public ContextResult<Message> provide(Invocation<CommandSender> invocation) {

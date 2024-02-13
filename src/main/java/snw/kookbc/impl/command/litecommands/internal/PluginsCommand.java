@@ -30,12 +30,6 @@ import snw.kookbc.impl.KBCClient;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 @Command(name = "plugins")
 @Description({"获取已安装到此 KookBC 实例的插件列表。"})
 public class PluginsCommand {

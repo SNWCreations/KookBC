@@ -33,12 +33,6 @@ import snw.jkook.message.Message;
 
 import java.util.Arrays;
 
-/**
- * 2024/2/12<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class LiteKookCommandExecutor implements CommandExecutor {
     private final Core core;
     private final LiteKookSettings settings;
