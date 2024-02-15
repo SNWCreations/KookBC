@@ -70,5 +70,8 @@ internal-commands:
   help: true
   plugins: true
 
+# Allow reporting of unexpected messages received from remote
+allow-warn-old-message: true
+
 # Allow command exception feedback to the sender
 allow-error-feedback: true

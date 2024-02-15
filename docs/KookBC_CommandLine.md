@@ -25,8 +25,6 @@ java -jar kookbc-<version>.jar
 `-Dlog4j2.log.level`: 指定 Log4j2 的控制台日志级别，`latest.log` 和 `debug.log` 不受此项影响。
 * 例如 `-Dlog4j2.log.level=DEBUG` 使控制台可以显示 DEBUG 级别日志。
 
-`-Dkookbc.cloud`: 指定是否启用基于 Cloud 的命令系统。
-
 ### 启动入口
 
 KookBC 当前有两个主类。

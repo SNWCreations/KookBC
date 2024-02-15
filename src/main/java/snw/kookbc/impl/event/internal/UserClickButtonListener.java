@@ -16,7 +16,6 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.util.Arrays;
@@ -49,12 +48,7 @@ public final class UserClickButtonListener implements Listener {
             return;
         }
 
-        List<String> content;
-        if (client.getCore().getCommandManager() instanceof CloudCommandManagerImpl) {
-            content = Util.listCloudCommandsHelp(this.client, force);
-        } else {
-            content = Util.listCommandsHelp(this.client);
-        }
+        List<String> content = Util.listCommandsHelp(this.client);
         MultipleCardComponent finalComponent;
         if (content.isEmpty()) {
             finalComponent = new CardBuilder()

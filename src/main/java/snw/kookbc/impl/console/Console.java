@@ -23,6 +23,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.command.litecommands.internal.completer.LiteCommandsCompleter;
 
 import java.nio.file.Paths;
 
@@ -64,6 +65,6 @@ public class Console extends SimpleTerminalConsole {
         if (client.getConfig().getBoolean("save-console-history", true)) {
             builder.variable("history-file", Paths.get(".console_history"));
         }
-        return super.buildReader(builder);
+        return super.buildReader(builder.completer(new LiteCommandsCompleter(client)));
     }
 }

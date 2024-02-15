@@ -132,7 +132,7 @@ public class ListenerImpl implements FrameHandler {
                         }
                     } while (true);
                 }
-            } else {
+            } else if(client.getConfig().getBoolean("allow-warn-old-message")){
                 client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
             }
         }
