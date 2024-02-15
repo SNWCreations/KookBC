@@ -128,7 +128,6 @@ public class KBCClient {
         this.pluginsFolder = pluginsFolder;
         this.internalPlugin = new InternalPlugin(this);
         this.core.init(this);
-        /*Cloud*/
         this.commandManager = Optional.ofNullable(commandManager).orElseGet(() -> CommandManagerImpl::new).apply(this);
         this.networkClient = Optional.ofNullable(networkClient).orElseGet(() -> c -> new NetworkClient(c, token)).apply(this);
         this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
