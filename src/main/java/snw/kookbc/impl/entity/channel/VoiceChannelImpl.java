@@ -85,7 +85,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     @Override
     public void moveToHere(Collection<User> users) {
         Map<String, Object> body = new MapBuilder()
-                .put("target", getId())
+                .put("target_id", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
