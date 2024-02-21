@@ -91,7 +91,7 @@ JSON 处理库: Google GSON
 
 ## 版权
 
-Copyright (C) 2022 - 2023 KookBC contributors
+Copyright (C) 2022 - 2024 KookBC contributors
 
 在编写 Mixin 支持 的实现代码时引用了部分来自 Mixin 项目的源代码，以及 [LegacyLauncher](https://github.com/Mojang/LegacyLauncher) 项目的源代码，在此一并表示感谢。
 
