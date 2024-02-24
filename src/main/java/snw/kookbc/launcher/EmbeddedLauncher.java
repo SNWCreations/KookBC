@@ -73,12 +73,10 @@ public class EmbeddedLauncher extends Launcher {
         }
         JKook.setCore(core);
 
-        if (token == null) {
+        if (token == null || token.isEmpty()) {
             String configToken = config.getString("token");
             if (configToken != null && !configToken.isEmpty()) {
-                if (token == null || token.isEmpty()) {
-                    token = configToken;
-                }
+                token = configToken;
             } else {
                 throw new IllegalArgumentException("Token is not set");
             }
