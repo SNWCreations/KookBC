@@ -28,14 +28,15 @@ import snw.kookbc.impl.command.CommandManagerImpl;
 
 import java.io.File;
 
+@SuppressWarnings("unused")
 public class EmbeddedLauncher extends Launcher {
-    private String token;
-    private final YamlConfiguration config;
-    private final Logger logger;
-    private final File pluginsFolder;
+    protected String token;
+    protected final YamlConfiguration config;
+    protected final Logger logger;
+    protected final File pluginsFolder;
 
-    private KBCClient client;
-    private CoreImpl core;
+    protected KBCClient client;
+    protected CoreImpl core;
 
     public EmbeddedLauncher(@NotNull File configFile) {
         this(YamlConfiguration.loadConfiguration(configFile), null, null, null);
