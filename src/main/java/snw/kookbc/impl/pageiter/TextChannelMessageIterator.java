@@ -78,14 +78,17 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
         JsonObject authorObj = object.getAsJsonObject("author");
         User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
         BaseComponent component = client.getMessageBuilder().buildComponent(object);
+        JsonElement quoteElement = object.get("quote");
+        Message quote = quoteElement != null && !quoteElement.isJsonNull() ? client.getMessageBuilder().buildQuote(quoteElement.getAsJsonObject()) : null;
         return new TextChannelMessageImpl(
                 client,
                 id,
                 author,
                 component,
                 timeStamp,
-                client.getMessageBuilder().buildQuote(object.getAsJsonObject("quote")),
+                quote,
                 channel
         );
     }
+
 }
