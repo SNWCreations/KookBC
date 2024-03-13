@@ -52,7 +52,7 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     @Override
     protected String getRequestURL() {
-        return String.format("%s?target_id=%s%s&pin=%s&flag=%s&page_size=%s", HttpAPIRoute.CHANNEL_MESSAGE_QUERY.toFullURL(), channel.getId(), ((refer != null) ? String.format("&msg_id=%s", "refer") : ""), (isPin ? 1 : 0), queryMode, getPageSize());
+        return String.format("%s?target_id=%s%s&pin=%s&flag=%s&page_size=%s", HttpAPIRoute.CHANNEL_MESSAGE_QUERY.toFullURL(), channel.getId(), ((refer != null) ? String.format("&msg_id=%s", refer) : ""), (isPin ? 1 : 0), queryMode, getPageSize());
     }
 
     @Override
