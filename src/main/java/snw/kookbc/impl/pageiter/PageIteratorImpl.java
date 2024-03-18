@@ -19,19 +19,23 @@
 package snw.kookbc.impl.pageiter;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Range;
+import snw.jkook.util.Meta;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class PageIteratorImpl<E> implements PageIterator<E> {
     protected final KBCClient client;
     protected E object;
     protected final AtomicInteger currentPage = new AtomicInteger(1);
+    private Optional<Meta> optionalMeta = Optional.empty();
     private int pageSizePerRequest = 20;
     private boolean executedOnce = false;
     private boolean next = true;
@@ -53,11 +57,20 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         JsonObject object = client.getNetworkClient().get(
                 reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.get() + "&page_size=" + getPageSize()
         );
-        JsonObject meta = object.getAsJsonObject("meta");
-        next = currentPage.getAndAdd(1) <= meta.get("page_total").getAsInt();
-        if (next) {
-            processElements(object.getAsJsonArray("items"));
+
+
+        JsonElement meta = object.get("meta");
+        if (meta != null && !meta.isJsonNull()) {
+            JsonObject metaAsJsonObject = meta.getAsJsonObject();
+            optionalMeta = Optional.of(new MetaImpl(metaAsJsonObject.get("page").getAsInt(),
+                    metaAsJsonObject.get("page_total").getAsInt(),
+                    metaAsJsonObject.get("page_size").getAsInt(),
+                    metaAsJsonObject.get("total").getAsInt()));
+            next = currentPage.getAndAdd(1) <= optionalMeta.get().getPageTotal();
+        } else {
+            next = false;
         }
+        processElements(object.getAsJsonArray("items"));
         return next;
     }
 
@@ -80,6 +93,11 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
     public void setPageSize(@Range(from = 50L, to = 100L) int size) {
         Validate.isTrue(!executedOnce, "You can't set the page size for this iterator again.");
         this.pageSizePerRequest = size;
+    }
+
+    @Override
+    public Optional<Meta> getMeta() {
+        return optionalMeta;
     }
 
     protected abstract String getRequestURL();
