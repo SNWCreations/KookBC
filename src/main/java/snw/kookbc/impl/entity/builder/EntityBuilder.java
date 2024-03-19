@@ -145,6 +145,7 @@ public class EntityBuilder {
             } else if (type == 2) { // VoiceChannel
                 boolean hasPassword = object.has("has_password") && get(object, "has_password").getAsBoolean();
                 int size = get(object, "limit_amount").getAsInt();
+                int quality = get(object, "voice_quality").getAsInt();
                 return new VoiceChannelImpl(
                         client,
                         id,
@@ -157,7 +158,8 @@ public class EntityBuilder {
                         upo,
                         level,
                         hasPassword,
-                        size
+                        size,
+                        quality
                 );
             }
         }
