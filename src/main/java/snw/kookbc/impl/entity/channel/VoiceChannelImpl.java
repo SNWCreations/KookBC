@@ -93,21 +93,6 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         client.getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
     }
 
-    @Override
-    public int getQuality() {
-        return quality;
-    }
-
-    @Override
-    public void setQuality(int i) {
-        Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .put("voice_quality", i)
-                .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        this.setMaxSize(i);
-    }
-
     public void setPasswordProtected(boolean passwordProtected) {
         this.passwordProtected = passwordProtected;
     }
