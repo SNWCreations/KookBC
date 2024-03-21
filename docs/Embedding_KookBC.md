@@ -63,7 +63,7 @@
 它有两个构造方法:
 
 * `CoreImpl()`
-* `Coreimpl(org.slf4j.Logger)`
+* `CoreImpl(org.slf4j.Logger)`
 
 一般情况下，我们推荐前者，因为前者默认使用 `org.slf4j.helpers.NOPLogger` 作为 Logger 。`NOPLogger` 使日志不会输出。
 

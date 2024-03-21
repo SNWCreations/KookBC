@@ -1,0 +1,57 @@
+/*
+ *     KookBC -- The Kook Bot Client & JKook API standard implementation for Java.
+ *     Copyright (C) 2022 - 2023 KookBC contributors
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Affero General Public License as published
+ *     by the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Affero General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Affero General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package snw.kookbc.impl.command.litecommands.argument;
+
+import dev.rollczi.litecommands.argument.Argument;
+import dev.rollczi.litecommands.argument.parser.ParseResult;
+import dev.rollczi.litecommands.argument.resolver.ArgumentResolver;
+import dev.rollczi.litecommands.invocation.Invocation;
+import dev.rollczi.litecommands.suggestion.SuggestionContext;
+import dev.rollczi.litecommands.suggestion.SuggestionResult;
+import snw.jkook.HttpAPI;
+import snw.jkook.command.CommandException;
+import snw.jkook.command.CommandSender;
+import snw.jkook.entity.Guild;
+
+public class GuildArgument extends ArgumentResolver<CommandSender, Guild> {
+    private final HttpAPI httpAPI;
+
+    public GuildArgument(HttpAPI httpAPI) {
+        this.httpAPI = httpAPI;
+    }
+
+    @Override
+    protected ParseResult<Guild> parse(Invocation<CommandSender> invocation, Argument<Guild> context, String argument) {
+        String input = argument;
+        try {
+            Guild guild = httpAPI.getGuild(input);
+            if (guild == null) {
+                return ParseResult.failure(new CommandException("Guild not found"));
+            }
+            return ParseResult.success(guild);
+        } catch (final Exception e) {
+            return ParseResult.failure(new CommandException("Guild not found"));
+        }
+    }
+
+    @Override
+    public SuggestionResult suggest(Invocation<CommandSender> invocation, Argument<Guild> argument, SuggestionContext context) {
+        return super.suggest(invocation, argument, context);
+    }
+}

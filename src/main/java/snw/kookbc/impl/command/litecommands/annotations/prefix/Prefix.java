@@ -15,24 +15,17 @@
  *     You should have received a copy of the GNU Affero General Public License
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package snw.kookbc.impl.command.cloud;
 
-import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.arguments.parser.ParserParameters;
-import cloud.commandframework.meta.CommandMeta;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
-import snw.jkook.command.CommandSender;
+package snw.kookbc.impl.command.litecommands.annotations.prefix;
 
-import java.util.function.Function;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * @author huanmeng_qwq
- */
-public interface CloudCommandBuilder {
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
+public @interface Prefix {
 
-    static @NotNull AnnotationParser<CommandSender> createParser(@NotNull CloudBasedCommandManager commandManager,
-                                                                 @NotNull Function<@NonNull ParserParameters, @NonNull CommandMeta> metaMapper) {
-        return new AnnotationParser<>(commandManager, CommandSender.class, metaMapper);
-    }
+    String[] value() default {"/"};
 }

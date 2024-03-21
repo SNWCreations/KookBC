@@ -163,8 +163,7 @@ public class Main extends Launcher {
 
         CoreImpl core = new CoreImpl(logger);
         JKook.setCore(core);
-        KBCClient client = new KBCClient(core, config, pluginsFolder, token,
-                parseBoolean(System.getProperty("kookbc.cloud", "true")) ? null : CommandManagerImpl::new,
+        KBCClient client = new KBCClient(core, config, pluginsFolder, token, CommandManagerImpl::new,
                 null, null, null, null, null, null);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.

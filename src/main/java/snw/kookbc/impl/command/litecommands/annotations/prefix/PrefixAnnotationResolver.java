@@ -16,18 +16,22 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.command.cloud.annotations;
+package snw.kookbc.impl.command.litecommands.annotations.prefix;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import dev.rollczi.litecommands.annotations.AnnotationInvoker;
+import dev.rollczi.litecommands.annotations.AnnotationProcessor;
+import snw.kookbc.impl.command.litecommands.KookLitePlatform;
 
-/**
- * @author huanmeng_qwq
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.TYPE})
-public @interface CommandPrefix {
-    String[] value() default {};
+import java.util.Arrays;
+import java.util.HashSet;
+
+public class PrefixAnnotationResolver<SENDER> implements AnnotationProcessor<SENDER> {
+    @Override
+    public AnnotationInvoker<SENDER> process(AnnotationInvoker<SENDER> invoker) {
+        return invoker.on(Prefix.class, (annotation, metaHolder) -> {
+            metaHolder.meta().put(KookLitePlatform.PREFIX, new HashSet<>(Arrays.asList(annotation.value())));
+        });
+    }
+
 }
+

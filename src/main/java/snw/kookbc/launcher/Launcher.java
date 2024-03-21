@@ -1,11 +1,5 @@
 package snw.kookbc.launcher;
 
-/**
- * 2023/7/17<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public abstract class Launcher {
     private static Launcher launcher;
 

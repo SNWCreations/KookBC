@@ -16,7 +16,6 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 import snw.jkook.message.component.card.module.*;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 import snw.kookbc.util.Util;
 
 import java.util.Arrays;
@@ -34,7 +33,7 @@ public final class UserClickButtonListener implements Listener {
         this.client = client;
     }
 
-    @EventHandler
+    @EventHandler(internal = true)
     public void event(UserClickButtonEvent event) {
         String value = event.getValue();
         if (!value.startsWith(HELP_VALUE_HEADER)) {
@@ -44,17 +43,11 @@ public final class UserClickButtonListener implements Listener {
         int page = detail.get("page").getAsInt();
         int currentPage = detail.get("current").getAsInt();
         String messageType = detail.get("messageType").getAsString();
-        boolean force = detail.has("force") && detail.get("force").getAsBoolean();
         if (page == currentPage) {
             return;
         }
 
-        List<String> content;
-        if (client.getCore().getCommandManager() instanceof CloudCommandManagerImpl) {
-            content = Util.listCloudCommandsHelp(this.client, force);
-        } else {
-            content = Util.listCommandsHelp(this.client);
-        }
+        List<String> content = Util.listCommandsHelp(this.client);
         MultipleCardComponent finalComponent;
         if (content.isEmpty()) {
             finalComponent = new CardBuilder()
@@ -123,7 +116,6 @@ public final class UserClickButtonListener implements Listener {
 
         if (messageType.equals("PM")) {
             Message message = this.client.getCore().getUnsafe().getPrivateMessage(event.getMessageId());
-            ;
             message.setComponent(finalComponent);
         } else if (messageType.equals("CM")) {
             Message message = this.client.getCore().getUnsafe().getTextChannelMessage(event.getMessageId());

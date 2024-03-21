@@ -16,18 +16,24 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.command.cloud.annotations;
+package snw.kookbc.impl.command.litecommands.tools;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import dev.rollczi.litecommands.context.ContextProvider;
+import dev.rollczi.litecommands.context.ContextResult;
+import dev.rollczi.litecommands.invocation.Invocation;
+import snw.jkook.command.CommandSender;
+import snw.jkook.message.Message;
 
-/**
- * @author huanmeng_qwq
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
-public @interface CommandHelpContent {
-    String[] value() default {};
+import java.util.Optional;
+
+public class KookMessageContextual implements ContextProvider<CommandSender, Message> {
+    @Override
+    public ContextResult<Message> provide(Invocation<CommandSender> invocation) {
+        Optional<Message> message = invocation.context().get(Message.class);
+        if (message.isPresent()) {
+            return ContextResult.ok(message::get);
+        }
+
+        return ContextResult.ok(() -> null);
+    }
 }

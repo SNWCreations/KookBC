@@ -27,8 +27,6 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.kookbc.impl.command.cloud.CloudCommandInfo;
-import snw.kookbc.impl.command.cloud.CloudCommandManagerImpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -173,19 +171,6 @@ public class Util {
         return result;
     }
 
-    public static List<String> listCloudCommandsHelp(KBCClient client, boolean force) {
-        List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
-
-        List<String> result = new LinkedList<>();
-        for (CloudCommandInfo command : commandsInfo) {
-            if (!force && (command.owningPlugin() == null || !command.owningPlugin().isEnabled() || command.hidden())) {
-                continue;
-            }
-            insertCommandHelpContent(result, command.syntax(), Arrays.asList(command.prefixes()), command.description());
-        }
-        return result;
-    }
-
     private static void insertCommandHelpContent(List<String> result, String rootName, Collection<String> prefixes, String description) {
         result.add(
                 limit(
@@ -208,23 +193,6 @@ public class Util {
                 return null;
             }
             return command.getCommand();
-        } else {
-            return null;
-        }
-    }
-
-    public static CloudCommandInfo findSpecificCloudCommand(KBCClient client, String name) {
-        List<CloudCommandInfo> commandsInfo = ((CloudCommandManagerImpl) client.getCore().getCommandManager()).getCommandsInfo();
-        if (!isBlank(name) && !name.equalsIgnoreCase("all")) {
-            return commandsInfo.stream()
-                    .filter(info ->
-                            info.rootName().equalsIgnoreCase(name) ||
-                                    info.syntax().equalsIgnoreCase(name) ||
-                                    Arrays.stream(info.aliases())
-                                            .anyMatch(
-                                                    alias -> alias.equalsIgnoreCase(name)
-                                            )
-                    ).findFirst().orElse(null);
         } else {
             return null;
         }

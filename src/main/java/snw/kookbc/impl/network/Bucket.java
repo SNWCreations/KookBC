@@ -163,5 +163,11 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE, "game/delete");
         bucketNameMap.put(HttpAPIRoute.GAME_CREATE_ACTIVITY, "game/activity");
         bucketNameMap.put(HttpAPIRoute.GAME_DELETE_ACTIVITY, "game/delete-activity");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_HANDLE_REQUEST, "friend/handle-request");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_REQUEST, "friend/request");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_DELETE, "friend/delete");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_LIST, "friend");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_BLOCK, "friend/block");
+        bucketNameMap.put(HttpAPIRoute.FRIEND_UNBLOCK, "friend/unblock");
     }
 }

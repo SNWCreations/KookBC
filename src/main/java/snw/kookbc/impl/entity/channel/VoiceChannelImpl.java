@@ -38,11 +38,13 @@ import static snw.kookbc.util.GsonUtil.has;
 public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
+    private int quality;
 
-    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize) {
+    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize, int quality) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;
+        this.quality = quality;
     }
 
     @Override
@@ -85,10 +87,25 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     @Override
     public void moveToHere(Collection<User> users) {
         Map<String, Object> body = new MapBuilder()
-                .put("target", getId())
+                .put("target_id", getId())
                 .put("user_ids", users.stream().map(User::getId).toArray(String[]::new))
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.MOVE_USER.toFullURL(), body);
+    }
+
+    @Override
+    public int getQuality() {
+        return quality;
+    }
+
+    @Override
+    public void setQuality(int i) {
+        Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("voice_quality", i)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.setMaxSize(i);
     }
 
     public void setPasswordProtected(boolean passwordProtected) {
