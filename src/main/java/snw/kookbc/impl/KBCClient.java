@@ -54,6 +54,7 @@ import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
+import snw.kookbc.util.DependencyListBasedPluginComparator;
 import snw.kookbc.util.ReturnNotNullFunction;
 
 import java.io.File;
@@ -225,6 +226,8 @@ public class KBCClient {
         registerInternal();
         getCore().getLogger().debug("Enabling plugins");
         enablePlugins();
+        getCore().getLogger().info("Running delayed init tasks");
+        ((SchedulerImpl) core.getScheduler()).runAfterPluginInitTasks();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
@@ -236,21 +239,15 @@ public class KBCClient {
     }
 
     protected void loadAllPlugins() {
+        final File pluginsFolder = getPluginsFolder();
         if (pluginsFolder == null) {
             return; // If you just want to use JKook API?
         }
         if (plugins != null) {
             return;
         }
-        List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(getPluginsFolder())));
-        //noinspection ComparatorMethodParameterNotUsed
-        plugins.sort(
-                (o1, o2) ->
-                        (o1.getDescription().getDepend().contains(o2.getDescription().getName())
-                                ||
-                                o1.getDescription().getSoftDepend().contains(o2.getDescription().getName()))
-                                ? 1 : -1
-        );
+        List<Plugin> plugins = new LinkedList<>(Arrays.asList(getCore().getPluginManager().loadPlugins(pluginsFolder)));
+        plugins.sort(DependencyListBasedPluginComparator.INSTANCE);
 
         this.plugins = plugins;
     }
@@ -301,6 +298,7 @@ public class KBCClient {
                     }
                     getCore().getLogger().debug("New plugins to be enabled in next round: {}", newPlugins);
                     if (!newPlugins.isEmpty()) {
+                        newPlugins.sort(DependencyListBasedPluginComparator.INSTANCE);
                         pluginsToEnable = newPlugins;
                         shouldContinue = true;
                     }
