@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.jar.JarFile;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
@@ -254,11 +253,6 @@ public class SimplePluginManager implements PluginManager {
         Validate.notNull(predicate, "Predicate cannot be null");
         Validate.notNull(provider, "Provider cannot be null");
         loaderMap.put(predicate, provider);
-    }
-
-    @Override
-    public void registerPluginDescriptionResolver(Predicate<File> condition, Supplier<PluginDescriptionResolver> resolverSupplier) {
-        // WIP
     }
 
     protected PluginLoader createPluginLoader(@Nullable ClassLoader parent) {

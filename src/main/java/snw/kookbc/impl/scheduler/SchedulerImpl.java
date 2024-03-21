@@ -80,16 +80,6 @@ public class SchedulerImpl implements Scheduler {
     }
 
     @Override
-    public Task scheduleAfterPluginInitTask(Plugin plugin, Runnable runnable) throws IllegalStateException {
-        // WIP
-        ensurePluginEnabled(plugin);
-        int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.submit(runnable), id, plugin);
-        scheduledTasks.put(id, task);
-        return task;
-    }
-
-    @Override
     public boolean isScheduled(int taskId) {
         return scheduledTasks.containsKey(taskId);
     }
