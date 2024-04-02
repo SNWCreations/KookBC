@@ -118,7 +118,7 @@ public final class UserClickButtonListener implements Listener {
             Message message = this.client.getCore().getUnsafe().getPrivateMessage(event.getMessageId());
             message.setComponent(finalComponent);
         } else if (messageType.equals("CM")) {
-            Message message = this.client.getCore().getUnsafe().getTextChannelMessage(event.getMessageId());
+            Message message = this.client.getCore().getUnsafe().getChannelMessage(event.getMessageId());
             message.setComponent(finalComponent);
         }
 

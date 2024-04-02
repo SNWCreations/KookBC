@@ -21,6 +21,7 @@ package snw.kookbc.impl.serializer.event.user;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.user.UserClickButtonEvent;
 import snw.kookbc.impl.KBCClient;
@@ -47,7 +48,7 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
                 Objects.equals(
                         get(body, "user_id").getAsString(),
                         get(body, "target_id").getAsString()
-                ) ? null : (TextChannel) client.getStorage().getChannel(get(body, "target_id").getAsString())
+                ) ? null : (NonCategoryChannel) client.getStorage().getChannel(get(body, "target_id").getAsString())
         );
     }
 

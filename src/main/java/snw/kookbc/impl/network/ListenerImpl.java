@@ -21,6 +21,7 @@ package snw.kookbc.impl.network;
 import com.google.gson.JsonObject;
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Event;
 import snw.jkook.event.channel.ChannelMessageEvent;
@@ -193,7 +194,7 @@ public class ListenerImpl implements FrameHandler {
         // region extract data
         User sender;
         Message msg;
-        TextChannel channel = null;
+        NonCategoryChannel channel = null;
         BaseComponent baseComponent; // raw
         TextComponent component = null;
         if (event instanceof ChannelMessageEvent) {

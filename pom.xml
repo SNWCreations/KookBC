@@ -189,10 +189,15 @@
     </repositories>
 
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>com.github.SNWCreations</groupId>-->
+<!--            <artifactId>JKook</artifactId>-->
+<!--            <version>${jkook.version}</version>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>com.github.SNWCreations</groupId>
+            <groupId>com.github.xiaoACE6716</groupId>
             <artifactId>JKook</artifactId>
-            <version>${jkook.version}</version>
+            <version>52580941dc</version>
         </dependency>
 
         <!--
