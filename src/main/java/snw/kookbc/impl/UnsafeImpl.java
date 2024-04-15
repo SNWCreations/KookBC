@@ -23,10 +23,12 @@ import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Game;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.PrivateMessage;
+import snw.jkook.message.TextChannelMessage;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
 import snw.kookbc.impl.entity.GameImpl;
 import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
+import snw.kookbc.impl.message.TextChannelMessageImpl;
 
 // Wait! Are you sure you want to this? This can cause RESOURCE LEAK! Beware.
 // But also, this is useful in some situations.
@@ -36,6 +38,12 @@ public class UnsafeImpl implements Unsafe {
 
     public UnsafeImpl(KBCClient client) {
         this.client = client;
+    }
+
+
+    @Override
+    public TextChannelMessage getTextChannelMessage(String id) {
+        return new TextChannelMessageImpl(client, id, null, null, -1, null, null);
     }
 
     @Override
