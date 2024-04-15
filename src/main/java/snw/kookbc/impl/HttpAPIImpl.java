@@ -31,12 +31,15 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -249,6 +252,34 @@ public class HttpAPIImpl implements HttpAPI {
         }
         final TextChannel channel = (TextChannel) getChannel(get(object, "channel_id").getAsString());
         return new TextChannelMessageImpl(client, id, sender, component, timeStamp, quote, channel);
+    }
+
+    @Override
+    public ChannelMessage getChannelMessage(String id) throws NoSuchElementException {
+        final JsonObject object;
+        try {
+            object = client.getNetworkClient()
+                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
+        } catch (BadResponseException e) {
+            if (e.getCode() == 40000) {
+                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
+                        new NoSuchElementException("No message object with provided ID " + id + " found")
+                                .initCause(e);
+            }
+            throw e;
+        }
+        JsonObject rawSender = get(object, "author").getAsJsonObject();
+        User sender = client.getStorage().getUser(get(rawSender, "id").getAsString(), rawSender);
+        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
+        long timeStamp = get(object, "create_at").getAsLong();
+        ChannelMessage quote = null;
+        if (has(object, "quote")) {
+            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
+            final String quoteId = get(rawQuote, "id").getAsString();
+            quote = getChannelMessage(quoteId);
+        }
+        final NonCategoryChannel channel = (NonCategoryChannel) getChannel(get(object, "channel_id").getAsString());
+        return new ChannelMessageImpl(client, id, sender, component, timeStamp, quote, channel);
     }
 
     @Override

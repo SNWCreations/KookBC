@@ -21,10 +21,12 @@ package snw.kookbc.impl;
 import snw.jkook.Unsafe;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Game;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
 import snw.kookbc.impl.entity.GameImpl;
+import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 
@@ -38,9 +40,15 @@ public class UnsafeImpl implements Unsafe {
         this.client = client;
     }
 
+
     @Override
     public TextChannelMessage getTextChannelMessage(String id) {
         return new TextChannelMessageImpl(client, id, null, null, -1, null, null);
+    }
+
+    @Override
+    public ChannelMessage getChannelMessage(String id) {
+        return new ChannelMessageImpl(client, id, null, null, -1, null, null);
     }
 
     @Override

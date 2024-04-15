@@ -22,7 +22,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import snw.jkook.event.channel.ChannelMessageEvent;
-import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.ChannelMessage;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
 
@@ -36,11 +36,11 @@ public class ChannelMessageEventDeserializer extends BaseEventDeserializer<Chann
 
     @Override
     protected ChannelMessageEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        TextChannelMessage textChannelMessage = client.getMessageBuilder().buildTextChannelMessage(object);
+        ChannelMessage ChannelMessage = client.getMessageBuilder().buildChannelMessage(object);
         return new ChannelMessageEvent(
-                textChannelMessage.getTimeStamp(),
-                textChannelMessage.getChannel(),
-                textChannelMessage
+                ChannelMessage.getTimeStamp(),
+                ChannelMessage.getChannel(),
+                ChannelMessage
         );
     }
 

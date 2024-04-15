@@ -143,6 +143,7 @@ public class EntityBuilder {
                         topic
                 );
             } else if (type == 2) { // VoiceChannel
+                int chatLimitTime = get(object, "slow_mode").getAsInt();
                 boolean hasPassword = object.has("has_password") && get(object, "has_password").getAsBoolean();
                 int size = get(object, "limit_amount").getAsInt();
                 int quality = get(object, "voice_quality").getAsInt();
@@ -159,7 +160,8 @@ public class EntityBuilder {
                         level,
                         hasPassword,
                         size,
-                        quality
+                        quality,
+                        chatLimitTime
                 );
             }
         }

@@ -21,7 +21,10 @@ package snw.kookbc.impl.entity.builder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
@@ -35,6 +38,7 @@ import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.QuoteImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
@@ -115,12 +119,12 @@ public class MessageBuilder {
         return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject);
     }
 
-    public TextChannelMessage buildTextChannelMessage(JsonObject object) {
+    public ChannelMessage buildChannelMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
         final JsonObject extra = get(object, "extra").getAsJsonObject();
         JsonObject authorObj = get(extra, "author").getAsJsonObject();
         User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
-        TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+        Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
         long timeStamp = get(object, "msg_timestamp").getAsLong();
         final JsonObject quote;
         JsonObject quote1;
@@ -131,22 +135,22 @@ public class MessageBuilder {
         }
         quote = quote1;
         if (quote == null) {
-            return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
+            return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, (NonCategoryChannel) channel);
         }
         final String quoteId = get(quote, "rong_id").getAsString();
         Message quoteObject;
-        Message quoteFromCache = client.getStorage().getMessage(quoteId);
-        if (quoteFromCache != null) {
-            quoteObject = quoteFromCache; // prevent resource leak
+        Message quoteFormCache = client.getStorage().getMessage(quoteId);
+        if (quoteFormCache != null) {
+            quoteObject = quoteFormCache;
         } else {
             try {
-                quoteObject = client.getCore().getHttpAPI().getTextChannelMessage(quoteId);
+                quoteObject = client.getCore().getHttpAPI().getChannelMessage(quoteId);
             } catch (NoSuchElementException e) {
                 quoteObject = buildQuote(quote);
             }
         }
 
-        return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
+        return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, (NonCategoryChannel) channel);
     }
 
     public Message buildQuote(JsonObject object) {

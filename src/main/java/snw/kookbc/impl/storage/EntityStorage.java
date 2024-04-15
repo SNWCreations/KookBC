@@ -25,6 +25,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
