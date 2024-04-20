@@ -43,7 +43,17 @@ public class RoleImpl implements Role, Updatable {
     private boolean hoist;
     private String name;
 
-    public RoleImpl(KBCClient client, Guild guild, int id, int color, int position, int permSum, boolean mentionable, boolean hoist, String name) {
+    public RoleImpl(
+            KBCClient client,
+            Guild guild,
+            int id,
+            int color,
+            int position,
+            int permSum,
+            boolean mentionable,
+            boolean hoist,
+            String name
+    ) {
         this.client = client;
         this.guild = guild;
         this.id = id;

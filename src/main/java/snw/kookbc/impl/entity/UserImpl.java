@@ -54,14 +54,16 @@ public class UserImpl implements User, Updatable {
     private String avatarUrl;
     private String vipAvatarUrl;
 
-    public UserImpl(KBCClient client, String id,
-                    boolean bot,
-                    String name,
-                    String avatarUrl,
-                    String vipAvatarUrl,
-                    int identify,
-                    boolean ban,
-                    boolean vip) {
+    public UserImpl(
+            KBCClient client, String id,
+            boolean bot,
+            String name,
+            String avatarUrl,
+            String vipAvatarUrl,
+            int identify,
+            boolean ban,
+            boolean vip
+    ) {
         this.client = client;
         this.id = id;
         this.bot = bot;

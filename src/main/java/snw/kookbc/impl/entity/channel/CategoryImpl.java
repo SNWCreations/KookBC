@@ -20,8 +20,6 @@ package snw.kookbc.impl.entity.channel;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
@@ -35,8 +33,18 @@ import static snw.kookbc.util.GsonUtil.get;
 
 public class CategoryImpl extends ChannelImpl implements Category {
 
-    public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
-        super(client, id, master, guild, permSync, name, rpo, upo, level);
+    public CategoryImpl(
+            KBCClient client,
+            String id,
+            String masterId,
+            String guildId,
+            boolean permSync,
+            Collection<RolePermissionOverwrite> rpo,
+            Collection<UserPermissionOverwrite> upo,
+            int level,
+            String name
+    ) {
+        super(client, id, masterId, guildId, permSync, name, rpo, upo, level);
     }
 
     @Override

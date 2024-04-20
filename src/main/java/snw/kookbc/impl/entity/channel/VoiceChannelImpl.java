@@ -22,7 +22,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.VoiceChannel;
@@ -40,8 +39,22 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     private int maxSize;
     private int quality;
 
-    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize, int quality) {
-        super(client, id, master, guild, permSync, parent, name, rpo, upo, level);
+    public VoiceChannelImpl(
+            KBCClient client,
+            String id,
+            String masterId,
+            String guildId,
+            boolean permSync,
+            Category parent,
+            String name,
+            Collection<RolePermissionOverwrite> rpo,
+            Collection<UserPermissionOverwrite> upo,
+            int level,
+            boolean passwordProtected,
+            int maxSize,
+            int quality
+    ) {
+        super(client, id, masterId, guildId, permSync, parent, name, rpo, upo, level);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;
         this.quality = quality;

@@ -53,28 +53,32 @@ public class GuildImpl implements Guild, Updatable {
     private final KBCClient client;
     private final String id;
     private NotifyType notifyType;
-    private String ownerId;
-    private final AtomicReference<User> owner = new AtomicReference<>();
+    private String masterId;
     private String name;
     private boolean public_; // I know Guild owner can turn this to false,
     // but I don't have internal events to listen for that!
     private String region;
     private String avatarUrl; // no vipAvatar here!
 
-    public GuildImpl(KBCClient client, String id,
-                     String name,
-                     boolean isPublic,
-                     String region,
-                     String ownerId,
-                     NotifyType notifyType,
-                     String avatarUrl
+    /* Lazy Load */
+    private final AtomicReference<User> master = new AtomicReference<>();
+
+    public GuildImpl(
+            KBCClient client,
+            String id,
+            String name,
+            boolean isPublic,
+            String region,
+            String masterId,
+            NotifyType notifyType,
+            String avatarUrl
     ) {
         this.client = client;
         this.id = id;
         this.name = name;
         this.public_ = isPublic;
         this.region = region;
-        this.ownerId = ownerId;
+        this.masterId = masterId;
         this.notifyType = notifyType;
         this.avatarUrl = avatarUrl;
     }
@@ -334,9 +338,9 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public User getMaster() {
-        return owner.updateAndGet(obj -> {
-            if (obj == null || !ownerId.equals(obj.getId())) {
-                return client.getStorage().getUser(ownerId);
+        return master.updateAndGet(obj -> {
+            if (obj == null || !masterId.equals(obj.getId())) {
+                return client.getStorage().getUser(masterId);
             }
             return obj;
         });
@@ -371,7 +375,7 @@ public class GuildImpl implements Guild, Updatable {
                     () -> "Unexpected NotifyType, got " + get(data, "notify_type").getAsInt()
             );
             avatarUrl = get(data, "icon").getAsString();
-            ownerId = get(data, "user_id").getAsString();
+            masterId = get(data, "user_id").getAsString();
         }
     }
 }

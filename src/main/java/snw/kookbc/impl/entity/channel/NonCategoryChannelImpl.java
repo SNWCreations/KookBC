@@ -20,9 +20,7 @@ package snw.kookbc.impl.entity.channel;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
-import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
-import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.util.PageIterator;
@@ -40,8 +38,18 @@ import static snw.kookbc.util.GsonUtil.get;
 public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonCategoryChannel {
     private Category parent;
 
-    protected NonCategoryChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
-        super(client, id, master, guild, permSync, name, rpo, upo, level);
+    protected NonCategoryChannelImpl(
+            KBCClient client,
+            String id,
+            String masterId,
+            String guildId,
+            boolean permSync,
+            Category parent,
+            String name,
+            Collection<RolePermissionOverwrite> rpo,
+            Collection<UserPermissionOverwrite> upo, int level
+    ) {
+        super(client, id, masterId, guildId, permSync, name, rpo, upo, level);
         this.parent = parent;
     }
 

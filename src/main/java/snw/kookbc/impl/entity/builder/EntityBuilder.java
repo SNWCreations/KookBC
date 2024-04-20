@@ -71,7 +71,7 @@ public class EntityBuilder {
         String name = get(object, "name").getAsString();
         boolean isPublic = get(object, "enable_open").getAsBoolean();
         String region = get(object, "region").getAsString();
-        String ownerId = get(object, "master_id").getAsString();
+        String masterId = get(object, "master_id").getAsString();
         int rawNotifyType = get(object, "notify_type").getAsInt();
 
         Guild.NotifyType type = null;
@@ -90,7 +90,7 @@ public class EntityBuilder {
                 name,
                 isPublic,
                 region,
-                ownerId,
+                masterId,
                 type,
                 avatar
         );
@@ -100,8 +100,8 @@ public class EntityBuilder {
         // basic information
         String id = get(object, "id").getAsString();
         String name = get(object, "name").getAsString();
-        Guild guild = client.getStorage().getGuild(get(object, "guild_id").getAsString());
-        User master = client.getStorage().getUser(get(object, "user_id").getAsString());
+        String masterId = get(object, "user_id").getAsString(); // TODO 语意混淆, 可能需要改进
+        String guildId = get(object, "guild_id").getAsString();
 
         boolean isPermSync = get(object, "permission_sync").getAsInt() != 0;
         int level = get(object, "level").getAsInt();
@@ -115,8 +115,8 @@ public class EntityBuilder {
         if (get(object, "is_category").getAsBoolean()) {
             return new CategoryImpl(
                     client, id,
-                    master,
-                    guild,
+                    masterId,
+                    guildId,
                     isPermSync,
                     rpo, upo, level, name
             );
@@ -131,8 +131,8 @@ public class EntityBuilder {
                 return new TextChannelImpl(
                         client,
                         id,
-                        master,
-                        guild,
+                        masterId,
+                        guildId,
                         isPermSync,
                         parent,
                         name,
@@ -149,8 +149,8 @@ public class EntityBuilder {
                 return new VoiceChannelImpl(
                         client,
                         id,
-                        master,
-                        guild,
+                        masterId,
+                        guildId,
                         isPermSync,
                         parent,
                         name,

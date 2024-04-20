@@ -33,25 +33,40 @@ import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static snw.kookbc.util.GsonUtil.get;
 
 public abstract class ChannelImpl implements Channel, Updatable {
     protected final KBCClient client;
     private final String id;
-    private final User master;
-    private final Guild guild;
+    private final String masterId;
+    private final String guildId;
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
     private String name;
     private int level;
 
-    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    /* Lazy Load */
+    private final AtomicReference<User> master = new AtomicReference<>();
+    private final AtomicReference<Guild> guild = new AtomicReference<>();
+
+    public ChannelImpl(
+            KBCClient client,
+            String id,
+            String masterId,
+            String guildId,
+            boolean permSync,
+            String name,
+            Collection<RolePermissionOverwrite> rpo,
+            Collection<UserPermissionOverwrite> upo,
+            int level
+    ) {
         this.client = client;
         this.id = id;
-        this.master = master;
-        this.guild = guild;
+        this.masterId = masterId;
+        this.guildId = guildId;
         this.permSync = permSync;
         this.name = name;
         this.rpo = rpo;
@@ -66,7 +81,12 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public Guild getGuild() {
-        return guild;
+        return this.guild.updateAndGet(obj -> {
+            if (obj == null || !guildId.equals(obj.getId())) {
+                return client.getStorage().getGuild(guildId);
+            }
+            return obj;
+        });
     }
 
     @Override
@@ -298,7 +318,12 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public User getMaster() {
-        return master;
+        return master.updateAndGet(obj -> {
+            if (obj == null || !masterId.equals(obj.getId())) {
+                return client.getStorage().getUser(masterId);
+            }
+            return obj;
+        });
     }
 
     @Override
