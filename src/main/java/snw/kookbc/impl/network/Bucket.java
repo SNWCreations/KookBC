@@ -134,6 +134,7 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST, "direct-message/reaction-list");
         bucketNameMap.put(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_ADD, "direct-message/add-reaction");
         bucketNameMap.put(HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_REMOVE, "direct-message/delete-reaction");
+        bucketNameMap.put(HttpAPIRoute.USER_CHAT_MESSAGE_INFO, "direct-message/view");
         bucketNameMap.put(HttpAPIRoute.GATEWAY, "gateway/index");
         bucketNameMap.put(HttpAPIRoute.USER_ME, "user/me");
         bucketNameMap.put(HttpAPIRoute.USER_WHO, "user/view");
