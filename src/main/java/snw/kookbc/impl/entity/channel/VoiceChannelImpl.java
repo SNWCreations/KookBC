@@ -22,6 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.jetbrains.annotations.NotNull;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -119,11 +120,33 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     }
 
     @Override
+    public void setPassword(@NotNull String password) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("password", password)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.passwordProtected = !password.isEmpty();
+    }
+
+    @Override
+    public void setSize(int size) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("limit_amount", size)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setMaxSize(size);
+    }
+
+    @Override
     public void setQuality(int i) {
         final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
                 .put("voice_quality", i)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.quality = i;
     }
+
 }
