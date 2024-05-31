@@ -94,7 +94,7 @@ public abstract class MessageImpl implements Message {
             String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
                             "%s?msg_id=%s&emoji=%s",
-                            ((this instanceof TextChannelMessage) ?
+                            ((this instanceof ChannelMessage) ?
                                     HttpAPIRoute.CHANNEL_MESSAGE_REACTION_LIST :
                                     HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
                                     .toFullURL(),
