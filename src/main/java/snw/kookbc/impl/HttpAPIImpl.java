@@ -304,10 +304,16 @@ public class HttpAPIImpl implements HttpAPI {
         PrivateMessage quote = null;
         if (has(object, "quote")) {
             JsonElement rawQuote = get(object, "quote");
-            if (!rawQuote.isJsonNull() && !rawQuote.getAsString().trim().isEmpty()) {
-                final JsonObject quoteObj = rawQuote.getAsJsonObject();
-                final String quoteId = get(quoteObj, "id").getAsString();
-                quote = getPrivateMessage(user, quoteId);
+            if (rawQuote.isJsonObject()) {
+                if (!rawQuote.isJsonNull()) {
+                    final JsonObject quoteObj = rawQuote.getAsJsonObject();
+                    final String quoteId = get(quoteObj, "id").getAsString();
+                    quote = getPrivateMessage(user, quoteId);
+                }
+            }else {
+                if (rawQuote.getAsString().trim().isEmpty()) {
+                    return new PrivateMessageImpl(client, id, user, component, timeStamp, quote);
+                }
             }
         }
         return new PrivateMessageImpl(client, id, user, component, timeStamp, quote);
