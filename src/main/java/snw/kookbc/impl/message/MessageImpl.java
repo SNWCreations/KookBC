@@ -24,6 +24,7 @@ import com.google.gson.JsonParser;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
@@ -93,7 +94,7 @@ public abstract class MessageImpl implements Message {
             String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
                             "%s?msg_id=%s&emoji=%s",
-                            ((this instanceof TextChannelMessage) ?
+                            ((this instanceof ChannelMessage) ?
                                     HttpAPIRoute.CHANNEL_MESSAGE_REACTION_LIST :
                                     HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
                                     .toFullURL(),
@@ -128,7 +129,7 @@ public abstract class MessageImpl implements Message {
                 .put("content", content)
                 .build();
         client.getNetworkClient().post(
-                ((this instanceof TextChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
+                ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
                 body
         );
     }
