@@ -144,7 +144,7 @@ public class HttpAPIImpl implements HttpAPI {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Cannot upload file: Malformed URL", e);
         }
-        try (Response response = this.okHttpClient.newCall(
+        try (Response response = client.getNetworkClient().getOkHttpClient().newCall(
                 new Request.Builder()
                         .get()
                         .url(url)

@@ -37,14 +37,29 @@ import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 public class NetworkClient {
     private final KBCClient kbcClient;
     private final String tokenWithPrefix;
-    private final OkHttpClient client = new OkHttpClient.Builder()
-            .writeTimeout(Duration.ofMinutes(1))
-            .readTimeout(Duration.ofMinutes(1))
-            .build();
+
+    private final OkHttpClient client;
 
     public NetworkClient(KBCClient kbcClient, String token) {
         this.kbcClient = kbcClient;
         tokenWithPrefix = "Bot " + token;
+
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .writeTimeout(Duration.ofMinutes(1))
+                .readTimeout(Duration.ofMinutes(1));
+        if (kbcClient.getConfig().getBoolean("ignore-ssl")) {
+            kbcClient.getCore().getLogger().warn("Ignoring SSL verification for networking!!!");
+            builder.sslSocketFactory(
+                            IgnoreSSLHelper.getSSLSocketFactory(),
+                            IgnoreSSLHelper.TRUST_MANAGER
+                    )
+                    .hostnameVerifier(IgnoreSSLHelper.getHostnameVerifier());
+        }
+        client = builder.build();
+    }
+
+    public OkHttpClient getOkHttpClient() {
+        return client;
     }
 
     public JsonObject get(String fullUrl) {
