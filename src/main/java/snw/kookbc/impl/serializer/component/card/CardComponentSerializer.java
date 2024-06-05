@@ -54,10 +54,11 @@ public class CardComponentSerializer implements JsonSerializer<CardComponent>, J
     public JsonElement serialize(CardComponent component, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject object = new JsonObject();
         object.addProperty("type", "card");
-        object.addProperty("theme", component.getTheme().getValue());
         object.addProperty("size", component.getSize().getValue());
-        if (component.getColor() != null && component.getColor().isEmpty()) {
+        if (component.getColor() != null && !component.getColor().isEmpty()) {
             object.addProperty("color", component.getColor());
+        } else {
+            object.addProperty("theme", component.getTheme().getValue());
         }
         JsonArray modules = context.serialize(component.getModules()).getAsJsonArray();
         object.add("modules", modules);
