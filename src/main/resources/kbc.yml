@@ -34,7 +34,7 @@ webhook-route: "kookbc-webhook"
 
 ## ---- END WEBHOOK CONFIGURATION ----
 
-# The UUID of your Bot in the BotMarket. (see https://www.botmarket.cn)
+# (CURRENTLY DEPRECATED) The UUID of your Bot in the BotMarket. (see https://www.botmarket.cn)
 # If you provided non-null value and it is a valid value, KookBC will schedule a task for pinging BotMarket.
 botmarket-uuid: ""
 

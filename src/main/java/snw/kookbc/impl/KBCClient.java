@@ -373,6 +373,7 @@ public class KBCClient {
         String rawBotMarketUUID = getConfig().getString("botmarket-uuid");
         if (rawBotMarketUUID != null) {
             if (!rawBotMarketUUID.isEmpty()) {
+                /*
                 try {
                     //noinspection ResultOfMethodCallIgnored
                     UUID.fromString(rawBotMarketUUID);
@@ -380,6 +381,9 @@ public class KBCClient {
                 } catch (IllegalArgumentException e) {
                     getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
                 }
+                */
+                getCore().getLogger()
+                        .warn("BotMarket Ping is currently deprecated, as they are upgrading their system.");
             }
         }
         // endregion
