@@ -63,6 +63,11 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private String avatarUrl; // no vipAvatar here!
     private boolean completed;
 
+    public GuildImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
+
     public GuildImpl(KBCClient client, String id,
                      String name,
                      boolean isPublic,
