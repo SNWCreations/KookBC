@@ -36,6 +36,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -43,7 +44,7 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class UserImpl implements User, Updatable {
+public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
     private final String id;
     private final boolean bot;
@@ -53,6 +54,7 @@ public class UserImpl implements User, Updatable {
     private boolean vip;
     private String avatarUrl;
     private String vipAvatarUrl;
+    private boolean completed;
 
     public UserImpl(KBCClient client, String id,
                     boolean bot,
@@ -327,6 +329,20 @@ public class UserImpl implements User, Updatable {
             ban = get(data, "status").getAsInt() == 10;
             vip = get(data, "is_vip").getAsBoolean();
         }
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient().get(
+                String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
+        );
+        update(data);
+        completed = true;
     }
 }
 

@@ -40,6 +40,7 @@ import snw.kookbc.impl.entity.mute.MuteDataImpl;
 import snw.kookbc.impl.entity.mute.MuteResultImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.*;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -49,7 +50,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class GuildImpl implements Guild, Updatable {
+public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private final KBCClient client;
     private final String id;
     private NotifyType notifyType;
@@ -60,6 +61,7 @@ public class GuildImpl implements Guild, Updatable {
     // but I don't have internal events to listen for that!
     private String region;
     private String avatarUrl; // no vipAvatar here!
+    private boolean completed;
 
     public GuildImpl(KBCClient client, String id,
                      String name,
@@ -373,6 +375,18 @@ public class GuildImpl implements Guild, Updatable {
             avatarUrl = get(data, "icon").getAsString();
             ownerId = get(data, "user_id").getAsString();
         }
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id));
+        update(data);
+        completed = true;
     }
 }
 
