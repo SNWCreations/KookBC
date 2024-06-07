@@ -113,6 +113,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public String getVoiceChannelServerRegion() {
+        initIfNeeded();
         return region;
     }
 
@@ -135,6 +136,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public boolean isPublic() {
+        initIfNeeded();
         return public_;
     }
 
@@ -292,12 +294,14 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public NotifyType getNotifyType() {
+        initIfNeeded();
         return notifyType;
     }
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
         Validate.isTrue(!b, "KOOK official does not provide \"vip_avatar\" field for Guild.");
+        initIfNeeded();
         return avatarUrl;
     }
 
@@ -339,11 +343,17 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
         return get(object, "url").getAsString();
     }
 
+    private String getMasterId() {
+        initIfNeeded();
+        return ownerId;
+    }
+
     @Override
     public User getMaster() {
         return owner.updateAndGet(obj -> {
-            if (obj == null || !ownerId.equals(obj.getId())) {
-                return client.getStorage().getUser(ownerId);
+            final String masterId = getMasterId();
+            if (obj == null || !masterId.equals(obj.getId())) {
+                return client.getStorage().getUser(masterId);
             }
             return obj;
         });
@@ -351,6 +361,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public String getName() {
+        initIfNeeded();
         return name;
     }
 

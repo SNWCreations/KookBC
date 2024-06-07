@@ -114,11 +114,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public int getIdentifyNumber() {
+        initIfNeeded();
         return identify;
     }
 
     @Override
     public boolean isVip() {
+        initIfNeeded();
         return vip;
     }
 
@@ -128,6 +130,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public boolean isBot() {
+        initIfNeeded();
         return bot;
     }
 
@@ -138,6 +141,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public boolean isBanned() {
+        initIfNeeded();
         return ban;
     }
 
@@ -295,11 +299,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
+        initIfNeeded();
         return b ? vipAvatarUrl : avatarUrl;
     }
 
     @Override
     public String getName() {
+        initIfNeeded();
         return name;
     }
 
