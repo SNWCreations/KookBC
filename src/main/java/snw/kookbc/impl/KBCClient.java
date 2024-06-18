@@ -40,6 +40,7 @@ import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.event.EventFactory;
+import snw.kookbc.impl.event.internal.ChannelInfoUpdateListener;
 import snw.kookbc.impl.event.internal.UserClickButtonListener;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.NetworkClient;
@@ -536,6 +537,9 @@ public class KBCClient {
                 .register(getInternalPlugin());
         this.core.getEventManager()
                 .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
+        this.core.getEventManager()
+                .registerHandlers(this.internalPlugin, new ChannelInfoUpdateListener());
+
     }
 
     public CommandManager getCommandManager() {
