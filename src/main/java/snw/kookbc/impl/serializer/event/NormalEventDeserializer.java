@@ -26,6 +26,7 @@ import snw.kookbc.impl.KBCClient;
 
 import java.lang.reflect.Type;
 
+import static snw.kookbc.impl.serializer.EventDeserializeUtils.getBody;
 import static snw.kookbc.util.GsonUtil.get;
 
 public abstract class NormalEventDeserializer<T extends Event> extends BaseEventDeserializer<T> {
@@ -41,7 +42,7 @@ public abstract class NormalEventDeserializer<T extends Event> extends BaseEvent
                 type,
                 ctx,
                 get(object, "msg_timestamp").getAsLong(),
-                get(get(object, "extra").getAsJsonObject(), "body").getAsJsonObject()
+                getBody(object)
         );
     }
 
