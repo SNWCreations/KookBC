@@ -24,10 +24,10 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
-import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.FileComponent;
 import snw.jkook.message.component.MarkdownComponent;
@@ -38,10 +38,7 @@ import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.message.ChannelMessageImpl;
-import snw.kookbc.impl.message.PrivateMessageImpl;
-import snw.kookbc.impl.message.QuoteImpl;
-import snw.kookbc.impl.message.TextChannelMessageImpl;
+import snw.kookbc.impl.message.*;
 
 import java.util.NoSuchElementException;
 
@@ -124,7 +121,6 @@ public class MessageBuilder {
         final JsonObject extra = get(object, "extra").getAsJsonObject();
         JsonObject authorObj = get(extra, "author").getAsJsonObject();
         User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
-        Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
         long timeStamp = get(object, "msg_timestamp").getAsLong();
         final JsonObject quote;
         JsonObject quote1;
@@ -135,7 +131,17 @@ public class MessageBuilder {
         }
         quote = quote1;
         if (quote == null) {
-            return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, (NonCategoryChannel) channel);
+            if (get(extra, "channel_type").getAsInt() == 1) {
+                TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+                return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
+            } else if (get(extra, "channel_type").getAsInt() == 2) {
+                VoiceChannel channel = (VoiceChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+                return new VoiceChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
+            } else {
+                // why keep this? To keep KOOK from going crazy!
+                Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
+                return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, (NonCategoryChannel) channel);
+            }
         }
         final String quoteId = get(quote, "rong_id").getAsString();
         Message quoteObject;
@@ -150,7 +156,18 @@ public class MessageBuilder {
             }
         }
 
-        return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, (NonCategoryChannel) channel);
+        if (get(extra, "channel_type").getAsInt() == 1) {
+            TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+            return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
+        } else if (get(extra, "channel_type").getAsInt() == 2) {
+            VoiceChannel channel = (VoiceChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
+            return new VoiceChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
+        } else {
+            // why keep this? To keep KOOK from going crazy!
+            Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
+            return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, (NonCategoryChannel) channel);
+        }
+
     }
 
     public Message buildQuote(JsonObject object) {
