@@ -21,7 +21,6 @@ package snw.kookbc.impl.entity.builder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.entity.channel.VoiceChannel;
@@ -47,6 +46,9 @@ import static snw.kookbc.util.GsonUtil.get;
 
 public class MessageBuilder {
     private final KBCClient client;
+
+    public static final int CHANNEL_TYPE_TEXT = 1;
+    public static final int CHANNEL_TYPE_VOICE = 2;
 
     public MessageBuilder(KBCClient client) {
         this.client = client;
@@ -119,55 +121,41 @@ public class MessageBuilder {
     public ChannelMessage buildChannelMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
         final JsonObject extra = get(object, "extra").getAsJsonObject();
-        JsonObject authorObj = get(extra, "author").getAsJsonObject();
-        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
+        User author = getAuthor(extra);
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        final JsonObject quote;
-        JsonObject quote1;
+        Message quote = getQuote(extra);
+        String targetId = get(object, "target_id").getAsString();
+        int channelType = get(extra, "channel_type").getAsInt();
+        return buildMessage(id, author, buildComponent(object), timeStamp, quote, targetId, channelType);
+    }
+
+    private User getAuthor(JsonObject extra) {
+        JsonObject authorObj = get(extra, "author").getAsJsonObject();
+        return client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
+    }
+
+    private Message getQuote(JsonObject extra) {
         try {
-            quote1 = get(extra, "quote").getAsJsonObject();
+            JsonObject quote = get(extra, "quote").getAsJsonObject();
+            String quoteId = get(quote, "rong_id").getAsString();
+            Message quoteFormCache = client.getStorage().getMessage(quoteId);
+            if (quoteFormCache == null) {
+                quoteFormCache = client.getCore().getHttpAPI().getChannelMessage(quoteId);
+            }
+            return quoteFormCache;
         } catch (NoSuchElementException e) {
-            quote1 = null;
+            return null;
         }
-        quote = quote1;
-        if (quote == null) {
-            if (get(extra, "channel_type").getAsInt() == 1) {
-                TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
-                return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
-            } else if (get(extra, "channel_type").getAsInt() == 2) {
-                VoiceChannel channel = (VoiceChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
-                return new VoiceChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, channel);
-            } else {
-                // why keep this? To keep KOOK from going crazy!
-                Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
-                return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, null, (NonCategoryChannel) channel);
-            }
-        }
-        final String quoteId = get(quote, "rong_id").getAsString();
-        Message quoteObject;
-        Message quoteFormCache = client.getStorage().getMessage(quoteId);
-        if (quoteFormCache != null) {
-            quoteObject = quoteFormCache;
-        } else {
-            try {
-                quoteObject = client.getCore().getHttpAPI().getChannelMessage(quoteId);
-            } catch (NoSuchElementException e) {
-                quoteObject = buildQuote(quote);
-            }
-        }
+    }
 
-        if (get(extra, "channel_type").getAsInt() == 1) {
-            TextChannel channel = (TextChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
-            return new TextChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
-        } else if (get(extra, "channel_type").getAsInt() == 2) {
-            VoiceChannel channel = (VoiceChannel) client.getStorage().getChannel(get(object, "target_id").getAsString());
-            return new VoiceChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, channel);
+    private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp, Message message, String targetId, int channelType) {
+        if (channelType == CHANNEL_TYPE_TEXT) {
+            return new TextChannelMessageImpl(client, id, author, component, timeStamp, message, (TextChannel) client.getStorage().getChannel(targetId));
+        } else if (channelType == CHANNEL_TYPE_VOICE) {
+            return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message, (VoiceChannel) client.getStorage().getChannel(targetId));
         } else {
-            // why keep this? To keep KOOK from going crazy!
-            Channel channel = client.getStorage().getChannel(get(object, "target_id").getAsString());
-            return new ChannelMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject, (NonCategoryChannel) channel);
+            return new ChannelMessageImpl(client, id, author, component, timeStamp, message, (NonCategoryChannel) client.getStorage().getChannel(targetId));
         }
-
     }
 
     public Message buildQuote(JsonObject object) {
