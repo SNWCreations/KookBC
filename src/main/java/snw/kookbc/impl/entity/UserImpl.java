@@ -36,6 +36,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -43,16 +44,22 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class UserImpl implements User, Updatable {
+public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
     private final String id;
-    private final boolean bot;
+    private boolean bot;
     private String name;
     private int identify;
     private boolean ban;
     private boolean vip;
     private String avatarUrl;
     private String vipAvatarUrl;
+    private boolean completed;
+
+    public UserImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
 
     public UserImpl(KBCClient client, String id,
                     boolean bot,
@@ -107,11 +114,13 @@ public class UserImpl implements User, Updatable {
 
     @Override
     public int getIdentifyNumber() {
+        initIfNeeded();
         return identify;
     }
 
     @Override
     public boolean isVip() {
+        initIfNeeded();
         return vip;
     }
 
@@ -121,6 +130,7 @@ public class UserImpl implements User, Updatable {
 
     @Override
     public boolean isBot() {
+        initIfNeeded();
         return bot;
     }
 
@@ -131,6 +141,7 @@ public class UserImpl implements User, Updatable {
 
     @Override
     public boolean isBanned() {
+        initIfNeeded();
         return ban;
     }
 
@@ -288,11 +299,13 @@ public class UserImpl implements User, Updatable {
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
+        initIfNeeded();
         return b ? vipAvatarUrl : avatarUrl;
     }
 
     @Override
     public String getName() {
+        initIfNeeded();
         return name;
     }
 
@@ -321,12 +334,27 @@ public class UserImpl implements User, Updatable {
         Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update user by using different data");
         synchronized (this) {
             name = get(data, "username").getAsString();
+            bot = get(data, "bot").getAsBoolean();
             avatarUrl = get(data, "avatar").getAsString();
             vipAvatarUrl = get(data, "vip_avatar").getAsString();
             identify = get(data, "identify_num").getAsInt();
             ban = get(data, "status").getAsInt() == 10;
             vip = get(data, "is_vip").getAsBoolean();
         }
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient().get(
+                String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
+        );
+        update(data);
+        completed = true;
     }
 }
 

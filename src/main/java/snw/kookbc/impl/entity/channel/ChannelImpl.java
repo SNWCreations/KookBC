@@ -29,6 +29,7 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -36,7 +37,7 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public abstract class ChannelImpl implements Channel, Updatable {
+public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
     private final String id;
     private final User master;
@@ -46,6 +47,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
     private boolean permSync;
     private String name;
     private int level;
+    private boolean completed;
 
     public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
@@ -340,5 +342,19 @@ public abstract class ChannelImpl implements Channel, Updatable {
             this.rpo = rpo;
             this.upo = upo;
         }
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient().get(
+                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), getId())
+        );
+        update(data);
+        completed = true;
     }
 }
