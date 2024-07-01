@@ -43,14 +43,73 @@ import snw.kookbc.impl.serializer.event.role.RoleCreateEventDeserializer;
 import snw.kookbc.impl.serializer.event.role.RoleDeleteEventDeserializer;
 import snw.kookbc.impl.serializer.event.role.RoleInfoUpdateEventDeserializer;
 import snw.kookbc.impl.serializer.event.user.*;
+//import snw.kookbc.impl.storage.EntityStorage;
 
+//import java.util.HashMap;
+import java.util.HashSet;
+//import java.util.Map;
+import java.util.Set;
+//import java.util.function.BiPredicate;
+
+//import static snw.kookbc.impl.serializer.EventDeserializeUtils.getBody;
 import static snw.kookbc.util.GsonUtil.get;
 import static snw.kookbc.util.GsonUtil.has;
 
 public class EventFactory {
+    protected static final Set<Class<? extends Event>> FORCE_CREATE_TYPES;
+//    protected static final Map<Class<? extends Event>, BiPredicate<EventFactory, JsonObject>> CREATE_CONDITIONS;
     protected final KBCClient client;
     protected final EventManagerImpl eventManager;
     protected final Gson gson;
+
+//    private static BiPredicate<EventFactory, JsonObject> subscribed(Class<? extends Event> type) {
+//        return (eventFactory, json) -> eventFactory.eventManager.isSubscribed(type);
+//    }
+//
+//    private static BiPredicate<EventFactory, JsonObject> cachedChannel() {
+//        return (eventFactory, jsonObject) -> {
+//            final JsonObject body = getBody(jsonObject);
+//            final String channelId = get(body, "channel_id").getAsString();
+//            final EntityStorage storage = eventFactory.client.getStorage();
+//            return storage.containsChannel(channelId);
+//        };
+//    }
+//
+//    public static BiPredicate<EventFactory, JsonObject> cachedGuild() {
+//        return (eventFactory, jsonObject) -> {
+//            final JsonObject body = getBody(jsonObject);
+//            final String channelId = get(body, "id").getAsString();
+//            final EntityStorage storage = eventFactory.client.getStorage();
+//            return storage.containsChannel(channelId);
+//        };
+//    }
+
+    static {
+        FORCE_CREATE_TYPES = new HashSet<Class<? extends Event>>() {
+            {
+                add(ChannelMessageEvent.class);
+                add(PrivateMessageReceivedEvent.class);
+                add(ChannelDeleteEvent.class);
+                add(ChannelMessageDeleteEvent.class);
+                add(ChannelMessageUpdateEvent.class);
+                add(GuildRemoveEmojiEvent.class);
+                add(GuildDeleteEvent.class);
+                add(PrivateMessageDeleteEvent.class);
+                add(RoleDeleteEvent.class);
+                add(RoleInfoUpdateEvent.class);
+                add(ChannelInfoUpdateEvent.class);
+                add(GuildInfoUpdateEvent.class);
+            }
+        };
+//        CREATE_CONDITIONS = new HashMap<Class<? extends Event>, BiPredicate<EventFactory, JsonObject>>() {
+//            {
+//                put(ChannelMessageDeleteEvent.class, subscribed(ChannelMessageEvent.class));
+//                put(PrivateMessageDeleteEvent.class, subscribed(PrivateMessageReceivedEvent.class));
+//                put(ChannelInfoUpdateEvent.class, cachedChannel()); // what #85 did
+//                put(GuildInfoUpdateEvent.class, cachedGuild());
+//            }
+//        };
+    }
 
     public EventFactory(KBCClient client) {
         this.client = client;
@@ -64,9 +123,12 @@ public class EventFactory {
             return null; // unknown event type
         }
         if (!eventManager.isSubscribed(eventType)) {
-            // if not message event, ensure command system can receive event.
-            if (eventType != ChannelMessageEvent.class && eventType != PrivateMessageReceivedEvent.class) {
-                return null;
+            if (!FORCE_CREATE_TYPES.contains(eventType)) {
+//                if (!CREATE_CONDITIONS.containsKey(eventType)
+//                        || !CREATE_CONDITIONS.get(eventType).test(this, object)) {
+                    // don't create event if not necesssary
+                    return null;
+//                }
             }
         }
         if (eventType == GuildInfoUpdateEvent.class) {

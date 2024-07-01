@@ -255,6 +255,10 @@ public class EntityStorage {
         emojis.invalidate(emoji.getId());
     }
 
+    public boolean containsChannel(String id) {
+        return channels.asMap().containsKey(id);
+    }
+
     private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
         return Caffeine.newBuilder()
                 .weakValues()
