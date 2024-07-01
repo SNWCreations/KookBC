@@ -88,34 +88,11 @@ public class MessageBuilder {
     public PrivateMessage buildPrivateMessage(JsonObject object) {
         String id = get(object, "msg_id").getAsString();
         final JsonObject extra = get(object, "extra").getAsJsonObject();
-        JsonObject authorObj = get(extra, "author").getAsJsonObject();
-        User author = client.getStorage().getUser(get(authorObj, "id").getAsString(), authorObj);
+        User author = getAuthor(extra);
         long timeStamp = get(object, "msg_timestamp").getAsLong();
-        final JsonObject quote;
-        JsonObject quote1;
-        try {
-            quote1 = get(extra, "quote").getAsJsonObject();
-        } catch (NoSuchElementException e) {
-            quote1 = null;
-        }
-        quote = quote1;
-        if (quote == null) {
-            return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, null);
-        }
-        final String quoteId = get(quote, "rong_id").getAsString();
-        Message quoteObject;
-        Message quoteFromCache = client.getStorage().getMessage(quoteId);
-        if (quoteFromCache != null) {
-            quoteObject = quoteFromCache; // prevent resource leak
-        } else {
-            try {
-                quoteObject = client.getCore().getHttpAPI().getPrivateMessage(author, quoteId);
-            } catch (NoSuchElementException e) {
-                quoteObject = buildQuote(quote);
-            }
-        }
+        Message quote = getQuote(extra);
 
-        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, quoteObject);
+        return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, quote);
     }
 
     public ChannelMessage buildChannelMessage(JsonObject object) {
