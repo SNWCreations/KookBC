@@ -187,7 +187,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public StreamingInfo requestStreamingInfo(@Nullable String password) {
-        final Map<String, ?> body = new MapBuilder()
+        final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
                 .putIfNotNull("password", password)
                 .build();
