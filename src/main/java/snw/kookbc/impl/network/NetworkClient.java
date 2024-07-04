@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
+import static snw.kookbc.CLIOptions.NO_BUCKET;
 import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
@@ -97,13 +98,20 @@ public class NetworkClient {
     }
 
     public String call(Request request) {
-        Bucket bucket = getBucket(request);
-        bucket.check();
+        Bucket bucket;
+        if (!NO_BUCKET) {
+            bucket = getBucket(request);
+            bucket.check();
+        } else {
+            bucket = null;
+        }
         try (Response response = client.newCall(request).execute()) {
             // region Bucket process
             int remaining = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Remaining")));
             int reset = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Reset")));
-            bucket.update(remaining, reset);
+            if (bucket != null) {
+                bucket.update(remaining, reset);
+            }
             // endregion
 
             final String body = Objects.requireNonNull(response.body()).string();
