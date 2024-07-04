@@ -196,6 +196,17 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     }
 
     @Override
+    public StreamingInfo requestStreamingInfo(@Nullable String password, boolean rtcpMux) {
+        final Map<String, ?> body = new MapBuilder()
+                .put("channel_id", getId())
+                .putIfNotNull("password", password)
+                .put("rtcp_mux", rtcpMux)
+                .build();
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+    }
+
+    @Override
     public StreamingInfo requestStreamingInfo(@Nullable String password, String audioSSRC, String audioPayloadType, boolean rtcpMux) {
         final Map<String, ?> body = new MapBuilder()
                 .put("channel_id", getId())
