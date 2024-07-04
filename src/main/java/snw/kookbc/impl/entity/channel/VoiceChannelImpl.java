@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -33,8 +34,7 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
+import static snw.kookbc.util.GsonUtil.*;
 
 public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
@@ -147,6 +147,65 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         this.quality = i;
+    }
+
+    public static final class StreamingInfoImpl implements StreamingInfo {
+
+        private final String ip;
+        private final int port;
+        private final int rtcp_port;
+        private final int bitrate;
+
+        public StreamingInfoImpl(String ip, int port, int rtcp_port, int bitrate) {
+            this.ip = ip;
+            this.port = port;
+            this.rtcp_port = rtcp_port;
+            this.bitrate = bitrate;
+        }
+
+
+        @Override
+        public String getIp() {
+            return ip;
+        }
+
+        @Override
+        public int getPort() {
+            return port;
+        }
+
+        @Override
+        public int getRTCPPort() {
+            return rtcp_port;
+        }
+
+        @Override
+        public int getBitRate() {
+            return bitrate;
+        }
+    }
+
+    @Override
+    public StreamingInfo requestStreamingInfo(@Nullable String password) {
+        final Map<String, ?> body = new MapBuilder()
+                .put("channel_id", getId())
+                .putIfNotNull("password", password)
+                .build();
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+    }
+
+    @Override
+    public StreamingInfo requestStreamingInfo(@Nullable String password, String audioSSRC, String audioPayloadType, boolean rtcpMux) {
+        final Map<String, ?> body = new MapBuilder()
+                .put("channel_id", getId())
+                .putIfNotNull("password", password)
+                .put("audio_ssrc", audioSSRC)
+                .put("audio_pt", audioPayloadType)
+                .put("rtcp_mux", rtcpMux)
+                .build();
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
     }
 
 }

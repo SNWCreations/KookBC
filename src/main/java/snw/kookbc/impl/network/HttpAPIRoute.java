@@ -52,6 +52,11 @@ public enum HttpAPIRoute {
     CHANNEL_USER_LIST("/v3/channel/user-list"),
     MOVE_USER("/v3/channel/move-user"),
 
+    // ------ VOICE ------
+    VOICE_JOIN("/v3/voice/join"),
+    VOICE_LIST("/v3/voice/list"),
+    VOICE_LEAVE("/v3/voice/leave"),
+
     // ------ CHANNEL ROLE (NOT "ROLE") -------
     CHANNEL_ROLE_CREATE("/v3/channel-role/create"),
     CHANNEL_ROLE_UPDATE("/v3/channel-role/update"),
