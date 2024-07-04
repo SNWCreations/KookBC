@@ -208,4 +208,12 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
     }
 
+    @Override
+    public void stopStreaming() {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.VOICE_LEAVE.toFullURL(), body);
+    }
+
 }
