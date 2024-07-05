@@ -155,12 +155,16 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         private final int port;
         private final int rtcp_port;
         private final int bitrate;
+        private final String audio_ssrc;
+        private final String audio_pt;
 
-        public StreamingInfoImpl(String ip, int port, int rtcp_port, int bitrate) {
+        public StreamingInfoImpl(String ip, int port, int rtcp_port, int bitrate, String audioSsrc, String audioPt) {
             this.ip = ip;
             this.port = port;
             this.rtcp_port = rtcp_port;
             this.bitrate = bitrate;
+            audio_ssrc = audioSsrc;
+            audio_pt = audioPt;
         }
 
 
@@ -182,6 +186,16 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         @Override
         public int getBitRate() {
             return bitrate;
+        }
+
+        @Override
+        public String getAudioSSRC() {
+            return audio_ssrc;
+        }
+
+        @Override
+        public String getAudioPayloadType() {
+            return audio_pt;
         }
     }
 
