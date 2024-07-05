@@ -29,16 +29,16 @@ import snw.jkook.HttpAPI;
 import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Category;
-import snw.jkook.entity.channel.Channel;
-import snw.jkook.entity.channel.NonCategoryChannel;
-import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.entity.channel.*;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
+import snw.kookbc.impl.entity.channel.CategoryImpl;
+import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
@@ -101,12 +101,18 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     @Override
+    public TextChannel getTextChannel(String s) {
+        return new TextChannelImpl(client, s);
+    }
+
+    @Override
+    public VoiceChannel getVoiceChannel(String s) {
+        return new VoiceChannelImpl(client, s);
+    }
+
+    @Override
     public Category getCategory(String s) {
-        try {
-            return (Category) client.getStorage().getChannel(s);
-        } catch (ClassCastException e) {
-            throw new RuntimeException("The object that you requests is not a Category.", e);
-        }
+        return new CategoryImpl(client, s);
     }
 
     @Override

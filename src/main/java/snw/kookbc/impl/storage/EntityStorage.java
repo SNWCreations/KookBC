@@ -23,6 +23,7 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -99,6 +100,7 @@ public class EntityStorage {
         return guilds.get(id);
     }
 
+    @Deprecated // always construct if not found, don't use if possible
     public Channel getChannel(String id) {
         Channel result = channels.getIfPresent(id);
         if (result == null) {

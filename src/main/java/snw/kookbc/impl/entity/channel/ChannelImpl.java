@@ -40,14 +40,19 @@ import static snw.kookbc.util.GsonUtil.get;
 public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
     private final String id;
-    private final User master;
-    private final Guild guild;
+    private User master;
+    private Guild guild;
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
     private String name;
     private int level;
     private boolean completed;
+
+    public ChannelImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
 
     public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
@@ -341,6 +346,14 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
             this.permSync = isPermSync;
             this.rpo = rpo;
             this.upo = upo;
+
+            // Why we delay the add operation?
+            // We may construct the channel object at any time,
+            // but sometimes they are just garbage object,
+            // to prevent them affecting the cache, we won't add it
+            // when constructing. When this method is called,
+            // we think this object will be actually used.
+            client.getStorage().addChannel(this);
         }
     }
 

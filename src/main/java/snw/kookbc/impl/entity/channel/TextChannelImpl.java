@@ -42,6 +42,10 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
     private int chatLimitTime;
     private String topic;
 
+    public TextChannelImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
     public TextChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime, String topic) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level, chatLimitTime);
         this.chatLimitTime = chatLimitTime;
