@@ -54,6 +54,7 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
 
     @Override
     public String getTopic() {
+        initIfNeeded();
         return topic;
     }
 

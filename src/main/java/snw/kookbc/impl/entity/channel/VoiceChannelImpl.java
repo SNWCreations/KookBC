@@ -67,11 +67,13 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public boolean hasPassword() {
+        initIfNeeded();
         return passwordProtected;
     }
 
     @Override
     public int getMaxSize() {
+        initIfNeeded();
         return maxSize;
     }
 
