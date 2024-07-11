@@ -238,7 +238,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.VOICE_LEAVE.toFullURL(), body);
+        client.getNetworkClient().postContent(HttpAPIRoute.VOICE_LEAVE.toFullURL(), body);
     }
 
 }
