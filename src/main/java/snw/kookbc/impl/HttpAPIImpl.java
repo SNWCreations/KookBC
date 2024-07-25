@@ -29,10 +29,7 @@ import snw.jkook.HttpAPI;
 import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.Category;
-import snw.jkook.entity.channel.Channel;
-import snw.jkook.entity.channel.NonCategoryChannel;
-import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.entity.channel.*;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
@@ -46,6 +43,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
+import snw.kookbc.impl.pageiter.JoinedVoiceChannelsIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.File;
@@ -475,6 +473,11 @@ public class HttpAPIImpl implements HttpAPI {
                 .put("user_id", target.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.FRIEND_DELETE.toFullURL(), body);
+    }
+
+    @Override
+    public PageIterator<Collection<VoiceChannel>> getJoinedVoiceChannels() {
+        return new JoinedVoiceChannelsIterator(client);
     }
 
     @Override
