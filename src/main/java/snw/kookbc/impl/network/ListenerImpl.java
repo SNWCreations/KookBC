@@ -34,7 +34,7 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.network.ws.Connector;
 import snw.kookbc.interfaces.network.FrameHandler;
 import snw.kookbc.interfaces.network.webhook.WebhookNetworkSystem;

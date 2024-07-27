@@ -19,21 +19,10 @@
 package snw.kookbc.impl.network.exceptions;
 
 // Thrown if the response is not 200 OK.
-public class BadResponseException extends RuntimeException {
-    private final int code;
-    private final String rawMessage;
-
+@SuppressWarnings("DeprecatedIsStillUsed") // scheduled to be removed
+@Deprecated // added to API 0.53.0
+public class BadResponseException extends snw.jkook.exceptions.BadResponseException {
     public BadResponseException(int code, String message) {
-        super("Response code: " + code + ", message: " + message);
-        this.code = code;
-        this.rawMessage = message;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public String getRawMessage() {
-        return rawMessage;
+        super(code, message);
     }
 }

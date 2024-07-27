@@ -34,7 +34,7 @@ import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;

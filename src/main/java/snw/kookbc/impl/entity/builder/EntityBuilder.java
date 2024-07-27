@@ -28,7 +28,7 @@ import snw.kookbc.impl.entity.*;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 
 import java.util.Collection;
 

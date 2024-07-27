@@ -33,7 +33,7 @@ import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.util.MapBuilder;
 

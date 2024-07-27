@@ -34,7 +34,7 @@ import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 
 import java.util.concurrent.TimeUnit;
 

@@ -40,7 +40,7 @@ import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.impl.pageiter.JoinedVoiceChannelsIterator;
