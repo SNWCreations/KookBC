@@ -139,7 +139,7 @@ public class WrappedLiteCommandsBuilder<SENDER, SETTINGS extends PlatformSetting
 
     @SuppressWarnings("unchecked")
     protected B self() {
-        return ((B) delegate);
+        return (B) this;
     }
 
     @Override
