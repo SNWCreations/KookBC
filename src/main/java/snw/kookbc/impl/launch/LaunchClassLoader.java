@@ -79,6 +79,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
         // classloader exclusions
         addClassLoaderExclusion("java.");
+        addClassLoaderExclusion("javax.");
         addClassLoaderExclusion("sun.");
         addClassLoaderExclusion("org.lwjgl.");
         addClassLoaderExclusion("org.apache.logging.");
@@ -98,7 +99,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("com.sun.");
 
         // transformer exclusions
-        addTransformerExclusion("javax.");
         addTransformerExclusion("argo.");
         addTransformerExclusion("org.objectweb.asm.");
         addTransformerExclusion("com.google.common.");
