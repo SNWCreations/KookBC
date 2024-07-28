@@ -25,6 +25,10 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     protected NonCategoryChannel channel;
 
+    public ChannelMessageImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
     public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, NonCategoryChannel channel) {
         super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
@@ -158,6 +162,8 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
         this.timeStamp = timeStamp;
         this.quote = quote;
         this.channel = channel;
+
+        client.getStorage().addMessage(this);
         this.completed = true;
     }
 

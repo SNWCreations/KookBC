@@ -27,16 +27,18 @@ import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 
 public class TextChannelMessageImpl extends ChannelMessageImpl implements TextChannelMessage {
-    private final TextChannel channel;
+
+    public TextChannelMessageImpl(KBCClient client, String id) {
+        super(client, id);
+    }
 
     public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
         super(client, id, user, component, timeStamp, quote, channel);
-        this.channel = channel;
     }
 
     @Override
     public TextChannel getChannel() {
-        return channel;
+        return (TextChannel) super.getChannel();
     }
 
     @Override

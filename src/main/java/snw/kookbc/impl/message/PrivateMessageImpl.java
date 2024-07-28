@@ -123,6 +123,8 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         this.component = component;
         this.timeStamp = timeStamp;
         this.quote = quote;
+
+        client.getStorage().addMessage(this);
         this.completed = true;
     }
 }

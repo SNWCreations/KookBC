@@ -49,11 +49,16 @@ import java.util.Map;
 public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
     private final String id;
-    private final User user;
+    private User user;
     protected BaseComponent component;
     protected long timeStamp;
     protected Message quote;
     protected boolean completed;
+
+    public MessageImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
 
     public MessageImpl(KBCClient client, String id, User user) {
         this.client = client;

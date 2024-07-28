@@ -235,6 +235,11 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public TextChannelMessage getTextChannelMessage(String id) throws NoSuchElementException {
+        return new TextChannelMessageImpl(client, id);
+    }
+
+    @Deprecated
+    private TextChannelMessage getTextChannelMessage_old(String id) {
         final JsonObject object;
         try {
             object = client.getNetworkClient()
@@ -263,6 +268,11 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public ChannelMessage getChannelMessage(String id) throws NoSuchElementException {
+        return new ChannelMessageImpl(client, id);
+    }
+
+    @Deprecated
+    private ChannelMessage getChannelMessage_old(String id) throws NoSuchElementException {
         final JsonObject object;
         try {
             object = client.getNetworkClient()
