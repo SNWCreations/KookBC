@@ -1,6 +1,7 @@
 package snw.kookbc.impl.message;
 
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.VoiceChannelMessage;
@@ -19,5 +20,10 @@ public class VoiceChannelMessageImpl extends ChannelMessageImpl implements Voice
     @Override
     public VoiceChannel getChannel() {
         return channel;
+    }
+
+    @Override
+    protected NonCategoryChannel retrieveOwningChannel(String id) {
+        return client.getCore().getHttpAPI().getVoiceChannel(id);
     }
 }

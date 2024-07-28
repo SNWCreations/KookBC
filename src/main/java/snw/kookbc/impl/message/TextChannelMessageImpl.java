@@ -19,6 +19,7 @@
 package snw.kookbc.impl.message;
 
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
@@ -38,4 +39,8 @@ public class TextChannelMessageImpl extends ChannelMessageImpl implements TextCh
         return channel;
     }
 
+    @Override
+    protected NonCategoryChannel retrieveOwningChannel(String id) {
+        return client.getCore().getHttpAPI().getTextChannel(id);
+    }
 }

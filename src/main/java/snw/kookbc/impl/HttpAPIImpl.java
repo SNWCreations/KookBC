@@ -31,6 +31,7 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.*;
 import snw.jkook.message.ChannelMessage;
+import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
@@ -290,6 +291,16 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public PrivateMessage getPrivateMessage(User user, String id) throws NoSuchElementException {
+        final Message cached = client.getStorage().getMessage(id);
+        if (cached instanceof PrivateMessage) {
+            return ((PrivateMessage) cached);
+        } else {
+            return new PrivateMessageImpl(client, id, user);
+        }
+    }
+
+    @Deprecated // for removal
+    private PrivateMessage getPrivateMessage_old(User user, String id) {
         final String chatCode = get(client.getNetworkClient()
                 .post(HttpAPIRoute.USER_CHAT_SESSION_CREATE.toFullURL(), // KOOK won't create multiple session
                         Collections.singletonMap("target_id", user.getId())), "code").getAsString();
