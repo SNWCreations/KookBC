@@ -322,6 +322,9 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
             // basic information
             String name = get(data, "name").getAsString();
             boolean isPermSync = get(data, "permission_sync").getAsInt() != 0;
+
+            final String guildId = get(data, "guild_id").getAsString();
+            final Guild theGuild = client.getCore().getHttpAPI().getGuild(guildId);
             // rpo parse
             Collection<RolePermissionOverwrite> rpo = new ArrayList<>();
             for (JsonElement element : get(data, "permission_overwrites").getAsJsonArray()) {
@@ -351,6 +354,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
             this.name = name;
             this.permSync = isPermSync;
+            this.guild = theGuild;
             this.rpo = rpo;
             this.upo = upo;
 
