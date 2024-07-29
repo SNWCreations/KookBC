@@ -24,12 +24,12 @@ import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.TextChannel;
-import snw.jkook.message.TextChannelMessage;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.TextChannelMessageIterator;
+import snw.kookbc.impl.pageiter.ChannelMessageIterator;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
@@ -73,9 +73,9 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
     }
 
     @Override
-    public PageIterator<Collection<TextChannelMessage>> getMessages(@Nullable String refer, boolean isPin, String queryMode) {
+    public PageIterator<Collection<ChannelMessage>> getMessages(@Nullable String refer, boolean isPin, String queryMode) {
         Validate.isTrue(Objects.equals(queryMode, "before") || Objects.equals(queryMode, "around") || Objects.equals(queryMode, "after"), "Invalid queryMode");
-        return new TextChannelMessageIterator(client, this, refer, isPin, queryMode);
+        return new ChannelMessageIterator(client, this, refer, isPin, queryMode);
     }
 
     @Override

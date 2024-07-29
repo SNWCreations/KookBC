@@ -389,7 +389,11 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                     () -> "Unexpected NotifyType, got " + get(data, "notify_type").getAsInt()
             );
             avatarUrl = get(data, "icon").getAsString();
-            ownerId = get(data, "user_id").getAsString();
+            final String incomingOwnerId = get(data, "user_id").getAsString();
+            if (!incomingOwnerId.equals(ownerId)) {
+                owner.set(null);
+                ownerId = incomingOwnerId;
+            }
         }
     }
 

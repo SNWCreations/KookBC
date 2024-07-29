@@ -23,26 +23,26 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
-import snw.jkook.message.TextChannelMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.message.TextChannelMessageImpl;
+import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public class TextChannelMessageIterator extends PageIteratorImpl<Collection<TextChannelMessage>> {
+public class ChannelMessageIterator extends PageIteratorImpl<Collection<ChannelMessage>> {
     private final TextChannel channel;
     private final String refer;
     private final boolean isPin;
     private final String queryMode;
 
-    public TextChannelMessageIterator(KBCClient client, TextChannel channel, String refer, boolean isPin, String queryMode) {
+    public ChannelMessageIterator(KBCClient client, TextChannel channel, String refer, boolean isPin, String queryMode) {
         super(client);
         this.channel = channel;
         this.refer = refer;
@@ -57,22 +57,22 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
 
     @Override
     protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
+        object = new LinkedHashSet<>(array.size());
         for (JsonElement element : array) {
             object.add(buildMessage(element.getAsJsonObject()));
         }
     }
 
     @Override
-    public Collection<TextChannelMessage> next() {
+    public Collection<ChannelMessage> next() {
         return Collections.unmodifiableCollection(super.next());
     }
 
-    private TextChannelMessage buildMessage(JsonObject object) {
+    private ChannelMessage buildMessage(JsonObject object) {
         String id = get(object, "id").getAsString();
         Message message = client.getStorage().getMessage(id);
         if (message != null) {
-            return (TextChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
+            return (ChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
         }
         long timeStamp = get(object, "create_at").getAsLong();
         JsonObject authorObj = object.getAsJsonObject("author");
@@ -80,7 +80,7 @@ public class TextChannelMessageIterator extends PageIteratorImpl<Collection<Text
         BaseComponent component = client.getMessageBuilder().buildComponent(object);
         JsonElement quoteElement = object.get("quote");
         Message quote = quoteElement != null && !quoteElement.isJsonNull() ? client.getMessageBuilder().buildQuote(quoteElement.getAsJsonObject()) : null;
-        return new TextChannelMessageImpl(
+        return new ChannelMessageImpl(
                 client,
                 id,
                 author,
