@@ -127,9 +127,9 @@ public class MessageBuilder {
 
     private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp, Message message, String targetId, int channelType) {
         if (channelType == CHANNEL_TYPE_TEXT) {
-            return new TextChannelMessageImpl(client, id, author, component, timeStamp, message, (TextChannel) client.getStorage().getChannel(targetId));
+            return new TextChannelMessageImpl(client, id, author, component, timeStamp, message, client.getCore().getHttpAPI().getTextChannel(targetId));
         } else if (channelType == CHANNEL_TYPE_VOICE) {
-            return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message, (VoiceChannel) client.getStorage().getChannel(targetId));
+            return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message, client.getCore().getHttpAPI().getVoiceChannel(targetId));
         } else {
             return new ChannelMessageImpl(client, id, author, component, timeStamp, message, (NonCategoryChannel) client.getStorage().getChannel(targetId));
         }
