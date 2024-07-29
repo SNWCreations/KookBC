@@ -42,6 +42,10 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     private int quality;
     private int chatLimitTime;
 
+    public VoiceChannelImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
     public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize, int quality, int chatLimitTime) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level, chatLimitTime);
         this.passwordProtected = passwordProtected;
@@ -63,11 +67,13 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public boolean hasPassword() {
+        initIfNeeded();
         return passwordProtected;
     }
 
     @Override
     public int getMaxSize() {
+        initIfNeeded();
         return maxSize;
     }
 

@@ -35,6 +35,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.jkook.exceptions.BadResponseException;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;
@@ -45,13 +46,25 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-public abstract class MessageImpl implements Message {
+public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
     private final String id;
-    private final User user;
-    private BaseComponent component;
-    private final long timeStamp;
-    private final Message quote;
+    private User user;
+    protected BaseComponent component;
+    protected long timeStamp;
+    protected Message quote;
+    protected boolean completed;
+
+    public MessageImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
+
+    public MessageImpl(KBCClient client, String id, User user) {
+        this.client = client;
+        this.id = id;
+        this.user = user;
+    }
 
     public MessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
         this.client = client;
@@ -64,6 +77,7 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public BaseComponent getComponent() {
+        initIfNeeded();
         return component;
     }
 
@@ -74,16 +88,19 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public @Nullable Message getQuote() {
+        initIfNeeded();
         return quote;
     }
 
     @Override
     public User getSender() {
+        initIfNeeded();
         return user;
     }
 
     @Override
     public long getTimeStamp() {
+        initIfNeeded();
         return timeStamp;
     }
 
@@ -167,5 +184,10 @@ public abstract class MessageImpl implements Message {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
     }
 }

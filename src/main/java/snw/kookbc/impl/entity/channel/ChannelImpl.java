@@ -29,6 +29,7 @@ import snw.jkook.entity.channel.Channel;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
@@ -36,16 +37,22 @@ import java.util.*;
 
 import static snw.kookbc.util.GsonUtil.get;
 
-public abstract class ChannelImpl implements Channel, Updatable {
+public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
     private final String id;
-    private final User master;
-    private final Guild guild;
+    private User master;
+    private Guild guild;
     private Collection<RolePermissionOverwrite> rpo;
     private Collection<UserPermissionOverwrite> upo;
     private boolean permSync;
     private String name;
     private int level;
+    private boolean completed;
+
+    public ChannelImpl(KBCClient client, String id) {
+        this.client = client;
+        this.id = id;
+    }
 
     public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
@@ -66,11 +73,13 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public Guild getGuild() {
+        initIfNeeded();
         return guild;
     }
 
     @Override
     public boolean isPermissionSync() {
+        initIfNeeded();
         return permSync;
     }
 
@@ -88,6 +97,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public int getLevel() {
+        initIfNeeded();
         return level;
     }
 
@@ -257,6 +267,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public String getName() {
+        initIfNeeded();
         return name;
     }
 
@@ -276,6 +287,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public Collection<RolePermissionOverwrite> getOverwrittenRolePermissions() {
+        initIfNeeded();
         return Collections.unmodifiableCollection(rpo);
     }
 
@@ -285,6 +297,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions() {
+        initIfNeeded();
         return Collections.unmodifiableCollection(upo);
     }
 
@@ -298,6 +311,7 @@ public abstract class ChannelImpl implements Channel, Updatable {
 
     @Override
     public User getMaster() {
+        initIfNeeded();
         return master;
     }
 
@@ -339,6 +353,28 @@ public abstract class ChannelImpl implements Channel, Updatable {
             this.permSync = isPermSync;
             this.rpo = rpo;
             this.upo = upo;
+
+            // Why we delay the add operation?
+            // We may construct the channel object at any time,
+            // but sometimes they are just garbage object,
+            // to prevent them affecting the cache, we won't add it
+            // when constructing. When this method is called,
+            // we think this object will be actually used.
+            client.getStorage().addChannel(this);
         }
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient().get(
+                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), getId())
+        );
+        update(data);
+        completed = true;
     }
 }

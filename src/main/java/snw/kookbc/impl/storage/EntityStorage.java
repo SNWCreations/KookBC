@@ -23,6 +23,7 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -61,24 +62,9 @@ public class EntityStorage {
     public EntityStorage(KBCClient client) {
         this.client = client;
         this.users = newCaffeineBuilderWithWeakRef()
-                .build(withRetry(id ->
-                        client.getEntityBuilder().buildUser(
-                                client.getNetworkClient().get(
-                                        String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
-                                )
-                        )
-                ));
+                .build(id -> new UserImpl(this.client, id));
         this.guilds = newCaffeineBuilderWithWeakRef()
-                .build(withRetry(id -> {
-                    try {
-                        return client.getEntityBuilder().buildGuild(
-                                client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id))
-                        );
-                    } catch (BadResponseException e) {
-                        if (!(e.getCode() == 403)) throw e; // 403 maybe happened?
-                    }
-                    return null;
-                }));
+                .build(id -> new GuildImpl(this.client, id));
         this.channels = newCaffeineBuilderWithWeakRef().build(); // key: channel ID
         this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
         this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
@@ -86,6 +72,9 @@ public class EntityStorage {
         this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
         this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
 
+        // fixme we stuck there: we don't know the exact type of channel,
+        //  may we deprecate API of getting channel and create new API?
+        //  (Deprecate HttpAPI#getChannel, use HttpAPI#getTextChannel, HttpAPI#getVoiceChannel ?)
         this.channelLoader = funcWithRetry(id ->
                 client.getEntityBuilder().buildChannel(
                         client.getNetworkClient().get(
@@ -111,6 +100,7 @@ public class EntityStorage {
         return guilds.get(id);
     }
 
+    @Deprecated // always construct if not found, don't use if possible
     public Channel getChannel(String id) {
         Channel result = channels.getIfPresent(id);
         if (result == null) {
