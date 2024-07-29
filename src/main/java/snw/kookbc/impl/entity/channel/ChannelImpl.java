@@ -47,7 +47,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     private boolean permSync;
     private String name;
     private int level;
-    private boolean completed;
+    protected boolean completed;
 
     public ChannelImpl(KBCClient client, String id) {
         this.client = client;

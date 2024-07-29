@@ -78,6 +78,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         this.identify = identify;
         this.ban = ban;
         this.vip = vip;
+        this.completed = true;
     }
 
 

@@ -41,6 +41,7 @@ public class CategoryImpl extends ChannelImpl implements Category {
 
     public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
         super(client, id, master, guild, permSync, name, rpo, upo, level);
+        this.completed = true;
     }
 
     @Override

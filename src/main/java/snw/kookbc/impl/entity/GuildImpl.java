@@ -84,6 +84,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
         this.ownerId = ownerId;
         this.notifyType = notifyType;
         this.avatarUrl = avatarUrl;
+        this.completed = true;
     }
 
     @Override

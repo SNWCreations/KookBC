@@ -12,6 +12,7 @@ public class VoiceChannelMessageImpl extends ChannelMessageImpl implements Voice
 
     public VoiceChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, VoiceChannel channel) {
         super(client, id, user, component, timeStamp, quote, channel);
+        this.completed = true;
     }
 
     @Override

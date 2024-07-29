@@ -46,6 +46,7 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
 
     public PrivateMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
         super(client, id, user, component, timeStamp, quote);
+        this.completed = true;
     }
 
     @Override

@@ -50,6 +50,7 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level, chatLimitTime);
         this.chatLimitTime = chatLimitTime;
         this.topic = topic;
+        this.completed = true;
     }
 
     @Override

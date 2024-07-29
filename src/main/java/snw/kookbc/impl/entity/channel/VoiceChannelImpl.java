@@ -52,6 +52,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         this.maxSize = maxSize;
         this.quality = quality;
         this.chatLimitTime = chatLimitTime;
+        this.completed = true;
     }
 
     @Override
