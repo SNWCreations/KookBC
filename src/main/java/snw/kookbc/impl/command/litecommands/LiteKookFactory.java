@@ -23,7 +23,9 @@ import dev.rollczi.litecommands.LiteCommandsFactory;
 import snw.jkook.Core;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Guild;
+import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -31,10 +33,9 @@ import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.Message;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.litecommands.argument.ChannelArgument;
-import snw.kookbc.impl.command.litecommands.argument.GuildArgument;
-import snw.kookbc.impl.command.litecommands.argument.UserArgument;
+import snw.kookbc.impl.command.litecommands.argument.*;
 import snw.kookbc.impl.command.litecommands.tools.KookMessageContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyConsoleContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyUserContextual;
@@ -62,6 +63,9 @@ public class LiteKookFactory {
                         .argument(NonCategoryChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
                         .argument(TextChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
                         .argument(VoiceChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
+
+                        .argument(Role.class, new RoleArgument(((CoreImpl) plugin.getCore()).getClient()))
+                        .argument(CustomEmoji.class, new EmojiArgument(((CoreImpl) plugin.getCore()).getClient()))
 
                         .result(String.class, new StringHandler())
         );
