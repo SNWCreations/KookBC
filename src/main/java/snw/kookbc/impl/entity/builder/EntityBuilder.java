@@ -66,6 +66,27 @@ public class EntityBuilder {
         );
     }
 
+    // only use on /api/v3/user/me
+    public User buildBot(JsonObject object) {
+        String id = get(object, "id").getAsString();
+        boolean bot = get(object, "bot").getAsBoolean();
+        String userName = get(object, "username").getAsString();
+        String avatar = get(object, "avatar").getAsString();
+        int identify = get(object, "identify_num").getAsInt();
+        boolean ban = get(object, "status").getAsInt() == 10;
+        return new UserImpl(
+                client,
+                id,
+                bot,
+                userName,
+                avatar,
+                avatar,
+                identify,
+                ban,
+                false
+        );
+    }
+
     public Guild buildGuild(JsonObject object) {
         String id = get(object, "id").getAsString();
         String name = get(object, "name").getAsString();
