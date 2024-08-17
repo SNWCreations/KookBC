@@ -18,15 +18,20 @@
 
 package snw.kookbc.impl.storage;
 
+import java.util.concurrent.TimeUnit;
+
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.Nullable;
-import snw.jkook.entity.*;
+
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Game;
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.Reaction;
+import snw.jkook.entity.Role;
+import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
@@ -35,9 +40,6 @@ import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.jkook.exceptions.BadResponseException;
-
-import java.util.concurrent.TimeUnit;
 
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
@@ -49,7 +51,8 @@ public class EntityStorage {
     private final LoadingCache<String, Guild> guilds;
     private final Cache<String, Channel> channels;
 
-    // The following data types can be loaded manually, but it costs too many network resource.
+    // The following data types can be loaded manually, but it costs too many
+    // network resource.
     // So we won't remove them if the memory is enough.
     private final Cache<String, Role> roles;
     private final Cache<String, CustomEmoji> emojis;
@@ -61,10 +64,8 @@ public class EntityStorage {
 
     public EntityStorage(KBCClient client) {
         this.client = client;
-        this.users = newCaffeineBuilderWithWeakRef()
-                .build(id -> new UserImpl(this.client, id));
-        this.guilds = newCaffeineBuilderWithWeakRef()
-                .build(id -> new GuildImpl(this.client, id));
+        this.users = newCaffeineBuilderWithSoftRef().build(id -> new UserImpl(this.client, id));
+        this.guilds = newCaffeineBuilderWithWeakRef().build(id -> new GuildImpl(this.client, id));
         this.channels = newCaffeineBuilderWithWeakRef().build(); // key: channel ID
         this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
         this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
@@ -73,15 +74,12 @@ public class EntityStorage {
         this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
 
         // fixme we stuck there: we don't know the exact type of channel,
-        //  may we deprecate API of getting channel and create new API?
-        //  (Deprecate HttpAPI#getChannel, use HttpAPI#getTextChannel, HttpAPI#getVoiceChannel ?)
-        this.channelLoader = funcWithRetry(id ->
-                client.getEntityBuilder().buildChannel(
-                        client.getNetworkClient().get(
-                                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id)
-                        )
-                )
-        );
+        // may we deprecate API of getting channel and create new API?
+        // (Deprecate HttpAPI#getChannel, use HttpAPI#getTextChannel,
+        // HttpAPI#getVoiceChannel ?)
+        this.channelLoader = funcWithRetry(id -> client.getEntityBuilder().buildChannel(
+                client.getNetworkClient().get(
+                        String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), id))));
     }
 
     public Game getGame(int id) {
@@ -192,7 +190,8 @@ public class EntityStorage {
     }
 
     public void addReaction(Reaction reaction) {
-        reactions.put(reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId(), reaction);
+        reactions.put(reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId(),
+                reaction);
     }
 
     public void addMessage(Message message) {
@@ -220,7 +219,8 @@ public class EntityStorage {
     }
 
     public void removeReaction(Reaction reaction) {
-        reactions.invalidate(reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId());
+        reactions.invalidate(
+                reaction.getMessageId() + "#" + reaction.getEmoji().getId() + "#" + reaction.getSender().getId());
     }
 
     // Only called when the message is invalid
@@ -271,9 +271,10 @@ public class EntityStorage {
         };
     }
 
-    private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original) {
-        return funcWithRetry(original::load)::apply;
-    }
+    // private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original)
+    // {
+    // return funcWithRetry(original::load)::apply;
+    // }
 
     public void cleanUpUserPermissionOverwrite(Guild guild, User user) {
         channels.asMap().values()

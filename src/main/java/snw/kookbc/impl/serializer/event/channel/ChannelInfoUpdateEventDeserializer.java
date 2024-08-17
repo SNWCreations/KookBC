@@ -18,19 +18,20 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.channel.Channel;
-import snw.jkook.event.channel.ChannelInfoUpdateEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.channel.ChannelImpl;
-import snw.jkook.exceptions.BadResponseException;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.event.channel.ChannelInfoUpdateEvent;
+import snw.jkook.exceptions.BadResponseException;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.ChannelImpl;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<ChannelInfoUpdateEvent> {
 
@@ -39,9 +40,10 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
     }
 
     @Override
-    protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+    protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        String id = getAsString(body, "id");
         Channel channel;
-        String id = get(body, "id").getAsString();
         try {
             channel = client.getStorage().getChannel(id);
         } catch (BadResponseException e) {
@@ -53,10 +55,7 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
             return null;
         }
         ((ChannelImpl) channel).update(body);
-        return new ChannelInfoUpdateEvent(
-                timeStamp,
-                channel
-        );
+        return new ChannelInfoUpdateEvent(timeStamp, channel);
     }
 
 }

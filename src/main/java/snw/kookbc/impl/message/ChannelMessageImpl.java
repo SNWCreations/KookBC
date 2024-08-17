@@ -1,6 +1,14 @@
 package snw.kookbc.impl.message;
 
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
 import com.google.gson.JsonObject;
+
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -14,13 +22,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
-
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     protected NonCategoryChannel channel;
@@ -29,7 +30,8 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
         super(client, id);
     }
 
-    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, NonCategoryChannel channel) {
+    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote, NonCategoryChannel channel) {
         super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
     }
@@ -98,8 +100,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
                 .build();
         client.getNetworkClient().post(
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
-                body
-        );
+                body);
     }
 
     @Override
@@ -129,7 +130,8 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     @Override
     public void delete() {
-        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(),
+                Collections.singletonMap("msg_id", getId()));
     }
 
     @Override
@@ -142,8 +144,8 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
         } catch (BadResponseException e) {
             if (e.getCode() == 40000) {
                 throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + id + " found")
-                                .initCause(e);
+                new NoSuchElementException("No message object with provided ID " + id + " found")
+                        .initCause(e);
             }
             throw e;
         }
@@ -169,7 +171,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     protected NonCategoryChannel retrieveOwningChannel(String id) {
         // todo for removal
-        //noinspection deprecation
+        // noinspection deprecation
         return (NonCategoryChannel) client.getCore().getHttpAPI().getChannel(id);
     }
 }

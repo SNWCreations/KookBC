@@ -18,10 +18,21 @@
 
 package snw.kookbc.impl.entity;
 
+import static snw.kookbc.util.GsonUtil.get;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.Nullable;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
@@ -40,10 +51,6 @@ import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.*;
-
-import static snw.kookbc.util.GsonUtil.get;
-
 public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
     private final String id;
@@ -61,26 +68,19 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         this.id = id;
     }
 
-    public UserImpl(KBCClient client, String id,
-                    boolean bot,
-                    String name,
-                    String avatarUrl,
-                    String vipAvatarUrl,
-                    int identify,
-                    boolean ban,
-                    boolean vip) {
+    public UserImpl(KBCClient client, String id, boolean bot, String name, int identify, boolean ban, boolean vip,
+            String avatarUrl, String vipAvatarUrl) {
         this.client = client;
         this.id = id;
         this.bot = bot;
         this.name = name;
-        this.avatarUrl = avatarUrl;
-        this.vipAvatarUrl = vipAvatarUrl;
         this.identify = identify;
         this.ban = ban;
         this.vip = vip;
+        this.avatarUrl = avatarUrl;
+        this.vipAvatarUrl = vipAvatarUrl;
         this.completed = true;
     }
-
 
     @Override
     public String getId() {
@@ -90,10 +90,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     @Override
     public String getNickName(Guild guild) {
         return client.getNetworkClient()
-                .get(String.format("%s?user_id=%s&guild_id=%s",
-                        HttpAPIRoute.USER_WHO.toFullURL(),
-                        id,
-                        guild.getId()))
+                .get(String.format("%s?user_id=%s&guild_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id, guild.getId()))
                 .get("nickname")
                 .getAsString();
     }
@@ -115,13 +112,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public int getIdentifyNumber() {
-        initIfNeeded();
+        lazyload();
         return identify;
     }
 
     @Override
     public boolean isVip() {
-        initIfNeeded();
+        lazyload();
         return vip;
     }
 
@@ -131,18 +128,19 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public boolean isBot() {
-        initIfNeeded();
+        lazyload();
         return bot;
     }
 
     @Override
     public boolean isOnline() {
-        return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)).get("online").getAsBoolean();
+        return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id))
+                .get("online").getAsBoolean();
     }
 
     @Override
     public boolean isBanned() {
-        initIfNeeded();
+        lazyload();
         return ban;
     }
 
@@ -187,7 +185,8 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 .put("content", json)
                 .putIfNotNull("quote", quote, Message::getId)
                 .build();
-        return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id").getAsString();
+        return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id")
+                .getAsString();
     }
 
     @Override
@@ -197,12 +196,15 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public int getIntimacy() {
-        return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score").getAsInt();
+        return client.getNetworkClient()
+                .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score")
+                .getAsInt();
     }
 
     @Override
     public IntimacyInfo getIntimacyInfo() {
-        JsonObject object = client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
+        JsonObject object = client.getNetworkClient()
+                .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
         String socialImage = get(object, "img_url").getAsString();
         String socialInfo = get(object, "social_info").getAsString();
         int lastRead = get(object, "last_read").getAsInt();
@@ -214,8 +216,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
             String id = obj.get("id").getAsString();
             String url = obj.get("url").getAsString();
             socialImages.add(
-                    new SocialImageImpl(id, url)
-            );
+                    new SocialImageImpl(id, url));
         }
         return new IntimacyInfoImpl(socialImage, socialInfo, lastRead, score, socialImages);
     }
@@ -300,13 +301,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
-        initIfNeeded();
+        lazyload();
         return b ? vipAvatarUrl : avatarUrl;
     }
 
     @Override
     public String getName() {
-        initIfNeeded();
+        lazyload();
         return name;
     }
 
@@ -332,7 +333,8 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update user by using different data");
+        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()),
+                "You can't update user by using different data");
         synchronized (this) {
             name = get(data, "username").getAsString();
             bot = get(data, "bot").getAsBoolean();
@@ -352,8 +354,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     @Override
     public void initialize() {
         final JsonObject data = client.getNetworkClient().get(
-                String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id)
-        );
+                String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id));
         update(data);
         completed = true;
     }
@@ -366,7 +367,8 @@ class IntimacyInfoImpl implements User.IntimacyInfo {
     private final int score;
     private final Collection<SocialImage> socialImages;
 
-    IntimacyInfoImpl(String socialImage, String socialInfo, int lastRead, int score, Collection<SocialImage> socialImages) {
+    IntimacyInfoImpl(String socialImage, String socialInfo, int lastRead, int score,
+            Collection<SocialImage> socialImages) {
         this.socialImage = socialImage;
         this.socialInfo = socialInfo;
         this.lastRead = lastRead;

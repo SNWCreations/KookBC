@@ -17,18 +17,35 @@
  */
 package snw.kookbc.util;
 
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.NoSuchElementException;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
+
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.element.ButtonElement;
 import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.element.MarkdownElement;
 import snw.jkook.message.component.card.element.PlainTextElement;
-import snw.jkook.message.component.card.module.*;
+import snw.jkook.message.component.card.module.ActionGroupModule;
+import snw.jkook.message.component.card.module.ContainerModule;
+import snw.jkook.message.component.card.module.ContextModule;
+import snw.jkook.message.component.card.module.CountdownModule;
+import snw.jkook.message.component.card.module.DividerModule;
+import snw.jkook.message.component.card.module.FileModule;
+import snw.jkook.message.component.card.module.HeaderModule;
+import snw.jkook.message.component.card.module.ImageGroupModule;
+import snw.jkook.message.component.card.module.InviteModule;
+import snw.jkook.message.component.card.module.SectionModule;
 import snw.jkook.message.component.card.structure.Paragraph;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.serializer.component.card.CardComponentSerializer;
@@ -36,12 +53,17 @@ import snw.kookbc.impl.serializer.component.card.MultipleCardComponentSerializer
 import snw.kookbc.impl.serializer.component.card.element.ButtonElementSerializer;
 import snw.kookbc.impl.serializer.component.card.element.ContentElementSerializer;
 import snw.kookbc.impl.serializer.component.card.element.ImageElementSerializer;
-import snw.kookbc.impl.serializer.component.card.module.*;
+import snw.kookbc.impl.serializer.component.card.module.ActionGroupModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.ContainerModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.ContextModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.CountdownModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.DividerModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.FileModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.HeaderModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.ImageGroupModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.InviteModuleSerializer;
+import snw.kookbc.impl.serializer.component.card.module.SectionModuleSerializer;
 import snw.kookbc.impl.serializer.component.card.structure.ParagraphSerializer;
-
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 public final class GsonUtil {
     public static final Gson CARD_GSON = new GsonBuilder()
@@ -52,10 +74,12 @@ public final class GsonUtil {
             // Element
             .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
             .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
-            .registerTypeAdapter(MarkdownElement.class, new ContentElementSerializer<>("kmarkdown", MarkdownElement::getContent, MarkdownElement::new))
-            .registerTypeAdapter(PlainTextElement.class, new ContentElementSerializer<>("plain-text", PlainTextElement::getContent, PlainTextElement::new))
+            .registerTypeAdapter(MarkdownElement.class,
+                    new ContentElementSerializer<>("kmarkdown", MarkdownElement::getContent, MarkdownElement::new))
+            .registerTypeAdapter(PlainTextElement.class,
+                    new ContentElementSerializer<>("plain-text", PlainTextElement::getContent, PlainTextElement::new))
 
-            //Structure
+            // Structure
             .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
 
             // Module
@@ -99,6 +123,42 @@ public final class GsonUtil {
             throw new NoSuchElementException("There is no valid value mapped to requested key '" + key + "'.");
         }
         return result;
+    }
+
+    public static String getAsString(JsonObject object, String key) {
+        return get(object, key).getAsString();
+    }
+
+    public static int getAsInt(JsonObject object, String key) {
+        return get(object, key).getAsInt();
+    }
+
+    public static long getAsLong(JsonObject object, String key) {
+        return get(object, key).getAsLong();
+    }
+
+    public static double getAsDouble(JsonObject object, String key) {
+        return get(object, key).getAsDouble();
+    }
+
+    public static boolean getAsBoolean(JsonObject object, String key) {
+        return get(object, key).getAsBoolean();
+    }
+
+    public static JsonObject getAsJsonObject(JsonObject object, String key) {
+        return get(object, key).getAsJsonObject();
+    }
+
+    public static JsonArray getAsJsonArray(JsonObject object, String key) {
+        return get(object, key).getAsJsonArray();
+    }
+
+    public static JsonPrimitive getAsJsonPrimitive(JsonObject object, String key) {
+        return get(object, key).getAsJsonPrimitive();
+    }
+
+    public static JsonNull getAsJsonNull(JsonObject object, String key) {
+        return get(object, key).getAsJsonNull();
     }
 
     private GsonUtil() {

@@ -18,16 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.channel.ChannelDeleteEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.event.channel.ChannelDeleteEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<ChannelDeleteEvent> {
 
@@ -36,12 +37,12 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
     }
 
     @Override
-    protected ChannelDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+    protected ChannelDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
         return new ChannelDeleteEvent(
                 timeStamp,
-                get(body, "id").getAsString(),
-                client.getStorage().getGuild(get(object, "target_id").getAsString())
-        );
+                getAsString(body, "id"),
+                client.getStorage().getGuild(getAsString(object, "target_id")));
     }
 
     @Override

@@ -32,7 +32,8 @@ public class TextChannelMessageImpl extends ChannelMessageImpl implements TextCh
         super(client, id);
     }
 
-    public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
+    public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote, TextChannel channel) {
         super(client, id, user, component, timeStamp, quote, channel);
         this.completed = true;
     }

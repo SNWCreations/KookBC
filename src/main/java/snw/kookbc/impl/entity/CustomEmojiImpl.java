@@ -18,20 +18,21 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonObject;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.Guild;
-import snw.jkook.util.Validate;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.interfaces.Updatable;
-import snw.kookbc.util.MapBuilder;
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonObject;
+
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Guild;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.Updatable;
+import snw.kookbc.util.MapBuilder;
 
 public class CustomEmojiImpl implements CustomEmoji, Updatable {
     private final KBCClient client;
@@ -39,12 +40,11 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
     private final Guild guild;
     private String name;
 
-    public CustomEmojiImpl(KBCClient client, String id, String name, Guild guild) {
+    public CustomEmojiImpl(KBCClient client, String id, Guild guild, String name) {
         this.client = client;
-        this.name = name;
         this.id = id;
-        // optional attributes are following:
-        this.guild = guild;
+        this.guild = guild; // optional attributes are following:
+        this.name = name;
     }
 
     @Override
@@ -74,7 +74,8 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
 
     @Override
     public void delete() {
-        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(), Collections.singletonMap("id", getId()));
+        client.getNetworkClient().post(HttpAPIRoute.GUILD_EMOJI_DELETE.toFullURL(),
+                Collections.singletonMap("id", getId()));
     }
 
     public void setName0(String name) {
@@ -82,10 +83,8 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
     }
 
     @Override
-    public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update the emoji by using different data");
-        synchronized (this) {
-            this.name = get(data, "name").getAsString();
-        }
+    public synchronized void update(JsonObject data) {
+        isTrue(Objects.equals(getId(), getAsString(data, "id")), "You can't update the emoji by using different data");
+        this.name = getAsString(data, "name");
     }
 }

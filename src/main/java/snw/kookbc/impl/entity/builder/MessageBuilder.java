@@ -18,12 +18,16 @@
 
 package snw.kookbc.impl.entity.builder;
 
+import static snw.kookbc.util.GsonUtil.CARD_GSON;
+import static snw.kookbc.util.GsonUtil.get;
+
+import java.util.NoSuchElementException;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
-import snw.jkook.entity.channel.TextChannel;
-import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
@@ -37,12 +41,11 @@ import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.message.*;
-
-import java.util.NoSuchElementException;
-
-import static snw.kookbc.util.GsonUtil.CARD_GSON;
-import static snw.kookbc.util.GsonUtil.get;
+import snw.kookbc.impl.message.ChannelMessageImpl;
+import snw.kookbc.impl.message.PrivateMessageImpl;
+import snw.kookbc.impl.message.QuoteImpl;
+import snw.kookbc.impl.message.TextChannelMessageImpl;
+import snw.kookbc.impl.message.VoiceChannelMessageImpl;
 
 public class MessageBuilder {
     private final KBCClient client;
@@ -57,27 +60,28 @@ public class MessageBuilder {
     // result format: {type, json}
     public static Object[] serialize(BaseComponent component) {
         if (component instanceof MarkdownComponent) {
-            return new Object[]{9, component.toString()};
+            return new Object[] { 9, component.toString() };
         } else if (component instanceof TextComponent) {
-            return new Object[]{1, component.toString()};
+            return new Object[] { 1, component.toString() };
         } else if (component instanceof CardComponent) {
-            return new Object[]{10, CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component))};
+            return new Object[] { 10, CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component)) };
         } else if (component instanceof MultipleCardComponent) {
-            return new Object[]{10, CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component))};
+            return new Object[] { 10, CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component)) };
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
             MultipleCardComponent fileCard;
             if (fileComponent.getType() == FileComponent.Type.IMAGE) { // special condition for better performance
-                return new Object[]{2, fileComponent.getUrl()};
-            } else if (fileComponent.getType() == FileComponent.Type.VIDEO) { // special condition for better performance
-                return new Object[]{3, fileComponent.getUrl()};
+                return new Object[] { 2, fileComponent.getUrl() };
+            } else if (fileComponent.getType() == FileComponent.Type.VIDEO) { // special condition for better
+                                                                              // performance
+                return new Object[] { 3, fileComponent.getUrl() };
             } else {
                 fileCard = new snw.jkook.message.component.card.CardBuilder()
                         .setTheme(Theme.NONE)
                         .setSize(Size.LG)
                         .addModule(
-                                new FileModule(fileComponent.getType(), fileComponent.getUrl(), fileComponent.getTitle(), null)
-                        )
+                                new FileModule(fileComponent.getType(), fileComponent.getUrl(),
+                                        fileComponent.getTitle(), null))
                         .build();
                 return serialize(fileCard); // actually, this is not a loop call
             }
@@ -125,20 +129,26 @@ public class MessageBuilder {
         }
     }
 
-    private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp, Message message, String targetId, int channelType) {
+    private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp,
+            Message message, String targetId, int channelType) {
         if (channelType == CHANNEL_TYPE_TEXT) {
-            return new TextChannelMessageImpl(client, id, author, component, timeStamp, message, client.getCore().getHttpAPI().getTextChannel(targetId));
+            return new TextChannelMessageImpl(client, id, author, component, timeStamp, message,
+                    client.getCore().getHttpAPI().getTextChannel(targetId));
         } else if (channelType == CHANNEL_TYPE_VOICE) {
-            return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message, client.getCore().getHttpAPI().getVoiceChannel(targetId));
+            return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message,
+                    client.getCore().getHttpAPI().getVoiceChannel(targetId));
         } else {
-            return new ChannelMessageImpl(client, id, author, component, timeStamp, message, (NonCategoryChannel) client.getStorage().getChannel(targetId));
+            return new ChannelMessageImpl(client, id, author, component, timeStamp, message,
+                    (NonCategoryChannel) client.getStorage().getChannel(targetId));
         }
     }
 
     public Message buildQuote(JsonObject object) {
-        if (object == null) return null;
+        if (object == null)
+            return null;
 
-        String id = get(object, "rong_id").getAsString(); // WARNING: this is not described in Kook developer document, maybe unavailable in the future
+        String id = get(object, "rong_id").getAsString(); // WARNING: this is not described in Kook developer document,
+                                                          // maybe unavailable in the future
 
         BaseComponent component = buildComponent(object);
         long timeStamp = get(object, "create_at").getAsLong();
@@ -199,9 +209,9 @@ public class MessageBuilder {
                         url,
                         title,
                         size,
-                        type
-                );
-            case 1: // Are you sure? This message type was deprecated. KOOK converts plain text (TextComponent) into KMarkdown (MarkdownComponent)
+                        type);
+            case 1: // Are you sure? This message type was deprecated. KOOK converts plain text
+                    // (TextComponent) into KMarkdown (MarkdownComponent)
                 return new TextComponent(content);
         }
         throw new RuntimeException("Unknown component type");
