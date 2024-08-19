@@ -52,15 +52,16 @@ public class KookLitePlatform extends AbstractPlatform<CommandSender, LiteKookSe
 
     @Override
     protected void hook(CommandRoute<CommandSender> commandRoute, PlatformInvocationListener<CommandSender> platformInvocationListener, PlatformSuggestionListener<CommandSender> platformSuggestionListener) {
-        for (String label : commandRoute.names()) {
-            List<String> desc = commandRoute.meta().get(Meta.DESCRIPTION);
-            Set<String> prefixes = commandRoute.meta().get(PREFIX);
-            // List<String> perms = commandRoute.meta().get(Meta.PERMISSIONS);
-            JKookCommand command = new JKookCommand(label, prefixes)
-                    .setDescription(String.join("\n", desc))
-                    .setExecutor(new LiteKookCommandExecutor(plugin.getCore(), settings, commandRoute, label, platformInvocationListener, platformSuggestionListener));
-            commandMap.register(plugin, command);
+        List<String> desc = commandRoute.meta().get(Meta.DESCRIPTION);
+        Set<String> prefixes = commandRoute.meta().get(PREFIX);
+        // List<String> perms = commandRoute.meta().get(Meta.PERMISSIONS);
+        JKookCommand command = new JKookCommand(commandRoute.getName(), prefixes)
+                .setDescription(String.join("\n", desc))
+                .setExecutor(new LiteKookCommandExecutor(plugin.getCore(), settings, commandRoute, commandRoute.getName(), platformInvocationListener, platformSuggestionListener));
+        for (String alias : commandRoute.getAliases()) {
+            command.addAlias(alias);
         }
+        commandMap.register(plugin, command);
     }
 
     @Override
