@@ -365,6 +365,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public User getMaster() {
+        lazyload();
         return master;
     }
 

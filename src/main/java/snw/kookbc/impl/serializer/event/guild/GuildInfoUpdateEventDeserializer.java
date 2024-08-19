@@ -38,13 +38,11 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
     }
 
     @Override
-    protected GuildInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+    protected GuildInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
         Guild guild = client.getStorage().getGuild(get(body, "id").getAsString());
         ((GuildImpl) guild).update(body);
-        return new GuildInfoUpdateEvent(
-                timeStamp,
-                guild
-        );
+        return new GuildInfoUpdateEvent(timeStamp, guild);
     }
 
 }
