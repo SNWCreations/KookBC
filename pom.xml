@@ -304,7 +304,7 @@
         <dependency>
             <groupId>dev.rollczi</groupId>
             <artifactId>litecommands-framework</artifactId>
-            <version>3.3.4</version>
+            <version>3.4.2</version>
         </dependency>
 
         <dependency>
