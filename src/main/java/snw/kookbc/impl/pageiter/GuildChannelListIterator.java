@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.pageiter;
 
+import static snw.kookbc.util.GsonUtil.getAsString;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,7 +48,7 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     protected void processElements(JsonArray array) {
         object = new HashSet<>(array.size());
         for (JsonElement element : array) {
-            object.add(client.getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
+            object.add(client.getStorage().getChannel(getAsString(element.getAsJsonObject(), "id")));
         }
     }
 

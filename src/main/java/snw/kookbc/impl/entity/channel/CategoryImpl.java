@@ -51,7 +51,7 @@ public class CategoryImpl extends ChannelImpl implements Category {
         final JsonObject object = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId() + "&need_children=true");
         update(object);
-        Collection<Channel> channels = new LinkedList<>();
+        final Collection<Channel> channels = new LinkedList<>();
         getAsJsonArray(object, "children")
                 .asList()
                 .stream()

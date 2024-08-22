@@ -38,7 +38,7 @@ public class Bucket {
     private final String name; // defined by response header
     private final AtomicInteger availableTimes = new AtomicInteger(Integer.MIN_VALUE);
     private final AtomicInteger resetTime = new AtomicInteger();
-    private volatile boolean scheduledToUpdate;
+    // private volatile boolean scheduledToUpdate;
 
     // Use get(KBCClient, String) method instead.
     private Bucket(KBCClient client, String name) {
