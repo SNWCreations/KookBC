@@ -18,15 +18,16 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import snw.jkook.entity.channel.Channel;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.HttpAPIRoute;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+
+import snw.jkook.entity.channel.Channel;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.network.HttpAPIRoute;
 
 public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     private final String guildId;

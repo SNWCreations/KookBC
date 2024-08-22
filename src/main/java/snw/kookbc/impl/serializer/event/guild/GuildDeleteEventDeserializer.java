@@ -18,16 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.guild.GuildDeleteEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.event.guild.GuildDeleteEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildDeleteEvent> {
 
@@ -36,12 +37,11 @@ public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildD
     }
 
     @Override
-    protected GuildDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        client.getStorage().removeGuild(get(body, "id").getAsString());
-        return new GuildDeleteEvent(
-                timeStamp,
-                get(body, "id").getAsString()
-        );
+    protected GuildDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
+            JsonObject body) throws JsonParseException {
+        final String id = getAsString(body, "id");
+        client.getStorage().removeGuild(id);
+        return new GuildDeleteEvent(timeStamp, id);
     }
 
 }

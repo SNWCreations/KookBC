@@ -47,6 +47,7 @@ import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.util.MapBuilder;
 
 public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonCategoryChannel {
+
     private Category parent;
     private int chatLimitTime;
 
@@ -86,10 +87,6 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("parent_id", (parent == null) ? 0 : parent.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setParent0(parent);
-    }
-
-    public void setParent0(Category parent) {
         this.parent = parent;
     }
 
@@ -150,19 +147,15 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("slow_mode", chatLimitTime)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setChatLimitTime0(chatLimitTime);
-    }
-
-    public void setChatLimitTime0(int chatLimitTime) {
         this.chatLimitTime = chatLimitTime;
     }
 
     @Override
     public synchronized void update(JsonObject data) {
         super.update(data);
-        String parentId = getAsString(data, "parent_id");
-        Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null
-                : (Category) client.getStorage().getChannel(parentId);
-        setParent0(parent);
+        final String parentId = getAsString(data, "parent_id");
+        final Boolean needParent = "".equals(parentId) || "0".equals(parentId);
+        this.parent = needParent ? null : new CategoryImpl(client, parentId);
     }
+
 }

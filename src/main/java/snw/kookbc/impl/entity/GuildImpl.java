@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
+import static java.util.Objects.requireNonNull;
 import static snw.jkook.util.Validate.isTrue;
 import static snw.kookbc.util.GsonUtil.get;
 import static snw.kookbc.util.GsonUtil.getAsBoolean;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
@@ -82,14 +84,13 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private boolean completed;
 
     public GuildImpl(KBCClient client, String id) {
-        this.client = client;
-        this.id = id;
+        this.client = requireNonNull(client);
+        this.id = requireNonNull(id);
     }
 
     public GuildImpl(KBCClient client, String id, NotifyType notifyType, User master, String name, boolean public_,
             String region, String avatarUrl) {
-        this.client = client;
-        this.id = id;
+        this(client, id);
         this.notifyType = notifyType;
         this.master = master;
         this.name = name;
@@ -389,18 +390,16 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public synchronized void update(JsonObject data) {
-        isTrue(Objects.equals(getId(), getAsString(data, "id")), "You can't update guild by using different data");
-        int notifyTypeId = getAsInt(data, "notify_type");
+        final String id = getAsString(data, "id");
+        final int notifyTypeId = getAsInt(data, "notify_type");
+        final Supplier<String> notifyErr = () -> "Unexpected NotifyType, got " + notifyTypeId;
+        isTrue(Objects.equals(getId(), id), "You can't update guild by using different data");
         this.name = getAsString(data, "name");
         this.public_ = getAsBoolean(data, "enable_open");
         this.region = getAsString(data, "region");
-        this.notifyType = Objects.requireNonNull(NotifyType.value(notifyTypeId),
-                () -> "Unexpected NotifyType, got " + notifyTypeId);
+        this.notifyType = requireNonNull(NotifyType.value(notifyTypeId), notifyErr);
         this.avatarUrl = getAsString(data, "icon");
-        final String incomingMasterId = getAsString(data, "user_id");
-        if (!incomingMasterId.equals(master.getId())) {
-            this.master = new UserImpl(client, incomingMasterId);
-        }
+        this.master = new UserImpl(client, getAsString(data, "user_id"));
     }
 
     @Override

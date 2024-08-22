@@ -18,15 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.message.ChannelMessage;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
-
-import java.lang.reflect.Type;
 
 public class ChannelMessageEventDeserializer extends BaseEventDeserializer<ChannelMessageEvent> {
 
@@ -37,8 +39,10 @@ public class ChannelMessageEventDeserializer extends BaseEventDeserializer<Chann
     @Override
     protected ChannelMessageEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx)
             throws JsonParseException {
-        ChannelMessage msg = client.getMessageBuilder().buildChannelMessage(object);
-        return new ChannelMessageEvent(msg.getTimeStamp(), msg.getChannel(), msg);
+        final ChannelMessage msg = client.getMessageBuilder().buildChannelMessage(object);
+        final long timeStamp = msg.getTimeStamp();
+        final NonCategoryChannel channel = msg.getChannel();
+        return new ChannelMessageEvent(timeStamp, channel, msg);
     }
 
     @Override

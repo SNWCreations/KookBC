@@ -25,4 +25,5 @@ public class VoiceChannelMessageImpl extends ChannelMessageImpl implements Voice
     protected NonCategoryChannel retrieveOwningChannel(String id) {
         return client.getCore().getHttpAPI().getVoiceChannel(id);
     }
+
 }

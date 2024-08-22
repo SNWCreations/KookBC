@@ -25,6 +25,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Guild;
 import snw.jkook.event.guild.GuildAddEmojiEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
@@ -38,8 +39,9 @@ public class GuildAddEmojiEventDeserializer extends NormalEventDeserializer<Guil
     @Override
     protected GuildAddEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji customEmoji = client.getEntityBuilder().buildEmoji(body);
-        return new GuildAddEmojiEvent(timeStamp, customEmoji.getGuild(), customEmoji);
+        final CustomEmoji customEmoji = client.getEntityBuilder().buildEmoji(body);
+        final Guild guild = customEmoji.getGuild();
+        return new GuildAddEmojiEvent(timeStamp, guild, customEmoji);
     }
 
 }

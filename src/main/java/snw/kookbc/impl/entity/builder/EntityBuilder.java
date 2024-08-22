@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.builder;
 
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseEmojiGuild;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseNotifyType;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
@@ -32,11 +33,11 @@ import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
+import snw.jkook.entity.Guild.NotifyType;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.CustomEmojiImpl;
 import snw.kookbc.impl.entity.GameImpl;
@@ -69,7 +70,7 @@ public class EntityBuilder {
 
     public Guild buildGuild(JsonObject object) {
         final String id = getAsString(object, "id");
-        final Guild.NotifyType notifyType = parseNotifyType(object);
+        final NotifyType notifyType = parseNotifyType(object);
         final User master = client.getStorage().getUser(getAsString(object, "master_id"));
         final String name = getAsString(object, "name");
         final boolean public_ = getAsBoolean(object, "enable_open");
@@ -87,13 +88,12 @@ public class EntityBuilder {
         final int level = getAsInt(object, "level");
         final Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(object);
         final Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, object);
-
         if (getAsBoolean(object, "is_category")) {
             return new CategoryImpl(client, id, master, guild, isPermSync, rpo, upo, level, name);
         }
         final String parentId = getAsString(object, "parent_id");
-        final Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null
-                : (Category) client.getStorage().getChannel(parentId);
+        final Boolean needCategory = "".equals(parentId) || "0".equals(parentId);
+        final Category parent = needCategory ? null : new CategoryImpl(client, parentId);
         switch (getAsInt(object, "type")) {
             case 1: {
                 final int chatLimitTime = getAsInt(object, "slow_mode");
@@ -128,19 +128,9 @@ public class EntityBuilder {
     }
 
     public CustomEmoji buildEmoji(JsonObject object) {
-        String id = getAsString(object, "id");
-        Guild guild = null;
-        if (id.contains("/")) {
-            try {
-                guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
-            } catch (BadResponseException e) {
-                if (!(e.getCode() == 403)) {
-                    throw e;
-                }
-                // or you don't have permission to access it!
-            }
-        }
-        String name = getAsString(object, "name");
+        final String id = getAsString(object, "id");
+        final Guild guild = parseEmojiGuild(id, client, object);
+        final String name = getAsString(object, "name");
         return new CustomEmojiImpl(client, id, guild, name);
     }
 

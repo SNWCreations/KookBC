@@ -18,22 +18,24 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.User;
-import snw.jkook.event.guild.GuildUnbanUserEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.storage.EntityStorage;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.User;
+import snw.jkook.event.guild.GuildUnbanUserEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import snw.kookbc.impl.storage.EntityStorage;
 
 public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<GuildUnbanUserEvent> {
 
@@ -42,22 +44,19 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
     }
 
     @Override
-    protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        EntityStorage storage = client.getStorage();
-        List<User> unbanned = Collections.unmodifiableList(
+    protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final EntityStorage storage = client.getStorage();
+        final Guild guild = storage.getGuild(getAsString(object, "target_id"));
+        final List<User> unbanned = Collections.unmodifiableList(
                 body.getAsJsonArray("user_id")
                         .asList()
                         .stream()
                         .map(JsonElement::getAsString)
                         .map(storage::getUser)
-                        .collect(Collectors.toList())
-        );
-        return new GuildUnbanUserEvent(
-                timeStamp,
-                storage.getGuild(get(object, "target_id").getAsString()),
-                unbanned,
-                storage.getUser(get(body, "operator_id").getAsString())
-        );
+                        .collect(Collectors.toList()));
+        final User operator = storage.getUser(getAsString(body, "operator_id"));
+        return new GuildUnbanUserEvent(timeStamp, guild, unbanned, operator);
     }
 
 }

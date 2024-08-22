@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
+import static java.util.Objects.requireNonNull;
 import static snw.kookbc.util.GsonUtil.get;
 
 import java.util.ArrayList;
@@ -64,14 +65,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     private boolean completed;
 
     public UserImpl(KBCClient client, String id) {
-        this.client = client;
-        this.id = id;
+        this.client = requireNonNull(client);
+        this.id = requireNonNull(id);
     }
 
     public UserImpl(KBCClient client, String id, boolean bot, String name, int identify, boolean ban, boolean vip,
             String avatarUrl, String vipAvatarUrl) {
-        this.client = client;
-        this.id = id;
+        this(client, id);
         this.bot = bot;
         this.name = name;
         this.identify = identify;

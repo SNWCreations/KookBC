@@ -91,11 +91,9 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
     }
 
     @Override
-    public void update(JsonObject data) {
-        synchronized (this) {
-            super.update(data);
-            this.chatLimitTime = getAsInt(data, "slow_mode");
-            this.topic = getAsString(data, "topic");
-        }
+    public synchronized void update(JsonObject data) {
+        super.update(data);
+        this.chatLimitTime = getAsInt(data, "slow_mode");
+        this.topic = getAsString(data, "topic");
     }
 }

@@ -18,7 +18,21 @@
 
 package snw.kookbc.util;
 
+import static java.util.Collections.emptyList;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
+
 import org.yaml.snakeyaml.Yaml;
+
 import snw.jkook.command.JKookCommand;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.plugin.PluginDescription;
@@ -27,13 +41,6 @@ import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
 
 public class Util {
 
@@ -171,18 +178,16 @@ public class Util {
         return result;
     }
 
-    private static void insertCommandHelpContent(List<String> result, String rootName, Collection<String> prefixes, String description) {
+    private static void insertCommandHelpContent(List<String> result, String rootName, Collection<String> prefixes,
+            String description) {
         result.add(
                 limit(
                         String.format("(%s)%s: %s",
                                 String.join(" ",
                                         prefixes),
                                 rootName,
-                                (isBlank(description)) ? "此命令没有简介。" : description
-                        ),
-                        4997
-                )
-        );
+                                (isBlank(description)) ? "此命令没有简介。" : description),
+                        4997));
     }
 
     public static JKookCommand findSpecificCommand(KBCClient client, String name) {
@@ -204,7 +209,6 @@ public class Util {
         return String.format("%s...", original.substring(0, maxLength));
     }
 
-
     public static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
     }
@@ -213,7 +217,12 @@ public class Util {
         final Yaml parser = new Yaml();
         try {
             final Map<String, Object> ymlContent = parser.load(stream);
-            // noinspection unchecked
+            @SuppressWarnings("unchecked")
+            final List<String> authors = (List<String>) ymlContent.getOrDefault("authors", emptyList());
+            @SuppressWarnings("unchecked")
+            final List<String> depend = (List<String>) ymlContent.getOrDefault("depend", emptyList());
+            @SuppressWarnings("unchecked")
+            final List<String> softDepend = (List<String>) ymlContent.getOrDefault("softdepend", emptyList());
             return new PluginDescription(
                     Objects.requireNonNull(ymlContent.get("name"), "name is missing").toString(),
                     Objects.requireNonNull(ymlContent.get("version"), "version is missing").toString(),
@@ -221,10 +230,9 @@ public class Util {
                     ymlContent.getOrDefault("description", "").toString(),
                     ymlContent.getOrDefault("website", "").toString(),
                     Objects.requireNonNull(ymlContent.get("main"), "main is missing").toString(),
-                    (List<String>) ymlContent.getOrDefault("authors", Collections.emptyList()),
-                    (List<String>) ymlContent.getOrDefault("depend", Collections.emptyList()),
-                    (List<String>) ymlContent.getOrDefault("softdepend", Collections.emptyList())
-            );
+                    authors,
+                    depend,
+                    softDepend);
         } catch (ClassCastException e) {
             throw new IllegalArgumentException("Invalid plugin.yml", e);
         }

@@ -18,17 +18,18 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.channel.TextChannel;
-import snw.jkook.event.channel.ChannelMessageDeleteEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.event.channel.ChannelMessageDeleteEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializer<ChannelMessageDeleteEvent> {
 
@@ -37,12 +38,12 @@ public class ChannelMessageDeleteEventDeserializer extends NormalEventDeserializ
     }
 
     @Override
-    protected ChannelMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new ChannelMessageDeleteEvent(
-                timeStamp,
-                client.getStorage().getChannel(get(body, "channel_id").getAsString()), // if this error, we can regard it as internal error
-                get(body, "msg_id").getAsString()
-        );
+    protected ChannelMessageDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        // if this error, we can regard it as internal error
+        final Channel channel = client.getStorage().getChannel(getAsString(body, "channel_id"));
+        final String messageId = getAsString(body, "msg_id");
+        return new ChannelMessageDeleteEvent(timeStamp, channel, messageId);
     }
 
     @Override

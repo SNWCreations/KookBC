@@ -18,6 +18,8 @@
 
 package snw.kookbc.impl.message;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -57,13 +59,12 @@ public abstract class MessageImpl implements Message, LazyLoadable {
     protected boolean completed;
 
     public MessageImpl(KBCClient client, String id) {
-        this.client = client;
-        this.id = id;
+        this.client = requireNonNull(client);
+        this.id = requireNonNull(id);
     }
 
     public MessageImpl(KBCClient client, String id, User user) {
-        this.client = client;
-        this.id = id;
+        this(client, id);
         this.user = user;
     }
 

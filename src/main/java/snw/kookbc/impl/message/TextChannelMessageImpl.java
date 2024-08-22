@@ -47,4 +47,5 @@ public class TextChannelMessageImpl extends ChannelMessageImpl implements TextCh
     protected NonCategoryChannel retrieveOwningChannel(String id) {
         return client.getCore().getHttpAPI().getTextChannel(id);
     }
+
 }

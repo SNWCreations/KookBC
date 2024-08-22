@@ -1,11 +1,12 @@
 package snw.kookbc.impl.message;
 
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsLong;
+import static snw.kookbc.util.GsonUtil.getAsString;
 import static snw.kookbc.util.GsonUtil.has;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import com.google.gson.JsonObject;
 
@@ -19,7 +20,6 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
 
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
@@ -137,36 +137,24 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
     @Override
     public void initialize() {
         final String id = getId();
-        final JsonObject object;
-        try {
-            object = client.getNetworkClient()
-                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
-        } catch (BadResponseException e) {
-            if (e.getCode() == 40000) {
-                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                new NoSuchElementException("No message object with provided ID " + id + " found")
-                        .initCause(e);
-            }
-            throw e;
-        }
+        final JsonObject object = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
         final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
+        final long timeStamp = getAsLong(object, "create_at");
         ChannelMessage quote = null;
         if (has(object, "quote")) {
-            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
-            final String quoteId = get(rawQuote, "id").getAsString();
+            final JsonObject rawQuote = getAsJsonObject(object, "quote");
+            final String quoteId = getAsString(rawQuote, "id");
             quote = client.getCore().getHttpAPI().getChannelMessage(quoteId);
         }
-        final String channelId = get(object, "channel_id").getAsString();
+        final String channelId = getAsString(object, "channel_id");
         final NonCategoryChannel channel = retrieveOwningChannel(channelId);
-
         this.component = component;
         this.timeStamp = timeStamp;
         this.quote = quote;
         this.channel = channel;
-
-        client.getStorage().addMessage(this);
         this.completed = true;
+        client.getStorage().addMessage(this);
     }
 
     protected NonCategoryChannel retrieveOwningChannel(String id) {
@@ -174,4 +162,5 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
         // noinspection deprecation
         return (NonCategoryChannel) client.getCore().getHttpAPI().getChannel(id);
     }
+
 }

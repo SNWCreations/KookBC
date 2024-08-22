@@ -18,17 +18,20 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.event.role.RoleDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDeleteEvent> {
     public RoleDeleteEventDeserializer(KBCClient client) {
@@ -36,12 +39,11 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
     }
 
     @Override
-    protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        Role role = client.getStorage().getRole(
-                client.getStorage().getGuild(get(object, "target_id").getAsString()),
-                get(body, "role_id").getAsInt(),
-                body
-        );
+    protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
+            JsonObject body) throws JsonParseException {
+        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
+        final int roleId = getAsInt(body, "role_id");
+        final Role role = client.getStorage().getRole(guild, roleId, body);
         return new RoleDeleteEvent(timeStamp, role);
     }
 

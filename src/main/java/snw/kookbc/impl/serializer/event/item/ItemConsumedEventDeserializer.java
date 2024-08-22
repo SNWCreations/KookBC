@@ -18,18 +18,23 @@
 
 package snw.kookbc.impl.serializer.event.item;
 
+import static com.google.gson.JsonParser.parseString;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsLong;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import snw.jkook.entity.User;
 import snw.jkook.event.item.ItemConsumedEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static com.google.gson.JsonParser.parseString;
-import static snw.kookbc.util.GsonUtil.get;
+import snw.kookbc.impl.storage.EntityStorage;
 
 public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemConsumedEvent> {
 
@@ -38,13 +43,16 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
     }
 
     @Override
-    protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        long msgTimeStamp = get(object, "msg_timestamp").getAsLong();
-        JsonObject content = parseString(get(object, "content").getAsString()).getAsJsonObject();
-        User consumer = client.getStorage().getUser(content.getAsJsonObject("data").get("user_id").getAsString());
-        User affected = client.getStorage().getUser(content.getAsJsonObject("data").get("target_id").getAsString());
-        int itemId = get(content, "data").getAsJsonObject().get("item_id").getAsInt();
-        return new ItemConsumedEvent(msgTimeStamp, consumer, affected, itemId);
+    protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx)
+            throws JsonParseException {
+        final EntityStorage storage = client.getStorage();
+        final JsonObject content = parseString(getAsString(object, "content")).getAsJsonObject();
+        final JsonObject data = getAsJsonObject(content, "data");
+        final long timeStamp = getAsLong(object, "msg_timeStamp");
+        final User consumer = storage.getUser(getAsString(data, "user_id"));
+        final User affected = storage.getUser(getAsString(data, "target_id"));
+        final int itemId = getAsInt(data, "item_id");
+        return new ItemConsumedEvent(timeStamp, consumer, affected, itemId);
     }
 
 }

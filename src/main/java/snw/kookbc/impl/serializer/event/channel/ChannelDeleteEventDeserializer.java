@@ -26,6 +26,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+import snw.jkook.entity.Guild;
 import snw.jkook.event.channel.ChannelDeleteEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
@@ -39,10 +40,9 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
     @Override
     protected ChannelDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        return new ChannelDeleteEvent(
-                timeStamp,
-                getAsString(body, "id"),
-                client.getStorage().getGuild(getAsString(object, "target_id")));
+        final String id = getAsString(body, "id");
+        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
+        return new ChannelDeleteEvent(timeStamp, id, guild);
     }
 
     @Override
