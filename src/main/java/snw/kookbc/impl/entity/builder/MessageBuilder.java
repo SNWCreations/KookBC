@@ -99,7 +99,7 @@ public class MessageBuilder {
         final String id = getAsString(object, "msg_id");
         final JsonObject extra = getAsJsonObject(object, "extra");
         final User author = getAuthor(extra);
-        final long timeStamp = getAsLong(object, "msg_timeStamp");
+        final long timeStamp = getAsLong(object, "msg_timestamp");
         final Message quote = getQuote(extra);
         return new PrivateMessageImpl(client, id, author, buildComponent(object), timeStamp, quote);
     }
@@ -108,7 +108,7 @@ public class MessageBuilder {
         final String id = getAsString(object, "msg_id");
         final JsonObject extra = getAsJsonObject(object, "extra");
         final User author = getAuthor(extra);
-        final long timeStamp = getAsLong(object, "msg_timeStamp");
+        final long timeStamp = getAsLong(object, "msg_timestamp");
         final Message quote = getQuote(extra);
         final String targetId = getAsString(object, "target_id");
         final int channelType = getAsInt(extra, "channel_type");

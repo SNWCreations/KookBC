@@ -64,14 +64,14 @@ public class EntityStorage {
 
     public EntityStorage(KBCClient client) {
         this.client = client;
-        this.users = newCaffeineBuilderWithSoftRef().build(id -> new UserImpl(this.client, id));
-        this.guilds = newCaffeineBuilderWithWeakRef().build(id -> new GuildImpl(this.client, id));
-        this.channels = newCaffeineBuilderWithWeakRef().build(); // key: channel ID
-        this.msgs = newCaffeineBuilderWithSoftRef().build(); // key: msg id
-        this.roles = newCaffeineBuilderWithSoftRef().build(); // key format: GUILD_ID#ROLE_ID
-        this.emojis = newCaffeineBuilderWithSoftRef().build(); // key: emoji ID
-        this.reactions = newCaffeineBuilderWithSoftRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
-        this.games = newCaffeineBuilderWithSoftRef().build(); // key: game id
+        this.users = softRef().build(id -> new UserImpl(this.client, id));
+        this.guilds = weakRef().build(id -> new GuildImpl(this.client, id));
+        this.channels = weakRef().build(); // key: channel ID
+        this.msgs = softRef().build(); // key: msg id
+        this.roles = softRef().build(); // key format: GUILD_ID#ROLE_ID
+        this.emojis = softRef().build(); // key: emoji ID
+        this.reactions = softRef().build(); // key format: MSG_ID#EMOJI_ID#SENDER_ID
+        this.games = softRef().build(); // key: game id
 
         // fixme we stuck there: we don't know the exact type of channel,
         // may we deprecate API of getting channel and create new API?
@@ -245,15 +245,14 @@ public class EntityStorage {
         emojis.invalidate(emoji.getId());
     }
 
-    private static Caffeine<Object, Object> newCaffeineBuilderWithWeakRef() {
+    private static Caffeine<Object, Object> weakRef() {
         return Caffeine.newBuilder()
                 .weakValues()
                 .expireAfterAccess(10, TimeUnit.MINUTES);
     }
 
-    private static Caffeine<Object, Object> newCaffeineBuilderWithSoftRef() {
-        return Caffeine.newBuilder()
-                .softValues();
+    private static Caffeine<Object, Object> softRef() {
+        return Caffeine.newBuilder().softValues();
     }
 
     private static <K, V> UncheckedFunction<K, V> funcWithRetry(UncheckedFunction<K, V> func) {
@@ -270,11 +269,6 @@ public class EntityStorage {
             throw new RuntimeException("Unable to load resource", latestException);
         };
     }
-
-    // private static <K, V> CacheLoader<K, V> withRetry(CacheLoader<K, V> original)
-    // {
-    // return funcWithRetry(original::load)::apply;
-    // }
 
     public void cleanUpUserPermissionOverwrite(Guild guild, User user) {
         channels.asMap().values()

@@ -48,7 +48,7 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
         final EntityStorage storage = client.getStorage();
         final JsonObject content = parseString(getAsString(object, "content")).getAsJsonObject();
         final JsonObject data = getAsJsonObject(content, "data");
-        final long timeStamp = getAsLong(object, "msg_timeStamp");
+        final long timeStamp = getAsLong(object, "msg_timestamp");
         final User consumer = storage.getUser(getAsString(data, "user_id"));
         final User affected = storage.getUser(getAsString(data, "target_id"));
         final int itemId = getAsInt(data, "item_id");
