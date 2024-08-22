@@ -18,9 +18,6 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseChannel;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsJsonObject;
 import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
@@ -47,13 +44,13 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
             long timeStamp, JsonObject body) throws JsonParseException {
         final String userId = getAsString(body, "user_id");
         final String targetId = getAsString(body, "target_id");
-        final int channelType = getAsInt(getAsJsonObject(body, "extra"), "channel_type");
         final Boolean needChannel = Objects.equals(userId, targetId);
 
         final User user = client.getStorage().getUser(userId);
         final String messageId = getAsString(body, "msg_id");
         final String value = getAsString(body, "value");
-        final NonCategoryChannel channel = needChannel ? null : parseChannel(client, targetId, channelType);
+        final NonCategoryChannel channel = needChannel ? null
+                : (NonCategoryChannel) client.getStorage().getChannel(targetId);
         return new UserClickButtonEvent(timeStamp, user, messageId, value, channel);
     }
 
