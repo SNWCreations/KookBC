@@ -21,20 +21,28 @@ package snw.kookbc.impl.command.litecommands;
 import dev.rollczi.litecommands.handler.result.ResultHandler;
 import dev.rollczi.litecommands.handler.result.ResultHandlerChain;
 import dev.rollczi.litecommands.invocation.Invocation;
+import panda.std.Pair;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.message.Message;
 
-class StringHandler implements ResultHandler<CommandSender, String> {
+import java.util.function.BiConsumer;
+
+class SimpleReplayResultHandler<T> implements ResultHandler<CommandSender, T> {
+    private final BiConsumer<CommandSender, Pair<Message, T>> consumer;
+
+    SimpleReplayResultHandler(BiConsumer<CommandSender, Pair<Message, T>> consumer) {
+        this.consumer = consumer;
+    }
 
     @Override
-    public void handle(Invocation<CommandSender> invocation, String result, ResultHandlerChain<CommandSender> chain) {
+    public void handle(Invocation<CommandSender> invocation, T result, ResultHandlerChain<CommandSender> chain) {
         CommandSender sender = invocation.sender();
         Message message = invocation.context().get(Message.class).orElse(null);
         if (sender instanceof User) {
             if (message != null) {
-                message.reply(result);
+                consumer.accept(sender, Pair.of(message, result));
             }
         } else if (sender instanceof ConsoleCommandSender) {
             ((ConsoleCommandSender) sender).getLogger().info("The execution result of command {}: {}", invocation.name(), result);
