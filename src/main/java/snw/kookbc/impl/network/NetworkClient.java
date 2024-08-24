@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.network;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
@@ -68,7 +69,12 @@ public class NetworkClient {
     }
 
     public JsonObject post(String fullUrl, Map<?, ?> body) {
-        return checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject()).getAsJsonObject("data");
+        JsonElement element = checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject()).get("data");
+        if (element instanceof JsonObject) {
+            return element.getAsJsonObject();
+        } else {
+            return null;
+        }
     }
 
     public String getRawContent(String fullUrl) {
