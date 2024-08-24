@@ -20,6 +20,7 @@ package snw.kookbc.impl.command.litecommands;
 
 import dev.rollczi.litecommands.LiteCommandsBuilder;
 import dev.rollczi.litecommands.LiteCommandsFactory;
+import dev.rollczi.litecommands.extension.annotations.LiteAnnotationsProcessorExtension;
 import snw.jkook.Core;
 import snw.jkook.HttpAPI;
 import snw.jkook.command.CommandSender;
@@ -39,11 +40,13 @@ import snw.jkook.message.component.TextComponent;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.plugin.Plugin;
-import snw.jkook.util.KMarkdownHelper;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.litecommands.annotations.prefix.PrefixAnnotationResolver;
+import snw.kookbc.impl.command.litecommands.annotations.result.ResultAnnotationResolver;
 import snw.kookbc.impl.command.litecommands.argument.*;
+import snw.kookbc.impl.command.litecommands.result.ResultTypeValidator;
 import snw.kookbc.impl.command.litecommands.tools.KookMessageContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyConsoleContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyUserContextual;
@@ -60,9 +63,15 @@ public class LiteKookFactory {
     public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteBungeeSettings) {
         KBCClient client = ((CoreImpl) plugin.getCore()).getClient();
         HttpAPI httpAPI = plugin.getCore().getHttpAPI();
-        return (B) new WrappedLiteCommandsBuilder<>(
+        LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
+        processorExtension
+                .processor(new PrefixAnnotationResolver<>())
+                .processor(new ResultAnnotationResolver<>(plugin.getLogger()));
+        return (B)
                 LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteBungeeSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
                         .bind(Core.class, plugin::getCore)
+                        .extension(processorExtension)
+                        .validatorGlobal(new ResultTypeValidator())
                         .context(Message.class, new KookMessageContextual())
                         .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
                         .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
@@ -77,17 +86,17 @@ public class LiteKookFactory {
                         .argument(Role.class, new RoleArgument(client))
                         .argument(CustomEmoji.class, new EmojiArgument(client))
 
-                        .result(String.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
-                        .result(CardComponent.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
-                        .result(MultipleCardComponent.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
-                        .result(MarkdownComponent.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
-                        .result(FileComponent.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
-                        .result(TextComponent.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond())))
+                        .result(String.class, new ReplyResultHandler<>())
+                        .result(CardComponent.class, new ReplyResultHandler<>())
+                        .result(MultipleCardComponent.class, new ReplyResultHandler<>())
+                        .result(MarkdownComponent.class, new ReplyResultHandler<>())
+                        .result(FileComponent.class, new ReplyResultHandler<>())
+                        .result(TextComponent.class, new ReplyResultHandler<>())
 
-                        .result(ChannelMessage.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond().getComponent())))
-                        .result(PrivateMessage.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond().getComponent())))
-                        .result(TextChannelMessage.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond().getComponent())))
-                        .result(VoiceChannelMessage.class, new SimpleReplayResultHandler<>((sender, data) -> data.getFirst().reply(data.getSecond().getComponent())))
-        );
+                        .result(ChannelMessage.class, new ReplyResultHandler<>())
+                        .result(PrivateMessage.class, new ReplyResultHandler<>())
+                        .result(TextChannelMessage.class, new ReplyResultHandler<>())
+                        .result(VoiceChannelMessage.class, new ReplyResultHandler<>())
+                ;
     }
 }

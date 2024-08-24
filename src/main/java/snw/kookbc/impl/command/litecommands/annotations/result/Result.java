@@ -16,31 +16,29 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.command.litecommands;
+package snw.kookbc.impl.command.litecommands.annotations.result;
 
-import dev.rollczi.litecommands.platform.PlatformSettings;
 import snw.kookbc.impl.command.litecommands.result.ResultType;
 import snw.kookbc.impl.command.litecommands.result.ResultTypes;
 
-public class LiteKookSettings implements PlatformSettings {
-    private boolean nativePermissions = false;
-    private ResultType defaultResultType = ResultTypes.REPLY;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public LiteKookSettings defaultResultType(ResultType defaultResultType) {
-        this.defaultResultType = defaultResultType;
-        return this;
-    }
-
-    public LiteKookSettings nativePermissions(boolean nativePermissions) {
-        this.nativePermissions = nativePermissions;
-        return this;
-    }
-
-    boolean isNativePermissions() {
-        return this.nativePermissions;
-    }
-
-    public ResultType defaultResultType() {
-        return defaultResultType;
-    }
+/**
+ * <blockquote><pre>
+ * {@code @Execute}
+ * {@code @Result(ResultTypes.SEND_TEMP)}
+ * public String doIt(){
+ *     // ...
+ * }
+ * </pre></blockquote>
+ * <p>
+ */
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Result {
+    ResultTypes value() default ResultTypes.DEFAULT;
+    Class<? extends ResultType> custom() default ResultType.class;
 }

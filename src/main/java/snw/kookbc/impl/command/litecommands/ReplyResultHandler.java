@@ -21,34 +21,17 @@ package snw.kookbc.impl.command.litecommands;
 import dev.rollczi.litecommands.handler.result.ResultHandler;
 import dev.rollczi.litecommands.handler.result.ResultHandlerChain;
 import dev.rollczi.litecommands.invocation.Invocation;
-import panda.std.Pair;
 import snw.jkook.command.CommandSender;
-import snw.jkook.command.ConsoleCommandSender;
-import snw.jkook.entity.User;
 import snw.jkook.message.Message;
+import snw.kookbc.impl.command.litecommands.result.ResultType;
+import snw.kookbc.impl.command.litecommands.result.ResultTypes;
 
-import java.util.function.BiConsumer;
-
-class SimpleReplayResultHandler<T> implements ResultHandler<CommandSender, T> {
-    private final BiConsumer<CommandSender, Pair<Message, T>> consumer;
-
-    SimpleReplayResultHandler(BiConsumer<CommandSender, Pair<Message, T>> consumer) {
-        this.consumer = consumer;
-    }
-
+public class ReplyResultHandler<T> implements ResultHandler<CommandSender, T> {
     @Override
     public void handle(Invocation<CommandSender> invocation, T result, ResultHandlerChain<CommandSender> chain) {
-        CommandSender sender = invocation.sender();
         Message message = invocation.context().get(Message.class).orElse(null);
-        if (sender instanceof User) {
-            if (message != null) {
-                consumer.accept(sender, Pair.of(message, result));
-            }
-        } else if (sender instanceof ConsoleCommandSender) {
-            ((ConsoleCommandSender) sender).getLogger().info("The execution result of command {}: {}", invocation.name(), result);
-        } else {
-            throw new IllegalStateException("Unknown sender type: " + sender.getClass().getName());
-        }
+        ResultType resultType = invocation.context().get(ResultType.class).orElse(ResultTypes.REPLY);// if set null?
+        resultType.message(invocation, message, result);
     }
 
 }
