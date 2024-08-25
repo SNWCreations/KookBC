@@ -53,7 +53,7 @@
         <log4j2.version>2.19.0</log4j2.version>
         <jkook.version>48d1a7b46237d1d29eee2e4df7de0a1da5139679</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mixin.version>0.12.4+mixin.0.8.5</mixin.version>
+        <mixin.version>0.15.2+mixin.0.8.7</mixin.version>
         <asm.version>9.3</asm.version>
         <!-- Used by JitPack CI -->
         <skipShade>false</skipShade>
