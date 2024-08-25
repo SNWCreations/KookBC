@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl;
 
+import static java.util.Collections.unmodifiableCollection;
 import static snw.kookbc.util.GsonUtil.get;
 
 import java.io.File;
@@ -81,9 +82,7 @@ public class HttpAPIImpl implements HttpAPI {
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
-        SUPPORTED_MUSIC_SOFTWARES = Collections.unmodifiableCollection(
-                Arrays.asList(
-                        "cloudmusic", "qqmusic", "kugou"));
+        SUPPORTED_MUSIC_SOFTWARES = unmodifiableCollection(Arrays.asList("cloudmusic", "qqmusic", "kugou"));
     }
 
     private final KBCClient client;
@@ -174,8 +173,7 @@ public class HttpAPIImpl implements HttpAPI {
                     "Cannot upload file at " + url + ": Response body should not be null");
             // long contentLength = body.contentLength();
             // if (contentLength > UPLOAD_FILE_LENGTH_LIMIT * 1024) {
-            // throw new IllegalArgumentException("Cannot upload file at " + url + ": Too
-            // big file");
+            //     throw new IllegalArgumentException("Cannot upload file at " + url + ": Toobig file");
             // }
             byte[] bytes = body.bytes();
             return uploadFile(fileName, bytes);

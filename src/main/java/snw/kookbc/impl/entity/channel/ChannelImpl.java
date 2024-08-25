@@ -81,13 +81,13 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public Guild getGuild() {
-        lazyload();
+        initIfNeeded();
         return guild;
     }
 
     @Override
     public boolean isPermissionSync() {
-        lazyload();
+        initIfNeeded();
         return permSync;
     }
 
@@ -103,7 +103,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public int getLevel() {
-        lazyload();
+        initIfNeeded();
         return level;
     }
 
@@ -273,7 +273,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public String getName() {
-        lazyload();
+        initIfNeeded();
         return name;
     }
 
@@ -293,7 +293,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public Collection<RolePermissionOverwrite> getOverwrittenRolePermissions() {
-        lazyload();
+        initIfNeeded();
         return Collections.unmodifiableCollection(rpo);
     }
 
@@ -303,7 +303,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public Collection<UserPermissionOverwrite> getOverwrittenUserPermissions() {
-        lazyload();
+        initIfNeeded();
         return Collections.unmodifiableCollection(upo);
     }
 
@@ -317,7 +317,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public User getMaster() {
-        lazyload();
+        initIfNeeded();
         return master;
     }
 

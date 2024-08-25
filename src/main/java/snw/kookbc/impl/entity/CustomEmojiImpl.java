@@ -43,7 +43,8 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
     public CustomEmojiImpl(KBCClient client, String id, Guild guild, String name) {
         this.client = client;
         this.id = id;
-        this.guild = guild; // optional attributes are following:
+        // optional attributes are following:
+        this.guild = guild;
         this.name = name;
     }
 

@@ -25,7 +25,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
@@ -155,10 +154,6 @@ public final class GsonUtil {
 
     public static JsonPrimitive getAsJsonPrimitive(JsonObject object, String key) {
         return get(object, key).getAsJsonPrimitive();
-    }
-
-    public static JsonNull getAsJsonNull(JsonObject object, String key) {
-        return get(object, key).getAsJsonNull();
     }
 
     private GsonUtil() {

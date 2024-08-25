@@ -79,7 +79,7 @@ public abstract class MessageImpl implements Message, LazyLoadable {
 
     @Override
     public BaseComponent getComponent() {
-        lazyload();
+        initIfNeeded();
         return component;
     }
 
@@ -90,19 +90,19 @@ public abstract class MessageImpl implements Message, LazyLoadable {
 
     @Override
     public @Nullable Message getQuote() {
-        lazyload();
+        initIfNeeded();
         return quote;
     }
 
     @Override
     public User getSender() {
-        lazyload();
+        initIfNeeded();
         return user;
     }
 
     @Override
     public long getTimeStamp() {
-        lazyload();
+        initIfNeeded();
         return timeStamp;
     }
 

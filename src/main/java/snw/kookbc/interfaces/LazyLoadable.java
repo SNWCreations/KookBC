@@ -5,7 +5,7 @@ public interface LazyLoadable {
 
     void initialize();
 
-    default void lazyload() {
+    default void initIfNeeded() {
         if (!isCompleted()) {
             initialize();
         }

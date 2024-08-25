@@ -76,7 +76,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
 
     @Override
     public @Nullable Category getParent() {
-        lazyload();
+        initIfNeeded();
         return parent;
     }
 
@@ -136,7 +136,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
 
     @Override
     public int getChatLimitTime() {
-        lazyload();
+        initIfNeeded();
         return chatLimitTime;
     }
 

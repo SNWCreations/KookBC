@@ -129,7 +129,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public String getVoiceChannelServerRegion() {
-        lazyload();
+        initIfNeeded();
         return region;
     }
 
@@ -154,7 +154,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public boolean isPublic() {
-        lazyload();
+        initIfNeeded();
         return public_;
     }
 
@@ -317,14 +317,14 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public NotifyType getNotifyType() {
-        lazyload();
+        initIfNeeded();
         return notifyType;
     }
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
         Validate.isTrue(!b, "KOOK official does not provide \"vip_avatar\" field for Guild.");
-        lazyload();
+        initIfNeeded();
         return avatarUrl;
     }
 
@@ -366,13 +366,13 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public User getMaster() {
-        lazyload();
+        initIfNeeded();
         return master;
     }
 
     @Override
     public String getName() {
-        lazyload();
+        initIfNeeded();
         return name;
     }
 

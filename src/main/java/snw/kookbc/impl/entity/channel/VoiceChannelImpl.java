@@ -80,7 +80,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public boolean hasPassword() {
-        lazyload();
+        initIfNeeded();
         return passwordProtected;
     }
 
@@ -96,7 +96,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public int getMaxSize() {
-        lazyload();
+        initIfNeeded();
         return maxSize;
     }
 
