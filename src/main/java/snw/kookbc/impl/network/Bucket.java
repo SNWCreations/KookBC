@@ -113,6 +113,7 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.VOICE_JOIN, "voice/join");
         bucketNameMap.put(HttpAPIRoute.VOICE_LEAVE, "voice/leave");
         bucketNameMap.put(HttpAPIRoute.VOICE_LIST, "voice/list");
+        bucketNameMap.put(HttpAPIRoute.VOICE_KEEP_ALIVE, "voice/keep-alive");
         bucketNameMap.put(HttpAPIRoute.MOVE_USER, "channel/move-user");
         bucketNameMap.put(HttpAPIRoute.CHANNEL_ROLE_CREATE, "channel-role/create");
         bucketNameMap.put(HttpAPIRoute.CHANNEL_ROLE_UPDATE, "channel-role/update");
