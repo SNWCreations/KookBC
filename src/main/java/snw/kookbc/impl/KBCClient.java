@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.CommandManager;
-import snw.jkook.command.JKookCommand;
 import snw.jkook.config.ConfigurationSection;
 import snw.jkook.entity.User;
 import snw.jkook.plugin.InvalidPluginException;
@@ -33,9 +32,11 @@ import snw.jkook.plugin.UnknownDependencyException;
 import snw.jkook.util.Validate;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.internal.HelpCommand;
 import snw.kookbc.impl.command.litecommands.LiteKookFactory;
+import snw.kookbc.impl.command.litecommands.internal.HelpCommand;
 import snw.kookbc.impl.command.litecommands.internal.PluginsCommand;
+import snw.kookbc.impl.command.litecommands.internal.StopCommand;
+import snw.kookbc.impl.command.litecommands.result.ResultTypes;
 import snw.kookbc.impl.console.Console;
 import snw.kookbc.impl.entity.builder.EntityBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
@@ -51,7 +52,6 @@ import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 import snw.kookbc.impl.storage.EntityStorage;
-import snw.kookbc.impl.tasks.BotMarketPingThread;
 import snw.kookbc.impl.tasks.StopSignalListener;
 import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
@@ -495,49 +495,40 @@ public class KBCClient {
     }
 
     protected void registerInternal() {
+        this.core.getEventManager().registerHandlers(this.internalPlugin, new InternalListener());
         ConfigurationSection commandConfig = getConfig().getConfigurationSection("internal-commands");
         if (commandConfig == null) {
             commandConfig = getConfig().createSection("internal-commands");
         }
+        List<Class<?>> commands = new ArrayList<>();
         if (commandConfig.getBoolean("stop", true)) {
-            registerStopCommand();
+            commands.add(StopCommand.class);
         }
         if (commandConfig.getBoolean("help", true)) {
-            registerHelpCommand();
+            this.core.getEventManager()
+                    .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
+            commands.add(HelpCommand.class);
         }
         if (commandConfig.getBoolean("plugins", true)) {
-            registerPluginsCommand();
+            commands.add(PluginsCommand.class);
         }
+        registerCommands(commands);
     }
 
-    protected void registerStopCommand() {
-        new JKookCommand("stop")
-                .setDescription("停止 " + SharedConstants.IMPL_NAME + " 实例。")
-                .setExecutor(wrapConsoleCmd((args) -> shutdown()))
-                .register(getInternalPlugin());
-    }
-
-    protected void registerPluginsCommand() {
-//        new JKookCommand("plugins")
-//                .setDescription("获取已安装到此 " + SharedConstants.IMPL_NAME + " 实例的插件列表。")
-//                .setExecutor(new PluginsCommand(this))
-//                .register(getInternalPlugin());
+    private void registerCommands(List<Class<?>> commands) {
         LiteKookFactory.builder(getInternalPlugin())
-                .commands(new PluginsCommand(this))
+                .settings((k) -> {
+                    try {
+                        ResultTypes resultTypes = ResultTypes.valueOf(getConfig().getString("internal-commands-reply-result-type"));
+                        k.defaultResultType(resultTypes);
+                    } catch (Exception e) {
+                        getCore().getLogger().error("`internal-commands-reply-result-type` is not a valid result-type");
+                    }
+                    return k;
+                })
+                .commands(commands.toArray())
                 .build()
         ;
-    }
-
-    protected void registerHelpCommand() {
-        HelpCommand executor = new HelpCommand(this);
-        new JKookCommand("help")
-                .setDescription("获取此帮助列表。")
-                .executesUser(executor)
-                .executesConsole(executor)
-                .register(getInternalPlugin());
-        this.core.getEventManager()
-                .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
-        this.core.getEventManager().registerHandlers(this.internalPlugin, new InternalListener());
     }
 
     public CommandManager getCommandManager() {

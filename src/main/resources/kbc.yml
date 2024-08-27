@@ -70,6 +70,14 @@ internal-commands:
   help: true
   plugins: true
 
+# Set 'internal commands' to reply to users with what type
+# Support Type:
+#  - REPLY         # Reply directly to this message
+#  - REPLY_TEMP    # Temporarily reply to this message
+#  - SEND          # Send results in this channel
+#  - SEND_TEMP     # Send temporary result messages in this channel
+internal-commands-reply-result-type: REPLY
+
 # Allow reporting of unexpected messages received from remote
 allow-warn-old-message: true
 

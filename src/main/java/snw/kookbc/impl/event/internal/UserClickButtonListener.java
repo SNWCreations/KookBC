@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static snw.kookbc.impl.command.internal.HelpCommand.HELP_VALUE_HEADER;
+import static snw.kookbc.impl.command.litecommands.internal.HelpCommand.HELP_VALUE_HEADER;
 
 public final class UserClickButtonListener implements Listener {
     private static final PlainTextElement EMPTY_PLAIN_TEXT_ELEMENT = new PlainTextElement(" ");
