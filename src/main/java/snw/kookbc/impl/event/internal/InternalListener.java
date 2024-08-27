@@ -37,11 +37,11 @@ public class InternalListener implements Listener {
     public void event(RoleInfoUpdateEvent event) {
     }
 
-    @EventHandler
+    @EventHandler(internal = true)
     public void event(PrivateMessageUpdateEvent event) {
     }
 
-    @EventHandler
+    @EventHandler(internal = true)
     public void event(UserInfoUpdateEvent event) {
     }
 
