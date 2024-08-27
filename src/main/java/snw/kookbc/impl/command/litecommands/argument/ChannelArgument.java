@@ -22,6 +22,8 @@ import dev.rollczi.litecommands.argument.Argument;
 import dev.rollczi.litecommands.argument.parser.ParseResult;
 import dev.rollczi.litecommands.argument.resolver.ArgumentResolver;
 import dev.rollczi.litecommands.invocation.Invocation;
+import dev.rollczi.litecommands.message.MessageKey;
+import dev.rollczi.litecommands.message.MessageRegistry;
 import dev.rollczi.litecommands.suggestion.SuggestionContext;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import snw.jkook.HttpAPI;
@@ -31,10 +33,14 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 
 public class ChannelArgument<T extends Channel> extends ArgumentResolver<CommandSender, T> {
-    private final HttpAPI httpAPI;
+    public static final MessageKey<String> CHANNEL_NOT_FOUND = MessageKey.of("channel_not_found", "Channel not found");
 
-    public ChannelArgument(HttpAPI httpAPI) {
+    private final HttpAPI httpAPI;
+    private final MessageRegistry<CommandSender> messageRegistry;
+
+    public ChannelArgument(HttpAPI httpAPI, MessageRegistry<CommandSender> messageRegistry) {
         this.httpAPI = httpAPI;
+        this.messageRegistry = messageRegistry;
     }
 
     @SuppressWarnings("unchecked")
@@ -50,7 +56,7 @@ public class ChannelArgument<T extends Channel> extends ArgumentResolver<Command
         try {
             Channel channel = httpAPI.getChannel(input);
             if (channel == null) {
-                return ParseResult.failure(new CommandException("Channel not found"));
+                return ParseResult.failure(messageRegistry.getInvoked(CHANNEL_NOT_FOUND, invocation, argument));
             }
             return ParseResult.success((T) channel);
         } catch (final Exception e) {

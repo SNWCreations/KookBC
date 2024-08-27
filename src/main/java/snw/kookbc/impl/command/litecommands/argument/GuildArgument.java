@@ -22,6 +22,8 @@ import dev.rollczi.litecommands.argument.Argument;
 import dev.rollczi.litecommands.argument.parser.ParseResult;
 import dev.rollczi.litecommands.argument.resolver.ArgumentResolver;
 import dev.rollczi.litecommands.invocation.Invocation;
+import dev.rollczi.litecommands.message.MessageKey;
+import dev.rollczi.litecommands.message.MessageRegistry;
 import dev.rollczi.litecommands.suggestion.SuggestionContext;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import snw.jkook.HttpAPI;
@@ -30,10 +32,14 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.entity.Guild;
 
 public class GuildArgument extends ArgumentResolver<CommandSender, Guild> {
-    private final HttpAPI httpAPI;
+    public static final MessageKey<String> GUILD_NOT_FOUND = MessageKey.of("guild_not_found", "Guild not found");
 
-    public GuildArgument(HttpAPI httpAPI) {
+    private final HttpAPI httpAPI;
+    private final MessageRegistry<CommandSender> messageRegistry;
+
+    public GuildArgument(HttpAPI httpAPI, MessageRegistry<CommandSender> messageRegistry) {
         this.httpAPI = httpAPI;
+        this.messageRegistry = messageRegistry;
     }
 
     @Override
@@ -42,11 +48,11 @@ public class GuildArgument extends ArgumentResolver<CommandSender, Guild> {
         try {
             Guild guild = httpAPI.getGuild(input);
             if (guild == null) {
-                return ParseResult.failure(new CommandException("Guild not found"));
+                return ParseResult.failure(messageRegistry.getInvoked(GUILD_NOT_FOUND, invocation, argument));
             }
             return ParseResult.success(guild);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("Guild not found"));
+            return ParseResult.failure(new CommandException("Guild not found", e));
         }
     }
 

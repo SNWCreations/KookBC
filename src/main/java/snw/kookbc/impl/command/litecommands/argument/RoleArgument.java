@@ -22,12 +22,16 @@ import dev.rollczi.litecommands.argument.Argument;
 import dev.rollczi.litecommands.argument.parser.ParseResult;
 import dev.rollczi.litecommands.argument.resolver.ArgumentResolver;
 import dev.rollczi.litecommands.invocation.Invocation;
+import dev.rollczi.litecommands.message.MessageKey;
+import dev.rollczi.litecommands.message.MessageRegistry;
 import dev.rollczi.litecommands.suggestion.SuggestionContext;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
+import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
+import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.util.PageIterator;
@@ -37,10 +41,21 @@ import java.util.Optional;
 import java.util.Set;
 
 public class RoleArgument extends ArgumentResolver<CommandSender, Role> {
-    private final KBCClient client;
+    public static final MessageKey<String> ROLE_NOT_FOUND = MessageKey.of("role_not_found", "User not found");
+    public static final MessageKey<Message> NOT_CHANNEL = MessageKey.of("role_not_channel", "Not supporting finding role");
+    public static final MessageKey<CommandSender> SENDER_UNSUPPORTED = MessageKey.of("role_sender_unsupported", sender -> {
+        if (sender instanceof ConsoleCommandSender) {
+            return "Unsupported console command";
+        }
+        return "Unsupported command";
+    });
 
-    public RoleArgument(KBCClient client) {
+    private final KBCClient client;
+    private final MessageRegistry<CommandSender> messageRegistry;
+
+    public RoleArgument(KBCClient client, MessageRegistry<CommandSender> messageRegistry) {
         this.client = client;
+        this.messageRegistry = messageRegistry;
     }
 
     @Override
@@ -57,7 +72,7 @@ public class RoleArgument extends ArgumentResolver<CommandSender, Role> {
         try {
             Optional<Message> optional = invocation.context().get(Message.class);
             if (!optional.isPresent()) {
-                return ParseResult.failure(new CommandException("Unsupported argument: " + argument));
+                return ParseResult.failure(messageRegistry.getInvoked(SENDER_UNSUPPORTED, invocation, invocation.sender()));
             }
             Message message = optional.get();
             if (message instanceof ChannelMessage) {
@@ -81,11 +96,11 @@ public class RoleArgument extends ArgumentResolver<CommandSender, Role> {
                     }
                 }
                 if (role == null) {
-                    return ParseResult.failure(new CommandException("Role not found"));
+                    return ParseResult.failure(messageRegistry.getInvoked(ROLE_NOT_FOUND, invocation, argument));
                 }
                 return ParseResult.success(role);
             }
-            return ParseResult.failure(new CommandException("Unsupported argument: " + argument));
+            return ParseResult.failure(messageRegistry.getInvoked(NOT_CHANNEL, invocation, message));
         } catch (final Exception e) {
             return ParseResult.failure(new CommandException("Role not found", e));
         }
