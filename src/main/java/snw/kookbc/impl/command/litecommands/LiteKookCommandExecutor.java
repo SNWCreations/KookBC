@@ -30,6 +30,8 @@ import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.CommandSender;
 import snw.jkook.message.Message;
+import snw.kookbc.impl.command.litecommands.result.ExecuteResultType;
+import snw.kookbc.impl.command.litecommands.result.ResultType;
 
 import java.util.Arrays;
 
@@ -73,7 +75,9 @@ public class LiteKookCommandExecutor implements CommandExecutor {
     private InvocationContext createContext(@Nullable Message message) {
         InvocationContext.Builder builder = InvocationContext.builder();
         builder.put(Core.class, core)
-                .put(Message.class, message);
+                .put(Message.class, message)
+                .put(ResultType.class, new ExecuteResultType(settings.defaultResultType()))
+        ;
         return builder.build();
     }
 }

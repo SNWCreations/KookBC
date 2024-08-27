@@ -439,6 +439,6 @@ public class HttpAPIImpl implements HttpAPI {
                 .put("id", id)
                 .put("accept", accept ? 1 : 0)
                 .build();
-        HttpAPIImpl.this.client.getNetworkClient().post(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
+        HttpAPIImpl.this.client.getNetworkClient().postContent(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
     }
 }

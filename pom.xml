@@ -53,7 +53,7 @@
         <log4j2.version>2.19.0</log4j2.version>
         <jkook.version>9a22f1e9</jkook.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mixin.version>0.12.4+mixin.0.8.5</mixin.version>
+        <mixin.version>0.15.2+mixin.0.8.7</mixin.version>
         <asm.version>9.3</asm.version>
         <!-- Used by JitPack CI -->
         <skipShade>false</skipShade>
@@ -304,7 +304,7 @@
         <dependency>
             <groupId>dev.rollczi</groupId>
             <artifactId>litecommands-framework</artifactId>
-            <version>3.3.4</version>
+            <version>3.4.2</version>
         </dependency>
 
         <dependency>

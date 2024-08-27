@@ -22,6 +22,7 @@ import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.description.Description;
 import dev.rollczi.litecommands.annotations.execute.Execute;
+import dev.rollczi.litecommands.annotations.inject.Inject;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.plugin.Plugin;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class PluginsCommand {
     private final KBCClient client;
 
+    @Inject
     public PluginsCommand(KBCClient client) {
         this.client = client;
     }

@@ -16,31 +16,34 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package snw.kookbc.impl.command.litecommands;
+package snw.kookbc.impl.command.litecommands.result;
 
-import dev.rollczi.litecommands.platform.PlatformSettings;
-import snw.kookbc.impl.command.litecommands.result.ResultType;
-import snw.kookbc.impl.command.litecommands.result.ResultTypes;
+import dev.rollczi.litecommands.invocation.Invocation;
+import snw.jkook.command.CommandSender;
+import snw.jkook.message.Message;
 
-public class LiteKookSettings implements PlatformSettings {
-    private boolean nativePermissions = false;
-    private ResultType defaultResultType = ResultTypes.REPLY;
+public class ExecuteResultType implements ResultType {
+    private ResultType resultType;
 
-    public LiteKookSettings defaultResultType(ResultType defaultResultType) {
-        this.defaultResultType = defaultResultType;
-        return this;
+    public ExecuteResultType(ResultType resultType) {
+        this.resultType = resultType;
     }
 
-    public LiteKookSettings nativePermissions(boolean nativePermissions) {
-        this.nativePermissions = nativePermissions;
-        return this;
+    public void setResultType(ResultType resultType) {
+        this.resultType = resultType;
     }
 
-    boolean isNativePermissions() {
-        return this.nativePermissions;
+    public ResultType getResultType() {
+        return resultType;
     }
 
-    public ResultType defaultResultType() {
-        return defaultResultType;
+    @Override
+    public void message(Invocation<CommandSender> invocation, Message message, Object result) {
+        if (resultType == null) {
+            ResultTypes.REPLY.message(invocation, message, result);
+        } else {
+            resultType.message(invocation, message, result);
+        }
     }
+
 }

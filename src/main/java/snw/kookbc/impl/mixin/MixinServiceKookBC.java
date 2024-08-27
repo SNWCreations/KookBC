@@ -152,7 +152,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public Phase getInitialPhase() {
-        System.setProperty("mixin.env.remapRefMap", "false");
+        System.setProperty("mixin.env.disableRefMap", "true");
 
         if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 189) {
             return Phase.DEFAULT;
@@ -166,7 +166,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      */
     @Override
     public CompatibilityLevel getMaxCompatibilityLevel() {
-        return CompatibilityLevel.JAVA_8;
+        return CompatibilityLevel.JAVA_22;
     }
 
     @Override
@@ -585,6 +585,11 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     @Override
     public ClassNode getClassNode(String className, boolean runTransformers) throws ClassNotFoundException, IOException {
         return this.getClassNode(className, this.getClassBytes(className, true), ClassReader.EXPAND_FRAMES);
+    }
+
+    @Override
+    public ClassNode getClassNode(String className, boolean runTransformers, int flags) throws ClassNotFoundException, IOException {
+        return this.getClassNode(className, this.getClassBytes(className, runTransformers), flags);
     }
 
     /**

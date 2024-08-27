@@ -20,21 +20,33 @@ package snw.kookbc.impl.command.litecommands;
 
 import dev.rollczi.litecommands.LiteCommandsBuilder;
 import dev.rollczi.litecommands.LiteCommandsFactory;
+import dev.rollczi.litecommands.extension.annotations.LiteAnnotationsProcessorExtension;
 import snw.jkook.Core;
+import snw.jkook.HttpAPI;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Guild;
+import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.entity.channel.VoiceChannel;
-import snw.jkook.message.Message;
+import snw.jkook.message.*;
+import snw.jkook.message.component.FileComponent;
+import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TextComponent;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.CoreImpl;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
-import snw.kookbc.impl.command.litecommands.argument.ChannelArgument;
-import snw.kookbc.impl.command.litecommands.argument.GuildArgument;
-import snw.kookbc.impl.command.litecommands.argument.UserArgument;
+import snw.kookbc.impl.command.litecommands.annotations.prefix.PrefixAnnotationResolver;
+import snw.kookbc.impl.command.litecommands.annotations.result.ResultAnnotationResolver;
+import snw.kookbc.impl.command.litecommands.argument.*;
+import snw.kookbc.impl.command.litecommands.result.ResultTypeValidator;
 import snw.kookbc.impl.command.litecommands.tools.KookMessageContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyConsoleContextual;
 import snw.kookbc.impl.command.litecommands.tools.KookOnlyUserContextual;
@@ -49,21 +61,46 @@ public class LiteKookFactory {
 
     @SuppressWarnings("unchecked")
     public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteBungeeSettings) {
-        return (B) new WrappedLiteCommandsBuilder<>(
+        KBCClient client = ((CoreImpl) plugin.getCore()).getClient();
+        HttpAPI httpAPI = plugin.getCore().getHttpAPI();
+        LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
+        processorExtension
+                .processor(new PrefixAnnotationResolver<>())
+                .processor(new ResultAnnotationResolver<>(plugin.getLogger()));
+        return (B)
                 LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteBungeeSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
                         .bind(Core.class, plugin::getCore)
+                        .bind(Plugin.class, () -> plugin)
+                        .bindUnsafe(plugin.getClass(), () -> plugin)
+                        .bind(KBCClient.class, () -> client)
+                        .validatorGlobal(new ResultTypeValidator())
+                        .extension(processorExtension)
                         .context(Message.class, new KookMessageContextual())
                         .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
                         .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
 
-                        .argument(User.class, new UserArgument(plugin.getCore().getHttpAPI()))
-                        .argument(Guild.class, new GuildArgument(plugin.getCore().getHttpAPI()))
-                        .argument(Channel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
-                        .argument(NonCategoryChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
-                        .argument(TextChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
-                        .argument(VoiceChannel.class, new ChannelArgument<>(plugin.getCore().getHttpAPI()))
+                        .selfProcessor((builder, internal) ->
+                                builder.argument(User.class, new UserArgument(httpAPI, internal.getMessageRegistry()))
+                                        .argument(Guild.class, new GuildArgument(httpAPI, internal.getMessageRegistry()))
+                                        .argument(Channel.class, new ChannelArgument<>(httpAPI, internal.getMessageRegistry()))
+                                        .argument(NonCategoryChannel.class, new ChannelArgument<>(httpAPI, internal.getMessageRegistry()))
+                                        .argument(TextChannel.class, new ChannelArgument<>(httpAPI, internal.getMessageRegistry()))
+                                        .argument(VoiceChannel.class, new ChannelArgument<>(httpAPI, internal.getMessageRegistry()))
 
-                        .result(String.class, new StringHandler())
-        );
+                                        .argument(Role.class, new RoleArgument(client, internal.getMessageRegistry()))
+                                        .argument(CustomEmoji.class, new EmojiArgument(client, internal.getMessageRegistry())))
+
+                        .result(String.class, new ReplyResultHandler<>())
+                        .result(CardComponent.class, new ReplyResultHandler<>())
+                        .result(MultipleCardComponent.class, new ReplyResultHandler<>())
+                        .result(MarkdownComponent.class, new ReplyResultHandler<>())
+                        .result(FileComponent.class, new ReplyResultHandler<>())
+                        .result(TextComponent.class, new ReplyResultHandler<>())
+
+                        .result(ChannelMessage.class, new ReplyResultHandler<>())
+                        .result(PrivateMessage.class, new ReplyResultHandler<>())
+                        .result(TextChannelMessage.class, new ReplyResultHandler<>())
+                        .result(VoiceChannelMessage.class, new ReplyResultHandler<>())
+                ;
     }
 }

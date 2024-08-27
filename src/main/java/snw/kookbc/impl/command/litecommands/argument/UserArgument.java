@@ -22,6 +22,8 @@ import dev.rollczi.litecommands.argument.Argument;
 import dev.rollczi.litecommands.argument.parser.ParseResult;
 import dev.rollczi.litecommands.argument.resolver.ArgumentResolver;
 import dev.rollczi.litecommands.invocation.Invocation;
+import dev.rollczi.litecommands.message.MessageKey;
+import dev.rollczi.litecommands.message.MessageRegistry;
 import dev.rollczi.litecommands.suggestion.SuggestionContext;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import snw.jkook.HttpAPI;
@@ -30,10 +32,15 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.entity.User;
 
 public class UserArgument extends ArgumentResolver<CommandSender, User> {
-    private final HttpAPI httpAPI;
+    public static final MessageKey<String> USER_NOT_FOUND = MessageKey.of("user_not_found", "User not found");
+    public static final MessageKey<CommandException> USER_FOUND_FAILURE = MessageKey.of("user_found_failure", "User found failure");
 
-    public UserArgument(HttpAPI httpAPI) {
+    private final HttpAPI httpAPI;
+    private final MessageRegistry<CommandSender> messageRegistry;
+
+    public UserArgument(HttpAPI httpAPI, MessageRegistry<CommandSender> messageRegistry) {
         this.httpAPI = httpAPI;
+        this.messageRegistry = messageRegistry;
     }
 
     @Override
@@ -48,11 +55,11 @@ public class UserArgument extends ArgumentResolver<CommandSender, User> {
         try {
             User user = httpAPI.getUser(input);
             if (user == null) {
-                return ParseResult.failure(new CommandException("User not found"));
+                return ParseResult.failure(messageRegistry.getInvoked(USER_NOT_FOUND, invocation, argument));
             }
             return ParseResult.success(user);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("User not found"));
+            return ParseResult.failure(messageRegistry.getInvoked(USER_FOUND_FAILURE, invocation, new CommandException("User not found", e)));
         }
     }
 

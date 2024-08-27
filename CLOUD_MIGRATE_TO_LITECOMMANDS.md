@@ -1,5 +1,10 @@
 ### 从Cloud迁移到LiteCommands
 
+#### 兼容层
+
+如果你不想迁移，可以安装 [kook-cloud-compatible](https://github.com/huanmeng-qwq/kookbc-cloud-compatible/releases)
+插件来允许使用cloud框架注册命令的插件正常运行
+
 ### 注解
 
 | Cloud                  | LiteCommands          |
@@ -9,9 +14,11 @@
 | @Argument              | @Arg                  |
 
 ### 示例
+
 #### Cloud
 
 ```java
+
 @CommandContainer
 @CommandPrefix("!")
 @CommandMethod("test")
@@ -24,8 +31,9 @@ public class TestCloudCommand {
 ```
 
 #### LiteCommands
+
 > Github: [LiteCommands](https://github.com/Rollczi/LiteCommands)
-> 
+>
 > IDEA中安装[LiteCommands](https://plugins.jetbrains.com/plugin/20799-litecommands)插件后，可以自动识别LiteCommands的注解，并能够很好的辅助开发。
 
 ```java
