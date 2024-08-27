@@ -518,6 +518,9 @@ public class KBCClient {
     private void registerCommands(List<Class<?>> commands) {
         LiteKookFactory.builder(getInternalPlugin())
                 .settings((k) -> {
+                    if (!getConfig().contains("internal-commands-reply-result-type")) {
+                        return k;
+                    }
                     try {
                         ResultTypes resultTypes = ResultTypes.valueOf(getConfig().getString("internal-commands-reply-result-type"));
                         k.defaultResultType(resultTypes);
