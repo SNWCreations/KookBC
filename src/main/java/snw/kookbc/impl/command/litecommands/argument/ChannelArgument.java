@@ -60,7 +60,7 @@ public class ChannelArgument<T extends Channel> extends ArgumentResolver<Command
             }
             return ParseResult.success((T) channel);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("Channel not found"));
+            return ParseResult.failure(new CommandException("Channel not found", e));
         }
     }
 
