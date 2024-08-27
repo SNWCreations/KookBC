@@ -20,16 +20,9 @@ package snw.kookbc.impl.command.litecommands;
 
 import dev.rollczi.litecommands.LiteCommandsBuilder;
 import dev.rollczi.litecommands.LiteCommandsFactory;
-import dev.rollczi.litecommands.LiteCommandsInternal;
 import dev.rollczi.litecommands.extension.annotations.LiteAnnotationsProcessorExtension;
-import dev.rollczi.litecommands.handler.result.ResultHandler;
-import dev.rollczi.litecommands.handler.result.ResultHandlerChain;
-import dev.rollczi.litecommands.invocation.Invocation;
-import dev.rollczi.litecommands.message.InvokedMessage;
-import dev.rollczi.litecommands.processor.LiteBuilderProcessor;
 import snw.jkook.Core;
 import snw.jkook.HttpAPI;
-import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.CustomEmoji;
@@ -80,8 +73,8 @@ public class LiteKookFactory {
                         .bind(Plugin.class, () -> plugin)
                         .bindUnsafe(plugin.getClass(), () -> plugin)
                         .bind(KBCClient.class, () -> client)
-                        .extension(processorExtension)
                         .validatorGlobal(new ResultTypeValidator())
+                        .extension(processorExtension)
                         .context(Message.class, new KookMessageContextual())
                         .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
                         .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))

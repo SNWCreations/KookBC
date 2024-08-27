@@ -36,7 +36,7 @@ public class ResultAnnotationResolver<SENDER> implements AnnotationProcessor<SEN
 
     @Override
     public AnnotationInvoker<SENDER> process(AnnotationInvoker<SENDER> invoker) {
-        return invoker.on(Result.class, (annotation, metaHolder) -> {
+        return invoker.onExecutorStructure(Result.class, (annotation, builder, executorProvider) -> {
             ResultType resultTypes = annotation.value();
             if (!Objects.equals(ResultType.class, annotation.custom())) {
                 try {
@@ -47,7 +47,7 @@ public class ResultAnnotationResolver<SENDER> implements AnnotationProcessor<SEN
                 }
             }
             if (resultTypes == ResultTypes.DEFAULT) return;
-            metaHolder.meta().put(ResultType.RESULT_TYPE_KEY, resultTypes);
+            builder.meta().put(ResultType.RESULT_TYPE_KEY, resultTypes);
         });
     }
 
