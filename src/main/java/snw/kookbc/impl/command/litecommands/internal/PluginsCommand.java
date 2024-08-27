@@ -26,8 +26,6 @@ import snw.jkook.command.CommandSender;
 import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.command.litecommands.annotations.result.Result;
-import snw.kookbc.impl.command.litecommands.result.ResultTypes;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -41,7 +39,6 @@ public class PluginsCommand {
         this.client = client;
     }
 
-    @Result(ResultTypes.SEND)
     @Execute
     String execute(@Context CommandSender sender) {
         Plugin[] plugins = client.getCore().getPluginManager().getPlugins();
