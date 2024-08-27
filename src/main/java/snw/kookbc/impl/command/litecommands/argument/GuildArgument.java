@@ -33,6 +33,7 @@ import snw.jkook.entity.Guild;
 
 public class GuildArgument extends ArgumentResolver<CommandSender, Guild> {
     public static final MessageKey<String> GUILD_NOT_FOUND = MessageKey.of("guild_not_found", "Guild not found");
+    public static final MessageKey<CommandException> GUILD_FOUND_FAILURE = MessageKey.of("guild_found_failure", "Guild found failure");
 
     private final HttpAPI httpAPI;
     private final MessageRegistry<CommandSender> messageRegistry;
@@ -52,7 +53,7 @@ public class GuildArgument extends ArgumentResolver<CommandSender, Guild> {
             }
             return ParseResult.success(guild);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("Guild not found", e));
+            return ParseResult.failure(messageRegistry.getInvoked(GUILD_FOUND_FAILURE, invocation, new CommandException("Guild not found", e)));
         }
     }
 

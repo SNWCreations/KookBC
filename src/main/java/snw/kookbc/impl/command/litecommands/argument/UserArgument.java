@@ -33,6 +33,7 @@ import snw.jkook.entity.User;
 
 public class UserArgument extends ArgumentResolver<CommandSender, User> {
     public static final MessageKey<String> USER_NOT_FOUND = MessageKey.of("user_not_found", "User not found");
+    public static final MessageKey<CommandException> USER_FOUND_FAILURE = MessageKey.of("user_found_failure", "User found failure");
 
     private final HttpAPI httpAPI;
     private final MessageRegistry<CommandSender> messageRegistry;
@@ -58,7 +59,7 @@ public class UserArgument extends ArgumentResolver<CommandSender, User> {
             }
             return ParseResult.success(user);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("User not found", e));
+            return ParseResult.failure(messageRegistry.getInvoked(USER_FOUND_FAILURE, invocation, new CommandException("User not found", e)));
         }
     }
 

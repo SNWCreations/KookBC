@@ -49,6 +49,7 @@ public class RoleArgument extends ArgumentResolver<CommandSender, Role> {
         }
         return "Unsupported command";
     });
+    public static final MessageKey<CommandException> ROLE_FOUND_FAILURE = MessageKey.of("role_found_failure", "Role found failure");
 
     private final KBCClient client;
     private final MessageRegistry<CommandSender> messageRegistry;
@@ -102,7 +103,7 @@ public class RoleArgument extends ArgumentResolver<CommandSender, Role> {
             }
             return ParseResult.failure(messageRegistry.getInvoked(NOT_CHANNEL, invocation, message));
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("Role not found", e));
+            return ParseResult.failure(messageRegistry.getInvoked(ROLE_FOUND_FAILURE, invocation, new CommandException("Role not found", e)));
         }
     }
 

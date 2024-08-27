@@ -49,6 +49,7 @@ public class EmojiArgument extends ArgumentResolver<CommandSender, CustomEmoji> 
         }
         return "Unsupported command";
     });
+    public static final MessageKey<CommandException> EMOJI_FOUND_FAILURE = MessageKey.of("emoji_found_failure", "Emoji found failure");
 
     private final KBCClient client;
     private final MessageRegistry<CommandSender> messageRegistry;
@@ -105,7 +106,7 @@ public class EmojiArgument extends ArgumentResolver<CommandSender, CustomEmoji> 
             }
             return ParseResult.failure(messageRegistry.getInvoked(NOT_CHANNEL, invocation, message));
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("CustomEmoji not found", e));
+            return ParseResult.failure(messageRegistry.getInvoked(EMOJI_FOUND_FAILURE, invocation, new CommandException("CustomEmoji not found", e)));
         }
     }
 

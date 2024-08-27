@@ -34,6 +34,7 @@ import snw.jkook.entity.channel.Channel;
 
 public class ChannelArgument<T extends Channel> extends ArgumentResolver<CommandSender, T> {
     public static final MessageKey<String> CHANNEL_NOT_FOUND = MessageKey.of("channel_not_found", "Channel not found");
+    public static final MessageKey<CommandException> EMOJI_FOUND_FAILURE = MessageKey.of("emoji_found_failure", "Emoji found failure");
 
     private final HttpAPI httpAPI;
     private final MessageRegistry<CommandSender> messageRegistry;
@@ -60,7 +61,7 @@ public class ChannelArgument<T extends Channel> extends ArgumentResolver<Command
             }
             return ParseResult.success((T) channel);
         } catch (final Exception e) {
-            return ParseResult.failure(new CommandException("Channel not found", e));
+            return ParseResult.failure(messageRegistry.getInvoked(EMOJI_FOUND_FAILURE, invocation, new CommandException("Channel not found", e)));
         }
     }
 
