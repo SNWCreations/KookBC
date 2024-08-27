@@ -18,13 +18,23 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import com.google.gson.JsonObject;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
 import org.jetbrains.annotations.Nullable;
+
+import com.google.gson.JsonObject;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.NonCategoryChannel;
+import snw.jkook.exceptions.BadResponseException;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
@@ -33,21 +43,21 @@ import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
-import static snw.kookbc.util.GsonUtil.get;
-
 public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonCategoryChannel {
+
     private Category parent;
     private int chatLimitTime;
 
-    protected NonCategoryChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime) {
+    protected NonCategoryChannelImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
+    protected NonCategoryChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync,
+            Category parent, String name, Collection<RolePermissionOverwrite> rpo,
+            Collection<UserPermissionOverwrite> upo, int level, int chatLimitTime) {
         super(client, id, master, guild, permSync, name, rpo, upo, level);
         this.chatLimitTime = chatLimitTime;
         this.parent = parent;
@@ -64,9 +74,9 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
         return get(object, "url").getAsString();
     }
 
-
     @Override
     public @Nullable Category getParent() {
+        initIfNeeded();
         return parent;
     }
 
@@ -77,10 +87,6 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("parent_id", (parent == null) ? 0 : parent.getId())
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setParent0(parent);
-    }
-
-    public void setParent0(Category parent) {
         this.parent = parent;
     }
 
@@ -88,7 +94,6 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
     public PageIterator<Set<Invitation>> getInvitations() {
         return new ChannelInvitationIterator(client, this);
     }
-
 
     @Override
     public String sendComponent(String message) {
@@ -116,7 +121,8 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .putIfNotNull("temp_target_id", tempTarget, User::getId)
                 .build();
         try {
-            return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id").getAsString();
+            return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id")
+                    .getAsString();
         } catch (BadResponseException e) {
             if ("资源不存在".equals(e.getRawMessage())) {
                 // 2023/1/17: special case for the resources that aren't created by Bots.
@@ -130,6 +136,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
 
     @Override
     public int getChatLimitTime() {
+        initIfNeeded();
         return chatLimitTime;
     }
 
@@ -140,19 +147,15 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("slow_mode", chatLimitTime)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setChatLimitTime0(chatLimitTime);
-    }
-
-    public void setChatLimitTime0(int chatLimitTime) {
         this.chatLimitTime = chatLimitTime;
     }
 
     @Override
     public synchronized void update(JsonObject data) {
         super.update(data);
-
-        String parentId = get(data, "parent_id").getAsString();
-        Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-        setParent0(parent);
+        final String parentId = getAsString(data, "parent_id");
+        final Boolean needParent = "".equals(parentId) || "0".equals(parentId);
+        this.parent = needParent ? null : new CategoryImpl(client, parentId);
     }
+
 }

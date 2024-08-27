@@ -25,6 +25,7 @@ import snw.jkook.plugin.*;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.launcher.Launcher;
 import snw.kookbc.util.DependencyListBasedPluginDescriptionComparator;
@@ -242,6 +243,7 @@ public class SimplePluginManager implements PluginManager {
         // cancel tasks
         client.getCore().getScheduler().cancelTasks(plugin);
         client.getCore().getEventManager().unregisterAllHandlers(plugin);
+        ConsoleCommandSenderImpl.removeFor(plugin);
         // unregister commands
         try {
             ((CommandManagerImpl) client.getCore().getCommandManager()).getCommandMap().unregisterAll(plugin);

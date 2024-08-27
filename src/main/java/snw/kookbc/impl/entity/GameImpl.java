@@ -18,23 +18,30 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonObject;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.util.Map;
+
 import org.jetbrains.annotations.NotNull;
+
+import com.google.gson.JsonObject;
+
 import snw.jkook.entity.Game;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Map;
-
-import static snw.kookbc.util.GsonUtil.get;
-
 public class GameImpl implements Game, Updatable {
     private final KBCClient client;
     private final int id;
     private String name;
     private String icon;
+
+    public GameImpl(KBCClient client, int id) {
+        this.client = client;
+        this.id = id;
+    }
 
     public GameImpl(KBCClient client, int id, String name, String icon) {
         this.client = client;
@@ -60,10 +67,6 @@ public class GameImpl implements Game, Updatable {
                 .put("name", name)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
-        setName0(name);
-    }
-
-    public void setName0(String name) {
         this.name = name;
     }
 
@@ -79,10 +82,6 @@ public class GameImpl implements Game, Updatable {
                 .put("icon", iconUrl)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
-        setIcon0(iconUrl);
-    }
-
-    public void setIcon0(String iconUrl) {
         this.icon = iconUrl;
     }
 
@@ -94,18 +93,13 @@ public class GameImpl implements Game, Updatable {
                 .put("icon", icon)
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.GAME_UPDATE.toFullURL(), body);
-        setName0(name);
-        setIcon0(icon);
+        this.name = name;
+        this.icon = icon;
     }
 
     @Override
-    public void update(JsonObject data) {
-        synchronized (this) {
-            String name = get(data, "name").getAsString();
-            String icon = get(data, "icon").getAsString();
-
-            this.name = name;
-            this.icon = icon;
-        }
+    public synchronized void update(JsonObject data) {
+        this.name = getAsString(data, "name");
+        this.icon = getAsString(data, "icon");
     }
 }

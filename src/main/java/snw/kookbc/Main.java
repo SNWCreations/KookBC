@@ -18,12 +18,24 @@
 
 package snw.kookbc;
 
+import static snw.kookbc.util.Util.isStartByLaunch;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import snw.jkook.JKook;
 import snw.jkook.config.InvalidConfigurationException;
 import snw.jkook.config.file.YamlConfiguration;
@@ -32,14 +44,6 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.launcher.Launcher;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
-
-import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-
-import static java.lang.Boolean.parseBoolean;
-import static snw.kookbc.util.Util.isStartByLaunch;
 
 public class Main extends Launcher {
     private static final String MAIN_THREAD_NAME = "Main Thread";

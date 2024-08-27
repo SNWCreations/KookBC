@@ -1,5 +1,15 @@
 package snw.kookbc.impl.message;
 
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsLong;
+import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.util.Collections;
+import java.util.Map;
+
+import com.google.gson.JsonObject;
+
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -12,14 +22,16 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.Collections;
-import java.util.Map;
-
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
-    private final NonCategoryChannel channel;
+    protected NonCategoryChannel channel;
 
-    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, NonCategoryChannel channel) {
+    public ChannelMessageImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
+    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote, NonCategoryChannel channel) {
         super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
     }
@@ -88,8 +100,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
                 .build();
         client.getNetworkClient().post(
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
-                body
-        );
+                body);
     }
 
     @Override
@@ -119,6 +130,37 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     @Override
     public void delete() {
-        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(),
+                Collections.singletonMap("msg_id", getId()));
     }
+
+    @Override
+    public void initialize() {
+        final String id = getId();
+        final JsonObject object = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
+        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
+        final long timeStamp = getAsLong(object, "create_at");
+        ChannelMessage quote = null;
+        if (has(object, "quote")) {
+            final JsonObject rawQuote = getAsJsonObject(object, "quote");
+            final String quoteId = getAsString(rawQuote, "id");
+            quote = client.getCore().getHttpAPI().getChannelMessage(quoteId);
+        }
+        final String channelId = getAsString(object, "channel_id");
+        final NonCategoryChannel channel = retrieveOwningChannel(channelId);
+        this.component = component;
+        this.timeStamp = timeStamp;
+        this.quote = quote;
+        this.channel = channel;
+        this.completed = true;
+        client.getStorage().addMessage(this);
+    }
+
+    protected NonCategoryChannel retrieveOwningChannel(String id) {
+        // todo for removal
+        // noinspection deprecation
+        return (NonCategoryChannel) client.getCore().getHttpAPI().getChannel(id);
+    }
+
 }

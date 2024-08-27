@@ -18,18 +18,6 @@
 
 package snw.kookbc.impl.plugin;
 
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import snw.jkook.Core;
-import snw.jkook.config.serialization.ConfigurationSerializable;
-import snw.jkook.config.serialization.ConfigurationSerialization;
-import snw.jkook.plugin.Plugin;
-import snw.jkook.plugin.PluginClassLoader;
-import snw.jkook.plugin.PluginDescription;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.launch.AccessClassLoader;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -39,6 +27,19 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import snw.jkook.Core;
+import snw.jkook.config.serialization.ConfigurationSerializable;
+import snw.jkook.config.serialization.ConfigurationSerialization;
+import snw.jkook.plugin.Plugin;
+import snw.jkook.plugin.PluginClassLoader;
+import snw.jkook.plugin.PluginDescription;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.launch.AccessClassLoader;
 
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
@@ -57,19 +58,18 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.add(this);
     }
 
-
     @Override
     protected <T extends Plugin> T construct(final Class<T> cls, final PluginDescription description) throws Exception {
         T plugin = cls.getDeclaredConstructor().newInstance();
         Method initMethod = cls.getMethod(
                 "init",
-                File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class
-        );
+                File.class, File.class, PluginDescription.class, File.class, Logger.class, Core.class);
         File pluginFile;
         final URL location = cls.getProtectionDomain().getCodeSource().getLocation();
         if (location.getFile().endsWith(".class")) {
             if (!location.getFile().contains("!/")) {
-                throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: " + location + ", maybe it is a single class file?");
+                throw new IllegalArgumentException("Cannot obtain the source jar of the main class, location: "
+                        + location + ", maybe it is a single class file?");
             }
             String url = location.toString();
             url = url.substring(0, url.indexOf("!/")).replace("jar:file:/", "");
@@ -88,15 +88,15 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 description,
                 pluginFile,
                 new PrefixLogger(description.getName(), LoggerFactory.getLogger(cls)),
-                client.getCore()
-        );
+                client.getCore());
         return plugin;
     }
 
     @Override
     protected Class<? extends Plugin> lookForMainClass(String mainClassName, File file) throws Exception {
         if (this.findLoadedClass(mainClassName) != null) {
-            throw new IllegalArgumentException("The main class defined in plugin.yml has already been defined in the VM.");
+            throw new IllegalArgumentException(
+                    "The main class defined in plugin.yml has already been defined in the VM.");
         } else {
             super.addURL(file.toURI().toURL());
             if (parentClassLoader != null) {
@@ -106,7 +106,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
             Class<?> loadClass = this.loadClass(mainClassName, true);
             Class<? extends Plugin> main = loadClass.asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
-                throw new IllegalStateException("Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
+                throw new IllegalStateException(
+                        "Unexpected constructor count, expected 1, got " + main.getDeclaredConstructors().length);
             } else {
                 return main;
             }
@@ -172,7 +173,8 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 // The keys in a WeakHashMap are held through weak references,
                 // which may be garbage collected when no strong references to them exist.
                 // If null checks are not performed while traversing the key set,
-                // it may lead to encountering null keys that have already been garbage collected,
+                // it may lead to encountering null keys that have already been garbage
+                // collected,
                 // resulting in a NullPointerException.
                 // Therefore, when traversing the key set of a WeakHashMap,
                 // it is necessary to perform a null check first and process only non-null keys.
@@ -194,8 +196,9 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.remove(this);
         for (Class<?> clazz : cache.values()) {
             if (clazz.getClassLoader() == this && ConfigurationSerializable.class.isAssignableFrom(clazz)) {
-                //noinspection unchecked
-                ConfigurationSerialization.unregisterClass((Class<? extends ConfigurationSerializable>) clazz);
+                @SuppressWarnings("unchecked")
+                final Class<? extends ConfigurationSerializable> s = (Class<? extends ConfigurationSerializable>) clazz;
+                ConfigurationSerialization.unregisterClass(s);
             }
         }
         super.close();

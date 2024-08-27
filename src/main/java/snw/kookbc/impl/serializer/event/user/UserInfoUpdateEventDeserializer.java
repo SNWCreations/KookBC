@@ -18,17 +18,18 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import snw.jkook.event.user.UserInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<UserInfoUpdateEvent> {
 
@@ -37,14 +38,12 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
     }
 
     @Override
-    protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        UserImpl updatedUser = ((UserImpl) client.getStorage().getUser(get(body, "body_id").getAsString()));
-        updatedUser.setName(get(body, "username").getAsString());
-        updatedUser.setAvatarUrl(get(body, "avatar").getAsString());
-        return new UserInfoUpdateEvent(
-                timeStamp,
-                updatedUser
-        );
+    protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        UserImpl user = ((UserImpl) client.getStorage().getUser(getAsString(body, "body_id")));
+        user.setName(getAsString(body, "username"));
+        user.setAvatarUrl(getAsString(body, "avatar"));
+        return new UserInfoUpdateEvent(timeStamp, user);
     }
 
 }

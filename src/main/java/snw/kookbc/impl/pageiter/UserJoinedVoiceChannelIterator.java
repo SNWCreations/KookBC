@@ -18,16 +18,20 @@
 
 package snw.kookbc.impl.pageiter;
 
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.util.Collection;
+import java.util.HashSet;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-
-import java.util.Collection;
-import java.util.HashSet;
 
 public class UserJoinedVoiceChannelIterator extends PageIteratorImpl<Collection<VoiceChannel>> {
     private final User user;
@@ -41,14 +45,15 @@ public class UserJoinedVoiceChannelIterator extends PageIteratorImpl<Collection<
 
     @Override
     protected String getRequestURL() {
-        return String.format("%s?user_id=%s&guild_id=%s", HttpAPIRoute.CHANNEL_USER_VOICE_CHANNEL.toFullURL(), user.getId(), guild.getId());
+        return String.format("%s?user_id=%s&guild_id=%s", HttpAPIRoute.CHANNEL_USER_VOICE_CHANNEL.toFullURL(),
+                user.getId(), guild.getId());
     }
 
     @Override
     protected void processElements(JsonArray array) {
         object = new HashSet<>();
         for (JsonElement element : array) {
-            object.add((VoiceChannel) client.getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
+            object.add(new VoiceChannelImpl(client, getAsString(element.getAsJsonObject(), "id")));
         }
     }
 }

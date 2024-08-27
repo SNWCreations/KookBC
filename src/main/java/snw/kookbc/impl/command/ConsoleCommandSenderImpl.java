@@ -41,4 +41,8 @@ public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
     public static synchronized ConsoleCommandSender get(Plugin plugin) {
         return INSTANCES.computeIfAbsent(plugin, i -> new ConsoleCommandSenderImpl(i.getLogger()));
     }
+
+    public static void removeFor(Plugin plugin) {
+        INSTANCES.remove(plugin);
+    }
 }

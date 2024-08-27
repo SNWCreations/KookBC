@@ -18,15 +18,17 @@
 
 package snw.kookbc.impl.serializer.event.pm;
 
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.User;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.message.PrivateMessage;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.BaseEventDeserializer;
-
-import java.lang.reflect.Type;
 
 public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializer<PrivateMessageReceivedEvent> {
 
@@ -35,13 +37,12 @@ public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializ
     }
 
     @Override
-    protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        PrivateMessage privateMessage = client.getMessageBuilder().buildPrivateMessage(object);
-        return new PrivateMessageReceivedEvent(
-                privateMessage.getTimeStamp(),
-                privateMessage.getSender(),
-                privateMessage
-        );
+    protected PrivateMessageReceivedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx)
+            throws JsonParseException {
+        final PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(object);
+        final long timeStamp = pm.getTimeStamp();
+        final User user = pm.getSender();
+        return new PrivateMessageReceivedEvent(timeStamp, user, pm);
     }
 
     @Override

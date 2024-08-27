@@ -18,20 +18,21 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
+import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildUserNickNameUpdateEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
+import snw.kookbc.impl.storage.EntityStorage;
 
 public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeserializer<GuildUserNickNameUpdateEvent> {
 
@@ -40,24 +41,23 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
     }
 
     @Override
-    protected GuildUserNickNameUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+    protected GuildUserNickNameUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
         String guildId;
         User user;
         String nickname;
-        EntityStorage entityStorage = client.getStorage();
+        final EntityStorage entityStorage = client.getStorage();
         if (has(body, "my_nickname")) { // it is from GuildInfoUpdateEvent body...
-            guildId = get(body, "id").getAsString();
+            guildId = getAsString(body, "id");
             user = client.getCore().getUser();
-            nickname = get(body, "my_nickname").getAsString();
+            nickname = getAsString(body, "my_nickname");
         } else {
-            guildId = get(object, "target_id").getAsString();
-            user = entityStorage.getUser(get(body, "user_id").getAsString());
-            nickname = get(body, "nickname").getAsString();
+            guildId = getAsString(object, "target_id");
+            user = entityStorage.getUser(getAsString(body, "user_id"));
+            nickname = getAsString(body, "nickname");
         }
         final Guild guild = entityStorage.getGuild(guildId);
-        return new GuildUserNickNameUpdateEvent(
-                timeStamp, guild, user, nickname
-        );
+        return new GuildUserNickNameUpdateEvent(timeStamp, guild, user, nickname);
     }
 
 }

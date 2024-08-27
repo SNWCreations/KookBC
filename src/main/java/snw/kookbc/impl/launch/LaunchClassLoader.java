@@ -3,9 +3,6 @@
  */
 package snw.kookbc.impl.launch;
 
-import org.spongepowered.asm.util.JavaVersion;
-import snw.jkook.plugin.MarkedClassLoader;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +15,15 @@ import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.jar.Attributes;
@@ -27,7 +32,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoader, AccessClassLoader {
+import org.spongepowered.asm.util.JavaVersion;
+
+public class LaunchClassLoader extends URLClassLoader implements AccessClassLoader {
     public static final int BUFFER_SIZE = 1 << 12;
     private final LinkedHashSet<URL> sources;
     private final ClassLoader parent = getClass().getClassLoader();
@@ -79,6 +86,7 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
 
         // classloader exclusions
         addClassLoaderExclusion("java.");
+        addClassLoaderExclusion("javax.");
         addClassLoaderExclusion("sun.");
         addClassLoaderExclusion("org.lwjgl.");
         addClassLoaderExclusion("org.apache.logging.");
@@ -98,7 +106,6 @@ public class LaunchClassLoader extends URLClassLoader implements MarkedClassLoad
         addClassLoaderExclusion("com.sun.");
 
         // transformer exclusions
-        addTransformerExclusion("javax.");
         addTransformerExclusion("argo.");
         addTransformerExclusion("org.objectweb.asm.");
         addTransformerExclusion("com.google.common.");

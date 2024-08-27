@@ -18,17 +18,19 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.event.guild.GuildRemoveEmojiEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Guild;
+import snw.jkook.event.guild.GuildRemoveEmojiEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class GuildRemoveEmojiEventDeserializer extends NormalEventDeserializer<GuildRemoveEmojiEvent> {
 
@@ -37,13 +39,11 @@ public class GuildRemoveEmojiEventDeserializer extends NormalEventDeserializer<G
     }
 
     @Override
-    protected GuildRemoveEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        CustomEmoji customEmoji = client.getStorage().getEmoji(get(body, "id").getAsString(), body);
-        return new GuildRemoveEmojiEvent(
-                timeStamp,
-                customEmoji.getGuild(),
-                customEmoji
-        );
+    protected GuildRemoveEmojiEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final CustomEmoji customEmoji = client.getStorage().getEmoji(getAsString(body, "id"), body);
+        final Guild guild = customEmoji.getGuild();
+        return new GuildRemoveEmojiEvent(timeStamp, guild, customEmoji);
     }
 
     @Override

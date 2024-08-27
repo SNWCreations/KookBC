@@ -18,15 +18,17 @@
 
 package snw.kookbc.impl.serializer.event;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.Event;
-import snw.kookbc.impl.KBCClient;
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsLong;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.event.Event;
+import snw.kookbc.impl.KBCClient;
 
 public abstract class NormalEventDeserializer<T extends Event> extends BaseEventDeserializer<T> {
 
@@ -36,15 +38,12 @@ public abstract class NormalEventDeserializer<T extends Event> extends BaseEvent
 
     @Override
     protected T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx) throws JsonParseException {
-        return deserialize(
-                object,
-                type,
-                ctx,
-                get(object, "msg_timestamp").getAsLong(),
-                get(get(object, "extra").getAsJsonObject(), "body").getAsJsonObject()
-        );
+        final long timeStamp = getAsLong(object, "msg_timestamp");
+        final JsonObject body = getAsJsonObject(getAsJsonObject(object, "extra"), "body");
+        return deserialize(object, type, ctx, timeStamp, body);
     }
 
-    protected abstract T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException;
+    protected abstract T deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
+            JsonObject body) throws JsonParseException;
 
 }

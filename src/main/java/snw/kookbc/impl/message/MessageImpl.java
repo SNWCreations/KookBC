@@ -18,24 +18,7 @@
 
 package snw.kookbc.impl.message;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import org.jetbrains.annotations.Nullable;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.message.ChannelMessage;
-import snw.jkook.message.Message;
-import snw.jkook.message.TextChannelMessage;
-import snw.jkook.message.component.BaseComponent;
-import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.message.component.card.CardComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.builder.MessageBuilder;
-import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.jkook.exceptions.BadResponseException;
-import snw.kookbc.util.MapBuilder;
+import static java.util.Objects.requireNonNull;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -45,13 +28,45 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-public abstract class MessageImpl implements Message {
+import org.jetbrains.annotations.Nullable;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.User;
+import snw.jkook.exceptions.BadResponseException;
+import snw.jkook.message.ChannelMessage;
+import snw.jkook.message.Message;
+import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.LazyLoadable;
+import snw.kookbc.util.MapBuilder;
+
+public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
     private final String id;
-    private final User user;
-    private BaseComponent component;
-    private final long timeStamp;
-    private final Message quote;
+    private User user;
+    protected BaseComponent component;
+    protected long timeStamp;
+    protected Message quote;
+    protected boolean completed;
+
+    public MessageImpl(KBCClient client, String id) {
+        this.client = requireNonNull(client);
+        this.id = requireNonNull(id);
+    }
+
+    public MessageImpl(KBCClient client, String id, User user) {
+        this(client, id);
+        this.user = user;
+    }
 
     public MessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
         this.client = client;
@@ -64,6 +79,7 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public BaseComponent getComponent() {
+        initIfNeeded();
         return component;
     }
 
@@ -74,16 +90,19 @@ public abstract class MessageImpl implements Message {
 
     @Override
     public @Nullable Message getQuote() {
+        initIfNeeded();
         return quote;
     }
 
     @Override
     public User getSender() {
+        initIfNeeded();
         return user;
     }
 
     @Override
     public long getTimeStamp() {
+        initIfNeeded();
         return timeStamp;
     }
 
@@ -94,14 +113,11 @@ public abstract class MessageImpl implements Message {
             String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
                             "%s?msg_id=%s&emoji=%s",
-                            ((this instanceof ChannelMessage) ?
-                                    HttpAPIRoute.CHANNEL_MESSAGE_REACTION_LIST :
-                                    HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
+                            ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_REACTION_LIST
+                                    : HttpAPIRoute.USER_CHAT_MESSAGE_REACTION_LIST)
                                     .toFullURL(),
                             getId(),
-                            URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())
-                    )
-            );
+                            URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())));
             array = JsonParser.parseString(rawStr).getAsJsonObject().getAsJsonArray("data");
         } catch (BadResponseException e) {
             if (e.getCode() == 40300) { // 40300, so we should throw IllegalStateException
@@ -129,9 +145,9 @@ public abstract class MessageImpl implements Message {
                 .put("content", content)
                 .build();
         client.getNetworkClient().post(
-                ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
-                body
-        );
+                ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE
+                        : HttpAPIRoute.USER_CHAT_MESSAGE_UPDATE).toFullURL(),
+                body);
     }
 
     @Override
@@ -167,5 +183,10 @@ public abstract class MessageImpl implements Message {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
     }
 }

@@ -19,6 +19,7 @@
 package snw.kookbc.impl.message;
 
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.TextChannelMessage;
@@ -26,16 +27,25 @@ import snw.jkook.message.component.BaseComponent;
 import snw.kookbc.impl.KBCClient;
 
 public class TextChannelMessageImpl extends ChannelMessageImpl implements TextChannelMessage {
-    private final TextChannel channel;
 
-    public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, TextChannel channel) {
+    public TextChannelMessageImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
+    public TextChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote, TextChannel channel) {
         super(client, id, user, component, timeStamp, quote, channel);
-        this.channel = channel;
+        this.completed = true;
     }
 
     @Override
     public TextChannel getChannel() {
-        return channel;
+        return (TextChannel) super.getChannel();
+    }
+
+    @Override
+    protected NonCategoryChannel retrieveOwningChannel(String id) {
+        return client.getCore().getHttpAPI().getTextChannel(id);
     }
 
 }

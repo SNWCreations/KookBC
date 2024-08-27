@@ -18,12 +18,24 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -32,22 +44,27 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
 
-import java.util.*;
-
-import static snw.kookbc.util.GsonUtil.*;
-
 public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
     private int maxSize;
+    @SuppressWarnings("unused")
     private int quality;
+    @SuppressWarnings("unused")
     private int chatLimitTime;
 
-    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, boolean passwordProtected, int maxSize, int quality, int chatLimitTime) {
+    public VoiceChannelImpl(KBCClient client, String id) {
+        super(client, id);
+    }
+
+    public VoiceChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Category parent,
+            String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level,
+            boolean passwordProtected, int maxSize, int quality, int chatLimitTime) {
         super(client, id, master, guild, permSync, parent, name, rpo, upo, level, chatLimitTime);
         this.passwordProtected = passwordProtected;
         this.maxSize = maxSize;
         this.quality = quality;
         this.chatLimitTime = chatLimitTime;
+        this.completed = true;
     }
 
     @Override
@@ -63,11 +80,23 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public boolean hasPassword() {
+        initIfNeeded();
         return passwordProtected;
     }
 
     @Override
+    public void setPassword(@NotNull String password) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("password", password)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.passwordProtected = !password.isEmpty();
+    }
+
+    @Override
     public int getMaxSize() {
+        initIfNeeded();
         return maxSize;
     }
 
@@ -76,8 +105,36 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     }
 
     @Override
+    public void setSize(int size) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("limit_amount", size)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        setMaxSize(size);
+    }
+
+    @Override
+    public int getQuality() { // must query because we can't update this value by update(JsonObject) method
+        final JsonObject self = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId());
+        return get(self, "voice_quality").getAsInt();
+    }
+
+    @Override
+    public void setQuality(int i) {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .put("voice_quality", i)
+                .build();
+        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
+        this.quality = i;
+    }
+
+    @Override
     public Collection<User> getUsers() {
-        String rawContent = client.getNetworkClient().getRawContent(HttpAPIRoute.CHANNEL_USER_LIST.toFullURL() + "?channel_id=" + getId());
+        String rawContent = client.getNetworkClient()
+                .getRawContent(HttpAPIRoute.CHANNEL_USER_LIST.toFullURL() + "?channel_id=" + getId());
         JsonArray array = JsonParser.parseString(rawContent).getAsJsonObject().getAsJsonArray("data");
         Set<User> users = new HashSet<>();
         for (JsonElement element : array) {
@@ -101,52 +158,56 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     }
 
     @Override
-    public void update(JsonObject data) {
-        synchronized (this) {
-            super.update(data);
-            boolean hasPassword = has(data, "has_password") && get(data, "has_password").getAsBoolean();
-            int size = has(data, "limit_amount") ? get(data, "limit_amount").getAsInt() : 0;
-            // KOOK does not provide voice quality value here!
-            this.passwordProtected = hasPassword;
-            this.maxSize = size;
-        }
+    public synchronized void update(JsonObject data) {
+        super.update(data);
+        boolean hasPassword = has(data, "has_password") && get(data, "has_password").getAsBoolean();
+        int size = has(data, "limit_amount") ? get(data, "limit_amount").getAsInt() : 0;
+        // KOOK does not provide voice quality value here!
+        this.passwordProtected = hasPassword;
+        this.maxSize = size;
     }
 
     @Override
-    public int getQuality() { // must query because we can't update this value by update(JsonObject) method
-        final JsonObject self = client.getNetworkClient()
-                .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId());
-        return get(self, "voice_quality").getAsInt();
-    }
-
-    @Override
-    public void setPassword(@NotNull String password) {
+    public StreamingInfo requestStreamingInfo(@Nullable String password) {
         final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
-                .put("password", password)
+                .putIfNotNull("password", password)
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        this.passwordProtected = !password.isEmpty();
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
     }
 
     @Override
-    public void setSize(int size) {
-        final Map<String, Object> body = new MapBuilder()
+    public StreamingInfo requestStreamingInfo(@Nullable String password, boolean rtcpMux) {
+        final Map<String, ?> body = new MapBuilder()
                 .put("channel_id", getId())
-                .put("limit_amount", size)
+                .putIfNotNull("password", password)
+                .put("rtcp_mux", rtcpMux)
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        setMaxSize(size);
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
     }
 
     @Override
-    public void setQuality(int i) {
+    public StreamingInfo requestStreamingInfo(@Nullable String password, String audioSSRC, String audioPayloadType,
+            boolean rtcpMux) {
+        final Map<String, ?> body = new MapBuilder()
+                .put("channel_id", getId())
+                .putIfNotNull("password", password)
+                .put("audio_ssrc", audioSSRC)
+                .put("audio_pt", audioPayloadType)
+                .put("rtcp_mux", rtcpMux)
+                .build();
+        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+    }
+
+    @Override
+    public void stopStreaming() {
         final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
-                .put("voice_quality", i)
                 .build();
-        client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
-        this.quality = i;
+        client.getNetworkClient().postContent(HttpAPIRoute.VOICE_LEAVE.toFullURL(), body);
     }
 
     public static final class StreamingInfoImpl implements StreamingInfo {
@@ -166,7 +227,6 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
             audio_ssrc = audioSsrc;
             audio_pt = audioPt;
         }
-
 
         @Override
         public String getIp() {
@@ -200,53 +260,11 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     }
 
     @Override
-    public StreamingInfo requestStreamingInfo(@Nullable String password) {
-        final Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .putIfNotNull("password", password)
-                .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
-    }
-
-    @Override
-    public StreamingInfo requestStreamingInfo(@Nullable String password, boolean rtcpMux) {
-        final Map<String, ?> body = new MapBuilder()
-                .put("channel_id", getId())
-                .putIfNotNull("password", password)
-                .put("rtcp_mux", rtcpMux)
-                .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
-    }
-
-    @Override
-    public StreamingInfo requestStreamingInfo(@Nullable String password, String audioSSRC, String audioPayloadType, boolean rtcpMux) {
-        final Map<String, ?> body = new MapBuilder()
-                .put("channel_id", getId())
-                .putIfNotNull("password", password)
-                .put("audio_ssrc", audioSSRC)
-                .put("audio_pt", audioPayloadType)
-                .put("rtcp_mux", rtcpMux)
-                .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
-    }
-
-    @Override
     public void keepStreaming() {
         final Map<String, Object> body = new MapBuilder()
                 .put("channel_id", getId())
                 .build();
         client.getNetworkClient().postContent(HttpAPIRoute.VOICE_KEEP_ALIVE.toFullURL(), body);
-    }
-
-    @Override
-    public void stopStreaming() {
-        final Map<String, Object> body = new MapBuilder()
-                .put("channel_id", getId())
-                .build();
-        client.getNetworkClient().postContent(HttpAPIRoute.VOICE_LEAVE.toFullURL(), body);
     }
 
 }

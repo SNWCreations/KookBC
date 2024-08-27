@@ -18,20 +18,29 @@
 
 package snw.kookbc.impl.network;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
+import static snw.kookbc.CLIOptions.NO_BUCKET;
+import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import snw.jkook.exceptions.BadResponseException;
+import snw.kookbc.impl.KBCClient;
 
 // provide the basic HTTP/WebSocket call feature. Authenticated with Bot Token.
 public class NetworkClient {
@@ -49,10 +58,7 @@ public class NetworkClient {
                 .readTimeout(Duration.ofMinutes(1));
         if (kbcClient.getConfig().getBoolean("ignore-ssl")) {
             kbcClient.getCore().getLogger().warn("Ignoring SSL verification for networking!!!");
-            builder.sslSocketFactory(
-                            IgnoreSSLHelper.getSSLSocketFactory(),
-                            IgnoreSSLHelper.TRUST_MANAGER
-                    )
+            builder.sslSocketFactory(IgnoreSSLHelper.getSSLSocketFactory(), IgnoreSSLHelper.TRUST_MANAGER)
                     .hostnameVerifier(IgnoreSSLHelper.getHostnameVerifier());
         }
         client = builder.build();
@@ -67,7 +73,8 @@ public class NetworkClient {
     }
 
     public JsonObject post(String fullUrl, Map<?, ?> body) {
-        return checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject()).getAsJsonObject("data");
+        return checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject())
+                .getAsJsonObject("data");
     }
 
     public String getRawContent(String fullUrl) {
@@ -87,9 +94,7 @@ public class NetworkClient {
     public String postContent(String fullUrl, String body, String mediaType) {
         logRequest("POST", fullUrl, body);
         Request request = new Request.Builder()
-                .post(
-                        RequestBody.create(body, MediaType.parse(mediaType))
-                )
+                .post(RequestBody.create(body, MediaType.parse(mediaType)))
                 .url(fullUrl)
                 .addHeader("Authorization", tokenWithPrefix)
                 .build();
@@ -97,13 +102,20 @@ public class NetworkClient {
     }
 
     public String call(Request request) {
-        Bucket bucket = getBucket(request);
-        bucket.check();
+        Bucket bucket;
+        if (!NO_BUCKET) {
+            bucket = getBucket(request);
+            bucket.check();
+        } else {
+            bucket = null;
+        }
         try (Response response = client.newCall(request).execute()) {
             // region Bucket process
             int remaining = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Remaining")));
             int reset = Integer.parseInt(Objects.requireNonNull(response.header("X-Rate-Limit-Reset")));
-            bucket.update(remaining, reset);
+            if (bucket != null) {
+                bucket.update(remaining, reset);
+            }
             // endregion
 
             final String body = Objects.requireNonNull(response.body()).string();

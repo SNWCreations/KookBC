@@ -18,16 +18,38 @@
 
 package snw.kookbc.impl.entity;
 
+import static java.util.Objects.requireNonNull;
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsBoolean;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
-import snw.jkook.entity.*;
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.Invitation;
+import snw.jkook.entity.Role;
+import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -39,43 +61,41 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.mute.MuteDataImpl;
 import snw.kookbc.impl.entity.mute.MuteResultImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.*;
+import snw.kookbc.impl.pageiter.GuildBannedUserIterator;
+import snw.kookbc.impl.pageiter.GuildChannelListIterator;
+import snw.kookbc.impl.pageiter.GuildEmojiListIterator;
+import snw.kookbc.impl.pageiter.GuildInvitationsIterator;
+import snw.kookbc.impl.pageiter.GuildRoleListIterator;
+import snw.kookbc.impl.pageiter.GuildUserListIterator;
+import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static snw.kookbc.util.GsonUtil.get;
-
-public class GuildImpl implements Guild, Updatable {
+public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private final KBCClient client;
     private final String id;
     private NotifyType notifyType;
-    private String ownerId;
-    private final AtomicReference<User> owner = new AtomicReference<>();
+    private User master;
     private String name;
-    private boolean public_; // I know Guild owner can turn this to false,
-    // but I don't have internal events to listen for that!
+    private boolean public_; // I know Guild owner can turn this to false, but I don't have internal events
+                             // to listen for that!
     private String region;
     private String avatarUrl; // no vipAvatar here!
+    private boolean completed;
 
-    public GuildImpl(KBCClient client, String id,
-                     String name,
-                     boolean isPublic,
-                     String region,
-                     String ownerId,
-                     NotifyType notifyType,
-                     String avatarUrl
-    ) {
-        this.client = client;
-        this.id = id;
-        this.name = name;
-        this.public_ = isPublic;
-        this.region = region;
-        this.ownerId = ownerId;
+    public GuildImpl(KBCClient client, String id) {
+        this.client = requireNonNull(client);
+        this.id = requireNonNull(id);
+    }
+
+    public GuildImpl(KBCClient client, String id, NotifyType notifyType, User master, String name, boolean public_,
+            String region, String avatarUrl) {
+        this(client, id);
         this.notifyType = notifyType;
+        this.master = master;
+        this.name = name;
+        this.public_ = public_;
+        this.region = region;
         this.avatarUrl = avatarUrl;
     }
 
@@ -90,8 +110,11 @@ public class GuildImpl implements Guild, Updatable {
     }
 
     @Override
-    public PageIterator<Set<User>> getUsers(String keyword, @Nullable Integer roleId, @Nullable Boolean isMobileVerified, @Nullable Boolean isActiveTimeFirst, @Nullable Boolean isJoinedTimeFirst) {
-        return new GuildUserListIterator(client, getId(), keyword, roleId, isMobileVerified, isActiveTimeFirst, isJoinedTimeFirst);
+    public PageIterator<Set<User>> getUsers(String keyword, @Nullable Integer roleId,
+            @Nullable Boolean isMobileVerified, @Nullable Boolean isActiveTimeFirst,
+            @Nullable Boolean isJoinedTimeFirst) {
+        return new GuildUserListIterator(client, getId(), keyword, roleId, isMobileVerified, isActiveTimeFirst,
+                isJoinedTimeFirst);
     }
 
     @Override
@@ -106,6 +129,7 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public String getVoiceChannelServerRegion() {
+        initIfNeeded();
         return region;
     }
 
@@ -116,18 +140,21 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public int getOnlineUserCount() {
-        JsonObject userStatus = client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
+        JsonObject userStatus = client.getNetworkClient()
+                .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
         return userStatus.get("online_count").getAsInt();
     }
 
     @Override
     public int getUserCount() {
-        JsonObject userStatus = client.getNetworkClient().get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
+        JsonObject userStatus = client.getNetworkClient()
+                .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
         return userStatus.get("user_count").getAsInt();
     }
 
     @Override
     public boolean isPublic() {
+        initIfNeeded();
         return public_;
     }
 
@@ -161,7 +188,8 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public void leave() {
-        client.getNetworkClient().postContent(HttpAPIRoute.GUILD_LEAVE.toFullURL(), Collections.singletonMap("guild_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.GUILD_LEAVE.toFullURL(),
+                Collections.singletonMap("guild_id", getId()));
     }
 
     @Override
@@ -201,13 +229,15 @@ public class GuildImpl implements Guild, Updatable {
                 .put("type", 1)
                 .putIfNotNull("parent_id", category, Channel::getId)
                 .build();
-        TextChannel channel = (TextChannel) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
+        TextChannel channel = (TextChannel) client.getEntityBuilder()
+                .buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         client.getStorage().addChannel(channel);
         return channel;
     }
 
     @Override
-    public VoiceChannel createVoiceChannel(String s, @Nullable Category parent, @Range(from = 1L, to = 99L) int size, @Range(from = 1L, to = 3L) int quality) {
+    public VoiceChannel createVoiceChannel(String s, @Nullable Category parent, @Range(from = 1L, to = 99L) int size,
+            @Range(from = 1L, to = 3L) int quality) {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
@@ -216,7 +246,8 @@ public class GuildImpl implements Guild, Updatable {
                 .put("voice_quality", String.valueOf(quality))
                 .putIfNotNull("parent_id", parent, Channel::getId)
                 .build();
-        VoiceChannel channel = (VoiceChannel) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
+        VoiceChannel channel = (VoiceChannel) client.getEntityBuilder()
+                .buildChannel(client.getNetworkClient().post(HttpAPIRoute.CHANNEL_CREATE.toFullURL(), body));
         client.getStorage().addChannel(channel);
         return channel;
     }
@@ -228,7 +259,8 @@ public class GuildImpl implements Guild, Updatable {
                 .put("name", s)
                 .put("is_category", 1)
                 .build();
-        Category result = (Category) client.getEntityBuilder().buildChannel(client.getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
+        Category result = (Category) client.getEntityBuilder()
+                .buildChannel(client.getNetworkClient().post(HttpAPIRoute.GUILD_KICK.toFullURL(), body));
         client.getStorage().addChannel(result);
         return result;
     }
@@ -258,8 +290,7 @@ public class GuildImpl implements Guild, Updatable {
                 .addFormDataPart(
                         "emoji",
                         "114514",
-                        RequestBody.create(content, MediaType.parse(type))
-                );
+                        RequestBody.create(content, MediaType.parse(type)));
         if (name != null) {
             if (name.length() < 2) {
                 throw new IllegalArgumentException("The emoji name should be greater or equals 2.");
@@ -272,7 +303,8 @@ public class GuildImpl implements Guild, Updatable {
                 .post(requestBody)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        JsonObject object = JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data");
+        JsonObject object = JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject()
+                .getAsJsonObject("data");
         CustomEmoji emoji = client.getEntityBuilder().buildEmoji(object);
         client.getStorage().addEmoji(emoji);
         return emoji;
@@ -285,12 +317,14 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public NotifyType getNotifyType() {
+        initIfNeeded();
         return notifyType;
     }
 
     @Override
     public @Nullable String getAvatarUrl(boolean b) {
         Validate.isTrue(!b, "KOOK official does not provide \"vip_avatar\" field for Guild.");
+        initIfNeeded();
         return avatarUrl;
     }
 
@@ -300,8 +334,8 @@ public class GuildImpl implements Guild, Updatable {
         Validate.isTrue(end > 0, "The parameter 'end' cannot be negative");
         Validate.isTrue(start < end, "The parameter 'start' cannot be greater than the parameter 'end'");
         JsonObject object = client.getNetworkClient().get(
-                String.format("%s?guild_id=%s&start_time=%s&end_time=%s", HttpAPIRoute.GUILD_BOOST_HISTORY.toFullURL(), getId(), start, end)
-        );
+                String.format("%s?guild_id=%s&start_time=%s&end_time=%s", HttpAPIRoute.GUILD_BOOST_HISTORY.toFullURL(),
+                        getId(), start, end));
         Collection<BoostInfo> result = new HashSet<>();
         for (JsonElement item : object.getAsJsonArray("items")) {
             JsonObject data = item.getAsJsonObject();
@@ -309,9 +343,7 @@ public class GuildImpl implements Guild, Updatable {
                     new BoostInfoImpl(
                             client.getStorage().getUser(data.get("user_id").getAsString()),
                             data.get("start_time").getAsInt(),
-                            data.get("end_time").getAsInt()
-                    )
-            );
+                            data.get("end_time").getAsInt()));
         }
         return Collections.unmodifiableCollection(result);
     }
@@ -334,16 +366,13 @@ public class GuildImpl implements Guild, Updatable {
 
     @Override
     public User getMaster() {
-        return owner.updateAndGet(obj -> {
-            if (obj == null || !ownerId.equals(obj.getId())) {
-                return client.getStorage().getUser(ownerId);
-            }
-            return obj;
-        });
+        initIfNeeded();
+        return master;
     }
 
     @Override
     public String getName() {
+        initIfNeeded();
         return name;
     }
 
@@ -360,23 +389,30 @@ public class GuildImpl implements Guild, Updatable {
     }
 
     @Override
-    public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update guild by using different data");
-        synchronized (this) {
-            name = get(data, "name").getAsString();
-            public_ = get(data, "enable_open").getAsBoolean();
-            region = get(data, "region").getAsString();
-            notifyType = Objects.requireNonNull(
-                    NotifyType.value(get(data, "notify_type").getAsInt()),
-                    () -> "Unexpected NotifyType, got " + get(data, "notify_type").getAsInt()
-            );
-            avatarUrl = get(data, "icon").getAsString();
-            final String incomingOwnerId = get(data, "user_id").getAsString();
-            if (!incomingOwnerId.equals(ownerId)) {
-                owner.set(null);
-                ownerId = incomingOwnerId;
-            }
-        }
+    public synchronized void update(JsonObject data) {
+        final String id = getAsString(data, "id");
+        final int notifyTypeId = getAsInt(data, "notify_type");
+        final Supplier<String> notifyErr = () -> "Unexpected NotifyType, got " + notifyTypeId;
+        isTrue(Objects.equals(getId(), id), "You can't update guild by using different data");
+        this.name = getAsString(data, "name");
+        this.public_ = getAsBoolean(data, "enable_open");
+        this.region = getAsString(data, "region");
+        this.notifyType = requireNonNull(NotifyType.value(notifyTypeId), notifyErr);
+        this.avatarUrl = getAsString(data, "icon");
+        this.master = new UserImpl(client, getAsString(data, "user_id"));
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    @Override
+    public void initialize() {
+        final JsonObject data = client.getNetworkClient()
+                .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id));
+        update(data);
+        completed = true;
     }
 }
 

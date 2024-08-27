@@ -27,7 +27,6 @@ import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import snw.jkook.HttpAPI;
 import snw.jkook.command.CommandException;
 import snw.jkook.command.CommandSender;
-import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 
 public class ChannelArgument<T extends Channel> extends ArgumentResolver<CommandSender, T> {
@@ -59,7 +58,8 @@ public class ChannelArgument<T extends Channel> extends ArgumentResolver<Command
     }
 
     @Override
-    public SuggestionResult suggest(Invocation<CommandSender> invocation, Argument<T> argument, SuggestionContext context) {
+    public SuggestionResult suggest(Invocation<CommandSender> invocation, Argument<T> argument,
+            SuggestionContext context) {
         return super.suggest(invocation, argument, context);
     }
 }

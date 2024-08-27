@@ -18,16 +18,19 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.role.RoleCreateEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.Role;
+import snw.jkook.event.role.RoleCreateEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCreateEvent> {
 
@@ -36,22 +39,18 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
     }
 
     @Override
-    protected RoleCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new RoleCreateEvent(
-                timeStamp,
-                client.getEntityBuilder().buildRole(
-                        client.getStorage().getGuild(get(object, "target_id").getAsString()),
-                        body
-                )
-        );
+    protected RoleCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
+            JsonObject body) throws JsonParseException {
+        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
+        final Role role = client.getEntityBuilder().buildRole(guild, body);
+        return new RoleCreateEvent(timeStamp, role);
     }
 
     @Override
     protected void beforeReturn(RoleCreateEvent event) {
-        client.getStorage().addRole(
-                client.getStorage().getGuild(event.getRole().getGuild().getId()),
-                event.getRole()
-        );
+        final Guild guild = client.getStorage().getGuild(event.getRole().getGuild().getId());
+        final Role role = event.getRole();
+        client.getStorage().addRole(guild, role);
     }
 
 }
