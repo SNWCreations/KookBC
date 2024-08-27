@@ -18,16 +18,22 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.channel.ChannelMessagePinEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.User;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.event.channel.ChannelMessagePinEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class ChannelMessagePinEventDeserializer extends NormalEventDeserializer<ChannelMessagePinEvent> {
 
@@ -36,13 +42,15 @@ public class ChannelMessagePinEventDeserializer extends NormalEventDeserializer<
     }
 
     @Override
-    protected ChannelMessagePinEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new ChannelMessagePinEvent(
-                timeStamp,
-                client.getStorage().getChannel(get(body, "channel_id").getAsString()),
-                get(body, "msg_id").getAsString(),
-                client.getStorage().getUser(get(body, "operator_id").getAsString())
-        );
+    protected ChannelMessagePinEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final String id = getAsString(body, "channel_id");
+        final Channel channel = getAsInt(body, "channel_type") == 1
+                ? new TextChannelImpl(client, id)
+                : new VoiceChannelImpl(client, id);
+        final String msgId = getAsString(body, "msg_id");
+        final User operator = client.getStorage().getUser(getAsString(body, "operator_id"));
+        return new ChannelMessagePinEvent(timeStamp, channel, msgId, operator);
     }
 
 }

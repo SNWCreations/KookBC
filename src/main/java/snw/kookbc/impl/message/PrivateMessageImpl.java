@@ -18,25 +18,26 @@
 
 package snw.kookbc.impl.message;
 
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
+import snw.jkook.exceptions.BadResponseException;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 
 public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
 
@@ -44,7 +45,8 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         super(client, id, user);
     }
 
-    public PrivateMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote) {
+    public PrivateMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote) {
         super(client, id, user, component, timeStamp, quote);
         this.completed = true;
     }
@@ -89,23 +91,26 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
 
     @Override
     public void delete() {
-        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.USER_CHAT_MESSAGE_DELETE.toFullURL(),
+                Collections.singletonMap("msg_id", getId()));
     }
 
     @Override
     public void initialize() {
         final String chatCode = get(client.getNetworkClient()
                 .post(HttpAPIRoute.USER_CHAT_SESSION_CREATE.toFullURL(), // KOOK won't create multiple session
-                        Collections.singletonMap("target_id", getSender().getId())), "code").getAsString();
+                        Collections.singletonMap("target_id", getSender().getId())),
+                "code").getAsString();
         final JsonObject object;
         try {
             object = client.getNetworkClient()
-                    .get(HttpAPIRoute.USER_CHAT_MESSAGE_INFO.toFullURL() + "?chat_code=" + chatCode + "&msg_id=" + getId());
+                    .get(HttpAPIRoute.USER_CHAT_MESSAGE_INFO.toFullURL() + "?chat_code=" + chatCode + "&msg_id="
+                            + getId());
         } catch (BadResponseException e) {
             if (e.getCode() == 40000) {
                 throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + getId() + " found")
-                                .initCause(e);
+                new NoSuchElementException("No message object with provided ID " + getId() + " found")
+                        .initCause(e);
             }
             throw e;
         }

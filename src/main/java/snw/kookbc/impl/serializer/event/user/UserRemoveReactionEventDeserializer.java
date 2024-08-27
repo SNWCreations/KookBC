@@ -18,19 +18,22 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Reaction;
+import snw.jkook.entity.User;
 import snw.jkook.event.user.UserRemoveReactionEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.ReactionImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer<UserRemoveReactionEvent> {
 
@@ -39,30 +42,19 @@ public class UserRemoveReactionEventDeserializer extends NormalEventDeserializer
     }
 
     @Override
-    protected UserRemoveReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        JsonObject emojiObject = get(body, "emoji").getAsJsonObject();
-        CustomEmoji customEmoji = client.getStorage().getEmoji(get(emojiObject, "id").getAsString(), emojiObject);
-        Reaction reaction = client.getStorage().getReaction(
-                get(body, "msg_id").getAsString(), customEmoji,
-                client.getStorage().getUser(get(body, "user_id").getAsString())
-        );
+    protected UserRemoveReactionEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final JsonObject emojiObject = getAsJsonObject(body, "emoji");
+        final CustomEmoji customEmoji = client.getStorage().getEmoji(getAsString(emojiObject, "id"), emojiObject);
+        final User user = client.getStorage().getUser(getAsString(body, "user_id"));
+        final String messageId = getAsString(body, "msg_id");
+        Reaction reaction = client.getStorage().getReaction(messageId, customEmoji, user);
         if (reaction != null) {
             client.getStorage().removeReaction(reaction);
         } else {
-            reaction = new ReactionImpl(
-                    client,
-                    get(body, "msg.id").getAsString(),
-                    customEmoji,
-                    client.getStorage().getUser(get(body, "user_id").getAsString()),
-                    -1
-            );
+            reaction = new ReactionImpl(client, messageId, customEmoji, user, -1);
         }
-        return new UserRemoveReactionEvent(
-                timeStamp,
-                client.getStorage().getUser(get(body, "user_id").getAsString()),
-                get(body, "msg_id").getAsString(),
-                reaction
-        );
+        return new UserRemoveReactionEvent(timeStamp, user, messageId, reaction);
     }
 
 }

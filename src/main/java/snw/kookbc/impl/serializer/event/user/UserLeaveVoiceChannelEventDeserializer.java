@@ -18,17 +18,20 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.channel.VoiceChannel;
-import snw.jkook.event.user.UserLeaveVoiceChannelEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.User;
+import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.event.user.UserLeaveVoiceChannelEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserLeaveVoiceChannelEventDeserializer extends NormalEventDeserializer<UserLeaveVoiceChannelEvent> {
 
@@ -37,12 +40,11 @@ public class UserLeaveVoiceChannelEventDeserializer extends NormalEventDeseriali
     }
 
     @Override
-    protected UserLeaveVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserLeaveVoiceChannelEvent(
-                timeStamp,
-                client.getStorage().getUser(get(body, "user_id").getAsString()),
-                (VoiceChannel) client.getStorage().getChannel(get(body, "channel_id").getAsString())
-        );
+    protected UserLeaveVoiceChannelEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final User user = client.getStorage().getUser(getAsString(body, "user_id"));
+        final VoiceChannel channel = new VoiceChannelImpl(client, getAsString(body, "channel_id"));
+        return new UserLeaveVoiceChannelEvent(timeStamp, user, channel);
     }
 
 }

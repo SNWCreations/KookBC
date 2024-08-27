@@ -1,6 +1,15 @@
 package snw.kookbc.impl.message;
 
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsLong;
+import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.GsonUtil.has;
+
+import java.util.Collections;
+import java.util.Map;
+
 import com.google.gson.JsonObject;
+
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -11,15 +20,7 @@ import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.network.exceptions.BadResponseException;
 import snw.kookbc.util.MapBuilder;
-
-import java.util.Collections;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
@@ -29,7 +30,8 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
         super(client, id);
     }
 
-    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp, Message quote, NonCategoryChannel channel) {
+    public ChannelMessageImpl(KBCClient client, String id, User user, BaseComponent component, long timeStamp,
+            Message quote, NonCategoryChannel channel) {
         super(client, id, user, component, timeStamp, quote);
         this.channel = channel;
     }
@@ -98,8 +100,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
                 .build();
         client.getNetworkClient().post(
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
-                body
-        );
+                body);
     }
 
     @Override
@@ -129,47 +130,37 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     @Override
     public void delete() {
-        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(), Collections.singletonMap("msg_id", getId()));
+        client.getNetworkClient().postContent(HttpAPIRoute.CHANNEL_MESSAGE_DELETE.toFullURL(),
+                Collections.singletonMap("msg_id", getId()));
     }
 
     @Override
     public void initialize() {
         final String id = getId();
-        final JsonObject object;
-        try {
-            object = client.getNetworkClient()
-                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
-        } catch (BadResponseException e) {
-            if (e.getCode() == 40000) {
-                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + id + " found")
-                                .initCause(e);
-            }
-            throw e;
-        }
+        final JsonObject object = client.getNetworkClient()
+                .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
         final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
+        final long timeStamp = getAsLong(object, "create_at");
         ChannelMessage quote = null;
         if (has(object, "quote")) {
-            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
-            final String quoteId = get(rawQuote, "id").getAsString();
+            final JsonObject rawQuote = getAsJsonObject(object, "quote");
+            final String quoteId = getAsString(rawQuote, "id");
             quote = client.getCore().getHttpAPI().getChannelMessage(quoteId);
         }
-        final String channelId = get(object, "channel_id").getAsString();
+        final String channelId = getAsString(object, "channel_id");
         final NonCategoryChannel channel = retrieveOwningChannel(channelId);
-
         this.component = component;
         this.timeStamp = timeStamp;
         this.quote = quote;
         this.channel = channel;
-
-        client.getStorage().addMessage(this);
         this.completed = true;
+        client.getStorage().addMessage(this);
     }
 
     protected NonCategoryChannel retrieveOwningChannel(String id) {
         // todo for removal
-        //noinspection deprecation
+        // noinspection deprecation
         return (NonCategoryChannel) client.getCore().getHttpAPI().getChannel(id);
     }
+
 }

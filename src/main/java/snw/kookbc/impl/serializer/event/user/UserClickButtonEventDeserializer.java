@@ -18,19 +18,20 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.entity.channel.NonCategoryChannel;
-import snw.jkook.entity.channel.TextChannel;
-import snw.jkook.event.user.UserClickButtonEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.User;
+import snw.jkook.entity.channel.NonCategoryChannel;
+import snw.jkook.event.user.UserClickButtonEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserClickButtonEventDeserializer extends NormalEventDeserializer<UserClickButtonEvent> {
 
@@ -39,17 +40,18 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
     }
 
     @Override
-    protected UserClickButtonEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserClickButtonEvent(
-                timeStamp,
-                client.getStorage().getUser(get(body, "user_id").getAsString()),
-                get(body, "msg_id").getAsString(),
-                get(body, "value").getAsString(),
-                Objects.equals(
-                        get(body, "user_id").getAsString(),
-                        get(body, "target_id").getAsString()
-                ) ? null : (NonCategoryChannel) client.getStorage().getChannel(get(body, "target_id").getAsString())
-        );
+    protected UserClickButtonEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final String userId = getAsString(body, "user_id");
+        final String targetId = getAsString(body, "target_id");
+        final Boolean needChannel = Objects.equals(userId, targetId);
+
+        final User user = client.getStorage().getUser(userId);
+        final String messageId = getAsString(body, "msg_id");
+        final String value = getAsString(body, "value");
+        final NonCategoryChannel channel = needChannel ? null
+                : (NonCategoryChannel) client.getStorage().getChannel(targetId);
+        return new UserClickButtonEvent(timeStamp, user, messageId, value, channel);
     }
 
 }

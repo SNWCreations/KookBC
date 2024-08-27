@@ -18,23 +18,35 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonObject;
-import snw.jkook.entity.*;
-import snw.jkook.entity.channel.Category;
-import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.Validate;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.*;
-import snw.kookbc.impl.entity.channel.CategoryImpl;
-import snw.kookbc.impl.entity.channel.TextChannelImpl;
-import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.jkook.exceptions.BadResponseException;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseEmojiGuild;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseNotifyType;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
+import static snw.kookbc.util.GsonUtil.getAsBoolean;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.util.Collection;
 
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonObject;
+
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.Game;
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.Guild.NotifyType;
+import snw.jkook.entity.Role;
+import snw.jkook.entity.User;
+import snw.jkook.entity.channel.Category;
+import snw.jkook.entity.channel.Channel;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.CustomEmojiImpl;
+import snw.kookbc.impl.entity.GameImpl;
+import snw.kookbc.impl.entity.GuildImpl;
+import snw.kookbc.impl.entity.RoleImpl;
+import snw.kookbc.impl.entity.UserImpl;
+import snw.kookbc.impl.entity.channel.CategoryImpl;
+import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 // The class for building entities.
 public class EntityBuilder {
@@ -44,162 +56,88 @@ public class EntityBuilder {
         this.client = client;
     }
 
-    public User buildUser(JsonObject object) {
-        String id = get(object, "id").getAsString();
-        boolean bot = get(object, "bot").getAsBoolean();
-        String userName = get(object, "username").getAsString();
-        String avatar = get(object, "avatar").getAsString();
-        String vipAvatar = get(object, "vip_avatar").getAsString();
-        int identify = get(object, "identify_num").getAsInt();
-        boolean ban = get(object, "status").getAsInt() == 10;
-        boolean vip = get(object, "is_vip").getAsBoolean();
-        return new UserImpl(
-                client,
-                id,
-                bot,
-                userName,
-                avatar,
-                vipAvatar,
-                identify,
-                ban,
-                vip
-        );
+    public User buildUser(JsonObject s) {
+        final String id = getAsString(s, "id");
+        final boolean bot = getAsBoolean(s, "bot");
+        final String name = getAsString(s, "username");
+        final int identify = getAsInt(s, "identify_num");
+        final boolean ban = getAsInt(s, "status") == 10;
+        final boolean vip = getAsBoolean(s, "is_vip");
+        final String avatarUrl = getAsString(s, "avatar");
+        final String vipAvatarUrl = getAsString(s, "vip_avatar");
+        return new UserImpl(client, id, bot, name, identify, ban, vip, avatarUrl, vipAvatarUrl);
     }
 
     public Guild buildGuild(JsonObject object) {
-        String id = get(object, "id").getAsString();
-        String name = get(object, "name").getAsString();
-        boolean isPublic = get(object, "enable_open").getAsBoolean();
-        String region = get(object, "region").getAsString();
-        String ownerId = get(object, "master_id").getAsString();
-        int rawNotifyType = get(object, "notify_type").getAsInt();
-
-        Guild.NotifyType type = null;
-        for (Guild.NotifyType value : Guild.NotifyType.values()) {
-            if (value.getValue() == rawNotifyType) {
-                type = value;
-                break;
-            }
-        }
-        Validate.notNull(type, String.format("Internal Error: Unexpected NotifyType from remote: %s", rawNotifyType));
-
-        String avatar = get(object, "icon").getAsString();
-        return new GuildImpl(
-                client,
-                id,
-                name,
-                isPublic,
-                region,
-                ownerId,
-                type,
-                avatar
-        );
+        final String id = getAsString(object, "id");
+        final NotifyType notifyType = parseNotifyType(object);
+        final User master = client.getStorage().getUser(getAsString(object, "master_id"));
+        final String name = getAsString(object, "name");
+        final boolean public_ = getAsBoolean(object, "enable_open");
+        final String region = getAsString(object, "region");
+        final String avatarUrl = getAsString(object, "icon");
+        return new GuildImpl(client, id, notifyType, master, name, public_, region, avatarUrl);
     }
 
     public Channel buildChannel(JsonObject object) {
-        // basic information
-        String id = get(object, "id").getAsString();
-        String name = get(object, "name").getAsString();
-        Guild guild = client.getStorage().getGuild(get(object, "guild_id").getAsString());
-        User master = client.getStorage().getUser(get(object, "user_id").getAsString());
-
-        boolean isPermSync = get(object, "permission_sync").getAsInt() != 0;
-        int level = get(object, "level").getAsInt();
-
-        // rpo parse
-        Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(object);
-
-        // upo parse
-        Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, object);
-
-        if (get(object, "is_category").getAsBoolean()) {
-            return new CategoryImpl(
-                    client, id,
-                    master,
-                    guild,
-                    isPermSync,
-                    rpo, upo, level, name
-            );
-        } else {
-            String parentId = get(object, "parent_id").getAsString();
-            Category parent = ("".equals(parentId) || "0".equals(parentId)) ? null : (Category) client.getStorage().getChannel(parentId);
-
-            int type = get(object, "type").getAsInt();
-            if (type == 1) { // TextChannel
-                int chatLimitTime = get(object, "slow_mode").getAsInt();
-                String topic = get(object, "topic").getAsString();
-                return new TextChannelImpl(
-                        client,
-                        id,
-                        master,
-                        guild,
-                        isPermSync,
-                        parent,
-                        name,
-                        rpo,
-                        upo,
-                        level,
-                        chatLimitTime,
-                        topic
-                );
-            } else if (type == 2) { // VoiceChannel
-                int chatLimitTime = get(object, "slow_mode").getAsInt();
-                boolean hasPassword = object.has("has_password") && get(object, "has_password").getAsBoolean();
-                int size = get(object, "limit_amount").getAsInt();
-                int quality = get(object, "voice_quality").getAsInt();
-                return new VoiceChannelImpl(
-                        client,
-                        id,
-                        master,
-                        guild,
-                        isPermSync,
-                        parent,
-                        name,
-                        rpo,
-                        upo,
-                        level,
-                        hasPassword,
-                        size,
-                        quality,
-                        chatLimitTime
-                );
+        final String id = getAsString(object, "id");
+        final String name = getAsString(object, "name");
+        final Guild guild = client.getStorage().getGuild(getAsString(object, "guild_id"));
+        final User master = client.getStorage().getUser(getAsString(object, "user_id"));
+        final boolean isPermSync = getAsInt(object, "permission_sync") != 0;
+        final int level = getAsInt(object, "level");
+        final Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(object);
+        final Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, object);
+        if (getAsBoolean(object, "is_category")) {
+            return new CategoryImpl(client, id, master, guild, isPermSync, rpo, upo, level, name);
+        }
+        final String parentId = getAsString(object, "parent_id");
+        final Boolean needCategory = "".equals(parentId) || "0".equals(parentId);
+        final Category parent = needCategory ? null : new CategoryImpl(client, parentId);
+        switch (getAsInt(object, "type")) {
+            case 1: {
+                final int chatLimitTime = getAsInt(object, "slow_mode");
+                final String topic = getAsString(object, "topic");
+                return new TextChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
+                        chatLimitTime, topic);
+            }
+            case 2: {
+                final int chatLimitTime = getAsInt(object, "slow_mode");
+                final boolean hasPassword = object.has("has_password") && getAsBoolean(object, "has_password");
+                final int size = getAsInt(object, "limit_amount");
+                final int quality = getAsInt(object, "voice_quality");
+                return new VoiceChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
+                        hasPassword, size, quality, chatLimitTime);
+            }
+            default: {
+                final String msg = "We can't construct the Channel using given information. Is your information correct?";
+                throw new IllegalArgumentException(msg);
             }
         }
-        throw new IllegalArgumentException("We can't construct the Channel using given information. Is your information correct?");
     }
 
     public Role buildRole(Guild guild, JsonObject object) {
-        int id = get(object, "role_id").getAsInt();
-        String name = get(object, "name").getAsString();
-        int color = get(object, "color").getAsInt();
-        int pos = get(object, "position").getAsInt();
-        boolean hoist = get(object, "hoist").getAsInt() == 1;
-        boolean mentionable = get(object, "mentionable").getAsInt() == 1;
-        int permissions = get(object, "permissions").getAsInt();
+        final int id = getAsInt(object, "role_id");
+        final String name = getAsString(object, "name");
+        final int color = getAsInt(object, "color");
+        final int pos = getAsInt(object, "position");
+        final boolean hoist = getAsInt(object, "hoist") == 1;
+        final boolean mentionable = getAsInt(object, "mentionable") == 1;
+        final int permissions = getAsInt(object, "permissions");
         return new RoleImpl(client, guild, id, color, pos, permissions, mentionable, hoist, name);
     }
 
     public CustomEmoji buildEmoji(JsonObject object) {
-        String id = get(object, "id").getAsString();
-        Guild guild = null;
-        if (id.contains("/")) {
-            try {
-                guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
-            } catch (BadResponseException e) {
-                if (!(e.getCode() == 403)) {
-                    throw e;
-                }
-                // or you don't have permission to access it!
-            }
-        }
-        String name = get(object, "name").getAsString();
-        return new CustomEmojiImpl(client, id, name, guild);
+        final String id = getAsString(object, "id");
+        final Guild guild = parseEmojiGuild(id, client, object);
+        final String name = getAsString(object, "name");
+        return new CustomEmojiImpl(client, id, guild, name);
     }
 
     public Game buildGame(JsonObject object) {
-        int id = get(object, "id").getAsInt();
-        String name = get(object, "name").getAsString();
-        String icon = get(object, "icon").getAsString();
+        final int id = getAsInt(object, "id");
+        final String name = getAsString(object, "name");
+        final String icon = getAsString(object, "icon");
         return new GameImpl(client, id, name, icon);
     }
 }

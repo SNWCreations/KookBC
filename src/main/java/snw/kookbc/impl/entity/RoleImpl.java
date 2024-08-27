@@ -18,19 +18,21 @@
 
 package snw.kookbc.impl.entity;
 
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.util.Map;
+
 import com.google.gson.JsonObject;
+
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
-import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
-
-import java.util.Map;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class RoleImpl implements Role, Updatable {
     private final KBCClient client;
@@ -43,7 +45,8 @@ public class RoleImpl implements Role, Updatable {
     private boolean hoist;
     private String name;
 
-    public RoleImpl(KBCClient client, Guild guild, int id, int color, int position, int permSum, boolean mentionable, boolean hoist, String name) {
+    public RoleImpl(KBCClient client, Guild guild, int id, int color, int position, int permSum, boolean mentionable,
+            boolean hoist, String name) {
         this.client = client;
         this.guild = guild;
         this.id = id;
@@ -162,22 +165,13 @@ public class RoleImpl implements Role, Updatable {
     }
 
     @Override
-    public void update(JsonObject data) {
-        Validate.isTrue(getId() == get(data, "role_id").getAsInt(), "You can't update the role by using different data");
-        synchronized (this) {
-            String name = get(data, "name").getAsString();
-            int color = get(data, "color").getAsInt();
-            int pos = get(data, "position").getAsInt();
-            boolean hoist = get(data, "hoist").getAsInt() == 1;
-            boolean mentionable = get(data, "mentionable").getAsInt() == 1;
-            int permissions = get(data, "permissions").getAsInt();
-
-            this.name = name;
-            this.color = color;
-            this.position = pos;
-            this.hoist = hoist;
-            this.mentionable = mentionable;
-            this.permSum = permissions;
-        }
+    public synchronized void update(JsonObject data) {
+        isTrue(getId() == getAsInt(data, "role_id"), "You can't update the role by using different data");
+        this.color = getAsInt(data, "color");
+        this.position = getAsInt(data, "position");
+        this.permSum = getAsInt(data, "permissions");
+        this.mentionable = getAsInt(data, "mentionable") == 1;
+        this.hoist = getAsInt(data, "hoist") == 1;
+        this.name = getAsString(data, "name");
     }
 }

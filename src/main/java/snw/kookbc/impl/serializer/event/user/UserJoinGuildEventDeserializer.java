@@ -18,17 +18,21 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsJsonObject;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.user.UserJoinGuildEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<UserJoinGuildEvent> {
 
@@ -37,8 +41,9 @@ public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<User
     }
 
     @Override
-    protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        String realType = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
+    protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final String realType = getAsString(getAsJsonObject(object, "extra"), "type");
         User user;
         String guildId;
         if ("self_joined_guild".equals(realType)) {
@@ -48,11 +53,8 @@ public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<User
             user = client.getStorage().getUser(get(body, "user_id").getAsString());
             guildId = get(object, "target_id").getAsString();
         }
-        return new UserJoinGuildEvent(
-                timeStamp,
-                user,
-                client.getStorage().getGuild(guildId)
-        );
+        final Guild guild = client.getStorage().getGuild(guildId);
+        return new UserJoinGuildEvent(timeStamp, user, guild);
     }
 
 }

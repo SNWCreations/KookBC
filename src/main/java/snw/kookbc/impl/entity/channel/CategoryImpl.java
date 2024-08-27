@@ -18,8 +18,15 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import static snw.kookbc.util.GsonUtil.getAsJsonArray;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Category;
@@ -27,19 +34,14 @@ import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-
-import static snw.kookbc.util.GsonUtil.get;
-
 public class CategoryImpl extends ChannelImpl implements Category {
 
     public CategoryImpl(KBCClient client, String id) {
         super(client, id);
     }
 
-    public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
+    public CategoryImpl(KBCClient client, String id, User master, Guild guild, boolean permSync,
+            Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level, String name) {
         super(client, id, master, guild, permSync, name, rpo, upo, level);
         this.completed = true;
     }
@@ -49,8 +51,8 @@ public class CategoryImpl extends ChannelImpl implements Category {
         final JsonObject object = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId() + "&need_children=true");
         update(object);
-        Collection<Channel> channels = new LinkedList<>();
-        get(object, "children").getAsJsonArray()
+        final Collection<Channel> channels = new LinkedList<>();
+        getAsJsonArray(object, "children")
                 .asList()
                 .stream()
                 .map(JsonElement::getAsString)

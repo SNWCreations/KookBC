@@ -18,19 +18,24 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.channel.Channel;
 import snw.jkook.event.channel.ChannelMessageUpdateEvent;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.MarkdownComponent;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.impl.message.MessageImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializer<ChannelMessageUpdateEvent> {
 
@@ -39,18 +44,20 @@ public class ChannelMessageUpdateEventDeserializer extends NormalEventDeserializ
     }
 
     @Override
-    protected ChannelMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new ChannelMessageUpdateEvent(
-                timeStamp,
-                client.getStorage().getChannel(get(body, "channel_id").getAsString()),
-                get(body, "msg_id").getAsString(),
-                get(body, "content").getAsString()
-        );
+    protected ChannelMessageUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final String id = getAsString(body, "channel_id");
+        final Channel channel = getAsInt(body, "channel_type") == 1
+                ? new TextChannelImpl(client, id)
+                : new VoiceChannelImpl(client, id);
+        final String msgId = getAsString(body, "msg_id");
+        final String content = getAsString(object, "content");
+        return new ChannelMessageUpdateEvent(timeStamp, channel, msgId, content);
     }
 
     @Override
     protected void beforeReturn(ChannelMessageUpdateEvent event) {
-        Message message = client.getStorage().getMessage(event.getMessageId());
+        final Message message = client.getStorage().getMessage(event.getMessageId());
         if (message != null) {
             ((MessageImpl) message).setComponent0(new MarkdownComponent(event.getContent()));
         }

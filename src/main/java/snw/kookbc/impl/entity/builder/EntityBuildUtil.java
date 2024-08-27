@@ -18,18 +18,27 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import snw.jkook.entity.channel.Channel;
-import snw.kookbc.impl.KBCClient;
+import static snw.jkook.util.Validate.notNull;
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsInt;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-class EntityBuildUtil {
+import snw.jkook.entity.Guild;
+import snw.jkook.entity.Guild.NotifyType;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.NonCategoryChannel;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
+
+public class EntityBuildUtil {
+
     public static Collection<Channel.RolePermissionOverwrite> parseRPO(JsonObject object) {
         JsonArray array = get(object, "permission_overwrites").getAsJsonArray();
         Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
@@ -39,9 +48,7 @@ class EntityBuildUtil {
                     new Channel.RolePermissionOverwrite(
                             orpo.get("role_id").getAsInt(),
                             orpo.get("allow").getAsInt(),
-                            orpo.get("deny").getAsInt()
-                    )
-            );
+                            orpo.get("deny").getAsInt()));
         }
         return rpo;
     }
@@ -56,10 +63,41 @@ class EntityBuildUtil {
                     new Channel.UserPermissionOverwrite(
                             client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
                             oupo.get("allow").getAsInt(),
-                            oupo.get("deny").getAsInt()
-                    )
-            );
+                            oupo.get("deny").getAsInt()));
         }
         return upo;
     }
+
+    public static NotifyType parseNotifyType(JsonObject object) {
+        Guild.NotifyType type = null;
+        int rawNotifyType = getAsInt(object, "notify_type");
+        for (Guild.NotifyType value : Guild.NotifyType.values()) {
+            if (value.getValue() == rawNotifyType) {
+                type = value;
+                break;
+            }
+        }
+        notNull(type, String.format("Internal Error: Unexpected NotifyType from remote: %s", rawNotifyType));
+        return type;
+    }
+
+    public static Guild parseEmojiGuild(String id, KBCClient client, JsonObject object) {
+        Guild guild = null;
+        if (id.contains("/")) {
+            guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
+        }
+        return guild;
+    }
+
+    public static NonCategoryChannel parseChannel(KBCClient client, String id, int type) {
+        switch (type) {
+            case 1:
+                return new TextChannelImpl(client, id);
+            case 2:
+                return new VoiceChannelImpl(client, id);
+            default:
+                return null;
+        }
+    }
+
 }

@@ -18,24 +18,31 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+
 import org.jetbrains.annotations.Nullable;
+
+import com.google.gson.JsonObject;
+
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
-import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
-
-import java.util.*;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
@@ -54,7 +61,8 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         this.id = id;
     }
 
-    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name, Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+    public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name,
+            Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
         this.id = id;
         this.master = master;
@@ -87,12 +95,10 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         this.permSync = permSync;
     }
 
-
     @Override
     public void delete() {
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_DELETE.toFullURL(),
-                Collections.singletonMap("channel_id", getId())
-        );
+                Collections.singletonMap("channel_id", getId()));
     }
 
     @Override
@@ -316,56 +322,21 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     }
 
     @Override
-    public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()), "You can't update channel by using different data");
-        synchronized (this) {
-            // basic information
-            String name = get(data, "name").getAsString();
-            boolean isPermSync = get(data, "permission_sync").getAsInt() != 0;
+    public synchronized void update(JsonObject data) {
+        isTrue(Objects.equals(getId(), getAsString(data, "id")), "You can't update channel by using different data");
+        this.name = getAsString(data, "name");
+        this.permSync = getAsInt(data, "permission_sync") != 0;
+        this.guild = client.getStorage().getGuild(getAsString(data, "guild_id"));
+        this.rpo = parseRPO(data);
+        this.upo = parseUPO(client, data);
 
-            final String guildId = get(data, "guild_id").getAsString();
-            final Guild theGuild = client.getCore().getHttpAPI().getGuild(guildId);
-            // rpo parse
-            Collection<RolePermissionOverwrite> rpo = new ArrayList<>();
-            for (JsonElement element : get(data, "permission_overwrites").getAsJsonArray()) {
-                JsonObject orpo = element.getAsJsonObject();
-                rpo.add(
-                        new RolePermissionOverwrite(
-                                orpo.get("role_id").getAsInt(),
-                                orpo.get("allow").getAsInt(),
-                                orpo.get("deny").getAsInt()
-                        )
-                );
-            }
-
-            // upo parse
-            Collection<UserPermissionOverwrite> upo = new ArrayList<>();
-            for (JsonElement element : get(data, "permission_users").getAsJsonArray()) {
-                JsonObject oupo = element.getAsJsonObject();
-                JsonObject rawUser = oupo.getAsJsonObject("user");
-                upo.add(
-                        new UserPermissionOverwrite(
-                                client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
-                                oupo.get("allow").getAsInt(),
-                                oupo.get("deny").getAsInt()
-                        )
-                );
-            }
-
-            this.name = name;
-            this.permSync = isPermSync;
-            this.guild = theGuild;
-            this.rpo = rpo;
-            this.upo = upo;
-
-            // Why we delay the add operation?
-            // We may construct the channel object at any time,
-            // but sometimes they are just garbage object,
-            // to prevent them affecting the cache, we won't add it
-            // when constructing. When this method is called,
-            // we think this object will be actually used.
-            client.getStorage().addChannel(this);
-        }
+        // Why we delay the add operation?
+        // We may construct the channel object at any time,
+        // but sometimes they are just garbage object,
+        // to prevent them affecting the cache, we won't add it
+        // when constructing. When this method is called,
+        // we think this object will be actually used.
+        client.getStorage().addChannel(this);
     }
 
     @Override
@@ -375,9 +346,8 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public void initialize() {
-        final JsonObject data = client.getNetworkClient().get(
-                String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), getId())
-        );
+        final JsonObject data = client.getNetworkClient()
+                .get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), this.id));
         update(data);
         completed = true;
     }

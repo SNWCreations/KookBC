@@ -18,14 +18,26 @@
 
 package snw.kookbc.impl.network;
 
+import static snw.kookbc.util.GsonUtil.get;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.google.gson.JsonObject;
+
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
-import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.event.Event;
 import snw.jkook.event.channel.ChannelMessageEvent;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
+import snw.jkook.exceptions.BadResponseException;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.TextComponent;
@@ -34,17 +46,9 @@ import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
 import snw.kookbc.impl.command.WrappedCommand;
-import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.network.ws.Connector;
 import snw.kookbc.interfaces.network.FrameHandler;
 import snw.kookbc.interfaces.network.webhook.WebhookNetworkSystem;
-
-import java.io.*;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class ListenerImpl implements FrameHandler {
     protected final KBCClient client;

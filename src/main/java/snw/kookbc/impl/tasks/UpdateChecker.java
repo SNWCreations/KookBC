@@ -18,17 +18,19 @@
 
 package snw.kookbc.impl.tasks;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import snw.kookbc.SharedConstants;
-import snw.kookbc.impl.KBCClient;
+import static snw.kookbc.util.Util.getVersionDifference;
 
 import java.util.Objects;
 
-import static snw.kookbc.util.Util.getVersionDifference;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import snw.kookbc.SharedConstants;
+import snw.kookbc.impl.KBCClient;
 
 public final class UpdateChecker extends Thread {
     private final KBCClient client;
@@ -49,22 +51,20 @@ public final class UpdateChecker extends Thread {
 
     private void run0() throws Exception {
         client.getCore().getLogger().info("Checking updates...");
-
         if (!Objects.equals(SharedConstants.REPO_URL, "https://github.com/SNWCreations/KookBC")) {
-            client.getCore().getLogger().warn("Not Official KookBC! We cannot check updates for you. Is this a fork version?");
+            client.getCore().getLogger()
+                    .warn("Not Official KookBC! We cannot check updates for you. Is this a fork version?");
             return;
         }
-
+        final Request req = new Request.Builder()
+                .get()
+                .url("https://api.github.com/repos/SNWCreations/KookBC/releases/latest")
+                .build();
         JsonObject resObj;
-        try (Response response = new OkHttpClient().newCall(
-                new Request.Builder()
-                        .get()
-                        .url("https://api.github.com/repos/SNWCreations/KookBC/releases/latest")
-                        .build()
-        ).execute()) {
-            assert response.body() != null;
-            String rawResponse = response.body().string();
-            resObj = JsonParser.parseString(rawResponse).getAsJsonObject();
+        try (Response response = new OkHttpClient().newCall(req).execute()) {
+            final ResponseBody body = response.body();
+            assert body != null;
+            resObj = JsonParser.parseString(body.string()).getAsJsonObject();
         }
 
         String receivedVersion = resObj.get("tag_name").getAsString();
@@ -77,26 +77,40 @@ public final class UpdateChecker extends Thread {
         try {
             versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
         } catch (NumberFormatException e) {
-            client.getCore().getLogger().warn("Cannot check update! We can't recognize version! Custom build or snapshot API?");
+            client.getCore().getLogger()
+                    .warn("Cannot check update! We can't recognize version! Custom build or snapshot API?");
             return;
         }
-        if (versionDifference == -1) {
-            client.getCore().getLogger().info("Update available! Information is following:");
-            client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion, client.getCore().getImplementationVersion());
-            client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
-            client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
-            client.getCore().getLogger().info("Release message is following:");
-            for (String body : resObj.get("body").getAsString().split("\r\n")) {
-                client.getCore().getLogger().info(body);
+        switch (versionDifference) {
+            case -1: {
+                client.getCore().getLogger().info("Update available! Information is following:");
+                client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion,
+                        client.getCore().getImplementationVersion());
+                client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
+                client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
+                client.getCore().getLogger().info("Release message is following:");
+                for (String body : resObj.get("body").getAsString().split("\r\n")) {
+                    client.getCore().getLogger().info(body);
+                }
+                client.getCore().getLogger().info(
+                        "You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}",
+                        receivedVersion);
+                break;
             }
-            client.getCore().getLogger().info("You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}", receivedVersion);
-        } else if (versionDifference == 0) {
-            client.getCore().getLogger().info("You are using the latest version! :)");
-        } else if (versionDifference == 1) {
-            client.getCore().getLogger().info("Your KookBC is newer than the latest version from remote!");
-            client.getCore().getLogger().info("Are you using development version?");
-        } else {
-            client.getCore().getLogger().info("Unable to compare the version! Internal method returns {}", versionDifference);
+            case 0: {
+                client.getCore().getLogger().info("You are using the latest version! :)");
+                break;
+            }
+            case 1: {
+                client.getCore().getLogger().info("Your KookBC is newer than the latest version from remote!");
+                client.getCore().getLogger().info("Are you using development version?");
+                break;
+            }
+            default: {
+                client.getCore().getLogger().info("Unable to compare the version! Internal method returns {}",
+                        versionDifference);
+                break;
+            }
         }
 
     }

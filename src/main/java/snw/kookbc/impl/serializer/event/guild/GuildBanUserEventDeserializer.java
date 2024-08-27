@@ -18,22 +18,24 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
+import static java.util.Collections.unmodifiableList;
+import static snw.kookbc.util.GsonUtil.getAsString;
+
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.guild.GuildBanUserEvent;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.storage.EntityStorage;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static snw.kookbc.util.GsonUtil.get;
+import snw.kookbc.impl.storage.EntityStorage;
 
 public class GuildBanUserEventDeserializer extends NormalEventDeserializer<GuildBanUserEvent> {
 
@@ -42,23 +44,20 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
     }
 
     @Override
-    protected GuildBanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        EntityStorage entityStorage = client.getStorage();
-        List<User> banned = Collections.unmodifiableList(
+    protected GuildBanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
+        final EntityStorage entityStorage = client.getStorage();
+        final Guild guild = entityStorage.getGuild(getAsString(object, "target_id"));
+        final User operator = entityStorage.getUser(getAsString(body, "operator_id"));
+        final List<User> banned = unmodifiableList(
                 body.getAsJsonArray("user_id")
                         .asList()
                         .stream()
                         .map(JsonElement::getAsString)
                         .map(entityStorage::getUser)
-                        .collect(Collectors.toList())
-        );
-        return new GuildBanUserEvent(
-                timeStamp,
-                entityStorage.getGuild(get(object, "target_id").getAsString()),
-                banned,
-                entityStorage.getUser(get(body, "operator_id").getAsString()),
-                get(body, "remark").getAsString()
-        );
+                        .collect(Collectors.toList()));
+        final String reason = getAsString(body, "remark");
+        return new GuildBanUserEvent(timeStamp, guild, banned, operator, reason);
     }
 
 }

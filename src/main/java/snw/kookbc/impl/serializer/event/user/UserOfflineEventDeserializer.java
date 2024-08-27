@@ -18,16 +18,18 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import snw.jkook.event.user.UserOfflineEvent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
+import snw.jkook.entity.User;
+import snw.jkook.event.user.UserOfflineEvent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 public class UserOfflineEventDeserializer extends NormalEventDeserializer<UserOfflineEvent> {
 
@@ -36,11 +38,10 @@ public class UserOfflineEventDeserializer extends NormalEventDeserializer<UserOf
     }
 
     @Override
-    protected UserOfflineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        return new UserOfflineEvent(
-                timeStamp,
-                client.getStorage().getUser(get(body, "user_id").getAsString())
-        );
+    protected UserOfflineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
+            JsonObject body) throws JsonParseException {
+        final User user = client.getStorage().getUser(getAsString(body, "user_id"));
+        return new UserOfflineEvent(timeStamp, user);
     }
 
 }

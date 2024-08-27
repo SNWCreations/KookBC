@@ -18,23 +18,49 @@
 
 package snw.kookbc.impl;
 
+import static java.util.Collections.unmodifiableCollection;
+import static snw.kookbc.util.GsonUtil.get;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import snw.jkook.HttpAPI;
 import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
-import snw.jkook.entity.channel.*;
+import snw.jkook.entity.channel.Category;
+import snw.jkook.entity.channel.Channel;
+import snw.jkook.entity.channel.TextChannel;
+import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.TextChannelMessage;
-import snw.jkook.message.component.BaseComponent;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
@@ -44,26 +70,15 @@ import snw.kookbc.impl.message.ChannelMessageImpl;
 import snw.kookbc.impl.message.PrivateMessageImpl;
 import snw.kookbc.impl.message.TextChannelMessageImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.jkook.exceptions.BadResponseException;
 import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.impl.pageiter.JoinedVoiceChannelsIterator;
 import snw.kookbc.util.MapBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
-
 public class HttpAPIImpl implements HttpAPI {
     private static final MediaType OCTET_STREAM;
     private static final Collection<String> SUPPORTED_MUSIC_SOFTWARES;
-//    private static final long UPLOAD_FILE_LENGTH_LIMIT = 25; // in MB
+    // private static final long UPLOAD_FILE_LENGTH_LIMIT = 25; // in MB
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
@@ -75,11 +90,9 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     private final KBCClient client;
-    private final OkHttpClient okHttpClient;
 
     public HttpAPIImpl(KBCClient client) {
         this.client = client;
-        this.okHttpClient = new OkHttpClient();
     }
 
     @Override
@@ -128,7 +141,8 @@ public class HttpAPIImpl implements HttpAPI {
                 .post(body)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data")
+                .get("url").getAsString();
     }
 
     @Override
@@ -142,7 +156,8 @@ public class HttpAPIImpl implements HttpAPI {
                 .post(requestBody)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data").get("url").getAsString();
+        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data")
+                .get("url").getAsString();
     }
 
     @Override
@@ -157,12 +172,13 @@ public class HttpAPIImpl implements HttpAPI {
                         .get()
                         .url(url)
                         .build()
-        ).execute()) {
-            ResponseBody body = Objects.requireNonNull(response.body(), "Cannot upload file at " + url + ": Response body should not be null");
+            ).execute()) {
+            final String bodyErr = "Cannot upload file at " + url + ": Response body should not be null";
+            final ResponseBody body = Objects.requireNonNull(response.body(), bodyErr);
             long contentLength = body.contentLength();
-//            if (contentLength > UPLOAD_FILE_LENGTH_LIMIT * 1024) {
-//                throw new IllegalArgumentException("Cannot upload file at " + url + ": Too big file");
-//            }
+            // if (contentLength > UPLOAD_FILE_LENGTH_LIMIT * 1024) {
+            //     throw new IllegalArgumentException("Cannot upload file at " + url + ": Toobig file");
+            // }
             byte[] bytes = body.bytes();
             return uploadFile(fileName, bytes);
         } catch (IOException e) {
@@ -173,8 +189,7 @@ public class HttpAPIImpl implements HttpAPI {
     @Override
     public void removeInvite(String urlCode) {
         client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
-                Collections.singletonMap("url_code", urlCode)
-        );
+                Collections.singletonMap("url_code", urlCode));
     }
 
     @Override
@@ -213,7 +228,8 @@ public class HttpAPIImpl implements HttpAPI {
                     .build();
             client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE_ACTIVITY.toFullURL(), body);
         } else {
-            client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), Collections.singletonMap("data_type", 1));
+            client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(),
+                    Collections.singletonMap("data_type", 1));
         }
     }
 
@@ -231,7 +247,8 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public void stopListening() {
-        client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(), Collections.singletonMap("data_type", 2));
+        client.getNetworkClient().post(HttpAPIRoute.GAME_DELETE_ACTIVITY.toFullURL(),
+                Collections.singletonMap("data_type", 2));
     }
 
     @Override
@@ -239,65 +256,9 @@ public class HttpAPIImpl implements HttpAPI {
         return new TextChannelMessageImpl(client, id);
     }
 
-    @Deprecated
-    private TextChannelMessage getTextChannelMessage_old(String id) {
-        final JsonObject object;
-        try {
-            object = client.getNetworkClient()
-                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
-        } catch (BadResponseException e) {
-            if (e.getCode() == 40000) {
-                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + id + " found")
-                                .initCause(e);
-            }
-            throw e;
-        }
-        JsonObject rawSender = get(object, "author").getAsJsonObject();
-        User sender = client.getStorage().getUser(get(rawSender, "id").getAsString(), rawSender);
-        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
-        TextChannelMessage quote = null;
-        if (has(object, "quote")) {
-            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
-            final String quoteId = get(rawQuote, "id").getAsString();
-            quote = getTextChannelMessage(quoteId);
-        }
-        final TextChannel channel = (TextChannel) getChannel(get(object, "channel_id").getAsString());
-        return new TextChannelMessageImpl(client, id, sender, component, timeStamp, quote, channel);
-    }
-
     @Override
     public ChannelMessage getChannelMessage(String id) throws NoSuchElementException {
         return new ChannelMessageImpl(client, id);
-    }
-
-    @Deprecated
-    private ChannelMessage getChannelMessage_old(String id) throws NoSuchElementException {
-        final JsonObject object;
-        try {
-            object = client.getNetworkClient()
-                    .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
-        } catch (BadResponseException e) {
-            if (e.getCode() == 40000) {
-                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + id + " found")
-                                .initCause(e);
-            }
-            throw e;
-        }
-        JsonObject rawSender = get(object, "author").getAsJsonObject();
-        User sender = client.getStorage().getUser(get(rawSender, "id").getAsString(), rawSender);
-        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
-        ChannelMessage quote = null;
-        if (has(object, "quote")) {
-            final JsonObject rawQuote = get(object, "quote").getAsJsonObject();
-            final String quoteId = get(rawQuote, "id").getAsString();
-            quote = getChannelMessage(quoteId);
-        }
-        final NonCategoryChannel channel = (NonCategoryChannel) getChannel(get(object, "channel_id").getAsString());
-        return new ChannelMessageImpl(client, id, sender, component, timeStamp, quote, channel);
     }
 
     @Override
@@ -310,48 +271,10 @@ public class HttpAPIImpl implements HttpAPI {
         }
     }
 
-    @Deprecated // for removal
-    private PrivateMessage getPrivateMessage_old(User user, String id) {
-        final String chatCode = get(client.getNetworkClient()
-                .post(HttpAPIRoute.USER_CHAT_SESSION_CREATE.toFullURL(), // KOOK won't create multiple session
-                        Collections.singletonMap("target_id", user.getId())), "code").getAsString();
-        final JsonObject object;
-        try {
-            object = client.getNetworkClient()
-                    .get(HttpAPIRoute.USER_CHAT_MESSAGE_INFO.toFullURL() + "?chat_code=" + chatCode + "&msg_id=" + id);
-        } catch (BadResponseException e) {
-            if (e.getCode() == 40000) {
-                throw (NoSuchElementException) // force casting is required because Throwable#initCause return Throwable
-                        new NoSuchElementException("No message object with provided ID " + id + " found")
-                                .initCause(e);
-            }
-            throw e;
-        }
-        final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
-        PrivateMessage quote = null;
-        if (has(object, "quote")) {
-            JsonElement rawQuote = get(object, "quote");
-            if (rawQuote.isJsonObject()) {
-                if (!rawQuote.isJsonNull()) {
-                    final JsonObject quoteObj = rawQuote.getAsJsonObject();
-                    final String quoteId = get(quoteObj, "id").getAsString();
-                    quote = getPrivateMessage(user, quoteId);
-                }
-            }else {
-                if (rawQuote.getAsString().trim().isEmpty()) {
-                    return new PrivateMessageImpl(client, id, user, component, timeStamp, quote);
-                }
-            }
-        }
-        return new PrivateMessageImpl(client, id, user, component, timeStamp, quote);
-    }
-
     @Override
     public FriendState getFriendState(boolean lazyInit) {
         return new FriendStateImpl(lazyInit);
     }
-
 
     // -------- Friend API --------
 

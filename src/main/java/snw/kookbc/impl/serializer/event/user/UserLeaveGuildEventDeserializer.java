@@ -18,18 +18,19 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
+import static snw.kookbc.util.GsonUtil.get;
+
+import java.lang.reflect.Type;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.user.UserLeaveGuildEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
-
-import java.lang.reflect.Type;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<UserLeaveGuildEvent> {
 
@@ -38,7 +39,8 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
     }
 
     @Override
-    protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
+    protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
+            long timeStamp, JsonObject body) throws JsonParseException {
         String realType = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
         User user;
         String guildId;
@@ -51,21 +53,9 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
         }
         Guild guild = client.getStorage().getGuild(guildId);
         if (guild == null) {
-            return new UserLeaveGuildEvent(
-                    timeStamp,
-                    user,
-                    guildId
-            );
+            return new UserLeaveGuildEvent(timeStamp, user, guildId);
         }
-        return new UserLeaveGuildEvent(
-                timeStamp,
-                user,
-                guild
-        );
+        return new UserLeaveGuildEvent(timeStamp, user, guild);
     }
 
-    @Override
-    protected void beforeReturn(UserLeaveGuildEvent event) {
-        client.getStorage().cleanUpUserPermissionOverwrite(event.getGuild(), event.getUser());
-    }
 }
