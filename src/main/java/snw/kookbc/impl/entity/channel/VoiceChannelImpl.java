@@ -259,4 +259,12 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         }
     }
 
+    @Override
+    public void keepStreaming() {
+        final Map<String, Object> body = new MapBuilder()
+                .put("channel_id", getId())
+                .build();
+        client.getNetworkClient().postContent(HttpAPIRoute.VOICE_KEEP_ALIVE.toFullURL(), body);
+    }
+
 }

@@ -56,6 +56,7 @@ public enum HttpAPIRoute {
     VOICE_JOIN("/v3/voice/join"),
     VOICE_LIST("/v3/voice/list"),
     VOICE_LEAVE("/v3/voice/leave"),
+    VOICE_KEEP_ALIVE("/v3/voice/keep-alive"),
 
     // ------ CHANNEL ROLE (NOT "ROLE") -------
     CHANNEL_ROLE_CREATE("/v3/channel-role/create"),
