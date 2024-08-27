@@ -82,7 +82,11 @@ public class HttpAPIImpl implements HttpAPI {
 
     static {
         OCTET_STREAM = MediaType.parse("application/octet-stream");
-        SUPPORTED_MUSIC_SOFTWARES = unmodifiableCollection(Arrays.asList("cloudmusic", "qqmusic", "kugou"));
+        SUPPORTED_MUSIC_SOFTWARES = Collections.unmodifiableCollection(
+                Arrays.asList(
+                        "cloudmusic", "qqmusic", "kugou"
+                )
+        );
     }
 
     private final KBCClient client;
@@ -167,11 +171,11 @@ public class HttpAPIImpl implements HttpAPI {
                 new Request.Builder()
                         .get()
                         .url(url)
-                        .build())
-                .execute()) {
-            ResponseBody body = Objects.requireNonNull(response.body(),
-                    "Cannot upload file at " + url + ": Response body should not be null");
-            // long contentLength = body.contentLength();
+                        .build()
+            ).execute()) {
+            final String bodyErr = "Cannot upload file at " + url + ": Response body should not be null";
+            final ResponseBody body = Objects.requireNonNull(response.body(), bodyErr);
+            long contentLength = body.contentLength();
             // if (contentLength > UPLOAD_FILE_LENGTH_LIMIT * 1024) {
             //     throw new IllegalArgumentException("Cannot upload file at " + url + ": Toobig file");
             // }
