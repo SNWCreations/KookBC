@@ -256,6 +256,7 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 ConfigurationSerialization.unregisterClass(s);
             }
         }
+        this.jarFile.close();
         super.close();
     }
 
