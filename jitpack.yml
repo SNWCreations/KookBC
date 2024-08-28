@@ -1,2 +1,2 @@
 install:
-  - mvn install -DskipTests -DskipShade=true
+  - gradle shadowJar -xtest -PskipShade=true

@@ -1,8 +1,8 @@
 {
   "name": "KookBC",
-  "version": "${project.version}",
+  "version": "${version}",
   "spec_name": "JKook",
-  "spec_version": "${jkook.version}",
+  "spec_version": "${jkookVersion}",
   "repo_url": "https://github.com/SNWCreations/KookBC",
   "is_snapshot": "${snapshotBuild}"
 }

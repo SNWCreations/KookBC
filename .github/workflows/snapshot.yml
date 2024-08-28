@@ -25,7 +25,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -PsnapshotBuild=true -xtest
+        run: ./gradlew shadowJar -PsnapshotBuild=true -xtest
 
       - name: Upload Snapshot Artifact
         uses: actions/upload-artifact@v4

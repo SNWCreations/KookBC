@@ -24,7 +24,6 @@ dependencies {
         api(dep)
     }
     shadowApi(libs.com.github.snwcreations.jkook)
-    shadowApi(libs.com.github.snwcreations.jkook)
     shadowApi(libs.com.github.snwcreations.terminalconsoleappender)
     shadowApi(libs.uk.org.lidalia.sysout.over.slf4j)
     shadowApi(libs.org.apache.logging.log4j.log4j.core)
@@ -78,20 +77,19 @@ val skipShade = properties["skipShade"] == "true"
 tasks.shadowJar {
     enabled = !skipShade
     archiveClassifier = ""
-}
-
-tasks.processResources {
-    expand(properties)
+    transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer())
     exclude(
         "META-INF/*.SF",
         "META-INF/*.DSA",
         "META-INF/*.RSA",
-        "META-INF/services/cpw.*"
+        "META-INF/services/cpw.*",
     )
 }
 
-tasks.assemble {
-    finalizedBy(tasks.shadowJar)
+tasks.processResources {
+    filesMatching("*.json") {
+        expand(properties + mapOf("jkookVersion" to libs.versions.com.github.snwcreations.jkook.get()))
+    }
 }
 
 application {
@@ -100,6 +98,12 @@ application {
 }
 
 tasks.jar {
+    exclude(
+        "META-INF/*.SF",
+        "META-INF/*.DSA",
+        "META-INF/*.RSA",
+        "META-INF/services/cpw.*",
+    )
     manifest {
         attributes(
             mapOf(
