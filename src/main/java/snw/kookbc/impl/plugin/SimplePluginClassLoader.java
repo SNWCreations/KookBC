@@ -61,6 +61,10 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     private JarFile jarFile;
     private Manifest manifest;
 
+    static {
+        ClassLoader.registerAsParallelCapable();
+    }
+
     public SimplePluginClassLoader(KBCClient client, @Nullable AccessClassLoader parent) {
         super(new URL[0], parent != null ? null : SimplePluginManager.class.getClassLoader());
         this.client = client;
