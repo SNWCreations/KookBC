@@ -34,6 +34,8 @@ import snw.jkook.entity.Guild.NotifyType;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.channel.CategoryImpl;
+import snw.kookbc.impl.entity.channel.NonCategoryChannelImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
@@ -89,8 +91,10 @@ public class EntityBuildUtil {
         return guild;
     }
 
-    public static NonCategoryChannel parseChannel(KBCClient client, String id, int type) {
+    public static Channel parseChannel(KBCClient client, String id, int type) {
         switch (type) {
+            case 0:
+                return new CategoryImpl(client, id);
             case 1:
                 return new TextChannelImpl(client, id);
             case 2:
