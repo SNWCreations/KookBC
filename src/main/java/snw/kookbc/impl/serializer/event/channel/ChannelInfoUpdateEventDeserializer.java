@@ -18,20 +18,19 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseChannel;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.event.channel.ChannelInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+
+import java.lang.reflect.Type;
+
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseChannel;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<ChannelInfoUpdateEvent> {
 
@@ -40,10 +39,9 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
     }
 
     @Override
-    protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
-            long timeStamp, JsonObject body) throws JsonParseException {
+    protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
         final String id = getAsString(body, "id");
-        final int channelType = getAsInt(object, "channel_type");
+        final int channelType = getAsInt(body, "type");
         final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
         channel.update(body);
         return new ChannelInfoUpdateEvent(timeStamp, channel);
