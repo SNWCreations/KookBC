@@ -18,20 +18,10 @@
 
 package snw.kookbc.impl.plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.google.common.io.ByteStreams;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import snw.jkook.Core;
 import snw.jkook.config.serialization.ConfigurationSerializable;
 import snw.jkook.config.serialization.ConfigurationSerialization;
@@ -40,6 +30,23 @@ import snw.jkook.plugin.PluginClassLoader;
 import snw.jkook.plugin.PluginDescription;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.launch.AccessClassLoader;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.CodeSigner;
+import java.security.CodeSource;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 // The Plugin ClassLoader.
 // Call close method on unused instances to ensure the instance will be fully destroyed.
@@ -50,6 +57,9 @@ public class SimplePluginClassLoader extends PluginClassLoader {
     @Nullable
     private final AccessClassLoader parentClassLoader;
     private File file;
+    private URL url;
+    private JarFile jarFile;
+    private Manifest manifest;
 
     public SimplePluginClassLoader(KBCClient client, @Nullable AccessClassLoader parent) {
         super(new URL[0], parent != null ? null : SimplePluginManager.class.getClassLoader());
@@ -103,6 +113,10 @@ public class SimplePluginClassLoader extends PluginClassLoader {
                 parentClassLoader.addURL(file.toURI().toURL());
             }
             this.file = file;
+            if (file.getName().endsWith(".jar")) {
+                this.jarFile = new JarFile(file);
+                this.manifest = jarFile.getManifest();
+            }
             Class<?> loadClass = this.loadClass(mainClassName, true);
             Class<? extends Plugin> main = loadClass.asSubclass(Plugin.class);
             if (main.getDeclaredConstructors().length != 1) {
@@ -135,13 +149,55 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         }
         Throwable throwable = null;
         try {
-            Class<?> result = super.findClass(name);
+            String path = name.replace('.', '/').concat(".class");
+            Class<?> result = null;
+            if (jarFile != null) {
+                JarEntry entry = jarFile.getJarEntry(path);
+                if (entry != null) {
+                    try (InputStream is = jarFile.getInputStream(entry)) {
+                        byte[] classBytes = ByteStreams.toByteArray(is);
+
+                        int dot = name.lastIndexOf('.');
+                        if (dot != -1) {
+                            String pkgName = name.substring(0, dot);
+                            if (this.getPackage(pkgName) == null) {
+                                try {
+                                    if (this.manifest != null) {
+                                        this.definePackage(pkgName, this.manifest, this.url);
+                                    } else {
+                                        this.definePackage(pkgName, null, null, null, null, null, null, null);
+                                    }
+                                } catch (IllegalArgumentException var20) {
+                                    if (this.getPackage(pkgName) == null) {
+                                        throw new IllegalStateException("Cannot find package " + pkgName);
+                                    }
+                                }
+                            }
+                        }
+
+
+                        CodeSigner[] signers = entry.getCodeSigners();
+                        CodeSource source = new CodeSource(getUrl(), signers);
+                        result = this.defineClass(name, classBytes, 0, classBytes.length, source);
+                    } catch (Exception e) {
+                        throwable = e;
+                        throw throwable;
+                    }
+                }
+            }
+            if (result == null) {
+                result = super.findClass(name);
+            }
             if (result != null) {
                 cache.put(name, result);
                 return result;
             }
-        } catch (NoClassDefFoundError | ClassNotFoundException error) {
-            throwable = error;
+        } catch (Throwable error) {
+            if (throwable != null) {
+                throwable.addSuppressed(error);
+            } else {
+                throwable = error;
+            }
         }
 
         // Try to load class from other known instances if needed
@@ -196,11 +252,17 @@ public class SimplePluginClassLoader extends PluginClassLoader {
         INSTANCES.remove(this);
         for (Class<?> clazz : cache.values()) {
             if (clazz.getClassLoader() == this && ConfigurationSerializable.class.isAssignableFrom(clazz)) {
-                @SuppressWarnings("unchecked")
-                final Class<? extends ConfigurationSerializable> s = (Class<? extends ConfigurationSerializable>) clazz;
+                @SuppressWarnings("unchecked") final Class<? extends ConfigurationSerializable> s = (Class<? extends ConfigurationSerializable>) clazz;
                 ConfigurationSerialization.unregisterClass(s);
             }
         }
         super.close();
+    }
+
+    public URL getUrl() throws MalformedURLException {
+        if (url == null) {
+            url = file.toURI().toURL();
+        }
+        return url;
     }
 }
