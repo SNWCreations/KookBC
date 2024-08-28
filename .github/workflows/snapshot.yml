@@ -1,4 +1,4 @@
-name: Snapshot Build Java CI with Maven
+name: Snapshot Build Java CI with Gradle
 
 on:
   push:
@@ -12,20 +12,23 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK 8
-      uses: actions/setup-java@v3
-      with:
-        java-version: '8'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml -DsnapshotBuild=true -DskipTests=false
-    - name: Upload Snapshot Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: Shaded JAR
-        path: target/kookbc-*.jar
+      - uses: actions/checkout@v4
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
+      - name: Add permissons
+        run: chmod +x gradlew
 
+      - name: Build with Gradle
+        run: ./gradlew shadowJar -PsnapshotBuild=true -xtest
 
+      - name: Upload Snapshot Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Package
+          path: build/libs

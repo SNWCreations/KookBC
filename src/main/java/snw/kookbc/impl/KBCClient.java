@@ -18,26 +18,8 @@
 
 package snw.kookbc.impl;
 
-import static snw.kookbc.util.Util.closeLoaderIfPossible;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import snw.jkook.Core;
 import snw.jkook.command.CommandExecutor;
 import snw.jkook.command.CommandManager;
@@ -75,6 +57,17 @@ import snw.kookbc.impl.tasks.UpdateChecker;
 import snw.kookbc.interfaces.network.NetworkSystem;
 import snw.kookbc.util.DependencyListBasedPluginComparator;
 import snw.kookbc.util.ReturnNotNullFunction;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+
+import static snw.kookbc.util.Util.closeLoaderIfPossible;
 
 // The client representation.
 public class KBCClient {
@@ -211,7 +204,7 @@ public class KBCClient {
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
-            getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id.full"), gitProperties.get("git.build.time"));
+            getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id"), gitProperties.get("git.commit.time"));
         } catch (NullPointerException | IOException e) {
             getCore().getLogger().warn("Unable to read Git commit information", e);
         }

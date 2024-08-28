@@ -1,2 +1,3 @@
 install:
-  - mvn install -DskipTests -DskipShade=true
+  - chmod +x gradlew
+  - ./gradlew shadowJar publishToMavenLocal -xtest -PskipShade=true
