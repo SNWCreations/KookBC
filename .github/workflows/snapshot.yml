@@ -1,4 +1,4 @@
-name: Snapshot Build Java CI with Maven
+name: Snapshot Build Java CI with Gradle
 
 on:
   push:
