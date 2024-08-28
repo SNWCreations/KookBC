@@ -1,2 +1,2 @@
 install:
-  - gradle shadowJar -xtest -PskipShade=true
+  - ./gradlew shadowJar -xtest -PskipShade=true
