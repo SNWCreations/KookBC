@@ -27,6 +27,7 @@ import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseChannel;
 import static snw.kookbc.util.GsonUtil.getAsInt;
@@ -43,7 +44,7 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
         final String id = getAsString(body, "id");
         final int channelType = getAsInt(body, "type");
         final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
-        channel.update(body);
+        Objects.requireNonNull(channel).update(body);
         return new ChannelInfoUpdateEvent(timeStamp, channel);
     }
 
