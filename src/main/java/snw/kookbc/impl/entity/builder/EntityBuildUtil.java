@@ -29,6 +29,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Guild.NotifyType;
 import snw.jkook.entity.channel.Channel;
@@ -91,6 +92,7 @@ public class EntityBuildUtil {
         return guild;
     }
 
+    @Nullable
     public static Channel parseChannel(KBCClient client, String id, int type) {
         switch (type) {
             case 0:
