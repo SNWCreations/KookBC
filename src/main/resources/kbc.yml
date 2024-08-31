@@ -78,6 +78,10 @@ internal-commands:
 #  - SEND_TEMP     # Send temporary result messages in this channel
 internal-commands-reply-result-type: REPLY
 
+# Set the over limit warning log level
+# Support Type: INFO | DEBUG
+over-limit-warning-log-level: DEBUG
+
 # Allow reporting of unexpected messages received from remote
 allow-warn-old-message: true
 

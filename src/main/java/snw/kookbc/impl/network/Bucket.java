@@ -25,6 +25,7 @@ import snw.kookbc.interfaces.network.policy.RateLimitPolicy;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,7 +63,11 @@ public class Bucket {
         }
         if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
             final int resetTime = this.resetTime.get();
-            client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+            if (Objects.equals(client.getConfig().getString("over-limit-warning-log-level"), "INFO")) {
+                client.getCore().getLogger().info("Route '{}' over limit! Current reset time: {}", name, resetTime);
+            } else {
+                client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+            }
             RateLimitPolicy.getDefault().perform(client, name, resetTime);
             return;
         }
