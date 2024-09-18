@@ -59,7 +59,6 @@ public class SimplePermsImpl implements Permissible {
     public boolean isPermissionSet(PermissionContext context, @NotNull String name) {
         if (!initializeContexts.contains(context)) {
             this.own.recalculatePermissions(context);
-            this.initializeContexts.add(context);
         }
         return this.permissions.containsKey(Pair.of(context, name.toLowerCase(Locale.ENGLISH)));
     }
@@ -79,6 +78,7 @@ public class SimplePermsImpl implements Permissible {
                 this.permissions.put(Pair.of(pair.first(), name), new PermissionAttachmentInfo(pair.first(), this.own, name, permissionAttachment, entry.getValue()));
             }
         }
+        this.initializeContexts.add(context);
     }
 
     @Override
