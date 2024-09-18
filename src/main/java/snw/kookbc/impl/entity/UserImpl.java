@@ -423,7 +423,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 if (roleIds.isEmpty()) break;
                 if (roleIds.contains(role.getId())) {
                     roleIds.remove(role.getId());
-                    if (role.isPermissionSet(permission)) {
+                    if (calculateDefaultPerms(permission, role)) {
                         return true;
                     }
                 }
@@ -431,6 +431,11 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         }
         return false;
     }
+
+    public boolean calculateDefaultPerms(Permission permission, Role role) {
+        return role.isPermissionSet(permission);
+    }
+
 
     @Override
     public void removeAttachment(PermissionContext context, PermissionAttachment permissionAttachment) {
