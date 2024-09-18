@@ -29,6 +29,7 @@ import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.VoiceChannel;
+import snw.jkook.exceptions.BadResponseException;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
@@ -387,7 +388,14 @@ public class UserImpl implements User, Updatable, LazyLoadable {
             Channel channel = (Channel) context;
             for (Permission value : Permission.values()) {
                 String permission = Permissions.getPermission(value);
-                addAttachment(context, client.getInternalPlugin(), permission, calculateDefaultPerms(value, channel));
+                boolean calculated = false;
+                try {
+                    calculated = calculateDefaultPerms(value, channel);
+                } catch (BadResponseException ignored) {
+                } catch (Exception e) {
+                    this.client.getCore().getLogger().error("Calculate permissions", e);
+                }
+                addAttachment(context, this.client.getInternalPlugin(), permission, calculated);
             }
         }
     }
