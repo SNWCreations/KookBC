@@ -174,4 +174,9 @@ public class RoleImpl implements Role, Updatable {
         this.hoist = getAsInt(data, "hoist") == 1;
         this.name = getAsString(data, "name");
     }
+
+    @Override
+    public String getPermissionGroup() {
+        return "role";
+    }
 }

@@ -351,4 +351,9 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         update(data);
         completed = true;
     }
+
+    @Override
+    public String getPermissionGroup() {
+        return "channel";
+    }
 }

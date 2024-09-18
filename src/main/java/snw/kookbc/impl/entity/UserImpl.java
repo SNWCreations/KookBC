@@ -18,39 +18,38 @@
 
 package snw.kookbc.impl.entity;
 
-import static java.util.Objects.requireNonNull;
-import static snw.kookbc.util.GsonUtil.get;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.entity.User;
+import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.permissions.*;
+import snw.jkook.plugin.Plugin;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
+import snw.kookbc.impl.permissions.SimplePermsImpl;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
+
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
+import static snw.kookbc.util.GsonUtil.get;
 
 public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
@@ -64,13 +63,15 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     private String vipAvatarUrl;
     private boolean completed;
 
+    private final SimplePermsImpl perms = new SimplePermsImpl(this);
+
     public UserImpl(KBCClient client, String id) {
         this.client = requireNonNull(client);
         this.id = requireNonNull(id);
     }
 
     public UserImpl(KBCClient client, String id, boolean bot, String name, int identify, boolean ban, boolean vip,
-            String avatarUrl, String vipAvatarUrl) {
+                    String avatarUrl, String vipAvatarUrl) {
         this(client, id);
         this.bot = bot;
         this.name = name;
@@ -358,6 +359,85 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         update(data);
         completed = true;
     }
+
+    @Override
+    public boolean hasPermission(PermissionContext context, @Nullable String permission) {
+        return this.perms.hasPermission(context, permission);
+    }
+
+    @Override
+    public boolean hasPermission(PermissionContext context, @NotNull PermissionNode perm) {
+        return this.perms.hasPermission(context, perm);
+    }
+
+    @Override
+    public boolean isPermissionSet(PermissionContext context, @NotNull String name) {
+        return this.perms.isPermissionSet(context, name);
+    }
+
+    @Override
+    public boolean isPermissionSet(PermissionContext context, @NotNull PermissionNode perm) {
+        return this.perms.isPermissionSet(context, perm);
+    }
+
+    @Override
+    public void recalculatePermissions(PermissionContext context) {
+        this.perms.recalculatePermissions(context);
+        if (context instanceof Channel) {
+            Channel channel = (Channel) context;
+            for (Permission value : Permission.values()) {
+                String permission = Permissions.getPermission(value);
+                addAttachment(context, client.getInternalPlugin(), permission, calculateDefaultPerms(value, channel));
+            }
+        }
+    }
+
+    public boolean calculateDefaultPerms(Permission permission, Channel channel) {
+        Channel.UserPermissionOverwrite userPermissionOverwriteByUser = channel.getUserPermissionOverwriteByUser(this);
+        if (userPermissionOverwriteByUser != null && permission.isIncludedIn(userPermissionOverwriteByUser.getRawAllow())) {
+            return true;
+        }
+
+        Guild guild = channel.getGuild();
+        Collection<Integer> roleIds = new HashSet<>(getRoles(guild));
+        for (Integer roleId : roleIds) {
+            Channel.RolePermissionOverwrite rolePermissionOverwriteByRole = channel.getRolePermissionOverwriteByRole(roleId);
+            if (rolePermissionOverwriteByRole != null && permission.isIncludedIn(rolePermissionOverwriteByRole.getRawAllow())) {
+                return true;
+            }
+        }
+
+        PageIterator<Set<Role>> iterator = guild.getRoles();
+        while (iterator.hasNext()) {
+            if (roleIds.isEmpty()) break;
+            Set<Role> roles = iterator.next();
+            for (Role role : roles) {
+                if (roleIds.isEmpty()) break;
+                if (roleIds.contains(role.getId())) {
+                    roleIds.remove(role.getId());
+                    if (role.isPermissionSet(permission)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void removeAttachment(PermissionContext context, PermissionAttachment permissionAttachment) {
+        this.perms.removeAttachment(context, permissionAttachment);
+    }
+
+    @Override
+    public @NotNull PermissionAttachment addAttachment(PermissionContext context, @NotNull Plugin plugin, @NotNull String name, boolean value) {
+        return this.perms.addAttachment(context, plugin, name, value);
+    }
+
+    @Override
+    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext context) {
+        return this.perms.getEffectivePermissions(context);
+    }
 }
 
 class IntimacyInfoImpl implements User.IntimacyInfo {
@@ -368,7 +448,7 @@ class IntimacyInfoImpl implements User.IntimacyInfo {
     private final Collection<SocialImage> socialImages;
 
     IntimacyInfoImpl(String socialImage, String socialInfo, int lastRead, int score,
-            Collection<SocialImage> socialImages) {
+                     Collection<SocialImage> socialImages) {
         this.socialImage = socialImage;
         this.socialInfo = socialInfo;
         this.lastRead = lastRead;

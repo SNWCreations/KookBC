@@ -18,11 +18,19 @@
 
 package snw.kookbc.impl.command;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.permissions.PermissionAttachment;
+import snw.jkook.permissions.PermissionAttachmentInfo;
+import snw.jkook.permissions.PermissionContext;
+import snw.jkook.permissions.PermissionNode;
 import snw.jkook.plugin.Plugin;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
@@ -44,5 +52,43 @@ public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
 
     public static void removeFor(Plugin plugin) {
         INSTANCES.remove(plugin);
+    }
+
+    @Override
+    public boolean hasPermission(PermissionContext permissionContext, @Nullable String s) {
+        return true;
+    }
+
+    @Override
+    public boolean hasPermission(PermissionContext permissionContext, @NotNull PermissionNode permissionNode) {
+        return true;
+    }
+
+    @Override
+    public boolean isPermissionSet(PermissionContext permissionContext, @NotNull String s) {
+        return true;
+    }
+
+    @Override
+    public boolean isPermissionSet(PermissionContext permissionContext, @NotNull PermissionNode permissionNode) {
+        return true;
+    }
+
+    @Override
+    public void recalculatePermissions(PermissionContext permissionContext) {
+    }
+
+    @Override
+    public void removeAttachment(PermissionContext permissionContext, PermissionAttachment permissionAttachment) {
+    }
+
+    @Override
+    public @NotNull PermissionAttachment addAttachment(PermissionContext permissionContext, @NotNull Plugin plugin, @NotNull String s, boolean b) {
+        return new PermissionAttachment(plugin, this);
+    }
+
+    @Override
+    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext permissionContext) {
+        return Collections.emptySet();
     }
 }

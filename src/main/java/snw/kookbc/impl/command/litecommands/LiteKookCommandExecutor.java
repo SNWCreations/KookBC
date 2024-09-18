@@ -55,7 +55,7 @@ public class LiteKookCommandExecutor implements CommandExecutor {
     @Override
     public void onCommand(CommandSender commandSender, Object[] objects, @Nullable Message message) {
         ParseableInput<?> input = ParseableInput.raw(Arrays.stream(objects).map(Object::toString).toArray(String[]::new));
-        KookSender platformSender = new KookSender(commandSender);
+        KookSender platformSender = new KookSender(commandSender, message);
         InvocationContext invocationContext = createContext(message);
         Invocation<CommandSender> invocation = new Invocation<>(commandSender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
 
@@ -64,7 +64,7 @@ public class LiteKookCommandExecutor implements CommandExecutor {
 
     public Iterable<String> getSuggestions(CommandSender sender, String[] args) {
         SuggestionInput<?> input = SuggestionInput.raw(args);
-        KookSender platformSender = new KookSender(sender);
+        KookSender platformSender = new KookSender(sender, null);
         InvocationContext invocationContext = createContext(null);
         Invocation<CommandSender> invocation = new Invocation<>(sender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
 
