@@ -330,6 +330,11 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         this.rpo = parseRPO(data);
         this.upo = parseUPO(client, data);
 
+        // Update Permissions
+        for (UserPermissionOverwrite userPermissionOverwrite : this.upo) {
+            userPermissionOverwrite.getUser().recalculatePermissions(this);
+        }
+
         // Why we delay the add operation?
         // We may construct the channel object at any time,
         // but sometimes they are just garbage object,
