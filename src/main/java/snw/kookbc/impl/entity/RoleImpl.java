@@ -18,14 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
-import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.util.Map;
-
 import com.google.gson.JsonObject;
-
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -33,6 +26,12 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
+
+import java.util.Map;
+
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 public class RoleImpl implements Role, Updatable {
     private final KBCClient client;
@@ -46,7 +45,7 @@ public class RoleImpl implements Role, Updatable {
     private String name;
 
     public RoleImpl(KBCClient client, Guild guild, int id, int color, int position, int permSum, boolean mentionable,
-            boolean hoist, String name) {
+                    boolean hoist, String name) {
         this.client = client;
         this.guild = guild;
         this.id = id;
@@ -177,6 +176,6 @@ public class RoleImpl implements Role, Updatable {
 
     @Override
     public String getPermissionGroup() {
-        return "role";
+        return "role#" + guild.getId() + "#" + id;
     }
 }

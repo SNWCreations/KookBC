@@ -18,21 +18,8 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
-import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.google.gson.JsonObject;
-
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -43,6 +30,17 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
+import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
+import static snw.kookbc.util.GsonUtil.getAsInt;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
@@ -62,7 +60,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     }
 
     public ChannelImpl(KBCClient client, String id, User master, Guild guild, boolean permSync, String name,
-            Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
+                       Collection<RolePermissionOverwrite> rpo, Collection<UserPermissionOverwrite> upo, int level) {
         this.client = client;
         this.id = id;
         this.master = master;
@@ -359,6 +357,6 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public String getPermissionGroup() {
-        return "channel";
+        return "channel#" + guild.getId() + "#" + id;
     }
 }

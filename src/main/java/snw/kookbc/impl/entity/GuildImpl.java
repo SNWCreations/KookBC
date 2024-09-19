@@ -18,38 +18,16 @@
 
 package snw.kookbc.impl.entity;
 
-import static java.util.Objects.requireNonNull;
-import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.getAsBoolean;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Supplier;
-
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.Invitation;
-import snw.jkook.entity.Role;
-import snw.jkook.entity.User;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
+import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Category;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.TextChannel;
@@ -61,15 +39,18 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.mute.MuteDataImpl;
 import snw.kookbc.impl.entity.mute.MuteResultImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.impl.pageiter.GuildBannedUserIterator;
-import snw.kookbc.impl.pageiter.GuildChannelListIterator;
-import snw.kookbc.impl.pageiter.GuildEmojiListIterator;
-import snw.kookbc.impl.pageiter.GuildInvitationsIterator;
-import snw.kookbc.impl.pageiter.GuildRoleListIterator;
-import snw.kookbc.impl.pageiter.GuildUserListIterator;
+import snw.kookbc.impl.pageiter.*;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Supplier;
+
+import static java.util.Objects.requireNonNull;
+import static snw.jkook.util.Validate.isTrue;
+import static snw.kookbc.util.GsonUtil.*;
 
 public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private final KBCClient client;
@@ -78,7 +59,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private User master;
     private String name;
     private boolean public_; // I know Guild owner can turn this to false, but I don't have internal events
-                             // to listen for that!
+    // to listen for that!
     private String region;
     private String avatarUrl; // no vipAvatar here!
     private boolean completed;
@@ -89,7 +70,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
     }
 
     public GuildImpl(KBCClient client, String id, NotifyType notifyType, User master, String name, boolean public_,
-            String region, String avatarUrl) {
+                     String region, String avatarUrl) {
         this(client, id);
         this.notifyType = notifyType;
         this.master = master;
@@ -111,8 +92,8 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public PageIterator<Set<User>> getUsers(String keyword, @Nullable Integer roleId,
-            @Nullable Boolean isMobileVerified, @Nullable Boolean isActiveTimeFirst,
-            @Nullable Boolean isJoinedTimeFirst) {
+                                            @Nullable Boolean isMobileVerified, @Nullable Boolean isActiveTimeFirst,
+                                            @Nullable Boolean isJoinedTimeFirst) {
         return new GuildUserListIterator(client, getId(), keyword, roleId, isMobileVerified, isActiveTimeFirst,
                 isJoinedTimeFirst);
     }
@@ -237,7 +218,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public VoiceChannel createVoiceChannel(String s, @Nullable Category parent, @Range(from = 1L, to = 99L) int size,
-            @Range(from = 1L, to = 3L) int quality) {
+                                           @Range(from = 1L, to = 3L) int quality) {
         Map<String, Object> body = new MapBuilder()
                 .put("guild_id", getId())
                 .put("name", s)
@@ -417,7 +398,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public String getPermissionGroup() {
-        return "guild";
+        return "guild#" + id;
     }
 }
 
