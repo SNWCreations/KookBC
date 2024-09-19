@@ -51,16 +51,21 @@ public class SimplePermsImpl implements Permissible {
 
     @Override
     public boolean hasPermission(PermissionContext context, @NotNull PermissionNode perm) {
+        checkInitialize(context);
         String name = perm.getName().toLowerCase(Locale.ENGLISH);
         return this.isPermissionSet(context, name) ? this.permissions.get(Pair.of(context, name)).getValue() : perm.getDefault().getValue();
     }
 
     @Override
     public boolean isPermissionSet(PermissionContext context, @NotNull String name) {
+        checkInitialize(context);
+        return this.permissions.containsKey(Pair.of(context, name.toLowerCase(Locale.ENGLISH)));
+    }
+
+    protected void checkInitialize(PermissionContext context) {
         if (!initializeContexts.contains(context)) {
             this.own.recalculatePermissions(context);
         }
-        return this.permissions.containsKey(Pair.of(context, name.toLowerCase(Locale.ENGLISH)));
     }
 
     @Override
@@ -101,6 +106,7 @@ public class SimplePermsImpl implements Permissible {
         } else if (!(plugin instanceof InternalPlugin) && name.startsWith("kook.")) {
             throw new IllegalArgumentException("Cannot add this permission: " + name);
         } else {
+            checkInitialize(context);
             PermissionAttachment result = new PermissionAttachment(plugin, this);
             result.setPermission(context, name, value);
             this.attachments.add(result);
@@ -111,6 +117,7 @@ public class SimplePermsImpl implements Permissible {
 
     @Override
     public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext context) {
+        checkInitialize(context);
         return Collections.unmodifiableSet(new HashSet<>(this.permissions.values()));
     }
 }
