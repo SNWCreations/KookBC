@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.command.litecommands;
 
+import dev.rollczi.litecommands.LiteCommandsBaseBuilder;
 import dev.rollczi.litecommands.LiteCommandsBuilder;
 import dev.rollczi.litecommands.LiteCommandsFactory;
 import dev.rollczi.litecommands.extension.annotations.LiteAnnotationsProcessorExtension;
@@ -55,12 +56,12 @@ public class LiteKookFactory {
     private LiteKookFactory() {
     }
 
-    public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin) {
+    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin) {
         return builder(plugin, new LiteKookSettings());
     }
 
     @SuppressWarnings("unchecked")
-    public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteKookSettings) {
+    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteKookSettings) {
         KBCClient client = ((CoreImpl) plugin.getCore()).getClient();
         HttpAPI httpAPI = plugin.getCore().getHttpAPI();
         LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
