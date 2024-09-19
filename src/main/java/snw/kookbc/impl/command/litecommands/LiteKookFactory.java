@@ -60,7 +60,7 @@ public class LiteKookFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteBungeeSettings) {
+    public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteKookSettings) {
         KBCClient client = ((CoreImpl) plugin.getCore()).getClient();
         HttpAPI httpAPI = plugin.getCore().getHttpAPI();
         LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
@@ -68,7 +68,7 @@ public class LiteKookFactory {
                 .processor(new PrefixAnnotationResolver<>())
                 .processor(new ResultAnnotationResolver<>(plugin.getLogger()));
         return (B)
-                LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteBungeeSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
+                LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteKookSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
                         .bind(Core.class, plugin::getCore)
                         .bind(Plugin.class, () -> plugin)
                         .bindUnsafe(plugin.getClass(), () -> plugin)
