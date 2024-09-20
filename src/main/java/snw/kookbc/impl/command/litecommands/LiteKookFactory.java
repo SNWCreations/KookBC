@@ -56,12 +56,21 @@ public class LiteKookFactory {
     private LiteKookFactory() {
     }
 
-    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin) {
+    @SuppressWarnings("unchecked")
+    public static <B extends LiteCommandsBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin) {
+        return (B) createBuilder(plugin);
+    }
+
+    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteKookSettings) {
+        return createBuilder(plugin, liteKookSettings);
+    }
+
+    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B createBuilder(Plugin plugin) {
         return builder(plugin, new LiteKookSettings());
     }
 
     @SuppressWarnings("unchecked")
-    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B builder(Plugin plugin, LiteKookSettings liteKookSettings) {
+    public static <B extends LiteCommandsBaseBuilder<CommandSender, LiteKookSettings, B>> B createBuilder(Plugin plugin, LiteKookSettings liteKookSettings) {
         KBCClient client = ((CoreImpl) plugin.getCore()).getClient();
         HttpAPI httpAPI = plugin.getCore().getHttpAPI();
         LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
