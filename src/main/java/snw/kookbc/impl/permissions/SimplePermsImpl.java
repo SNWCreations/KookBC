@@ -64,6 +64,7 @@ public class SimplePermsImpl implements Permissible {
 
     protected void checkInitialize(PermissionContext context) {
         if (!initializeContexts.contains(context)) {
+            this.initializeContexts.add(context);
             this.own.recalculatePermissions(context);
         }
     }
@@ -83,7 +84,6 @@ public class SimplePermsImpl implements Permissible {
                 this.permissions.put(Pair.of(pair.first(), name), new PermissionAttachmentInfo(pair.first(), this.own, name, permissionAttachment, entry.getValue()));
             }
         }
-        this.initializeContexts.add(context);
     }
 
     @Override

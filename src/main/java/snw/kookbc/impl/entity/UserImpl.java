@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
+import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -386,11 +387,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         this.perms.recalculatePermissions(context);
         if (context instanceof Channel) {
             Channel channel = (Channel) context;
+            HashSet<Integer> roleIds = new HashSet<>();
+            HashSet<Role> roles = new HashSet<>();
             for (Permission value : Permission.values()) {
                 String permission = Permissions.getPermission(value);
                 boolean calculated = false;
                 try {
-                    calculated = calculateDefaultPerms(value, channel);
+                    calculated = calculateDefaultPerms(value, channel, roleIds, roles);
                 } catch (BadResponseException ignored) {
                 } catch (Exception e) {
                     this.client.getCore().getLogger().error("Calculate permissions", e);
@@ -400,32 +403,48 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         }
     }
 
-    public boolean calculateDefaultPerms(Permission permission, Channel channel) {
+    public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> roleIds, Collection<Role> roles) {
         Channel.UserPermissionOverwrite userPermissionOverwriteByUser = channel.getUserPermissionOverwriteByUser(this);
         if (userPermissionOverwriteByUser != null && permission.isIncludedIn(userPermissionOverwriteByUser.getRawAllow())) {
             return true;
         }
 
         Guild guild = channel.getGuild();
-        Collection<Integer> roleIds = new HashSet<>(getRoles(guild));
+        if (roleIds.isEmpty()) {
+            Collection<Integer> requestRoles = getRoles(guild);
+            roleIds.addAll(requestRoles);
+            if (requestRoles.isEmpty()) {
+                roleIds.add(null);
+            }
+        }
         for (Integer roleId : roleIds) {
+            if (roleId == null) continue;
             Channel.RolePermissionOverwrite rolePermissionOverwriteByRole = channel.getRolePermissionOverwriteByRole(roleId);
             if (rolePermissionOverwriteByRole != null && permission.isIncludedIn(rolePermissionOverwriteByRole.getRawAllow())) {
                 return true;
             }
         }
 
-        PageIterator<Set<Role>> iterator = guild.getRoles();
-        while (iterator.hasNext()) {
-            if (roleIds.isEmpty()) break;
-            Set<Role> roles = iterator.next();
-            for (Role role : roles) {
+        if (roles.isEmpty()) {
+            PageIterator<Set<Role>> iterator = guild.getRoles();
+            while (iterator.hasNext()) {
                 if (roleIds.isEmpty()) break;
-                if (roleIds.contains(role.getId())) {
-                    roleIds.remove(role.getId());
-                    if (calculateDefaultPerms(permission, role)) {
-                        return true;
-                    }
+                Set<Role> batchRoles = iterator.next();
+                roles.addAll(batchRoles);
+            }
+            if (roles.isEmpty()) {
+                roles.add(null);
+            }
+        }
+        if (roleIds.isEmpty() || (roleIds.size() == 1 && Iterables.getFirst(roleIds, null) == null)) return false;
+        if (roles.isEmpty() || (roles.size() == 1 && Iterables.getFirst(roles, null) == null)) return false;
+        HashSet<Integer> cachedRoleIds = new HashSet<>(roleIds);
+        cachedRoleIds.removeIf(Objects::isNull);
+        for (Role role : roles) {
+            if (cachedRoleIds.contains(role.getId())) {
+                cachedRoleIds.remove(role.getId());
+                if (calculateDefaultPerms(permission, role)) {
+                    return true;
                 }
             }
         }
