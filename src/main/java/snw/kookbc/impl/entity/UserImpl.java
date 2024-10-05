@@ -394,9 +394,11 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 boolean calculated = false;
                 try {
                     calculated = calculateDefaultPerms(value, channel, roleIds, roles);
-                } catch (BadResponseException ignored) {
+                } catch (BadResponseException e) {
+                    this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                    break;
                 } catch (Exception e) {
-                    this.client.getCore().getLogger().error("Calculate permissions", e);
+                    this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
                 }
                 addAttachment(context, this.client.getInternalPlugin(), permission, calculated);
             }
