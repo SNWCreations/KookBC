@@ -36,7 +36,7 @@ public class ResultAnnotationResolver<SENDER> implements AnnotationProcessor<SEN
 
     @Override
     public AnnotationInvoker<SENDER> process(AnnotationInvoker<SENDER> invoker) {
-        return invoker.onExecutorStructure(Result.class, (annotation, builder, executorProvider) -> {
+        return invoker.onMethod(Result.class, (method, annotation, builder, executorProvider) -> {
             ResultType resultTypes = annotation.value();
             if (!Objects.equals(ResultType.class, annotation.custom())) {
                 try {
