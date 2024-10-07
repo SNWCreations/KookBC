@@ -328,11 +328,6 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         this.rpo = parseRPO(data);
         this.upo = parseUPO(client, data);
 
-        // Update Permissions
-        for (UserPermissionOverwrite userPermissionOverwrite : this.upo) {
-            userPermissionOverwrite.getUser().recalculatePermissions(this);
-        }
-
         // Why we delay the add operation?
         // We may construct the channel object at any time,
         // but sometimes they are just garbage object,
@@ -353,10 +348,5 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
                 .get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), this.id));
         update(data);
         completed = true;
-    }
-
-    @Override
-    public String getPermissionGroup() {
-        return "channel#" + guild.getId() + "#" + id;
     }
 }

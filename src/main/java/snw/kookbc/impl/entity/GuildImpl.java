@@ -395,11 +395,6 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
         update(data);
         completed = true;
     }
-
-    @Override
-    public String getPermissionGroup() {
-        return "guild#" + id;
-    }
 }
 
 // Just a JavaBean that contains the boost information.

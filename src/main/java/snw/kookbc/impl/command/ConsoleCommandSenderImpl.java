@@ -22,9 +22,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import snw.jkook.command.ConsoleCommandSender;
+import snw.jkook.entity.channel.Channel;
 import snw.jkook.permissions.PermissionAttachment;
 import snw.jkook.permissions.PermissionAttachmentInfo;
-import snw.jkook.permissions.PermissionContext;
 import snw.jkook.permissions.PermissionNode;
 import snw.jkook.plugin.Plugin;
 
@@ -55,40 +55,42 @@ public class ConsoleCommandSenderImpl implements ConsoleCommandSender {
     }
 
     @Override
-    public boolean hasPermission(PermissionContext permissionContext, @Nullable String s) {
+    public boolean hasPermission(@Nullable Channel channel, @Nullable String s) {
         return true;
     }
 
     @Override
-    public boolean hasPermission(PermissionContext permissionContext, @NotNull PermissionNode permissionNode) {
+    public boolean hasPermission(@Nullable Channel channel, @NotNull PermissionNode permissionNode) {
         return true;
     }
 
     @Override
-    public boolean isPermissionSet(PermissionContext permissionContext, @NotNull String s) {
+    public boolean isPermissionSet(Channel channel, @NotNull String s) {
         return true;
     }
 
     @Override
-    public boolean isPermissionSet(PermissionContext permissionContext, @NotNull PermissionNode permissionNode) {
+    public boolean isPermissionSet(@Nullable Channel channel, @NotNull PermissionNode permissionNode) {
         return true;
     }
 
     @Override
-    public void recalculatePermissions(PermissionContext permissionContext) {
+    public void recalculatePermissions() {
+
     }
 
     @Override
-    public void removeAttachment(PermissionContext permissionContext, PermissionAttachment permissionAttachment) {
+    public void removeAttachment(PermissionAttachment permissionAttachment) {
+
     }
 
     @Override
-    public @NotNull PermissionAttachment addAttachment(PermissionContext permissionContext, @NotNull Plugin plugin, @NotNull String s, boolean b) {
+    public @NotNull PermissionAttachment addAttachment(@Nullable Channel channel, @NotNull Plugin plugin, @NotNull String s, boolean b) {
         return new PermissionAttachment(plugin, this);
     }
 
     @Override
-    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext permissionContext) {
+    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(@Nullable Channel channel) {
         return Collections.emptySet();
     }
 }

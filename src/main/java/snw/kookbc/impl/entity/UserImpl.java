@@ -35,7 +35,9 @@ import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.permissions.*;
+import snw.jkook.permissions.PermissionAttachment;
+import snw.jkook.permissions.PermissionAttachmentInfo;
+import snw.jkook.permissions.PermissionNode;
 import snw.jkook.plugin.Plugin;
 import snw.jkook.util.PageIterator;
 import snw.jkook.util.Validate;
@@ -363,46 +365,47 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     }
 
     @Override
-    public boolean hasPermission(PermissionContext context, @Nullable String permission) {
+    public boolean hasPermission(@Nullable Channel context, @Nullable String permission) {
         return this.perms.hasPermission(context, permission);
     }
 
     @Override
-    public boolean hasPermission(PermissionContext context, @NotNull PermissionNode perm) {
+    public boolean hasPermission(@Nullable Channel context, @NotNull PermissionNode perm) {
         return this.perms.hasPermission(context, perm);
     }
 
     @Override
-    public boolean isPermissionSet(PermissionContext context, @NotNull String name) {
+    public boolean isPermissionSet(@Nullable Channel context, @NotNull String name) {
         return this.perms.isPermissionSet(context, name);
     }
 
     @Override
-    public boolean isPermissionSet(PermissionContext context, @NotNull PermissionNode perm) {
+    public boolean isPermissionSet(@Nullable Channel context, @NotNull PermissionNode perm) {
         return this.perms.isPermissionSet(context, perm);
     }
 
     @Override
-    public void recalculatePermissions(PermissionContext context) {
-        this.perms.recalculatePermissions(context);
-        if (context instanceof Channel) {
-            Channel channel = (Channel) context;
-            HashSet<Integer> roleIds = new HashSet<>();
-            HashSet<Role> roles = new HashSet<>();
-            for (Permission value : Permission.values()) {
-                String permission = Permissions.getPermission(value);
-                boolean calculated = false;
-                try {
-                    calculated = calculateDefaultPerms(value, channel, roleIds, roles);
-                } catch (BadResponseException e) {
-                    this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-                    break;
-                } catch (Exception e) {
-                    this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-                }
-                addAttachment(context, this.client.getInternalPlugin(), permission, calculated);
+    public void recalculatePermissions() {
+        this.perms.recalculatePermissions();
+    }
+
+    public Map<Permission, Boolean> calculateChannel(Channel channel) {
+        Map<Permission, Boolean> result = new HashMap<>();
+        HashSet<Integer> roleIds = new HashSet<>();
+        HashSet<Role> roles = new HashSet<>();
+        for (Permission value : Permission.values()) {
+            boolean calculated = false;
+            try {
+                calculated = calculateDefaultPerms(value, channel, roleIds, roles);
+            } catch (BadResponseException e) {
+                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                break;
+            } catch (Exception e) {
+                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
             }
+            result.put(value, calculated);
         }
+        return result;
     }
 
     public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> roleIds, Collection<Role> roles) {
@@ -459,18 +462,18 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
 
     @Override
-    public void removeAttachment(PermissionContext context, PermissionAttachment permissionAttachment) {
-        this.perms.removeAttachment(context, permissionAttachment);
+    public void removeAttachment(PermissionAttachment permissionAttachment) {
+        this.perms.removeAttachment(permissionAttachment);
     }
 
     @Override
-    public @NotNull PermissionAttachment addAttachment(PermissionContext context, @NotNull Plugin plugin, @NotNull String name, boolean value) {
+    public @NotNull PermissionAttachment addAttachment(@Nullable Channel context, @NotNull Plugin plugin, @NotNull String name, boolean value) {
         return this.perms.addAttachment(context, plugin, name, value);
     }
 
     @Override
-    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext context) {
-        return this.perms.getEffectivePermissions(context);
+    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(@Nullable Channel channel) {
+        return this.perms.getEffectivePermissions(channel);
     }
 }
 

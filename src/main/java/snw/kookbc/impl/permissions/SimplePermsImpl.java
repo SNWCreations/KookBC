@@ -20,104 +20,125 @@ package snw.kookbc.impl.permissions;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import snw.jkook.Permission;
+import snw.jkook.entity.channel.Channel;
 import snw.jkook.permissions.*;
 import snw.jkook.plugin.Plugin;
-import snw.jkook.util.Pair;
-import snw.kookbc.impl.plugin.InternalPlugin;
+import snw.kookbc.impl.entity.UserImpl;
 
 import java.util.*;
 
 public class SimplePermsImpl implements Permissible {
-    private final Permissible own;
-    private final Set<PermissionContext> initializeContexts = new HashSet<>();
-    private final Map<Pair<PermissionContext, String>, PermissionAttachmentInfo> permissions;
+    private final UserImpl own;
+    private final Map<String, PermissionAttachmentInfo> permissions;
     private final List<PermissionAttachment> attachments = new LinkedList<>();
 
-    public SimplePermsImpl(Permissible own) {
+    public SimplePermsImpl(UserImpl own) {
         this.own = own;
         this.permissions = new HashMap<>();
     }
 
     @Override
-    public boolean hasPermission(PermissionContext context, @Nullable String permission) {
+    public boolean hasPermission(@Nullable Channel context, @Nullable String permission) {
         if (permission == null) return true;
         String name = permission.toLowerCase(Locale.ENGLISH);
+        if (context != null && name.startsWith("kook.")) {
+            Map<Permission, Boolean> map = this.own.calculateChannel(context);
+            Permissions perms = Permissions.values().stream().filter(e -> e.getPermission().equalsIgnoreCase(name)).findFirst().orElse(null);
+            if (perms == null) {
+                return false;
+            }
+            return map.containsKey(perms.getPermissionEnum()) && map.get(perms.getPermissionEnum());
+        }
         if (this.isPermissionSet(context, name)) {
-            return this.permissions.get(Pair.of(context, name)).getValue();
+            return this.permissions.get(name).getValue();
         } else {
             return false;
         }
     }
 
     @Override
-    public boolean hasPermission(PermissionContext context, @NotNull PermissionNode perm) {
-        checkInitialize(context);
+    public boolean hasPermission(@Nullable Channel context, @NotNull PermissionNode perm) {
         String name = perm.getName().toLowerCase(Locale.ENGLISH);
-        return this.isPermissionSet(context, name) ? this.permissions.get(Pair.of(context, name)).getValue() : perm.getDefault().getValue();
-    }
-
-    @Override
-    public boolean isPermissionSet(PermissionContext context, @NotNull String name) {
-        checkInitialize(context);
-        return this.permissions.containsKey(Pair.of(context, name.toLowerCase(Locale.ENGLISH)));
-    }
-
-    protected void checkInitialize(PermissionContext context) {
-        if (!initializeContexts.contains(context)) {
-            this.initializeContexts.add(context);
-            this.own.recalculatePermissions(context);
+        if (context != null && name.startsWith("kook.")) {
+            Map<Permission, Boolean> map = this.own.calculateChannel(context);
+            Permissions perms = Permissions.values().stream().filter(e -> e.getPermission().equalsIgnoreCase(name)).findFirst().orElse(null);
+            if (perms == null) {
+                return false;
+            }
+            return map.containsKey(perms.getPermissionEnum()) && map.get(perms.getPermissionEnum());
         }
+        return this.isPermissionSet(context, name) ? this.permissions.get(name).getValue() : perm.getDefault().getValue();
     }
 
     @Override
-    public boolean isPermissionSet(PermissionContext context, @NotNull PermissionNode perm) {
+    public boolean isPermissionSet(@Nullable Channel context, @NotNull String name) {
+        return this.permissions.containsKey(name.toLowerCase(Locale.ENGLISH));
+    }
+
+    @Override
+    public boolean isPermissionSet(@Nullable Channel context, @NotNull PermissionNode perm) {
         return this.isPermissionSet(context, perm.getName());
     }
 
     @Override
-    public void recalculatePermissions(PermissionContext context) {
+    public void recalculatePermissions() {
         this.permissions.clear();
         for (PermissionAttachment permissionAttachment : this.attachments) {
-            for (Map.Entry<Pair<PermissionContext, String>, Boolean> entry : permissionAttachment.getPermissions().entrySet()) {
-                Pair<PermissionContext, String> pair = entry.getKey();
-                String name = pair.second().toLowerCase(Locale.ENGLISH);
-                this.permissions.put(Pair.of(pair.first(), name), new PermissionAttachmentInfo(pair.first(), this.own, name, permissionAttachment, entry.getValue()));
+            for (Map.Entry<String, Boolean> entry : permissionAttachment.getPermissions().entrySet()) {
+                String name = entry.getKey().toLowerCase(Locale.ENGLISH);
+                if (name.startsWith("kook.")) {
+                    continue;
+                }
+                this.permissions.put(name, new PermissionAttachmentInfo(this.own, name, permissionAttachment, entry.getValue()));
             }
         }
     }
 
     @Override
-    public void removeAttachment(PermissionContext context, PermissionAttachment permissionAttachment) {
+    public void removeAttachment(PermissionAttachment permissionAttachment) {
         if (permissionAttachment == null) {
             throw new IllegalArgumentException("Attachment cannot be null");
         }
 
         if (this.attachments.remove(permissionAttachment)) {
-            recalculatePermissions(context);
+            recalculatePermissions();
         } else {
             throw new IllegalArgumentException("Given attachment is not part of Permissible object " + this.own);
         }
     }
 
     @Override
-    public @NotNull PermissionAttachment addAttachment(PermissionContext context, @NotNull Plugin plugin, @NotNull String name, boolean value) {
+    public @NotNull PermissionAttachment addAttachment(@Nullable Channel context, @NotNull Plugin plugin, @NotNull String name, boolean value) {
         if (!plugin.isEnabled()) {
             throw new IllegalArgumentException("Plugin " + plugin.getDescription().getName() + " v" + plugin.getDescription().getVersion() + " is disabled");
-        } else if (!(plugin instanceof InternalPlugin) && name.startsWith("kook.")) {
-            throw new IllegalArgumentException("Cannot add this permission: " + name);
+        } else if (name.startsWith("kook.")) {
+            if (context == null)
+                throw new IllegalArgumentException("Cannot add this permission: " + name);
+            Permissions pemrs = Permissions.values().stream().filter(e -> e.getPermission().equalsIgnoreCase(name)).findFirst().orElse(null);
+            if (pemrs == null)
+                throw new IllegalArgumentException("Cannot add this permission: " + name);
+            context.addPermission(this.own, pemrs.getPermissionEnum());
+            return new PermissionAttachment(plugin, this);
         } else {
-            checkInitialize(context);
             PermissionAttachment result = new PermissionAttachment(plugin, this);
-            result.setPermission(context, name, value);
+            result.setPermission(name, value);
             this.attachments.add(result);
-            this.recalculatePermissions(context);
+            this.recalculatePermissions();
             return result;
         }
     }
 
     @Override
-    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(PermissionContext context) {
-        checkInitialize(context);
-        return Collections.unmodifiableSet(new HashSet<>(this.permissions.values()));
+    public @NotNull Set<PermissionAttachmentInfo> getEffectivePermissions(@Nullable Channel context) {
+        Set<PermissionAttachmentInfo> result = new HashSet<>();
+        if (context != null) {
+            Map<Permission, Boolean> map = this.own.calculateChannel(context);
+            for (Map.Entry<Permission, Boolean> entry : map.entrySet()) {
+                result.add(new PermissionAttachmentInfo(this.own, Permissions.getPermission(entry.getKey()), null, entry.getValue()));
+            }
+        }
+        result.addAll(this.permissions.values());
+        return result;
     }
 }
