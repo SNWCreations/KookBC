@@ -18,19 +18,11 @@
 
 package snw.kookbc.impl.storage;
 
-import java.util.concurrent.TimeUnit;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonObject;
-
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.Game;
-import snw.jkook.entity.Guild;
-import snw.jkook.entity.Reaction;
-import snw.jkook.entity.Role;
-import snw.jkook.entity.User;
+import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.message.Message;
 import snw.kookbc.impl.KBCClient;
@@ -40,6 +32,11 @@ import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
@@ -118,6 +115,13 @@ public class EntityStorage {
 
     public Role getRole(Guild guild, int id) {
         return roles.getIfPresent(guild.getId() + "#" + id);
+    }
+
+    /**
+     * @deprecated This can only find cached ones
+     */
+    public List<Role> getRoles(Guild guild) {
+        return roles.asMap().values().stream().filter(e -> Objects.equals(e.getGuild().getId(), guild.getId())).collect(Collectors.toList());
     }
 
     public CustomEmoji getEmoji(String id) {

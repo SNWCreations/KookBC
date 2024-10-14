@@ -393,6 +393,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         Map<Permission, Boolean> result = new HashMap<>();
         HashSet<Integer> roleIds = new HashSet<>();
         HashSet<Role> roles = new HashSet<>();
+        List<Role> cachedRoles = client.getStorage().getRoles(channel.getGuild());
+        if (!cachedRoles.isEmpty()) {
+            for (Role cachedRole : cachedRoles) {
+                roleIds.add(cachedRole.getId());
+                roles.add(cachedRole);
+            }
+        }
         for (Permission value : Permission.values()) {
             boolean calculated = false;
             try {
