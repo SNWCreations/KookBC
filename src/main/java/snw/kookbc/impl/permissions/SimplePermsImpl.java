@@ -24,18 +24,34 @@ import snw.jkook.Permission;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.permissions.*;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.UserImpl;
 
 import java.util.*;
 
 public class SimplePermsImpl implements Permissible {
+    private final KBCClient client;
     private final UserImpl own;
     private final Map<String, PermissionAttachmentInfo> permissions;
     private final List<PermissionAttachment> attachments = new LinkedList<>();
 
-    public SimplePermsImpl(UserImpl own) {
+    private boolean loading = true;
+
+    public SimplePermsImpl(KBCClient client, UserImpl own) {
+        this.client = client;
         this.own = own;
         this.permissions = new HashMap<>();
+    }
+
+    public void load() {
+        if (!this.loading) return;
+        UserPermissionSaved permissionSaved = client.getUserPermissions().get(own.getId());
+        if (permissionSaved != null) {
+            permissionSaved.getPermissions().forEach((perms, v) -> {
+                addAttachment(client.getInternalPlugin(), perms, v);
+            });
+            this.loading = false;
+        }
     }
 
     @Override
@@ -102,7 +118,7 @@ public class SimplePermsImpl implements Permissible {
         }
 
         if (this.attachments.remove(permissionAttachment)) {
-            recalculatePermissions();
+            this.own.recalculatePermissions();
         } else {
             throw new IllegalArgumentException("Given attachment is not part of Permissible object " + this.own);
         }
@@ -119,12 +135,12 @@ public class SimplePermsImpl implements Permissible {
             if (pemrs == null)
                 throw new IllegalArgumentException("Cannot add this permission: " + name);
             context.addPermission(this.own, pemrs.getPermissionEnum());
-            return new PermissionAttachment(plugin, this);
+            return new PermissionAttachment(plugin, this.own);
         } else {
-            PermissionAttachment result = new PermissionAttachment(plugin, this);
+            PermissionAttachment result = new PermissionAttachment(plugin, this.own);
             result.setPermission(name, value);
             this.attachments.add(result);
-            this.recalculatePermissions();
+            this.own.recalculatePermissions();
             return result;
         }
     }
@@ -140,5 +156,9 @@ public class SimplePermsImpl implements Permissible {
         }
         result.addAll(this.permissions.values());
         return result;
+    }
+
+    public boolean isLoading() {
+        return loading;
     }
 }

@@ -46,6 +46,7 @@ import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.UserJoinedVoiceChannelIterator;
 import snw.kookbc.impl.permissions.SimplePermsImpl;
+import snw.kookbc.impl.permissions.UserPermissionSaved;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
@@ -67,11 +68,13 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     private String vipAvatarUrl;
     private boolean completed;
 
-    private final SimplePermsImpl perms = new SimplePermsImpl(this);
+    private final SimplePermsImpl perms;
 
     public UserImpl(KBCClient client, String id) {
         this.client = requireNonNull(client);
         this.id = requireNonNull(id);
+        this.perms = new SimplePermsImpl(this.client, this);
+        this.perms.load();
     }
 
     public UserImpl(KBCClient client, String id, boolean bot, String name, int identify, boolean ban, boolean vip,
@@ -387,6 +390,11 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     @Override
     public void recalculatePermissions() {
         this.perms.recalculatePermissions();
+        if (this.perms.isLoading()) {
+            return;
+        }
+        client.getUserPermissions().put(getId(), new UserPermissionSaved(getId(), this.perms.getEffectivePermissions(null)));
+        client.savePermissions();
     }
 
     public Map<Permission, Boolean> calculateChannel(Channel channel) {

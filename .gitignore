@@ -120,3 +120,4 @@ run/
 logs
 kbc.yml
 plugins
+permissions.json

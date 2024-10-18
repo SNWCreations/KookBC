@@ -48,6 +48,7 @@ import snw.kookbc.impl.network.NetworkClient;
 import snw.kookbc.impl.network.Session;
 import snw.kookbc.impl.network.webhook.JLHttpWebhookNetworkSystem;
 import snw.kookbc.impl.network.ws.OkhttpWebSocketNetworkSystem;
+import snw.kookbc.impl.permissions.UserPermissionSaved;
 import snw.kookbc.impl.plugin.InternalPlugin;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
@@ -59,7 +60,10 @@ import snw.kookbc.util.DependencyListBasedPluginComparator;
 import snw.kookbc.util.ReturnNotNullFunction;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,6 +93,7 @@ public class KBCClient {
     protected final ExecutorService eventExecutor;
     protected final NetworkSystem networkSystem;
     protected List<Plugin> plugins;
+    protected final Map<String, UserPermissionSaved> userPermissions = new HashMap<>();
 
     // Use the second one instead, that's recommended
     // However, if you have already specified the network mode in the config object, feel free to use this one
@@ -111,17 +116,9 @@ public class KBCClient {
         return config;
     }
 
-    public KBCClient(
-            CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
+    public KBCClient(CoreImpl core, ConfigurationSection config, File pluginsFolder, String token,
             /* Customizable components are following: */
-            @Nullable ReturnNotNullFunction<KBCClient, CommandManager> commandManager,
-            @Nullable ReturnNotNullFunction<KBCClient, NetworkClient> networkClient,
-            @Nullable ReturnNotNullFunction<KBCClient, EntityStorage> storage,
-            @Nullable ReturnNotNullFunction<KBCClient, EntityBuilder> entityBuilder,
-            @Nullable ReturnNotNullFunction<KBCClient, MessageBuilder> msgBuilder,
-            @Nullable ReturnNotNullFunction<KBCClient, EventFactory> eventFactory,
-            @Nullable ReturnNotNullFunction<KBCClient, NetworkSystem> networkSystem
-    ) {
+                     @Nullable ReturnNotNullFunction<KBCClient, CommandManager> commandManager, @Nullable ReturnNotNullFunction<KBCClient, NetworkClient> networkClient, @Nullable ReturnNotNullFunction<KBCClient, EntityStorage> storage, @Nullable ReturnNotNullFunction<KBCClient, EntityBuilder> entityBuilder, @Nullable ReturnNotNullFunction<KBCClient, MessageBuilder> msgBuilder, @Nullable ReturnNotNullFunction<KBCClient, EventFactory> eventFactory, @Nullable ReturnNotNullFunction<KBCClient, NetworkSystem> networkSystem) {
         if (pluginsFolder != null) {
             Validate.isTrue(pluginsFolder.isDirectory(), "The provided pluginsFolder object is not a directory.");
         }
@@ -154,6 +151,44 @@ public class KBCClient {
             }
         } else {
             this.networkSystem = networkSystem.apply(this);
+        }
+        loadPermissions();
+    }
+
+    protected void loadPermissions() {
+        String path = System.getProperty("kookbc.permissions.file", "permissions.json");
+        File file = new File(path);
+        if (!file.exists()) {
+            return;
+        }
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            byte[] bytes = new byte[inputStream.available()];
+            inputStream.read(bytes);
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            List<UserPermissionSaved> parseList = UserPermissionSaved.parseList(json);
+            for (UserPermissionSaved userPermissionSaved : parseList) {
+                this.userPermissions.put(userPermissionSaved.getUid(), userPermissionSaved);
+            }
+        } catch (IOException e) {
+            getCore().getLogger().error("Failed to load permissions", e);
+        }
+    }
+
+    public void savePermissions() {
+        String path = System.getProperty("kookbc.permissions.file", "permissions.json");
+        try {
+            File file = new File(path);
+            if (file.getParentFile()!=null && !file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                outputStream.write(UserPermissionSaved.toString(this.userPermissions.values().toArray(new UserPermissionSaved[0])).getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -220,8 +255,7 @@ public class KBCClient {
         }
 
         core.getLogger().debug("Fetching Bot user object");
-        User botUser = getEntityBuilder().buildUser(
-                getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));
+        User botUser = getEntityBuilder().buildUser(getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
@@ -257,8 +291,7 @@ public class KBCClient {
         if (plugins == null || getPluginsFolder() == null) {
             return; // no plugins loaded (or no plugin folder available), so no plugins can be enabled
         }
-        @SuppressWarnings("DataFlowIssue")
-        List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
+        @SuppressWarnings("DataFlowIssue") List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
 
         getCore().getLogger().debug("Before filtering: {}", newIncomingFiles);
         getCore().getLogger().debug("Current known plugins: {}", this.plugins);
@@ -383,8 +416,7 @@ public class KBCClient {
                     getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
                 }
                 */
-                getCore().getLogger()
-                        .warn("BotMarket Ping is currently deprecated, as they are upgrading their system.");
+                getCore().getLogger().warn("BotMarket Ping is currently deprecated, as they are upgrading their system.");
             }
         }
         // endregion
@@ -505,8 +537,7 @@ public class KBCClient {
             commands.add(StopCommand.class);
         }
         if (commandConfig.getBoolean("help", true)) {
-            this.core.getEventManager()
-                    .registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
+            this.core.getEventManager().registerHandlers(this.internalPlugin, new UserClickButtonListener(this));
             commands.add(HelpCommand.class);
         }
         if (commandConfig.getBoolean("plugins", true)) {
@@ -516,25 +547,25 @@ public class KBCClient {
     }
 
     private void registerCommands(List<Class<?>> commands) {
-        LiteKookFactory.builder(getInternalPlugin())
-                .settings((k) -> {
-                    if (!getConfig().contains("internal-commands-reply-result-type")) {
-                        return k;
-                    }
-                    try {
-                        ResultTypes resultTypes = ResultTypes.valueOf(getConfig().getString("internal-commands-reply-result-type"));
-                        k.defaultResultType(resultTypes);
-                    } catch (Exception e) {
-                        getCore().getLogger().error("`internal-commands-reply-result-type` is not a valid result-type");
-                    }
-                    return k;
-                })
-                .commands(commands.toArray())
-                .build()
-        ;
+        LiteKookFactory.builder(getInternalPlugin()).settings((k) -> {
+            if (!getConfig().contains("internal-commands-reply-result-type")) {
+                return k;
+            }
+            try {
+                ResultTypes resultTypes = ResultTypes.valueOf(getConfig().getString("internal-commands-reply-result-type"));
+                k.defaultResultType(resultTypes);
+            } catch (Exception e) {
+                getCore().getLogger().error("`internal-commands-reply-result-type` is not a valid result-type");
+            }
+            return k;
+        }).commands(commands.toArray()).build();
     }
 
     public CommandManager getCommandManager() {
         return commandManager;
+    }
+
+    public Map<String, UserPermissionSaved> getUserPermissions() {
+        return userPermissions;
     }
 }
