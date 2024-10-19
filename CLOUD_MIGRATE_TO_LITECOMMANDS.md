@@ -47,7 +47,7 @@ import snw.kookbc.impl.command.litecommands.annotations.prefix.Prefix;
 @Prefix("!")
 public class TestLiteCommand {
     @Execute(name = "sub1")
-    public void sub1(@Context CommandSender sender,
+    public void sub1(@Sender CommandSender sender,
                      @Context Message message,
                      @Arg("parm1") String parm1) {
         // ...

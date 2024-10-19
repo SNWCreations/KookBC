@@ -19,7 +19,7 @@
 package snw.kookbc.impl.command.litecommands.internal;
 
 import dev.rollczi.litecommands.annotations.command.Command;
-import dev.rollczi.litecommands.annotations.context.Context;
+import dev.rollczi.litecommands.annotations.context.Sender;
 import dev.rollczi.litecommands.annotations.description.Description;
 import dev.rollczi.litecommands.annotations.execute.Execute;
 import dev.rollczi.litecommands.annotations.inject.Inject;
@@ -42,7 +42,7 @@ public class PluginsCommand {
     }
 
     @Execute
-    String execute(@Context CommandSender sender) {
+    String execute(@Sender CommandSender sender) {
         Plugin[] plugins = client.getCore().getPluginManager().getPlugins();
         return String.format("%s (%d): %s",
                 (sender instanceof ConsoleCommandSender) ? "Installed and running plugins" : "已安装并正在运行的插件",
