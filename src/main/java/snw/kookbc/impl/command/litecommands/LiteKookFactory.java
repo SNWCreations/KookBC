@@ -44,6 +44,7 @@ import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.CoreImpl;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.command.CommandManagerImpl;
+import snw.kookbc.impl.command.litecommands.annotations.permission.KookPermissionAnnotationResolver;
 import snw.kookbc.impl.command.litecommands.annotations.prefix.PrefixAnnotationResolver;
 import snw.kookbc.impl.command.litecommands.annotations.result.ResultAnnotationResolver;
 import snw.kookbc.impl.command.litecommands.argument.*;
@@ -76,6 +77,7 @@ public class LiteKookFactory {
         LiteAnnotationsProcessorExtension<CommandSender> processorExtension = new LiteAnnotationsProcessorExtension<>();
         processorExtension
                 .processor(new PrefixAnnotationResolver<>())
+                .processor(new KookPermissionAnnotationResolver<>())
                 .processor(new ResultAnnotationResolver<>(plugin.getLogger()));
         return (B)
                 LiteCommandsFactory.builder(CommandSender.class, new KookLitePlatform(liteKookSettings, plugin, ((CommandManagerImpl) plugin.getCore().getCommandManager()).getCommandMap()))
