@@ -50,8 +50,8 @@ public class SimplePermsImpl implements Permissible {
             permissionSaved.getPermissions().forEach((perms, v) -> {
                 addAttachment(client.getInternalPlugin(), perms, v);
             });
-            this.loading = false;
         }
+        this.loading = false;
     }
 
     @Override
