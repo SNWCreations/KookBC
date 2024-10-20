@@ -44,7 +44,7 @@ dependencies {
     compileOnly(libs.org.jetbrains.annotations)
 }
 group = "snw"
-version = "0.31.0"
+version = "0.32.0"
 description = "KookBC"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
