@@ -47,7 +47,6 @@ group = "snw"
 version = "0.32.1"
 description = "KookBC"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
-
 java.targetCompatibility = JavaVersion.VERSION_1_8
 
 publishing {

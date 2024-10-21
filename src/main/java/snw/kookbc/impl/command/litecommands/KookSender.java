@@ -21,7 +21,6 @@ package snw.kookbc.impl.command.litecommands;
 import dev.rollczi.litecommands.identifier.Identifier;
 import dev.rollczi.litecommands.platform.AbstractPlatformSender;
 import snw.jkook.command.CommandSender;
-import snw.jkook.command.ConsoleCommandSender;
 import snw.jkook.entity.User;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
@@ -56,13 +55,10 @@ class KookSender extends AbstractPlatformSender {
 
     @Override
     public boolean hasPermission(String permission) {
-        if (this.handle instanceof ConsoleCommandSender) {
-            return true;
-        }
         if (this.message instanceof ChannelMessage) {
             return handle.hasPermission(((ChannelMessage) this.message).getChannel(), permission);
         }
-        return false;
+        return this.handle.hasPermission(permission);
     }
 
 }

@@ -8,12 +8,6 @@ import snw.jkook.permissions.Permissions;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-/**
- * 2024/10/21<br>
- * KookBC<br>
- *
- * @author huanmeng_qwq
- */
 public class KookPermissionAnnotationResolver<SENDER> implements AnnotationProcessor<SENDER> {
     @Override
     public AnnotationInvoker<SENDER> process(AnnotationInvoker<SENDER> invoker) {

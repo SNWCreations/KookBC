@@ -18,7 +18,8 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.common.collect.Iterables;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -52,6 +53,7 @@ import snw.kookbc.interfaces.Updatable;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 import static snw.kookbc.util.GsonUtil.get;
@@ -69,6 +71,9 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     private boolean completed;
 
     private final SimplePermsImpl perms;
+    private final Cache<String, Collection<Integer>> cacheRoleIds = Caffeine.newBuilder()
+            .weakKeys()
+            .expireAfterAccess(20, TimeUnit.SECONDS).build();
 
     public UserImpl(KBCClient client, String id) {
         this.client = requireNonNull(client);
@@ -399,19 +404,20 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     public Map<Permission, Boolean> calculateChannel(Channel channel) {
         Map<Permission, Boolean> result = new HashMap<>();
-        HashSet<Integer> roleIds = new HashSet<>();
-        HashSet<Role> roles = new HashSet<>();
-        List<Role> cachedRoles = client.getStorage().getRoles(channel.getGuild());
-        if (!cachedRoles.isEmpty()) {
-            for (Role cachedRole : cachedRoles) {
-                roleIds.add(cachedRole.getId());
-                roles.add(cachedRole);
-            }
+        Collection<Integer> cached = cacheRoleIds.asMap().get(id);
+        if (cached == null) {
+            cacheRoleIds.put(id, cached = getRoles(channel.getGuild()));
+        }
+        Collection<Integer> userRoleIds = new HashSet<>(cached);
+        HashSet<Role> guildRoles = new HashSet<>();
+        List<Role> cachedGuildRoles = client.getStorage().getRoles(channel.getGuild());
+        if (!cachedGuildRoles.isEmpty()) {
+            guildRoles.addAll(cachedGuildRoles);
         }
         for (Permission value : Permission.values()) {
             boolean calculated = false;
             try {
-                calculated = calculateDefaultPerms(value, channel, roleIds, roles);
+                calculated = calculateDefaultPerms(value, channel, userRoleIds, guildRoles);
             } catch (BadResponseException e) {
                 this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
                 break;
@@ -423,21 +429,21 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         return result;
     }
 
-    public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> roleIds, Collection<Role> roles) {
+    public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> userRoleIds, Collection<Role> guildRoles) {
         Channel.UserPermissionOverwrite userPermissionOverwriteByUser = channel.getUserPermissionOverwriteByUser(this);
         if (userPermissionOverwriteByUser != null && permission.isIncludedIn(userPermissionOverwriteByUser.getRawAllow())) {
             return true;
         }
 
         Guild guild = channel.getGuild();
-        if (roleIds.isEmpty()) {
-            Collection<Integer> requestRoles = getRoles(guild);
-            roleIds.addAll(requestRoles);
-            if (requestRoles.isEmpty()) {
-                roleIds.add(null);
+        if (guildRoles.isEmpty()) {
+            PageIterator<Set<Role>> iterator = guild.getRoles();
+            while (iterator.hasNext()) {
+                Set<Role> batchRoles = iterator.next();
+                guildRoles.addAll(batchRoles);
             }
         }
-        for (Integer roleId : roleIds) {
+        for (Integer roleId : userRoleIds) {
             if (roleId == null) continue;
             Channel.RolePermissionOverwrite rolePermissionOverwriteByRole = channel.getRolePermissionOverwriteByRole(roleId);
             if (rolePermissionOverwriteByRole != null && permission.isIncludedIn(rolePermissionOverwriteByRole.getRawAllow())) {
@@ -445,22 +451,12 @@ public class UserImpl implements User, Updatable, LazyLoadable {
             }
         }
 
-        if (roles.isEmpty()) {
-            PageIterator<Set<Role>> iterator = guild.getRoles();
-            while (iterator.hasNext()) {
-                if (roleIds.isEmpty()) break;
-                Set<Role> batchRoles = iterator.next();
-                roles.addAll(batchRoles);
-            }
-            if (roles.isEmpty()) {
-                roles.add(null);
-            }
-        }
-        if (roleIds.isEmpty() || (roleIds.size() == 1 && Iterables.getFirst(roleIds, null) == null)) return false;
-        if (roles.isEmpty() || (roles.size() == 1 && Iterables.getFirst(roles, null) == null)) return false;
-        HashSet<Integer> cachedRoleIds = new HashSet<>(roleIds);
-        cachedRoleIds.removeIf(Objects::isNull);
-        for (Role role : roles) {
+        if (userRoleIds.isEmpty())
+            return false;
+        if (guildRoles.isEmpty())
+            return false;
+        HashSet<Integer> cachedRoleIds = new HashSet<>(userRoleIds);
+        for (Role role : guildRoles) {
             if (cachedRoleIds.contains(role.getId())) {
                 cachedRoleIds.remove(role.getId());
                 if (calculateDefaultPerms(permission, role)) {
