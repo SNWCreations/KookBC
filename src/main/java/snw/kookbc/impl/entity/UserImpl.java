@@ -451,10 +451,12 @@ public class UserImpl implements User, Updatable, LazyLoadable {
             }
         }
 
-        if (userRoleIds.isEmpty())
+        if (Objects.equals(guild.getMaster().getId(), id)) {
+            return true;
+        }
+        if (userRoleIds.isEmpty() || guildRoles.isEmpty()) {
             return false;
-        if (guildRoles.isEmpty())
-            return false;
+        }
         HashSet<Integer> cachedRoleIds = new HashSet<>(userRoleIds);
         for (Role role : guildRoles) {
             if (cachedRoleIds.contains(role.getId())) {
