@@ -62,8 +62,7 @@ java -jar kookbc-<version>.jar --help
 
 如果您会 Java 编程 ，并且希望帮助我们改进 KookBC 的程序，请按照以下过程进行您的 Pull Request 过程:
 * 创建一份此仓库的 Fork
-* 从 dev 分支签出您的 Fork 分支，以 `fork-<您的 Github 用户名>` 命名
-* 在其中做好您的修改
+* 从 dev 分支签出一个独立的分支，在其中做好您的修改
 * 提交，并 Push 到您的 Fork
 * 根据 Pull Request Template ，向我们发出 Pull Request
 * 等待我们审核
