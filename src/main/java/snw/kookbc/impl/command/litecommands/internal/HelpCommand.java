@@ -44,7 +44,7 @@ public class HelpCommand {
 
     @Description("获取此帮助列表。")
     @Execute
-    public Object help(@Context Message message, @Context CommandSender sender, @Arg String[] args) {
+    public Object help(@Context Message message, @Context CommandSender sender, @Arg("args") String[] args) {
         if (sender instanceof ConsoleCommandSender) {
             List<String> content = buildHelpContent(args.length > 0 ? args[0] : null);
             if (content.isEmpty()) {
