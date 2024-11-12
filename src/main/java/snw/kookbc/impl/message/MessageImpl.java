@@ -163,7 +163,13 @@ public abstract class MessageImpl implements Message, LazyLoadable {
         if (this.component == null) {
             return; // we don't know, let HTTP API check
         }
-        final boolean compatible = isCompatibleComponentType(this.component, newIncoming);
+        boolean compatible;
+        if (newIncoming instanceof TemplateMessage) {
+            int oldType = (int) MessageBuilder.serialize(this.component)[0];
+            compatible = ((TemplateMessage) newIncoming).getType() == oldType;
+        } else {
+            compatible = isCompatibleComponentType(this.component, newIncoming);
+        }
         if (!compatible) {
             throw new IllegalArgumentException("Incompatible component type, tried updating from "
                     + this.component.getClass() + " to " + newIncoming.getClass());
