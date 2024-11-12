@@ -18,27 +18,15 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import static snw.kookbc.util.GsonUtil.CARD_GSON;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsJsonObject;
-import static snw.kookbc.util.GsonUtil.getAsLong;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.util.NoSuchElementException;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
-import snw.jkook.message.component.BaseComponent;
-import snw.jkook.message.component.FileComponent;
-import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.message.component.TextComponent;
+import snw.jkook.message.component.*;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.message.component.card.Size;
@@ -47,11 +35,11 @@ import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
-import snw.kookbc.impl.message.ChannelMessageImpl;
-import snw.kookbc.impl.message.PrivateMessageImpl;
-import snw.kookbc.impl.message.QuoteImpl;
-import snw.kookbc.impl.message.TextChannelMessageImpl;
-import snw.kookbc.impl.message.VoiceChannelMessageImpl;
+import snw.kookbc.impl.message.*;
+
+import java.util.NoSuchElementException;
+
+import static snw.kookbc.util.GsonUtil.*;
 
 public class MessageBuilder {
     private final KBCClient client;
@@ -72,7 +60,9 @@ public class MessageBuilder {
         } else if (component instanceof CardComponent) {
             return new Object[] { 10, CARD_GSON.toJson(CardBuilder.serialize((CardComponent) component)) };
         } else if (component instanceof MultipleCardComponent) {
-            return new Object[] { 10, CARD_GSON.toJson(CardBuilder.serialize((MultipleCardComponent) component)) };
+            return new Object[]{10, CARD_GSON.toJson(component)};
+        } else if (component instanceof TemplateMessage) {
+            return new Object[]{ ((TemplateMessage) component).getType(), CARD_GSON.toJson(component) };
         } else if (component instanceof FileComponent) {
             FileComponent fileComponent = (FileComponent) component;
             MultipleCardComponent fileCard;

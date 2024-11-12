@@ -37,6 +37,7 @@ import snw.jkook.entity.channel.VoiceChannel;
 import snw.jkook.message.*;
 import snw.jkook.message.component.FileComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TemplateMessage;
 import snw.jkook.message.component.TextComponent;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
@@ -106,6 +107,7 @@ public class LiteKookFactory {
                         .result(CardComponent.class, new ReplyResultHandler<>())
                         .result(MultipleCardComponent.class, new ReplyResultHandler<>())
                         .result(MarkdownComponent.class, new ReplyResultHandler<>())
+                        .result(TemplateMessage.class, new ReplyResultHandler<>())
                         .result(FileComponent.class, new ReplyResultHandler<>())
                         .result(TextComponent.class, new ReplyResultHandler<>())
 

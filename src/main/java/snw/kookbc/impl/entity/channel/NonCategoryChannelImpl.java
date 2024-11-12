@@ -18,17 +18,8 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.getAsString;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.google.gson.JsonObject;
-
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
@@ -39,12 +30,20 @@ import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TemplateMessage;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.ChannelInvitationIterator;
 import snw.kookbc.util.MapBuilder;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.GsonUtil.getAsString;
 
 public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonCategoryChannel {
 
@@ -117,6 +116,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("target_id", getId())
                 .put("type", result[0])
                 .put("content", result[1])
+                .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .putIfNotNull("quote", quote, Message::getId)
                 .putIfNotNull("temp_target_id", tempTarget, User::getId)
                 .build();

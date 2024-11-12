@@ -47,6 +47,14 @@ public class MapBuilder {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> MapBuilder putIfInstance(String key, Object source, Class<T> type, Function<T, Object> behavior) {
+        if (type.isInstance(source)) {
+            result.put(key, behavior.apply((T) source));
+        }
+        return this;
+    }
+
     public Map<String, Object> build() {
         return result;
     }

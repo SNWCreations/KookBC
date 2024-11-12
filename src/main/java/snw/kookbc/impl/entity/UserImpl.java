@@ -36,6 +36,7 @@ import snw.jkook.message.Message;
 import snw.jkook.message.PrivateMessage;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TemplateMessage;
 import snw.jkook.permissions.PermissionAttachment;
 import snw.jkook.permissions.PermissionAttachmentInfo;
 import snw.jkook.permissions.PermissionNode;
@@ -196,6 +197,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 .put("type", type)
                 .put("target_id", getId())
                 .put("content", json)
+                .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .putIfNotNull("quote", quote, Message::getId)
                 .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id")

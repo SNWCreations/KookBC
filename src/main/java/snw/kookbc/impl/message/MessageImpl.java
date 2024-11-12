@@ -18,7 +18,25 @@
 
 package snw.kookbc.impl.message;
 
-import static java.util.Objects.requireNonNull;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import org.jetbrains.annotations.Nullable;
+import snw.jkook.entity.CustomEmoji;
+import snw.jkook.entity.User;
+import snw.jkook.exceptions.BadResponseException;
+import snw.jkook.message.ChannelMessage;
+import snw.jkook.message.Message;
+import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TemplateMessage;
+import snw.jkook.message.component.card.CardComponent;
+import snw.jkook.message.component.card.MultipleCardComponent;
+import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.MessageBuilder;
+import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.interfaces.LazyLoadable;
+import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -28,26 +46,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jetbrains.annotations.Nullable;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
-import snw.jkook.entity.CustomEmoji;
-import snw.jkook.entity.User;
-import snw.jkook.exceptions.BadResponseException;
-import snw.jkook.message.ChannelMessage;
-import snw.jkook.message.Message;
-import snw.jkook.message.component.BaseComponent;
-import snw.jkook.message.component.MarkdownComponent;
-import snw.jkook.message.component.card.CardComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.kookbc.impl.KBCClient;
-import snw.kookbc.impl.entity.builder.MessageBuilder;
-import snw.kookbc.impl.network.HttpAPIRoute;
-import snw.kookbc.interfaces.LazyLoadable;
-import snw.kookbc.util.MapBuilder;
+import static java.util.Objects.requireNonNull;
 
 public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
@@ -143,6 +142,7 @@ public abstract class MessageImpl implements Message, LazyLoadable {
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .put("content", content)
+                .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .build();
         client.getNetworkClient().post(
                 ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE

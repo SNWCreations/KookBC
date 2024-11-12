@@ -1,15 +1,6 @@
 package snw.kookbc.impl.message;
 
-import static snw.kookbc.util.GsonUtil.getAsJsonObject;
-import static snw.kookbc.util.GsonUtil.getAsLong;
-import static snw.kookbc.util.GsonUtil.getAsString;
-import static snw.kookbc.util.GsonUtil.has;
-
-import java.util.Collections;
-import java.util.Map;
-
 import com.google.gson.JsonObject;
-
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -17,10 +8,16 @@ import snw.jkook.message.ChannelMessage;
 import snw.jkook.message.Message;
 import snw.jkook.message.component.BaseComponent;
 import snw.jkook.message.component.MarkdownComponent;
+import snw.jkook.message.component.TemplateMessage;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
+
+import java.util.Collections;
+import java.util.Map;
+
+import static snw.kookbc.util.GsonUtil.*;
 
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
@@ -97,6 +94,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
                 .put("msg_id", getId())
                 .put("content", content)
                 .put("temp_target_id", user.getId())
+                .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .build();
         client.getNetworkClient().post(
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),
