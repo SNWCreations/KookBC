@@ -91,7 +91,7 @@ public class LiteKookFactory {
                         .context(Message.class, new KookMessageContextual())
                         .context(User.class, new KookOnlyUserContextual<>("只有用户才能执行该命令"))
                         .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
-                        .scheduler(new KookScheduler(plugin))
+                        .scheduler(new KookScheduler(client, plugin))
 
                         .selfProcessor((builder, internal) ->
                                 builder.argument(User.class, new UserArgument(httpAPI, internal.getMessageRegistry()))

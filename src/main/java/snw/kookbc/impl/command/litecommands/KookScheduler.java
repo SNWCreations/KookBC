@@ -21,32 +21,33 @@ import dev.rollczi.litecommands.scheduler.Scheduler;
 import dev.rollczi.litecommands.scheduler.SchedulerPoll;
 import dev.rollczi.litecommands.shared.ThrowingSupplier;
 import snw.jkook.plugin.Plugin;
+import snw.kookbc.impl.KBCClient;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 public class KookScheduler implements Scheduler {
+    private final KBCClient client;
     private final Plugin plugin;
-    private final ThreadLocal<Boolean> isMainThread = ThreadLocal.withInitial(() -> false);
 
-    public KookScheduler(Plugin plugin) {
+    public KookScheduler(KBCClient client, Plugin plugin) {
+        this.client = client;
         this.plugin = plugin;
-        this.isMainThread.set(true);
     }
 
     @Override
     public <T> CompletableFuture<T> supplyLater(SchedulerPoll type, Duration delay, ThrowingSupplier<T, Throwable> supplier) {
         SchedulerPoll resolve = type.resolve(SchedulerPoll.MAIN, SchedulerPoll.ASYNCHRONOUS);
         CompletableFuture<T> future = new CompletableFuture<>();
-        if (resolve.equals(SchedulerPoll.MAIN) && delay.isZero() && isMainThread.get()) {
+        if (resolve.equals(SchedulerPoll.MAIN) && delay.isZero() && client.isPrimaryThread()) {
             tryRun(supplier, future);
         } else {
             if (delay.isZero()) {
-                plugin.getCore().getScheduler().runTask(plugin, () -> {
+                client.getCore().getScheduler().runTask(plugin, () -> {
                     tryRun(supplier, future);
                 });
             } else {
-                plugin.getCore().getScheduler().runTaskLater(plugin, () -> {
+                client.getCore().getScheduler().runTaskLater(plugin, () -> {
                     tryRun(supplier, future);
                 }, delay.toMillis());
             }

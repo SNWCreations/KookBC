@@ -89,6 +89,7 @@ public class KBCClient {
     private final InternalPlugin internalPlugin;
     private final ReentrantLock shutdownLock;
     private final Condition shutdownCondition;
+    private final Thread mainThread = Thread.currentThread();
 
     protected final ExecutorService eventExecutor;
     protected final NetworkSystem networkSystem;
@@ -524,6 +525,10 @@ public class KBCClient {
 
     public NetworkSystem getNetworkSystem() {
         return networkSystem;
+    }
+
+    public boolean isPrimaryThread() {
+        return Thread.currentThread() == mainThread;
     }
 
     protected void registerInternal() {
