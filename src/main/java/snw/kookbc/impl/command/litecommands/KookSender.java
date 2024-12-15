@@ -28,7 +28,7 @@ import snw.jkook.message.Message;
 class KookSender extends AbstractPlatformSender {
 
     private final CommandSender handle;
-    private final Message message;
+    Message message;
 
     public KookSender(CommandSender handle, Message message) {
         this.handle = handle;

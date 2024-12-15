@@ -45,7 +45,7 @@ public class KookLitePlatform extends AbstractPlatform<CommandSender, LiteKookSe
     private final CommandMap commandMap;
 
     protected KookLitePlatform(@NotNull LiteKookSettings settings, Plugin plugin, CommandMap commandMap) {
-        super(settings);
+        super(settings, (sender) -> new KookSender(sender, null));
         this.plugin = plugin;
         this.commandMap = commandMap;
     }
@@ -58,7 +58,7 @@ public class KookLitePlatform extends AbstractPlatform<CommandSender, LiteKookSe
             // List<String> perms = commandRoute.meta().get(Meta.PERMISSIONS);
             JKookCommand command = new JKookCommand(label, prefixes)
                     .setDescription(String.join("\n", desc))
-                    .setExecutor(new LiteKookCommandExecutor(plugin.getCore(), settings, commandRoute, label, platformInvocationListener, platformSuggestionListener));
+                    .setExecutor(new LiteKookCommandExecutor(plugin.getCore(), this, settings, commandRoute, label, platformInvocationListener, platformSuggestionListener));
             commandMap.register(plugin, command);
         }
     }

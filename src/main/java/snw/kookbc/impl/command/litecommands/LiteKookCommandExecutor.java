@@ -24,6 +24,7 @@ import dev.rollczi.litecommands.command.CommandRoute;
 import dev.rollczi.litecommands.invocation.Invocation;
 import dev.rollczi.litecommands.invocation.InvocationContext;
 import dev.rollczi.litecommands.platform.PlatformInvocationListener;
+import dev.rollczi.litecommands.platform.PlatformSender;
 import dev.rollczi.litecommands.platform.PlatformSuggestionListener;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Core;
@@ -37,14 +38,16 @@ import java.util.Arrays;
 
 public class LiteKookCommandExecutor implements CommandExecutor {
     private final Core core;
+    private final KookLitePlatform platform;
     private final LiteKookSettings settings;
     private final CommandRoute<CommandSender> commandSection;
     private final String label;
     private final PlatformInvocationListener<CommandSender> executeListener;
     private final PlatformSuggestionListener<CommandSender> suggestionListener;
 
-    public LiteKookCommandExecutor(Core core, LiteKookSettings settings, CommandRoute<CommandSender> commandSection, String label, PlatformInvocationListener<CommandSender> executeListener, PlatformSuggestionListener<CommandSender> suggestionListener) {
+    public LiteKookCommandExecutor(Core core, KookLitePlatform platform, LiteKookSettings settings, CommandRoute<CommandSender> commandSection, String label, PlatformInvocationListener<CommandSender> executeListener, PlatformSuggestionListener<CommandSender> suggestionListener) {
         this.core = core;
+        this.platform = platform;
         this.settings = settings;
         this.commandSection = commandSection;
         this.label = label;
@@ -55,7 +58,8 @@ public class LiteKookCommandExecutor implements CommandExecutor {
     @Override
     public void onCommand(CommandSender commandSender, Object[] objects, @Nullable Message message) {
         ParseableInput<?> input = ParseableInput.raw(Arrays.stream(objects).map(Object::toString).toArray(String[]::new));
-        KookSender platformSender = new KookSender(commandSender, message);
+        KookSender platformSender = (KookSender) platform.createSender(commandSender);
+        platformSender.message = message;
         InvocationContext invocationContext = createContext(message);
         Invocation<CommandSender> invocation = new Invocation<>(commandSender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
 
@@ -64,7 +68,7 @@ public class LiteKookCommandExecutor implements CommandExecutor {
 
     public Iterable<String> getSuggestions(CommandSender sender, String[] args) {
         SuggestionInput<?> input = SuggestionInput.raw(args);
-        KookSender platformSender = new KookSender(sender, null);
+        PlatformSender platformSender = platform.createSender(sender);
         InvocationContext invocationContext = createContext(null);
         Invocation<CommandSender> invocation = new Invocation<>(sender, platformSender, this.commandSection.getName(), this.label, input, invocationContext);
 
