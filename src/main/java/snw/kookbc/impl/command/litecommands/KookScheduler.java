@@ -17,16 +17,13 @@
  */
 package snw.kookbc.impl.command.litecommands;
 
-import dev.rollczi.litecommands.scheduler.Scheduler;
-import dev.rollczi.litecommands.scheduler.SchedulerPoll;
-import dev.rollczi.litecommands.shared.ThrowingSupplier;
+import dev.rollczi.litecommands.scheduler.AbstractMainThreadBasedScheduler;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 
-public class KookScheduler implements Scheduler {
+public class KookScheduler extends AbstractMainThreadBasedScheduler {
     private final KBCClient client;
     private final Plugin plugin;
 
@@ -35,39 +32,23 @@ public class KookScheduler implements Scheduler {
         this.plugin = plugin;
     }
 
-    @Override
-    public <T> CompletableFuture<T> supplyLater(SchedulerPoll type, Duration delay, ThrowingSupplier<T, Throwable> supplier) {
-        SchedulerPoll resolve = type.resolve(SchedulerPoll.MAIN, SchedulerPoll.ASYNCHRONOUS);
-        CompletableFuture<T> future = new CompletableFuture<>();
-        if (resolve.equals(SchedulerPoll.MAIN) && delay.isZero() && client.isPrimaryThread()) {
-            tryRun(supplier, future);
-        } else {
-            if (delay.isZero()) {
-                client.getCore().getScheduler().runTask(plugin, () -> {
-                    tryRun(supplier, future);
-                });
-            } else {
-                client.getCore().getScheduler().runTaskLater(plugin, () -> {
-                    tryRun(supplier, future);
-                }, delay.toMillis());
-            }
-        }
-
-        return future;
-    }
-
-    private static <T> CompletableFuture<T> tryRun(ThrowingSupplier<T, Throwable> supplier, CompletableFuture<T> future) {
-        try {
-            future.complete(supplier.get());
-        } catch (Throwable e) {
-            future.completeExceptionally(e);
-        }
-
-        return future;
-    }
 
     @Override
     public void shutdown() {
 
+    }
+
+    @Override
+    protected void runSynchronous(Runnable task, Duration delay) {
+        if (delay.isZero() && client.isPrimaryThread()) {
+            task.run();
+        } else {
+            plugin.getCore().getScheduler().runTaskLater(plugin, task, delay.toMillis());
+        }
+    }
+
+    @Override
+    protected void runAsynchronous(Runnable task, Duration delay) {
+        plugin.getCore().getScheduler().runTaskLater(plugin, task, delay.toMillis());
     }
 }

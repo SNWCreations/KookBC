@@ -14,6 +14,7 @@ repositories {
     maven("https://jitpack.io")
     maven("https://maven.fabricmc.net/")
     maven("https://maven.architectury.dev/")
+    maven("https://repo.eternalcode.pl/snapshots")
     maven("https://repo.panda-lang.org/releases")
     maven("https://repo.maven.apache.org/maven2/")
 }
