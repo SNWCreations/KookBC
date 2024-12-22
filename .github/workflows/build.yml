@@ -28,4 +28,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/kookbc*.jar
+          files: build/libs/KookBC*.jar
