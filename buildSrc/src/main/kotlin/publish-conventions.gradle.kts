@@ -13,7 +13,7 @@ indra {
     github("SNWCreations", "KookBC") {
         ci(true)
     }
-    apache2License()
+    gpl3OnlyLicense()
 
     javaVersions {
         target(8)
