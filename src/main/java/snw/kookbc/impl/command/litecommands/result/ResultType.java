@@ -31,7 +31,7 @@ import snw.kookbc.impl.command.litecommands.ReplyResultHandler;
  * Example:
  * <blockquote><pre>
  * LiteKookFactory.builder(plugin)
- *     .result(String.class, new ReplyResultHandler<>())
+ *     .result(String.class, new ReplyResultHandler&lt;&gt;())
  * </pre></blockquote>
  * <blockquote><pre>
  * {@code @Execute}

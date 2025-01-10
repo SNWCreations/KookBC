@@ -3,9 +3,9 @@ import java.util.*
 plugins {
     `java-library`
     `maven-publish`
-    application
     id("com.gorylenko.gradle-git-properties") version "2.4.2"
-    id("com.gradleup.shadow") version "8.3.0"
+    id("com.gradleup.shadow") version "9.0.0-beta4"
+    id("publish-conventions")
 }
 
 repositories {
@@ -44,17 +44,11 @@ dependencies {
     shadowApi(libs.net.bytebuddy.byte.buddy.agent)
     compileOnly(libs.org.jetbrains.annotations)
 }
-group = "snw"
+group = "io.github.snwcreations"
 version = "0.32.2"
 description = "KookBC"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 java.targetCompatibility = JavaVersion.VERSION_1_8
-
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
-    }
-}
 
 tasks.compileJava {
     options.encoding = "UTF-8"
@@ -93,11 +87,6 @@ tasks.processResources {
     }
 }
 
-application {
-    // Edit "LaunchMain" to "Main" to disable Mixin support if you want
-    mainClass = "snw.kookbc.LaunchMain"
-}
-
 tasks.jar {
     exclude(
         "META-INF/*.SF",
@@ -115,6 +104,7 @@ tasks.jar {
                 "Implementation-Title" to "KookBC",
                 "Implementation-Version" to version.toString(),
                 "Implementation-Vendor" to "SnWCreations",
+                "Main-Class" to "snw.kookbc.LaunchMain"
             )
         )
     }
