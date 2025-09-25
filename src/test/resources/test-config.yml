@@ -1,0 +1,39 @@
+# KookBC 测试配置文件
+
+# 测试模式配置
+kbc:
+  test:
+    mode: true
+    mock_network: true
+    skip_plugin_loading: true
+
+# 测试数据配置
+test:
+  data:
+    # 默认测试用户信息
+    default_user:
+      id: "test_user_12345"
+      username: "TestUser"
+      nickname: "测试用户"
+
+    # 默认测试服务器信息
+    default_guild:
+      id: "test_guild_67890"
+      name: "测试服务器"
+
+    # 默认测试频道信息
+    default_channel:
+      id: "test_channel_11111"
+      name: "测试频道"
+
+  # 网络测试配置
+  network:
+    mock_server_port: 8080
+    timeout_millis: 5000
+    retry_count: 3
+
+  # 性能测试配置
+  performance:
+    event_batch_size: 1000
+    load_test_duration_seconds: 60
+    concurrent_users: 10

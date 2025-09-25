@@ -37,6 +37,8 @@ import snw.kookbc.impl.event.EventManagerImpl;
 import snw.kookbc.impl.plugin.SimplePluginManager;
 import snw.kookbc.impl.scheduler.SchedulerImpl;
 
+import static snw.kookbc.util.VirtualThreadUtil.startVirtualThread;
+
 import java.util.Optional;
 
 public class CoreImpl implements Core {
@@ -132,7 +134,7 @@ public class CoreImpl implements Core {
     public void shutdown() {
         // If we don't use another thread for calling the real shutdown method,
         //  the client won't be terminated if you called this in a scheduler task.
-        new Thread(client::shutdown, "Shutdown Thread").start();
+        startVirtualThread(client::shutdown, "Shutdown-Thread");
     }
 
     // Just a friendly way to get the client instance.

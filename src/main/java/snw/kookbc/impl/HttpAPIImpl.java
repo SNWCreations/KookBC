@@ -19,7 +19,9 @@
 package snw.kookbc.impl;
 
 import static java.util.Collections.unmodifiableCollection;
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
+import static snw.kookbc.util.JacksonUtil.parse;
+import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,10 +40,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -90,6 +90,16 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     private final KBCClient client;
+
+    // 将 JsonObject (Gson) 转换为 JsonNode (Jackson)
+    private JsonNode toJsonNode(JsonObject gsonObject) {
+        return parse(NORMAL_GSON.toJson(gsonObject));
+    }
+
+    // 将 JsonNode (Jackson) 转换为 JsonObject (Gson)
+    private JsonObject toJsonObject(JsonNode jacksonNode) {
+        return NORMAL_GSON.fromJson(jacksonNode.toString(), JsonObject.class);
+    }
 
     public HttpAPIImpl(KBCClient client) {
         this.client = client;
@@ -141,8 +151,7 @@ public class HttpAPIImpl implements HttpAPI {
                 .post(body)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data")
-                .get("url").getAsString();
+        return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
     }
 
     @Override
@@ -156,8 +165,7 @@ public class HttpAPIImpl implements HttpAPI {
                 .post(requestBody)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        return JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject().getAsJsonObject("data")
-                .get("url").getAsString();
+        return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
     }
 
     @Override
@@ -213,8 +221,8 @@ public class HttpAPIImpl implements HttpAPI {
         } else {
             body = Collections.singletonMap("name", name);
         }
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), body);
-        Game game = client.getEntityBuilder().buildGame(object);
+        JsonObject gsonObject = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), body);
+        Game game = client.getEntityBuilder().buildGame(gsonObject);
         client.getStorage().addGame(game);
         return game;
     }
@@ -288,18 +296,19 @@ public class HttpAPIImpl implements HttpAPI {
             this.blocked = new AtomicReference<>();
             this.requests = new AtomicReference<>();
             if (!lazyInit) {
-                JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-                JsonArray request = get(object, "request").getAsJsonArray();
+                JsonObject gsonObject = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
+                JsonNode object = toJsonNode(gsonObject);
+                JsonNode request = get(object, "request");
                 Collection<FriendRequest> requestCollection;
-                if (!request.isEmpty()) {
+                if (request.isArray() && request.size() > 0) {
                     requestCollection = new ArrayList<>(request.size());
                     convertRawRequest(request, requestCollection);
                 } else {
                     requestCollection = Collections.emptyList();
                 }
-                JsonArray blocked = get(object, "blocked").getAsJsonArray();
+                JsonNode blocked = get(object, "blocked");
                 Collection<User> blockedUsers = buildUserListFromFriendStateArray(blocked);
-                JsonArray friend = get(object, "friend").getAsJsonArray();
+                JsonNode friend = get(object, "friend");
                 Collection<User> friends = buildUserListFromFriendStateArray(friend);
 
                 this.friends.set(friends);
@@ -308,12 +317,12 @@ public class HttpAPIImpl implements HttpAPI {
             }
         }
 
-        protected void convertRawRequest(JsonArray request, Collection<FriendRequest> requestCollection) {
-            for (JsonElement element : request) {
-                JsonObject obj = element.getAsJsonObject();
-                int id = get(obj, "id").getAsInt();
-                JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+        protected void convertRawRequest(JsonNode request, Collection<FriendRequest> requestCollection) {
+            for (JsonNode element : request) {
+                JsonNode obj = element;
+                int id = get(obj, "id").asInt();
+                JsonNode userObj = get(element, "friend_info");
+                User user = client.getStorage().getUser(get(userObj, "id").asText(), toJsonObject(userObj));
                 FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
                 requestCollection.add(requestObj);
             }
@@ -323,9 +332,10 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<User> getBlockedUsers() {
             return blocked.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject object = client.getNetworkClient()
+                    JsonObject gsonObject = client.getNetworkClient()
                             .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
-                    JsonArray friend = get(object, "block").getAsJsonArray();
+                    JsonNode object = toJsonNode(gsonObject);
+                    JsonNode friend = get(object, "block");
                     return buildUserListFromFriendStateArray(friend);
                 }
                 return i;
@@ -336,9 +346,10 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<User> getFriends() {
             return friends.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject object = client.getNetworkClient()
+                    JsonObject gsonObject = client.getNetworkClient()
                             .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
-                    JsonArray friend = get(object, "friend").getAsJsonArray();
+                    JsonNode object = toJsonNode(gsonObject);
+                    JsonNode friend = get(object, "friend");
                     return buildUserListFromFriendStateArray(friend);
                 }
                 return i;
@@ -349,10 +360,11 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<FriendRequest> getPendingFriendRequests() {
             return requests.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-                    JsonArray request = get(object, "request").getAsJsonArray();
+                    JsonObject gsonObject = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
+                JsonNode object = toJsonNode(gsonObject);
+                    JsonNode request = get(object, "request");
                     Collection<FriendRequest> requestCollection;
-                    if (!request.isEmpty()) {
+                    if (request.isArray() && request.size() > 0) {
                         requestCollection = new HashSet<>(request.size());
                         convertRawRequest(request, requestCollection);
                     } else {
@@ -364,12 +376,12 @@ public class HttpAPIImpl implements HttpAPI {
             });
         }
 
-        protected Collection<User> buildUserListFromFriendStateArray(JsonArray array) {
-            if (!array.isEmpty()) {
+        protected Collection<User> buildUserListFromFriendStateArray(JsonNode array) {
+            if (array.isArray() && array.size() > 0) {
                 Collection<User> c = new ArrayList<>(array.size());
-                for (JsonElement element : array) {
-                    JsonObject userObj = get(element.getAsJsonObject(), "friend_info").getAsJsonObject();
-                    User user = client.getStorage().getUser(get(userObj, "id").getAsString(), userObj);
+                for (JsonNode element : array) {
+                    JsonNode userObj = get(element, "friend_info");
+                    User user = client.getStorage().getUser(get(userObj, "id").asText(), toJsonObject(userObj));
                     c.add(user);
                 }
                 return Collections.unmodifiableCollection(c);

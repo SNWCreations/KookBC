@@ -18,6 +18,13 @@ org-fusesource-jansi-jansi = "2.4.0"
 org-jetbrains-annotations = "23.1.0"
 org-jline-jline-terminal-jansi = "3.21.0"
 uk-org-lidalia-sysout-over-slf4j = "1.0.2"
+# Test Dependencies
+junit = "5.9.3"
+mockito = "4.11.0"
+wiremock = "2.27.2"
+testcontainers = "1.17.6"
+assertj = "3.24.2"
+mockwebserver = "4.10.0"
 
 [libraries]
 com-github-ben-manes-caffeine-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "com-github-ben-manes-caffeine-caffeine" }
@@ -39,3 +46,16 @@ org-fusesource-jansi-jansi = { module = "org.fusesource.jansi:jansi", version.re
 org-jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "org-jetbrains-annotations" }
 org-jline-jline-terminal-jansi = { module = "org.jline:jline-terminal-jansi", version.ref = "org-jline-jline-terminal-jansi" }
 uk-org-lidalia-sysout-over-slf4j = { module = "uk.org.lidalia:sysout-over-slf4j", version.ref = "uk-org-lidalia-sysout-over-slf4j" }
+# Test Libraries
+junit_jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit_jupiter_engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit_jupiter_params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+mockito_core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito_junit_jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+mockito_inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+wiremock_jre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+testcontainers_junit_jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers_core = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+assertj_core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
+

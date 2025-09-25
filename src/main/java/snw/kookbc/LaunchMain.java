@@ -1,7 +1,10 @@
 /*
  * License: https://github.com/Mojang/LegacyLauncher
  */
+
 package snw.kookbc;
+
+import static snw.kookbc.util.VirtualThreadUtil.startVirtualThread;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -48,7 +51,7 @@ public class LaunchMain extends Launcher {
                 AccessClassLoader loader = AccessClassLoader.of(classLoader);
                 MixinPluginManager.instance().loadFolder(loader, new File("plugins"));
                 String[] finalArgs = args;
-                Thread thread = new Thread(() -> {
+                Thread thread = startVirtualThread(() -> {
                     try {
                         Class<?> mainClass = Class.forName(LaunchMainTweaker.CLASS_NAME);
                         MethodHandles.lookup().findStatic(mainClass, "main", MethodType.methodType(void.class, String[].class))
@@ -56,9 +59,15 @@ public class LaunchMain extends Launcher {
                     } catch (Throwable e) {
                         throw new RuntimeException(e);
                     }
-                });
+                }, "Mixin-Launch-Thread");
                 thread.setContextClassLoader(PluginClassLoaderDelegate.INSTANCE);
-                thread.start();
+
+                // 等待虚拟线程完成
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 return;
             }
         } catch (ClassNotFoundException ignored) {
@@ -231,15 +240,21 @@ public class LaunchMain extends Launcher {
                 if (launchTarget != null && !launchTarget.isEmpty()) {
                     final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
                     MethodHandle mainMethodHandle = MethodHandles.lookup().findStatic(clazz, "main", MethodType.methodType(void.class, String[].class));
-                    Thread main = new Thread(() -> {
+                    Thread main = startVirtualThread(() -> {
                         try {
                             mainMethodHandle.invoke((Object) argumentList.toArray(new String[0]));
                         } catch (Throwable e) {
                             e.printStackTrace();
                         }
-                    }, clazz.getSimpleName());
+                    }, clazz.getSimpleName() + "-Main-Thread");
                     main.setContextClassLoader(PluginClassLoaderDelegate.INSTANCE);
-                    main.start();
+
+                    // 等待虚拟线程完成
+                    try {
+                        main.join();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         } catch (Exception e) {

@@ -72,6 +72,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
+import static snw.kookbc.util.VirtualThreadUtil.newVirtualThreadExecutor;
 
 // The client representation.
 public class KBCClient {
@@ -133,7 +134,7 @@ public class KBCClient {
         this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> EntityBuilder::new).apply(this);
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> MessageBuilder::new).apply(this);
-        this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.eventExecutor = newVirtualThreadExecutor("Event-Executor");
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
         this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> EventFactory::new).apply(this);

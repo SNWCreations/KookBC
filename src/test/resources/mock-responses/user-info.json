@@ -1,0 +1,19 @@
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "id": "test_user_12345",
+    "username": "TestUser",
+    "nickname": "测试用户",
+    "identify_num": "1234",
+    "online": true,
+    "bot": false,
+    "status": 1,
+    "avatar": "https://example.com/avatar.png",
+    "vip_avatar": "",
+    "banner": "",
+    "is_vip": false,
+    "is_ai_reduce_noise": false,
+    "is_personal_card_bg": false
+  }
+}

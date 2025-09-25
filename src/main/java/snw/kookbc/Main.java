@@ -19,6 +19,7 @@
 package snw.kookbc;
 
 import static snw.kookbc.util.Util.isStartByLaunch;
+import static snw.kookbc.util.VirtualThreadUtil.startVirtualThread;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -171,7 +172,7 @@ public class Main extends Launcher {
                 null, null, null, null, null, null);
 
         // make sure the things can stop correctly (e.g. Scheduler), but the crash makes no sense.
-        Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM Shutdown Hook Thread"));
+        Runtime.getRuntime().addShutdownHook(new Thread(client::shutdown, "JVM-Shutdown-Hook-Thread"));
 
         try {
             client.start();
