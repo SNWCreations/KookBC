@@ -26,12 +26,16 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.kookbc.util.JacksonUtil;
+import snw.kookbc.util.VirtualThreadUtil;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -149,6 +153,101 @@ public class NetworkClient {
         kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}",
                 method, fullUrl, postBodyJson);
     }
+
+    // ===== 虚拟线程异步 API =====
+
+    /**
+     * 异步 GET 请求 - 使用虚拟线程
+     *
+     * @param fullUrl 完整 URL
+     * @return 异步结果
+     */
+    public CompletableFuture<JsonNode> getAsync(String fullUrl) {
+        return CompletableFuture.supplyAsync(() -> get(fullUrl), VirtualThreadUtil.getHttpExecutor());
+    }
+
+    /**
+     * 异步 POST 请求 - 使用虚拟线程
+     *
+     * @param fullUrl 完整 URL
+     * @param body 请求体
+     * @return 异步结果
+     */
+    public CompletableFuture<JsonNode> postAsync(String fullUrl, Map<?, ?> body) {
+        return CompletableFuture.supplyAsync(() -> post(fullUrl, body), VirtualThreadUtil.getHttpExecutor());
+    }
+
+    /**
+     * 异步获取原始内容 - 使用虚拟线程
+     *
+     * @param fullUrl 完整 URL
+     * @return 异步结果
+     */
+    public CompletableFuture<String> getRawContentAsync(String fullUrl) {
+        return CompletableFuture.supplyAsync(() -> getRawContent(fullUrl), VirtualThreadUtil.getHttpExecutor());
+    }
+
+    /**
+     * 异步 POST 原始内容 - 使用虚拟线程
+     *
+     * @param fullUrl 完整 URL
+     * @param body 请求体
+     * @param mediaType 媒体类型
+     * @return 异步结果
+     */
+    public CompletableFuture<String> postContentAsync(String fullUrl, String body, String mediaType) {
+        return CompletableFuture.supplyAsync(() -> postContent(fullUrl, body, mediaType), VirtualThreadUtil.getHttpExecutor());
+    }
+
+    /**
+     * 批量异步 GET 请求 - 使用虚拟线程
+     *
+     * <p>所有请求并行执行，显著提升性能
+     *
+     * @param urls URL 列表
+     * @return 批量异步结果
+     */
+    public CompletableFuture<List<JsonNode>> batchGetAsync(List<String> urls) {
+        List<CompletableFuture<JsonNode>> futures = urls.stream()
+            .map(this::getAsync)
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * 批量异步 POST 请求 - 使用虚拟线程
+     *
+     * @param requests 请求列表 (URL 和 Body 的映射)
+     * @return 批量异步结果
+     */
+    public CompletableFuture<List<JsonNode>> batchPostAsync(Map<String, Map<?, ?>> requests) {
+        List<CompletableFuture<JsonNode>> futures = requests.entrySet().stream()
+            .map(entry -> postAsync(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * 异步调用请求 - 使用虚拟线程
+     *
+     * <p>底层方法，支持自定义 Request 对象
+     *
+     * @param request OkHttp Request 对象
+     * @return 异步结果
+     */
+    public CompletableFuture<String> callAsync(Request request) {
+        return CompletableFuture.supplyAsync(() -> call(request), VirtualThreadUtil.getHttpExecutor());
+    }
+
+    // ===== 原有同步方法（保持向后兼容）=====
 
     // Jackson响应检查
     public JsonNode checkResponseJackson(JsonNode response) {

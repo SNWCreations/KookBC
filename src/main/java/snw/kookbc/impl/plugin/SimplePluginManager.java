@@ -29,14 +29,18 @@ import snw.kookbc.impl.command.ConsoleCommandSenderImpl;
 import snw.kookbc.impl.launch.AccessClassLoader;
 import snw.kookbc.launcher.Launcher;
 import snw.kookbc.util.DependencyListBasedPluginDescriptionComparator;
+import snw.kookbc.util.VirtualThreadUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
 import static snw.kookbc.util.Util.getVersionDifference;
@@ -315,5 +319,231 @@ public class SimplePluginManager implements PluginManager {
 
     public Map<Predicate<File>, Function<ClassLoader, PluginLoader>> getLoaderProviders() {
         return Collections.unmodifiableMap(loaderMap);
+    }
+
+    // ===== 虚拟线程异步 API =====
+
+    /**
+     * 异步加载插件 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行插件加载操作，避免阻塞主线程，
+     * 特别适合加载大型插件或多个插件的场景。
+     *
+     * @param file 插件文件
+     * @return 异步插件加载结果
+     */
+    public CompletableFuture<Plugin> loadPluginAsync(File file) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return loadPlugin(file);
+            } catch (InvalidPluginException e) {
+                throw new RuntimeException("异步加载插件失败: " + file.getName(), e);
+            }
+        }, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步批量加载插件 - 使用虚拟线程
+     *
+     * <p>并行加载目录中的所有插件，显著提升多插件加载性能
+     *
+     * @param directory 插件目录
+     * @return 异步插件数组结果
+     */
+    public CompletableFuture<Plugin[]> loadPluginsAsync(File directory) {
+        return CompletableFuture.supplyAsync(() -> loadPlugins(directory), VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步启用插件 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行插件启用操作，避免阻塞主线程
+     *
+     * @param plugin 要启用的插件
+     * @return 异步启用结果
+     */
+    public CompletableFuture<Void> enablePluginAsync(Plugin plugin) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                enablePlugin(plugin);
+            } catch (UnknownDependencyException e) {
+                throw new RuntimeException("异步启用插件失败: " + plugin.getDescription().getName(), e);
+            }
+        }, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步禁用插件 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行插件禁用操作，包括资源清理
+     *
+     * @param plugin 要禁用的插件
+     * @return 异步禁用结果
+     */
+    public CompletableFuture<Void> disablePluginAsync(Plugin plugin) {
+        return CompletableFuture.runAsync(() -> disablePlugin(plugin), VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步禁用所有插件 - 使用虚拟线程
+     *
+     * <p>并行禁用所有插件，提升关闭速度
+     *
+     * @return 异步禁用结果
+     */
+    public CompletableFuture<Void> disablePluginsAsync() {
+        return CompletableFuture.runAsync(this::disablePlugins, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 批量异步启用插件 - 使用虚拟线程
+     *
+     * <p>并行启用多个插件，考虑依赖关系顺序
+     *
+     * @param plugins 要启用的插件列表
+     * @return 异步启用结果
+     */
+    public CompletableFuture<Void> batchEnablePluginsAsync(List<Plugin> plugins) {
+        return CompletableFuture.runAsync(() -> {
+            // 按依赖关系排序
+            List<Plugin> sortedPlugins = plugins.stream()
+                .sorted((p1, p2) -> DependencyListBasedPluginDescriptionComparator.INSTANCE
+                    .compare(p1.getDescription(), p2.getDescription()))
+                .collect(Collectors.toList());
+
+            // 按序启用插件
+            for (Plugin plugin : sortedPlugins) {
+                try {
+                    enablePlugin(plugin);
+                } catch (UnknownDependencyException e) {
+                    logger.error("批量启用插件失败: {}", plugin.getDescription().getName(), e);
+                    // 继续处理其他插件
+                }
+            }
+        }, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 批量异步禁用插件 - 使用虚拟线程
+     *
+     * <p>并行禁用多个插件，提升性能
+     *
+     * @param plugins 要禁用的插件列表
+     * @return 异步禁用结果
+     */
+    public CompletableFuture<Void> batchDisablePluginsAsync(List<Plugin> plugins) {
+        List<CompletableFuture<Void>> futures = plugins.stream()
+            .map(this::disablePluginAsync)
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    }
+
+    /**
+     * 异步重载插件 - 使用虚拟线程
+     *
+     * <p>先禁用再重新加载启用插件，在虚拟线程中执行避免阻塞
+     *
+     * @param plugin 要重载的插件
+     * @return 异步重载结果
+     */
+    public CompletableFuture<Plugin> reloadPluginAsync(Plugin plugin) {
+        return CompletableFuture.supplyAsync(() -> {
+            String pluginName = plugin.getDescription().getName();
+            File pluginFile = plugin.getFile();
+
+            // 先禁用插件
+            disablePlugin(plugin);
+            removePlugin(plugin);
+
+            // 重新加载插件
+            try {
+                Plugin newPlugin = loadPlugin(pluginFile);
+                addPlugin(newPlugin);
+                enablePlugin(newPlugin);
+                return newPlugin;
+            } catch (InvalidPluginException | UnknownDependencyException e) {
+                throw new RuntimeException("异步重载插件失败: " + pluginName, e);
+            }
+        }, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步扫描并加载新插件 - 使用虚拟线程
+     *
+     * <p>扫描插件目录，加载新发现的插件文件
+     *
+     * @param directory 插件目录
+     * @return 新加载的插件列表
+     */
+    public CompletableFuture<List<Plugin>> scanAndLoadNewPluginsAsync(File directory) {
+        return CompletableFuture.supplyAsync(() -> {
+            Validate.isTrue(directory.isDirectory(), "The provided file object is not a directory.");
+            File[] files = directory.listFiles(File::isFile);
+            if (files == null) {
+                return Collections.emptyList();
+            }
+
+            List<Plugin> newPlugins = new ArrayList<>();
+            Set<String> existingPluginNames = plugins.stream()
+                .map(p -> p.getDescription().getName())
+                .collect(Collectors.toSet());
+
+            for (File file : files) {
+                final PluginDescriptionResolver resolver = lookUpPluginDescriptionResolverForFile(file);
+                if (resolver == null) {
+                    continue;
+                }
+
+                try {
+                    final PluginDescription description = resolver.resolve(file);
+                    // 检查是否是新插件
+                    if (!existingPluginNames.contains(description.getName())) {
+                        Plugin plugin = loadPlugin0(file, false);
+                        if (plugin != null) {
+                            newPlugins.add(plugin);
+                            addPlugin(plugin);
+                        }
+                    }
+                } catch (Throwable e) {
+                    logger.error("扫描加载新插件失败: {}", file.getName(), e);
+                }
+            }
+
+            return newPlugins;
+        }, VirtualThreadUtil.getPluginExecutor());
+    }
+
+    /**
+     * 异步插件热重载 - 使用虚拟线程
+     *
+     * <p>监控插件文件变化，自动重载已修改的插件
+     *
+     * @param pluginFile 插件文件
+     * @return 异步重载结果
+     */
+    public CompletableFuture<Plugin> hotReloadPluginAsync(File pluginFile) {
+        return CompletableFuture.supplyAsync(() -> {
+            // 查找现有插件
+            Plugin existingPlugin = plugins.stream()
+                .filter(p -> p.getFile().equals(pluginFile))
+                .findFirst()
+                .orElse(null);
+
+            if (existingPlugin != null) {
+                // 重载现有插件
+                return reloadPluginAsync(existingPlugin).join();
+            } else {
+                // 加载新插件
+                try {
+                    Plugin newPlugin = loadPlugin(pluginFile);
+                    addPlugin(newPlugin);
+                    enablePlugin(newPlugin);
+                    return newPlugin;
+                } catch (InvalidPluginException | UnknownDependencyException e) {
+                    throw new RuntimeException("热重载插件失败: " + pluginFile.getName(), e);
+                }
+            }
+        }, VirtualThreadUtil.getPluginExecutor());
     }
 }

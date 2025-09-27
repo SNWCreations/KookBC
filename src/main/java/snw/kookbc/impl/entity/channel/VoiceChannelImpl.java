@@ -31,6 +31,8 @@ import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -237,7 +239,14 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         private final String audio_ssrc;
         private final String audio_pt;
 
-        public StreamingInfoImpl(String ip, int port, int rtcp_port, int bitrate, String audioSsrc, String audioPt) {
+        @JsonCreator
+        public StreamingInfoImpl(
+                @JsonProperty("ip") String ip,
+                @JsonProperty("port") int port,
+                @JsonProperty("rtcp_port") int rtcp_port,
+                @JsonProperty("bitrate") int bitrate,
+                @JsonProperty("audio_ssrc") String audioSsrc,
+                @JsonProperty("audio_pt") String audioPt) {
             this.ip = ip;
             this.port = port;
             this.rtcp_port = rtcp_port;
