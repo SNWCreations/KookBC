@@ -18,12 +18,11 @@
 
 package snw.kookbc.impl.pageiter;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -45,10 +44,23 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     }
 
     @Override
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            object.add(client.getStorage().getChannel(element.get("id").asText()));
+        }
+    }
+
+    /**
+     * 向后兼容的Gson版本
+     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
+     */
+    @Deprecated
+    @Override
     protected void processElements(JsonArray array) {
         object = new HashSet<>(array.size());
         for (JsonElement element : array) {
-            object.add(client.getStorage().getChannel(getAsString(element.getAsJsonObject(), "id")));
+            object.add(client.getStorage().getChannel(element.getAsJsonObject().get("id").getAsString()));
         }
     }
 

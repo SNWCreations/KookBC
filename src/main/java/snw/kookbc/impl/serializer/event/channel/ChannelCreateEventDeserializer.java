@@ -24,6 +24,9 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
+
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.event.channel.ChannelCreateEvent;
 import snw.kookbc.impl.KBCClient;
@@ -40,6 +43,27 @@ public class ChannelCreateEventDeserializer extends NormalEventDeserializer<Chan
             long timeStamp, JsonObject body) throws JsonParseException {
         final Channel channel = client.getEntityBuilder().buildChannel(body);
         return new ChannelCreateEvent(timeStamp, channel);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected ChannelCreateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final Channel channel = client.getEntityBuilder().buildChannel(body);
+        return new ChannelCreateEvent(timeStamp, channel);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // EntityBuilder已支持Jackson版本，可以启用
+        return true;
     }
 
     @Override

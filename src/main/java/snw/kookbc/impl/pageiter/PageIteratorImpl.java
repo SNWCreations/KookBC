@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.Range;
 import snw.jkook.util.Meta;
 import snw.jkook.util.PageIterator;
@@ -54,23 +52,22 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
             executedOnce = true;
         }
         String reqUrl = getRequestURL();
-        JsonObject object = client.getNetworkClient().get(
+        // 使用Jackson API获得更好的性能
+        JsonNode object = client.getNetworkClient().get(
                 reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.get() + "&page_size=" + getPageSize()
         );
 
-
-        JsonElement meta = object.get("meta");
-        if (meta != null && !meta.isJsonNull()) {
-            JsonObject metaAsJsonObject = meta.getAsJsonObject();
-            optionalMeta = Optional.of(new MetaImpl(metaAsJsonObject.get("page").getAsInt(),
-                    metaAsJsonObject.get("page_total").getAsInt(),
-                    metaAsJsonObject.get("page_size").getAsInt(),
-                    metaAsJsonObject.get("total").getAsInt()));
+        JsonNode meta = object.get("meta");
+        if (meta != null && !meta.isNull()) {
+            optionalMeta = Optional.of(new MetaImpl(meta.get("page").asInt(),
+                    meta.get("page_total").asInt(),
+                    meta.get("page_size").asInt(),
+                    meta.get("total").asInt()));
             next = currentPage.getAndAdd(1) <= optionalMeta.get().getPageTotal();
         } else {
             next = false;
         }
-        processElements(object.getAsJsonArray("items"));
+        processElements(object.get("items"));
         return next;
     }
 
@@ -102,5 +99,11 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
 
     protected abstract String getRequestURL();
 
-    protected abstract void processElements(JsonArray array);
+    protected abstract void processElements(JsonNode node);
+
+    // 向后兼容方法：支持GSON JsonArray（已弃用）
+    protected void processElements(com.google.gson.JsonArray array) {
+        // 将JsonArray转换为JsonNode供新方法使用，确保兼容性
+        processElements(snw.kookbc.util.JacksonUtil.parse(array.toString()));
+    }
 }

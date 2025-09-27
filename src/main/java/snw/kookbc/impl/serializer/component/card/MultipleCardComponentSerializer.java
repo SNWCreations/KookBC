@@ -20,13 +20,12 @@ package snw.kookbc.impl.serializer.component.card;
 import com.google.gson.*;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
+import snw.kookbc.util.GsonUtil;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.createListType;
-
 public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {
-    private static final Type LIST_CARDCOMPONENT = createListType(CardComponent.class);
+    private static final Type LIST_CARDCOMPONENT = GsonUtil.createListType(CardComponent.class);
 
     @Override
     public JsonElement serialize(MultipleCardComponent src, Type typeOfSrc, JsonSerializationContext context) {

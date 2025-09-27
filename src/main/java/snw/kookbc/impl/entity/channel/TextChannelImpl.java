@@ -18,8 +18,10 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getAsInt;
+import static snw.kookbc.util.JacksonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getIntOrDefault;
+import static snw.kookbc.util.JacksonUtil.getStringOrDefault;
 
 import java.util.Collection;
 import java.util.Map;
@@ -27,6 +29,7 @@ import java.util.Objects;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 
 import snw.jkook.entity.Guild;
@@ -92,8 +95,13 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
 
     @Override
     public synchronized void update(JsonObject data) {
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    @Override
+    public synchronized void update(JsonNode data) {
         super.update(data);
-        this.chatLimitTime = getAsInt(data, "slow_mode");
-        this.topic = getAsString(data, "topic");
+        this.chatLimitTime = getIntOrDefault(data, "slow_mode", 0);
+        this.topic = getStringOrDefault(data, "topic", "");
     }
 }

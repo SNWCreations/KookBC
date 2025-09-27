@@ -18,14 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
@@ -44,13 +45,39 @@ public class ChannelMessageUnpinEventDeserializer extends NormalEventDeserialize
     @Override
     protected ChannelMessageUnpinEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final String id = getAsString(body, "channel_id");
-        final Channel channel = getAsInt(body, "channel_type") == 1
+        final String id = body.get("channel_id").getAsString();
+        final Channel channel = body.get("channel_type").getAsInt() == 1
                 ? new TextChannelImpl(client, id)
                 : new VoiceChannelImpl(client, id);
-        final String msgId = getAsString(body, "msg_id");
-        final User operator = client.getStorage().getUser(getAsString(body, "operator_id"));
+        final String msgId = body.get("msg_id").getAsString();
+        final User operator = client.getStorage().getUser(body.get("operator_id").getAsString());
         return new ChannelMessageUnpinEvent(timeStamp, channel, msgId, operator);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected ChannelMessageUnpinEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String id = body.get("channel_id").asText();
+        final Channel channel = body.get("channel_type").asInt() == 1
+                ? new TextChannelImpl(client, id)
+                : new VoiceChannelImpl(client, id);
+        final String msgId = body.get("msg_id").asText();
+        final User operator = client.getStorage().getUser(body.get("operator_id").asText());
+        return new ChannelMessageUnpinEvent(timeStamp, channel, msgId, operator);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖MessageBuilder，可以直接启用
+        return true;
     }
 
 }

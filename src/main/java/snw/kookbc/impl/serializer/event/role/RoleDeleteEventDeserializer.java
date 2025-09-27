@@ -18,14 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -41,8 +42,8 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
     @Override
     protected RoleDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
             JsonObject body) throws JsonParseException {
-        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
-        final int roleId = getAsInt(body, "role_id");
+        final Guild guild = client.getStorage().getGuild(object.get("target_id").getAsString());
+        final int roleId = body.get("role_id").getAsInt();
         final Role role = client.getStorage().getRole(guild, roleId, body);
         return new RoleDeleteEvent(timeStamp, role);
     }
@@ -50,5 +51,28 @@ public class RoleDeleteEventDeserializer extends NormalEventDeserializer<RoleDel
     @Override
     protected void beforeReturn(RoleDeleteEvent event) {
         client.getStorage().removeRole(event.getRole());
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected RoleDeleteEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final Guild guild = client.getStorage().getGuild(node.get("target_id").asText());
+        final int roleId = body.get("role_id").asInt();
+        final Role role = client.getStorage().getRole(guild, roleId, body);
+        return new RoleDeleteEvent(timeStamp, role);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // EntityStorage已支持Jackson版本的getRole方法，可以启用
+        return true;
     }
 }

@@ -18,8 +18,7 @@
 
 package snw.kookbc.impl.network.ws;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
@@ -30,13 +29,12 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.impl.network.ListenerFactory;
 import snw.kookbc.interfaces.network.FrameHandler;
+import snw.kookbc.util.JacksonUtil;
 
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.zip.DataFormatException;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 import static snw.kookbc.util.Util.decompressDeflate;
 
 public class WebSocketMessageProcessor extends WebSocketListener {
@@ -61,8 +59,15 @@ public class WebSocketMessageProcessor extends WebSocketListener {
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
         super.onMessage(webSocket, text);
-        JsonObject object = JsonParser.parseString(text).getAsJsonObject();
-        Frame frame = new Frame(get(object, "s").getAsInt(), has(object, "sn") ? get(object, "sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        JsonNode object = JacksonUtil.parse(text);
+        JsonNode sNode = object.get("s");
+        JsonNode snNode = object.get("sn");
+        JsonNode dNode = object.get("d");
+
+        int s = sNode.asInt();
+        int sn = snNode != null ? snNode.asInt() : -1;
+
+        Frame frame = new Frame(s, sn, dNode);
         listener.executeEvent(frame);
     }
 
@@ -77,8 +82,15 @@ public class WebSocketMessageProcessor extends WebSocketListener {
             client.getCore().getLogger().error("Unable to decompress data", e);
             return;
         }
-        JsonObject object = JsonParser.parseString(res).getAsJsonObject();
-        Frame frame = new Frame(get(object, "s").getAsInt(), has(object, "sn") ? get(object, "sn").getAsInt() : -1, object.getAsJsonObject("d"));
+        JsonNode object = JacksonUtil.parse(res);
+        JsonNode sNode = object.get("s");
+        JsonNode snNode = object.get("sn");
+        JsonNode dNode = object.get("d");
+
+        int s = sNode.asInt();
+        int sn = snNode != null ? snNode.asInt() : -1;
+
+        Frame frame = new Frame(s, sn, dNode);
         listener.executeEvent(frame);
     }
 

@@ -18,16 +18,13 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.getAsJsonObject;
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.event.user.UserJoinGuildEvent;
@@ -43,18 +40,49 @@ public class UserJoinGuildEventDeserializer extends NormalEventDeserializer<User
     @Override
     protected UserJoinGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final String realType = getAsString(getAsJsonObject(object, "extra"), "type");
+        final String realType = object.getAsJsonObject("extra").get("type").getAsString();
         User user;
         String guildId;
         if ("self_joined_guild".equals(realType)) {
             user = client.getCore().getUser();
-            guildId = get(body, "guild_id").getAsString();
+            guildId = body.get("guild_id").getAsString();
         } else {
-            user = client.getStorage().getUser(get(body, "user_id").getAsString());
-            guildId = get(object, "target_id").getAsString();
+            user = client.getStorage().getUser(body.get("user_id").getAsString());
+            guildId = object.get("target_id").getAsString();
         }
         final Guild guild = client.getStorage().getGuild(guildId);
         return new UserJoinGuildEvent(timeStamp, user, guild);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected UserJoinGuildEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String realType = node.get("extra").get("type").asText();
+        User user;
+        String guildId;
+        if ("self_joined_guild".equals(realType)) {
+            user = client.getCore().getUser();
+            guildId = body.get("guild_id").asText();
+        } else {
+            user = client.getStorage().getUser(body.get("user_id").asText());
+            guildId = node.get("target_id").asText();
+        }
+        final Guild guild = client.getStorage().getGuild(guildId);
+        return new UserJoinGuildEvent(timeStamp, user, guild);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖MessageBuilder，可以直接启用
+        return true;
     }
 
 }

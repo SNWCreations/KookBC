@@ -22,8 +22,7 @@ import static snw.kookbc.util.Util.getVersionDifference;
 
 import java.util.Objects;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -31,6 +30,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.JacksonUtil;
 
 public final class UpdateChecker extends Thread {
     private final KBCClient client;
@@ -60,14 +60,35 @@ public final class UpdateChecker extends Thread {
                 .get()
                 .url("https://api.github.com/repos/SNWCreations/KookBC/releases/latest")
                 .build();
-        JsonObject resObj;
+        JsonNode resObj;
         try (Response response = new OkHttpClient().newCall(req).execute()) {
             final ResponseBody body = response.body();
             assert body != null;
-            resObj = JsonParser.parseString(body.string()).getAsJsonObject();
+            resObj = JacksonUtil.parse(body.string());
         }
 
-        String receivedVersion = resObj.get("tag_name").getAsString();
+        // 检查 GitHub API 错误响应
+        JsonNode messageNode = resObj.get("message");
+        if (messageNode != null && !messageNode.isNull()) {
+            String errorMessage = messageNode.asText();
+            if (errorMessage.contains("API rate limit exceeded")) {
+                client.getCore().getLogger()
+                        .warn("Cannot check update! GitHub API rate limit exceeded. Please try again later.");
+            } else {
+                client.getCore().getLogger()
+                        .warn("Cannot check update! GitHub API returned error: {}", errorMessage);
+            }
+            return;
+        }
+
+        JsonNode tagNameNode = resObj.get("tag_name");
+        if (tagNameNode == null || tagNameNode.isNull()) {
+            client.getCore().getLogger()
+                    .warn("Cannot check update! GitHub API response missing 'tag_name' field. API format may have changed.");
+            return;
+        }
+
+        String receivedVersion = tagNameNode.asText();
 
         if (receivedVersion.startsWith("v")) { // normally I won't add "v" prefix.
             receivedVersion = receivedVersion.substring(1);
@@ -86,10 +107,19 @@ public final class UpdateChecker extends Thread {
                 client.getCore().getLogger().info("Update available! Information is following:");
                 client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion,
                         client.getCore().getImplementationVersion());
-                client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
-                client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
+
+                JsonNode nameNode = resObj.get("name");
+                String releaseName = nameNode != null && !nameNode.isNull() ? nameNode.asText() : "Unknown";
+                client.getCore().getLogger().info("Release Title: {}", releaseName);
+
+                JsonNode publishedAtNode = resObj.get("published_at");
+                String publishedAt = publishedAtNode != null && !publishedAtNode.isNull() ? publishedAtNode.asText() : "Unknown";
+                client.getCore().getLogger().info("Release Time: {}", publishedAt);
+
                 client.getCore().getLogger().info("Release message is following:");
-                for (String body : resObj.get("body").getAsString().split("\r\n")) {
+                JsonNode bodyNode = resObj.get("body");
+                String releaseBody = bodyNode != null && !bodyNode.isNull() ? bodyNode.asText() : "No release notes available";
+                for (String body : releaseBody.split("\r\n")) {
                     client.getCore().getLogger().info(body);
                 }
                 client.getCore().getLogger().info(

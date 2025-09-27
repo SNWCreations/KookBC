@@ -30,8 +30,6 @@ import snw.jkook.message.component.card.structure.Paragraph;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 
 public class SectionModuleSerializer implements JsonSerializer<SectionModule>, JsonDeserializer<SectionModule> {
     @Override
@@ -54,10 +52,10 @@ public class SectionModuleSerializer implements JsonSerializer<SectionModule>, J
     public SectionModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
         JsonObject text = jsonObject.get("text").getAsJsonObject();
-        boolean hasModeField = has(jsonObject, "mode");
-        Accessory.Mode mode = hasModeField ? Accessory.Mode.value(get(jsonObject, "mode").getAsString()) : null;
+        boolean hasModeField = jsonObject.has("mode");
+        Accessory.Mode mode = hasModeField ? Accessory.Mode.value(jsonObject.get("mode").getAsString()) : null;
         Accessory accessory = null;
-        if (has(jsonObject, "accessory")) {
+        if (jsonObject.has("accessory")) {
             JsonObject accessoryJson = jsonObject.get("accessory").getAsJsonObject();
             String accessoryType = accessoryJson.getAsJsonPrimitive("type").getAsString();
             if (accessoryType.equals("image")) {

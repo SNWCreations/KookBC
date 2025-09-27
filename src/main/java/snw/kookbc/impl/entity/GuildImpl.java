@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -50,7 +51,7 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.JacksonUtil.*;
 
 public class GuildImpl implements Guild, Updatable, LazyLoadable {
     private final KBCClient client;
@@ -121,16 +122,16 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public int getOnlineUserCount() {
-        JsonObject userStatus = client.getNetworkClient()
+        JsonNode userStatus = client.getNetworkClient()
                 .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
-        return userStatus.get("online_count").getAsInt();
+        return userStatus.get("online_count").asInt();
     }
 
     @Override
     public int getUserCount() {
-        JsonObject userStatus = client.getNetworkClient()
+        JsonNode userStatus = client.getNetworkClient()
                 .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_USERS.toFullURL(), id));
-        return userStatus.get("user_count").getAsInt();
+        return userStatus.get("user_count").asInt();
     }
 
     @Override
@@ -146,17 +147,17 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
     @Override
     public MuteResult getMuteStatus() {
         String url = String.format("%s?guild_id=%s", HttpAPIRoute.MUTE_LIST, getId());
-        JsonObject object = client.getNetworkClient().get(url);
+        JsonNode object = client.getNetworkClient().get(url);
 
         MuteResultImpl result = new MuteResultImpl();
-        for (JsonElement element : object.getAsJsonObject("mic").getAsJsonArray("user_ids")) {
-            String id = element.getAsString();
+        for (JsonNode element : object.get("mic").get("user_ids")) {
+            String id = element.asText();
             MuteDataImpl data = new MuteDataImpl(client.getStorage().getUser(id));
             data.setInputDisabled(true);
             result.add(data);
         }
-        for (JsonElement element : object.getAsJsonObject("headset").getAsJsonArray("user_ids")) {
-            String id = element.getAsString();
+        for (JsonNode element : object.get("headset").get("user_ids")) {
+            String id = element.asText();
             MuteDataImpl resDef = (MuteDataImpl) result.getByUser(id);
             if (resDef == null) {
                 resDef = new MuteDataImpl(client.getStorage().getUser(id));
@@ -252,8 +253,8 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .put("guild_id", getId())
                 .put("name", s)
                 .build();
-        JsonObject res = client.getNetworkClient().post(HttpAPIRoute.ROLE_CREATE.toFullURL(), body);
-        Role result = client.getEntityBuilder().buildRole(this, res);
+        JsonNode res = client.getNetworkClient().post(HttpAPIRoute.ROLE_CREATE.toFullURL(), body);
+        Role result = client.getEntityBuilder().buildRole(this, snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(res));
         client.getStorage().addRole(this, result);
         return result;
     }
@@ -314,17 +315,16 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
         Validate.isTrue(start >= 0, "The paramater 'start' cannot be negative");
         Validate.isTrue(end > 0, "The parameter 'end' cannot be negative");
         Validate.isTrue(start < end, "The parameter 'start' cannot be greater than the parameter 'end'");
-        JsonObject object = client.getNetworkClient().get(
+        JsonNode object = client.getNetworkClient().get(
                 String.format("%s?guild_id=%s&start_time=%s&end_time=%s", HttpAPIRoute.GUILD_BOOST_HISTORY.toFullURL(),
                         getId(), start, end));
         Collection<BoostInfo> result = new HashSet<>();
-        for (JsonElement item : object.getAsJsonArray("items")) {
-            JsonObject data = item.getAsJsonObject();
+        for (JsonNode item : object.get("items")) {
             result.add(
                     new BoostInfoImpl(
-                            client.getStorage().getUser(data.get("user_id").getAsString()),
-                            data.get("start_time").getAsInt(),
-                            data.get("end_time").getAsInt()));
+                            client.getStorage().getUser(item.get("user_id").asText()),
+                            item.get("start_time").asInt(),
+                            item.get("end_time").asInt()));
         }
         return Collections.unmodifiableCollection(result);
     }
@@ -341,8 +341,8 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return get(object, "url").getAsString();
+        JsonNode object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        return snw.kookbc.util.JacksonUtil.get(object, "url").asText();
     }
 
     @Override
@@ -371,16 +371,21 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public synchronized void update(JsonObject data) {
-        final String id = getAsString(data, "id");
-        final int notifyTypeId = getAsInt(data, "notify_type");
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    @Override
+    public synchronized void update(JsonNode data) {
+        final String id = data.get("id").asText();
+        final int notifyTypeId = data.get("notify_type").asInt();
         final Supplier<String> notifyErr = () -> "Unexpected NotifyType, got " + notifyTypeId;
         isTrue(Objects.equals(getId(), id), "You can't update guild by using different data");
-        this.name = getAsString(data, "name");
-        this.public_ = getAsBoolean(data, "enable_open");
-        this.region = getAsString(data, "region");
+        this.name = data.get("name").asText();
+        this.public_ = data.get("enable_open").asBoolean();
+        this.region = data.get("region").asText();
         this.notifyType = requireNonNull(NotifyType.value(notifyTypeId), notifyErr);
-        this.avatarUrl = getAsString(data, "icon");
-        this.master = new UserImpl(client, getAsString(data, "user_id"));
+        this.avatarUrl = data.get("icon").asText();
+        this.master = new UserImpl(client, data.get("user_id").asText());
     }
 
     @Override
@@ -390,7 +395,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     @Override
     public void initialize() {
-        final JsonObject data = client.getNetworkClient()
+        final JsonNode data = client.getNetworkClient()
                 .get(String.format("%s?guild_id=%s", HttpAPIRoute.GUILD_INFO.toFullURL(), id));
         update(data);
         completed = true;

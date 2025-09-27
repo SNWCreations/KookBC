@@ -18,12 +18,13 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import static snw.kookbc.util.GsonUtil.getAsJsonArray;
+import static snw.kookbc.util.JacksonUtil.getAsJsonArray;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -48,15 +49,13 @@ public class CategoryImpl extends ChannelImpl implements Category {
 
     @Override
     public Collection<Channel> getChannels() {
-        final JsonObject object = client.getNetworkClient()
+        final JsonNode object = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId() + "&need_children=true");
         update(object);
         final Collection<Channel> channels = new LinkedList<>();
-        getAsJsonArray(object, "children")
-                .asList()
-                .stream()
-                .map(JsonElement::getAsString)
-                .forEach(id -> channels.add(client.getStorage().getChannel(id)));
+        snw.kookbc.util.JacksonUtil.get(object, "children")
+                .elements()
+                .forEachRemaining(element -> channels.add(client.getStorage().getChannel(element.asText())));
         return Collections.unmodifiableCollection(channels);
     }
 

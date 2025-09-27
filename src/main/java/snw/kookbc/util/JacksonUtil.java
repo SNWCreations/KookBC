@@ -21,105 +21,89 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import snw.jkook.message.component.TemplateMessage;
-import snw.jkook.message.component.card.CardComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.jkook.message.component.card.element.ButtonElement;
-import snw.jkook.message.component.card.element.ImageElement;
-import snw.jkook.message.component.card.element.MarkdownElement;
-import snw.jkook.message.component.card.element.PlainTextElement;
-import snw.jkook.message.component.card.module.*;
-import snw.jkook.message.component.card.structure.Paragraph;
 import snw.jkook.util.Validate;
-import snw.kookbc.impl.serializer.component.TemplateMessageSerializer;
-import snw.kookbc.impl.serializer.component.card.CardComponentSerializer;
-import snw.kookbc.impl.serializer.component.card.MultipleCardComponentSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ButtonElementSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ContentElementSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ImageElementSerializer;
-import snw.kookbc.impl.serializer.component.card.module.*;
-import snw.kookbc.impl.serializer.component.card.structure.ParagraphSerializer;
 
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Jackson-based JSON utility for high-performance JSON processing.
- * Provides migration path from Gson while maintaining API compatibility.
+ * Jackson JSON工具类 - 高性能JSON处理
+ * 提供与GsonUtil兼容的API，但使用Jackson实现更高性能
  */
 public final class JacksonUtil {
 
-    /**
-     * High-performance ObjectMapper configured for Card components with custom serializers.
-     * Optimized for virtual threads and concurrent access.
-     */
-    public static final ObjectMapper CARD_MAPPER;
+    // 兼容性字段，供现有代码使用
+    public static final com.google.gson.Gson NORMAL_GSON = GsonUtil.NORMAL_GSON;
 
-    /**
-     * Standard ObjectMapper for general JSON processing.
-     * Optimized for performance with virtual threads.
-     */
-    public static final ObjectMapper NORMAL_MAPPER;
+    // Jackson核心对象
+    private static final ObjectMapper MAPPER;
 
     static {
-        // Initialize CARD_MAPPER with custom serializers (migration from Gson serializers)
-        CARD_MAPPER = createCardMapper();
-
-        // Initialize NORMAL_MAPPER for general use
-        NORMAL_MAPPER = createNormalMapper();
+        MAPPER = new ObjectMapper();
+        MAPPER.registerModule(new JavaTimeModule());
+        // 配置Jackson以处理缺失字段和null值
+        MAPPER.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        MAPPER.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     }
 
-    private static ObjectMapper createCardMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-
-        // Register JavaTime module for JSR-310 support
-        mapper.registerModule(new JavaTimeModule());
-
-        // Create custom module for Card components
-        SimpleModule cardModule = new SimpleModule("KookBC-Card-Module");
-
-        // TODO: Convert Gson serializers to Jackson serializers
-        // This is a placeholder - we'll need to create Jackson equivalents
-        // of the existing Gson serializers
-
-        mapper.registerModule(cardModule);
-        return mapper;
+    private JacksonUtil() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
-    private static ObjectMapper createNormalMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        return mapper;
-    }
+    // ===== 基础JSON操作 =====
 
-    /**
-     * Creates a TypeReference for List types (Jackson equivalent of Gson's TypeToken).
-     */
-    public static <T> TypeReference<List<T>> createListType(Class<T> elementType) {
-        Validate.notNull(elementType);
-        return new TypeReference<List<T>>() {};
-    }
-
-    /**
-     * Check if JsonNode contains the specified field and is not null.
-     * Gson-compatible API for migration.
-     */
-    public static boolean has(JsonNode node, String fieldName) {
-        return node.has(fieldName) && !node.get(fieldName).isNull();
-    }
-
-    /**
-     * Get JsonNode field, throwing exception if not found or null.
-     * Gson-compatible API for migration.
-     */
-    public static JsonNode get(JsonNode node, String fieldName) {
-        if (!node.has(fieldName) || node.get(fieldName).isNull()) {
-            throw new NoSuchElementException("There is no valid value mapped to requested key '" + fieldName + "'.");
+    public static JsonNode parse(String json) {
+        try {
+            return MAPPER.readTree(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse JSON: " + json, e);
         }
-        return node.get(fieldName);
+    }
+
+    public static String toJson(Object obj) {
+        try {
+            return MAPPER.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize object to JSON", e);
+        }
+    }
+
+    public static <T> T fromJson(String json, Class<T> classOfT) {
+        try {
+            return MAPPER.readValue(json, classOfT);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize JSON to " + classOfT.getName(), e);
+        }
+    }
+
+    public static <T> T fromJson(String json, TypeReference<T> typeRef) {
+        try {
+            return MAPPER.readValue(json, typeRef);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to deserialize JSON", e);
+        }
+    }
+
+    // ===== 节点访问方法 =====
+
+    public static JsonNode get(JsonNode node, String fieldName) {
+        Validate.notNull(node, "JsonNode cannot be null");
+        JsonNode result = node.get(fieldName);
+        if (result == null || result.isNull()) {
+            throw new NoSuchElementException("Field '" + fieldName + "' not found or is null in JSON node");
+        }
+        return result;
+    }
+
+    public static boolean has(JsonNode node, String fieldName) {
+        if (node == null) {
+            return false;
+        }
+        JsonNode field = node.get(fieldName);
+        return field != null && !field.isNull();
     }
 
     public static String getAsString(JsonNode node, String fieldName) {
@@ -134,70 +118,182 @@ public final class JacksonUtil {
         return get(node, fieldName).asLong();
     }
 
-    public static double getAsDouble(JsonNode node, String fieldName) {
-        return get(node, fieldName).asDouble();
-    }
-
     public static boolean getAsBoolean(JsonNode node, String fieldName) {
         return get(node, fieldName).asBoolean();
     }
 
-    /**
-     * Parse JSON string to JsonNode using NORMAL_MAPPER.
-     */
-    public static JsonNode parse(String json) {
+    public static double getAsDouble(JsonNode node, String fieldName) {
+        return get(node, fieldName).asDouble();
+    }
+
+    // ===== 兼容性方法 (用于GsonUtil替换) =====
+
+    public static JsonNode getAsJsonObject(JsonNode node, String fieldName) {
+        JsonNode result = get(node, fieldName);
+        if (!result.isObject()) {
+            throw new IllegalStateException("Field '" + fieldName + "' is not a JSON object");
+        }
+        return result;
+    }
+
+    public static JsonNode getAsJsonArray(JsonNode node, String fieldName) {
+        JsonNode result = get(node, fieldName);
+        if (!result.isArray()) {
+            throw new IllegalStateException("Field '" + fieldName + "' is not a JSON array");
+        }
+        return result;
+    }
+
+    // ===== 类型转换辅助方法 =====
+
+    public static <T> List<T> toList(JsonNode arrayNode, Class<T> elementType) {
         try {
-            return NORMAL_MAPPER.readTree(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse JSON", e);
+            return MAPPER.convertValue(arrayNode,
+                MAPPER.getTypeFactory().constructCollectionType(List.class, elementType));
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Failed to convert JsonNode to List<" + elementType.getName() + ">", e);
         }
     }
 
+    // 获取ObjectMapper实例，供高级用途使用
+    public static ObjectMapper getMapper() {
+        return MAPPER;
+    }
+
+    // ===== Null-Safe字段访问方法（EntityBuilder专用）=====
+
     /**
-     * Convert object to JSON string using NORMAL_MAPPER.
+     * 获取必需的字符串字段，如果不存在或为null则抛出异常
      */
-    public static String toJson(Object object) {
-        try {
-            return NORMAL_MAPPER.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize to JSON", e);
+    public static String getRequiredString(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            throw new NoSuchElementException("Required field '" + fieldName + "' not found or is null");
         }
+        return field.asText();
     }
 
     /**
-     * Convert object to JSON string using CARD_MAPPER.
+     * 获取字符串字段，支持默认值
      */
-    public static String toCardJson(Object object) {
-        try {
-            return CARD_MAPPER.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize card to JSON", e);
+    public static String getStringOrDefault(JsonNode node, String fieldName, String defaultValue) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return defaultValue;
         }
+        return field.asText();
     }
 
     /**
-     * Parse JSON to specific type using NORMAL_MAPPER.
+     * 获取必需的整数字段，如果不存在或为null则抛出异常
      */
-    public static <T> T fromJson(String json, Class<T> clazz) {
-        try {
-            return NORMAL_MAPPER.readValue(json, clazz);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to deserialize JSON to " + clazz.getSimpleName(), e);
+    public static int getRequiredInt(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            throw new NoSuchElementException("Required field '" + fieldName + "' not found or is null");
         }
+        return field.asInt();
     }
 
     /**
-     * Parse JSON to specific type using TypeReference.
+     * 获取整数字段，支持默认值
      */
-    public static <T> T fromJson(String json, TypeReference<T> typeRef) {
-        try {
-            return NORMAL_MAPPER.readValue(json, typeRef);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to deserialize JSON", e);
+    public static int getIntOrDefault(JsonNode node, String fieldName, int defaultValue) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return defaultValue;
         }
+        return field.asInt();
     }
 
-    private JacksonUtil() {
-        // Utility class
+    /**
+     * 获取长整数字段，支持默认值
+     */
+    public static long getLongOrDefault(JsonNode node, String fieldName, long defaultValue) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return defaultValue;
+        }
+        return field.asLong();
+    }
+
+    /**
+     * 获取布尔字段，支持默认值
+     */
+    public static boolean getBooleanOrDefault(JsonNode node, String fieldName, boolean defaultValue) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return defaultValue;
+        }
+        return field.asBoolean();
+    }
+
+    /**
+     * 获取双精度字段，支持默认值
+     */
+    public static double getDoubleOrDefault(JsonNode node, String fieldName, double defaultValue) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return defaultValue;
+        }
+        return field.asDouble();
+    }
+
+    /**
+     * 安全获取嵌套对象
+     */
+    public static JsonNode getObjectOrNull(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull() || !field.isObject()) {
+            return null;
+        }
+        return field;
+    }
+
+    /**
+     * 安全获取数组
+     */
+    public static JsonNode getArrayOrNull(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull() || !field.isArray()) {
+            return null;
+        }
+        return field;
+    }
+
+    /**
+     * 检查字段是否存在且不为null
+     */
+    public static boolean hasNonNull(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        return field != null && !field.isNull();
+    }
+
+    // ===== 其他工具方法 =====
+
+    public static ObjectNode createObjectNode() {
+        return MAPPER.createObjectNode();
+    }
+
+    public static String toJsonString(Object obj) {
+        return toJson(obj);
+    }
+
+    public static Type createListType(Class<?> elementType) {
+        // 为兼容性提供Type支持，返回List<elementType>的Type
+        // 注意：序列化器应该使用GsonUtil.createListType()避免静态初始化循环依赖
+        return MAPPER.getTypeFactory().constructCollectionType(List.class, elementType);
+    }
+
+    public static com.google.gson.JsonObject convertToGsonJsonObject(JsonNode jacksonNode) {
+        if (jacksonNode == null) {
+            return null;
+        }
+        try {
+            // 优化：直接使用JsonParser而不是NORMAL_GSON，减少运行时Gson依赖
+            return com.google.gson.JsonParser.parseString(jacksonNode.toString()).getAsJsonObject();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert Jackson JsonNode to Gson JsonObject", e);
+        }
     }
 }

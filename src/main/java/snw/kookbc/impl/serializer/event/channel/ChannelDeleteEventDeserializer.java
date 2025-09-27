@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.channel;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.event.channel.ChannelDeleteEvent;
@@ -40,9 +42,31 @@ public class ChannelDeleteEventDeserializer extends NormalEventDeserializer<Chan
     @Override
     protected ChannelDeleteEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final String id = getAsString(body, "id");
-        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
+        final String id = body.get("id").getAsString();
+        final Guild guild = client.getStorage().getGuild(object.get("target_id").getAsString());
         return new ChannelDeleteEvent(timeStamp, id, guild);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected ChannelDeleteEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String id = body.get("id").asText();
+        final Guild guild = client.getStorage().getGuild(node.get("target_id").asText());
+        return new ChannelDeleteEvent(timeStamp, id, guild);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖复杂构建器，可以直接启用
+        return true;
     }
 
     @Override

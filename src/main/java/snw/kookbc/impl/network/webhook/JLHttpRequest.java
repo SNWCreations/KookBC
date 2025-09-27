@@ -18,8 +18,9 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import snw.kookbc.util.JacksonUtil;
 import net.freeutils.httpserver.HTTPServer;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.interfaces.network.webhook.Request;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static snw.kookbc.util.Util.decompressDeflate;
 import static snw.kookbc.util.Util.inputStreamToByteArray;
 
-public class JLHttpRequest implements Request<JsonObject> {
+public class JLHttpRequest implements Request<JsonNode> {
     private final KBCClient client;
     private final HTTPServer.Request request;
     private final HTTPServer.Response response;
@@ -68,13 +69,13 @@ public class JLHttpRequest implements Request<JsonObject> {
     }
 
     @Override
-    public JsonObject toJson() {
+    public JsonNode toJson() {
         final String rawBody = getRawBody();
         if (rawBody.isEmpty()) {
-            return new JsonObject();
+            return JacksonUtil.createObjectNode();
         }
         final String decryptedBody = EncryptUtils.decrypt(client, rawBody);
-        return JsonParser.parseString(decryptedBody).getAsJsonObject();
+        return JacksonUtil.parse(decryptedBody);
     }
 
     @Override

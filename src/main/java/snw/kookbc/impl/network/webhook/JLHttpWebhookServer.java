@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.freeutils.httpserver.HTTPServer;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.interfaces.network.FrameHandler;
@@ -57,7 +57,7 @@ public class JLHttpWebhookServer implements WebhookServer {
     }
 
     @Override
-    public void setHandler(RequestHandler<JsonObject> handler) {
+    public void setHandler(RequestHandler<JsonNode> handler) {
         if (server != null) {
             HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
             virtualHost.addContext('/' + route, new JLHttpRequestWrapper(client, handler), "POST");

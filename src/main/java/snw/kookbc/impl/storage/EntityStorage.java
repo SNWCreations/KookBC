@@ -21,6 +21,7 @@ package snw.kookbc.impl.storage;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
@@ -140,6 +141,20 @@ public class EntityStorage {
         return result;
     }
 
+    // ===== Jackson API - 高性能版本 =====
+
+    public User getUser(String id, JsonNode def) {
+        // use getIfPresent, because the def should not be wasted
+        User result = users.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildUser(def);
+            addUser(result);
+        } else {
+            ((UserImpl) result).update(def);
+        }
+        return result;
+    }
+
     public Guild getGuild(String id, JsonObject def) {
         Guild result = guilds.getIfPresent(id);
         if (result == null) {
@@ -151,7 +166,29 @@ public class EntityStorage {
         return result;
     }
 
+    public Guild getGuild(String id, JsonNode def) {
+        Guild result = guilds.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildGuild(def);
+            addGuild(result);
+        } else {
+            ((GuildImpl) result).update(def);
+        }
+        return result;
+    }
+
     public Channel getChannel(String id, JsonObject def) {
+        Channel result = channels.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildChannel(def);
+            addChannel(result);
+        } else {
+            ((ChannelImpl) result).update(def);
+        }
+        return result;
+    }
+
+    public Channel getChannel(String id, JsonNode def) {
         Channel result = channels.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildChannel(def);
@@ -174,7 +211,30 @@ public class EntityStorage {
         return result;
     }
 
+    public Role getRole(Guild guild, int id, JsonNode def) {
+        // getRole is Nullable
+        Role result = getRole(guild, id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildRole(guild, def);
+            addRole(guild, result);
+        } else {
+            ((RoleImpl) result).update(def);
+        }
+        return result;
+    }
+
     public CustomEmoji getEmoji(String id, JsonObject def) {
+        CustomEmoji emoji = getEmoji(id);
+        if (emoji == null) {
+            emoji = client.getEntityBuilder().buildEmoji(def);
+            addEmoji(emoji);
+        } else {
+            ((CustomEmojiImpl) emoji).update(def);
+        }
+        return emoji;
+    }
+
+    public CustomEmoji getEmoji(String id, JsonNode def) {
         CustomEmoji emoji = getEmoji(id);
         if (emoji == null) {
             emoji = client.getEntityBuilder().buildEmoji(def);
@@ -281,6 +341,7 @@ public class EntityStorage {
                 .map(i -> ((ChannelImpl) i).getOverwrittenUserPermissions0())
                 .forEach(i -> i.removeIf(o -> o.getUser() == user));
     }
+
 }
 
 interface UncheckedFunction<K, V> {

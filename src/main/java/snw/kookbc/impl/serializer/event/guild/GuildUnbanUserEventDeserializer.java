@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -29,6 +28,9 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -47,7 +49,7 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
     protected GuildUnbanUserEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
         final EntityStorage storage = client.getStorage();
-        final Guild guild = storage.getGuild(getAsString(object, "target_id"));
+        final Guild guild = storage.getGuild(object.get("target_id").getAsString());
         final List<User> unbanned = Collections.unmodifiableList(
                 body.getAsJsonArray("user_id")
                         .asList()
@@ -55,8 +57,29 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
                         .map(JsonElement::getAsString)
                         .map(storage::getUser)
                         .collect(Collectors.toList()));
-        final User operator = storage.getUser(getAsString(body, "operator_id"));
+        final User operator = storage.getUser(body.get("operator_id").getAsString());
         return new GuildUnbanUserEvent(timeStamp, guild, unbanned, operator);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected GuildUnbanUserEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

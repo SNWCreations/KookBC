@@ -21,14 +21,13 @@ package snw.kookbc.impl.serializer.component.card.module;
 import com.google.gson.*;
 import snw.jkook.message.component.card.element.ImageElement;
 import snw.jkook.message.component.card.module.ContainerModule;
+import snw.kookbc.util.GsonUtil;
 
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static snw.kookbc.util.GsonUtil.createListType;
-
 public class ContainerModuleSerializer implements JsonSerializer<ContainerModule>, JsonDeserializer<ContainerModule> {
-    static Type LIST_IMAGEELEMENT = createListType(ImageElement.class);
+    static Type LIST_IMAGEELEMENT = GsonUtil.createListType(ImageElement.class);
 
     @Override
     public JsonElement serialize(ContainerModule module, Type typeOfSrc, JsonSerializationContext context) {

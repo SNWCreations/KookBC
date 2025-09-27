@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.guild;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.event.guild.GuildInfoUpdateEvent;
@@ -41,9 +43,30 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
     @Override
     protected GuildInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final Guild guild = client.getStorage().getGuild(getAsString(body, "id"));
+        final Guild guild = client.getStorage().getGuild(body.get("id").getAsString());
         ((GuildImpl) guild).update(body);
         return new GuildInfoUpdateEvent(timeStamp, guild);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected GuildInfoUpdateEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

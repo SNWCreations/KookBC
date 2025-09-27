@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.entity;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getStringOrDefault;
 
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Game;
 import snw.kookbc.impl.KBCClient;
@@ -99,7 +101,14 @@ public class GameImpl implements Game, Updatable {
 
     @Override
     public synchronized void update(JsonObject data) {
-        this.name = getAsString(data, "name");
-        this.icon = getAsString(data, "icon");
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    // ===== Jackson API - 高性能版本 =====
+
+    @Override
+    public synchronized void update(JsonNode data) {
+        this.name = getStringOrDefault(data, "name", "Unknown Game");
+        this.icon = getStringOrDefault(data, "icon", "");
     }
 }

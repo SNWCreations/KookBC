@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -47,6 +48,28 @@ public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> 
         return String.format("%s?guild_id=%s", HttpAPIRoute.INVITE_LIST.toFullURL(), guildId);
     }
 
+    @Override
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            String guildIdFromResponse = element.get("guild_id").asText();
+            Guild guild = client.getStorage().getGuild(guildIdFromResponse);
+            String urlCode = element.get("url_code").asText();
+            String url = element.get("url").asText();
+            JsonNode userNode = element.get("user");
+            String userId = userNode.get("id").asText();
+            User master = client.getStorage().getUser(userId);
+            object.add(new InvitationImpl(
+                    client, guild, null, urlCode, url, master
+            ));
+        }
+    }
+
+    /**
+     * 向后兼容的Gson版本
+     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
+     */
+    @Deprecated
     @Override
     protected void processElements(JsonArray array) {
         object = new HashSet<>(array.size());

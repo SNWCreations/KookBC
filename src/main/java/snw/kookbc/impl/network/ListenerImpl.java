@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.network;
 
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -29,7 +29,9 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
+import snw.kookbc.util.JacksonUtil;
 
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
@@ -92,7 +94,10 @@ public class ListenerImpl implements FrameHandler {
                 break;
             case RESUME_ACK:
                 client.getCore().getLogger().info("Resume finished");
-                client.getSession().setId(frame.getData().get("session_id").getAsString());
+                JsonNode sessionIdNode = frame.getData().get("session_id");
+                if (sessionIdNode != null) {
+                    client.getSession().setId(sessionIdNode.asText());
+                }
                 break;
         }
     }
@@ -146,7 +151,9 @@ public class ListenerImpl implements FrameHandler {
     protected void event0(Frame frame) {
         Event event;
         try {
-            event = client.getEventFactory().createEvent(frame.getData());
+            // 直接使用 Jackson JsonNode 进行事件创建
+            JsonNode jacksonData = frame.getData();
+            event = client.getEventFactory().createEvent(jacksonData);
         } catch (Exception e) {
             client.getCore().getLogger().error("Unable to create event from payload.");
             client.getCore().getLogger().error("Event payload: {}", frame);
@@ -181,10 +188,14 @@ public class ListenerImpl implements FrameHandler {
     protected void hello(Frame frame) {
         client.getCore().getLogger().debug("Got HELLO");
         connector.setConnected(true);
-        JsonObject object = frame.getData();
-        int status = get(object, "code").getAsInt();
+        JsonNode object = frame.getData();
+        JsonNode codeNode = object.get("code");
+        int status = codeNode != null ? codeNode.asInt() : -1;
         if (status == 0) {
-            client.getSession().setId(get(object, "session_id").getAsString());
+            JsonNode sessionIdNode = object.get("session_id");
+            if (sessionIdNode != null) {
+                client.getSession().setId(sessionIdNode.asText());
+            }
         } else {
             connector.requestReconnect();
         }

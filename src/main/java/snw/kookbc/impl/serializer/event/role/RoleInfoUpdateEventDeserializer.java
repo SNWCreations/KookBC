@@ -21,6 +21,9 @@ package snw.kookbc.impl.serializer.event.role;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.jkook.event.role.RoleInfoUpdateEvent;
@@ -30,7 +33,6 @@ import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
 
 public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<RoleInfoUpdateEvent> {
 
@@ -41,11 +43,32 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
     @Override
     protected RoleInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final Guild guild = client.getStorage().getGuild(get(object, "target_id").getAsString());
-        final int roleId = get(body, "role_id").getAsInt();
+        final Guild guild = client.getStorage().getGuild(object.get("target_id").getAsString());
+        final int roleId = body.get("role_id").getAsInt();
         ((RoleImpl) client.getStorage().getRole(guild, roleId, body)).update(body);
         final Role role = client.getStorage().getRole(guild, roleId);
         return new RoleInfoUpdateEvent(timeStamp, role);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected RoleInfoUpdateEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

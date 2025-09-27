@@ -24,9 +24,6 @@ import snw.jkook.message.component.card.element.ImageElement;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
-
 public class ImageElementSerializer implements JsonSerializer<ImageElement>, JsonDeserializer<ImageElement> {
     @Override
     public JsonElement serialize(ImageElement element, Type typeOfSrc, JsonSerializationContext context) {
@@ -42,10 +39,10 @@ public class ImageElementSerializer implements JsonSerializer<ImageElement>, Jso
     @Override
     public ImageElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String src = get(jsonObject, "src").getAsString();
-        String size = has(jsonObject, "size") ? get(jsonObject, "size").getAsString() : Size.LG.getValue();
-        String alt = has(jsonObject, "alt") ? get(jsonObject, "alt").getAsString() : "";
-        boolean circle = has(jsonObject, "circle") && get(jsonObject, "circle").getAsBoolean();
+        String src = jsonObject.get("src").getAsString();
+        String size = jsonObject.has("size") ? jsonObject.get("size").getAsString() : Size.LG.getValue();
+        String alt = jsonObject.has("alt") ? jsonObject.get("alt").getAsString() : "";
+        boolean circle = jsonObject.has("circle") && jsonObject.get("circle").getAsBoolean();
         return new ImageElement(src, alt, Size.value(size), circle);
     }
 }

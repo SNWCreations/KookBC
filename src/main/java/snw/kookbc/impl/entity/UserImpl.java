@@ -20,6 +20,7 @@ package snw.kookbc.impl.entity;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -57,7 +58,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
 
 public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
@@ -106,7 +107,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         return client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id, guild.getId()))
                 .get("nickname")
-                .getAsString();
+                .asText();
     }
 
     @Override
@@ -149,7 +150,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     @Override
     public boolean isOnline() {
         return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id))
-                .get("online").getAsBoolean();
+                .get("online").asBoolean();
     }
 
     @Override
@@ -160,15 +161,15 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public Collection<Integer> getRoles(Guild guild) {
-        JsonArray array = client.getNetworkClient()
+        JsonNode array = client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s",
                         HttpAPIRoute.USER_WHO.toFullURL(),
                         id,
                         guild.getId()))
-                .getAsJsonArray("roles");
+                .get("roles");
         HashSet<Integer> result = new HashSet<>();
-        for (JsonElement element : array) {
-            result.add(element.getAsInt());
+        for (JsonNode element : array) {
+            result.add(element.asInt());
         }
         return Collections.unmodifiableSet(result);
     }
@@ -201,7 +202,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 .putIfNotNull("quote", quote, Message::getId)
                 .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id")
-                .getAsString();
+                .asText();
     }
 
     @Override
@@ -213,23 +214,22 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     public int getIntimacy() {
         return client.getNetworkClient()
                 .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score")
-                .getAsInt();
+                .asInt();
     }
 
     @Override
     public IntimacyInfo getIntimacyInfo() {
-        JsonObject object = client.getNetworkClient()
+        JsonNode object = client.getNetworkClient()
                 .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
-        String socialImage = get(object, "img_url").getAsString();
-        String socialInfo = get(object, "social_info").getAsString();
-        int lastRead = get(object, "last_read").getAsInt();
-        int score = get(object, "score").getAsInt();
-        JsonArray socialImageListRaw = get(object, "img_list").getAsJsonArray();
+        String socialImage = get(object, "img_url").asText();
+        String socialInfo = get(object, "social_info").asText();
+        int lastRead = get(object, "last_read").asInt();
+        int score = get(object, "score").asInt();
+        JsonNode socialImageListRaw = get(object, "img_list");
         Collection<IntimacyInfo.SocialImage> socialImages = new ArrayList<>(socialImageListRaw.size());
-        for (JsonElement element : socialImageListRaw) {
-            JsonObject obj = element.getAsJsonObject();
-            String id = obj.get("id").getAsString();
-            String url = obj.get("url").getAsString();
+        for (JsonNode element : socialImageListRaw) {
+            String id = element.get("id").asText();
+            String url = element.get("url").asText();
             socialImages.add(
                     new SocialImageImpl(id, url));
         }
@@ -348,16 +348,21 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()),
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    @Override
+    public synchronized void update(JsonNode data) {
+        Validate.isTrue(Objects.equals(getId(), data.get("id").asText()),
                 "You can't update user by using different data");
         synchronized (this) {
-            name = get(data, "username").getAsString();
-            bot = get(data, "bot").getAsBoolean();
-            avatarUrl = get(data, "avatar").getAsString();
-            vipAvatarUrl = get(data, "vip_avatar").getAsString();
-            identify = get(data, "identify_num").getAsInt();
-            ban = get(data, "status").getAsInt() == 10;
-            vip = get(data, "is_vip").getAsBoolean();
+            name = data.get("username").asText();
+            bot = data.get("bot").asBoolean();
+            avatarUrl = data.get("avatar").asText();
+            vipAvatarUrl = data.get("vip_avatar").asText();
+            identify = data.get("identify_num").asInt();
+            ban = data.get("status").asInt() == 10;
+            vip = data.get("is_vip").asBoolean();
         }
     }
 
@@ -368,7 +373,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public void initialize() {
-        final JsonObject data = client.getNetworkClient().get(
+        final JsonNode data = client.getNetworkClient().get(
                 String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id));
         update(data);
         completed = true;

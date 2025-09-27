@@ -27,8 +27,6 @@ import snw.jkook.message.component.card.element.PlainTextElement;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 
 public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, JsonDeserializer<ButtonElement> {
     @Override
@@ -61,15 +59,15 @@ public class ButtonElementSerializer implements JsonSerializer<ButtonElement>, J
     @Override
     public ButtonElement deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String theme = get(jsonObject, "theme").getAsString();
+        String theme = jsonObject.get("theme").getAsString();
 
         JsonObject textObj = jsonObject.getAsJsonObject("text");
         BaseElement text = context.deserialize(textObj,
                 "kmarkdown".equals(textObj.getAsJsonPrimitive("type").getAsString()) ? MarkdownElement.class
                         : PlainTextElement.class);
 
-        String click = has(jsonObject, "click") ? get(jsonObject, "click").getAsString() : "";
-        String value = has(jsonObject, "value") ? get(jsonObject, "value").getAsString() : "";
+        String click = jsonObject.has("click") ? jsonObject.get("click").getAsString() : "";
+        String value = jsonObject.has("value") ? jsonObject.get("value").getAsString() : "";
 
         return new ButtonElement(Theme.value(theme), value, ButtonElement.EventType.value(click), text);
     }

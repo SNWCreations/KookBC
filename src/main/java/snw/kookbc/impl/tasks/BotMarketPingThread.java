@@ -18,17 +18,16 @@
 
 package snw.kookbc.impl.tasks;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.JacksonUtil;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import static snw.kookbc.util.GsonUtil.get;
 
 public final class BotMarketPingThread extends Thread {
     private final KBCClient client;
@@ -73,11 +72,21 @@ public final class BotMarketPingThread extends Thread {
             try (Response response = networkClient.newCall(request).execute()) {
                 if (response.body() != null) {
                     String resStr = response.body().string();
-                    JsonObject object = JsonParser.parseString(resStr).getAsJsonObject();
-                    int status = get(object, "code").getAsInt();
+                    JsonNode jsonNode = JacksonUtil.parse(resStr);
+
+                    // 使用 Jackson 安全地处理响应
+                    JsonNode codeNode = jsonNode.get("code");
+                    if (codeNode == null || codeNode.isNull()) {
+                        throw new RuntimeException("Invalid BotMarket response: missing 'code' field");
+                    }
+
+                    int status = codeNode.asInt();
                     if (status != 0) {
-                        throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status,
-                                get(object, "message").getAsString()));
+                        JsonNode messageNode = jsonNode.get("message");
+                        String message = messageNode != null && !messageNode.isNull()
+                            ? messageNode.asText()
+                            : "Unknown error";
+                        throw new RuntimeException(String.format("Unexpected Response Code: %s, message: %s", status, message));
                     }
                 } else {
                     throw new RuntimeException("No response body when we attempting to PING BotMarket.");

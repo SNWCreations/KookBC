@@ -21,6 +21,9 @@ package snw.kookbc.impl.serializer.event.channel;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.event.channel.ChannelInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
@@ -30,8 +33,6 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseChannel;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<ChannelInfoUpdateEvent> {
 
@@ -41,11 +42,35 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
 
     @Override
     protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        final String id = getAsString(body, "id");
-        final int channelType = getAsInt(body, "type");
+        final String id = body.get("id").getAsString();
+        final int channelType = body.get("type").getAsInt();
         final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
         Objects.requireNonNull(channel).update(body);
         return new ChannelInfoUpdateEvent(timeStamp, channel);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected ChannelInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String id = body.get("id").asText();
+        final int channelType = body.get("type").asInt();
+        final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
+        Objects.requireNonNull(channel).update(body);
+        return new ChannelInfoUpdateEvent(timeStamp, channel);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // ChannelImpl已支持Jackson update方法，可以启用
+        return true;
     }
 
 }

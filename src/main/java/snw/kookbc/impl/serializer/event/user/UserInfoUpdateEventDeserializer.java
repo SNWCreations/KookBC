@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.event.user.UserInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
@@ -40,10 +42,33 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
     @Override
     protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        UserImpl user = ((UserImpl) client.getStorage().getUser(getAsString(body, "body_id")));
-        user.setName(getAsString(body, "username"));
-        user.setAvatarUrl(getAsString(body, "avatar"));
+        UserImpl user = ((UserImpl) client.getStorage().getUser(body.get("body_id").getAsString()));
+        user.setName(body.get("username").getAsString());
+        user.setAvatarUrl(body.get("avatar").getAsString());
         return new UserInfoUpdateEvent(timeStamp, user);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected UserInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        UserImpl user = ((UserImpl) client.getStorage().getUser(body.get("body_id").asText()));
+        user.setName(body.get("username").asText());
+        user.setAvatarUrl(body.get("avatar").asText());
+        return new UserInfoUpdateEvent(timeStamp, user);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖MessageBuilder，可以直接启用
+        return true;
     }
 
 }

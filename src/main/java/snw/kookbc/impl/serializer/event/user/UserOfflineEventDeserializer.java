@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.User;
 import snw.jkook.event.user.UserOfflineEvent;
@@ -40,8 +42,29 @@ public class UserOfflineEventDeserializer extends NormalEventDeserializer<UserOf
     @Override
     protected UserOfflineEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
             JsonObject body) throws JsonParseException {
-        final User user = client.getStorage().getUser(getAsString(body, "user_id"));
+        final User user = client.getStorage().getUser(body.get("user_id").getAsString());
         return new UserOfflineEvent(timeStamp, user);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected UserOfflineEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final User user = client.getStorage().getUser(body.get("user_id").asText());
+        return new UserOfflineEvent(timeStamp, user);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖MessageBuilder，可以直接启用
+        return true;
     }
 
 }

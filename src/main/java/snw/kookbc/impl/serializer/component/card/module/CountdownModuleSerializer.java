@@ -23,7 +23,6 @@ import snw.jkook.message.component.card.module.CountdownModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
 
 public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override
@@ -41,9 +40,9 @@ public class CountdownModuleSerializer implements JsonSerializer<CountdownModule
     @Override
     public CountdownModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String mode = get(jsonObject, "mode").getAsString();
-        long startTime = get(jsonObject, "startTime").getAsLong();
-        long endTime = get(jsonObject, "endTime").getAsLong();
+        String mode = jsonObject.get("mode").getAsString();
+        long startTime = jsonObject.get("startTime").getAsLong();
+        long endTime = jsonObject.get("endTime").getAsLong();
         return new CountdownModule(CountdownModule.Type.value(mode), startTime, endTime);
     }
 }

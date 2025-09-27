@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
@@ -42,8 +43,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.get;
+import static snw.kookbc.util.JacksonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getStringOrDefault;
 
 public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonCategoryChannel {
 
@@ -69,8 +71,8 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return get(object, "url").getAsString();
+        JsonNode object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        return get(object, "url").asText();
     }
 
     @Override
@@ -122,7 +124,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .build();
         try {
             return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id")
-                    .getAsString();
+                    .asText();
         } catch (BadResponseException e) {
             if ("资源不存在".equals(e.getRawMessage())) {
                 // 2023/1/17: special case for the resources that aren't created by Bots.
@@ -152,8 +154,13 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
 
     @Override
     public synchronized void update(JsonObject data) {
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    @Override
+    public synchronized void update(JsonNode data) {
         super.update(data);
-        final String parentId = getAsString(data, "parent_id");
+        final String parentId = getStringOrDefault(data, "parent_id", "");
         final Boolean needParent = "".equals(parentId) || "0".equals(parentId);
         this.parent = needParent ? null : new CategoryImpl(client, parentId);
     }

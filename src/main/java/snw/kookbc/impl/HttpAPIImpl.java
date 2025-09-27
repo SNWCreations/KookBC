@@ -21,7 +21,6 @@ package snw.kookbc.impl;
 import static java.util.Collections.unmodifiableCollection;
 import static snw.kookbc.util.JacksonUtil.get;
 import static snw.kookbc.util.JacksonUtil.parse;
-import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -91,15 +89,6 @@ public class HttpAPIImpl implements HttpAPI {
 
     private final KBCClient client;
 
-    // 将 JsonObject (Gson) 转换为 JsonNode (Jackson)
-    private JsonNode toJsonNode(JsonObject gsonObject) {
-        return parse(NORMAL_GSON.toJson(gsonObject));
-    }
-
-    // 将 JsonNode (Jackson) 转换为 JsonObject (Gson)
-    private JsonObject toJsonObject(JsonNode jacksonNode) {
-        return NORMAL_GSON.fromJson(jacksonNode.toString(), JsonObject.class);
-    }
 
     public HttpAPIImpl(KBCClient client) {
         this.client = client;
@@ -221,8 +210,8 @@ public class HttpAPIImpl implements HttpAPI {
         } else {
             body = Collections.singletonMap("name", name);
         }
-        JsonObject gsonObject = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), body);
-        Game game = client.getEntityBuilder().buildGame(gsonObject);
+        JsonNode response = client.getNetworkClient().post(HttpAPIRoute.GAME_CREATE.toFullURL(), body);
+        Game game = client.getEntityBuilder().buildGame(response);
         client.getStorage().addGame(game);
         return game;
     }
@@ -296,8 +285,7 @@ public class HttpAPIImpl implements HttpAPI {
             this.blocked = new AtomicReference<>();
             this.requests = new AtomicReference<>();
             if (!lazyInit) {
-                JsonObject gsonObject = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-                JsonNode object = toJsonNode(gsonObject);
+                JsonNode object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
                 JsonNode request = get(object, "request");
                 Collection<FriendRequest> requestCollection;
                 if (request.isArray() && request.size() > 0) {
@@ -322,7 +310,7 @@ public class HttpAPIImpl implements HttpAPI {
                 JsonNode obj = element;
                 int id = get(obj, "id").asInt();
                 JsonNode userObj = get(element, "friend_info");
-                User user = client.getStorage().getUser(get(userObj, "id").asText(), toJsonObject(userObj));
+                User user = client.getStorage().getUser(get(userObj, "id").asText(), userObj);
                 FriendRequestImpl requestObj = new FriendRequestImpl(id, user);
                 requestCollection.add(requestObj);
             }
@@ -332,9 +320,7 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<User> getBlockedUsers() {
             return blocked.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject gsonObject = client.getNetworkClient()
-                            .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
-                    JsonNode object = toJsonNode(gsonObject);
+                    JsonNode object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=block");
                     JsonNode friend = get(object, "block");
                     return buildUserListFromFriendStateArray(friend);
                 }
@@ -346,9 +332,7 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<User> getFriends() {
             return friends.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject gsonObject = client.getNetworkClient()
-                            .get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
-                    JsonNode object = toJsonNode(gsonObject);
+                    JsonNode object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL() + "?type=friend");
                     JsonNode friend = get(object, "friend");
                     return buildUserListFromFriendStateArray(friend);
                 }
@@ -360,8 +344,7 @@ public class HttpAPIImpl implements HttpAPI {
         public Collection<FriendRequest> getPendingFriendRequests() {
             return requests.updateAndGet(i -> {
                 if (i == null) {
-                    JsonObject gsonObject = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
-                JsonNode object = toJsonNode(gsonObject);
+                    JsonNode object = client.getNetworkClient().get(HttpAPIRoute.FRIEND_LIST.toFullURL());
                     JsonNode request = get(object, "request");
                     Collection<FriendRequest> requestCollection;
                     if (request.isArray() && request.size() > 0) {
@@ -381,7 +364,7 @@ public class HttpAPIImpl implements HttpAPI {
                 Collection<User> c = new ArrayList<>(array.size());
                 for (JsonNode element : array) {
                     JsonNode userObj = get(element, "friend_info");
-                    User user = client.getStorage().getUser(get(userObj, "id").asText(), toJsonObject(userObj));
+                    User user = client.getStorage().getUser(get(userObj, "id").asText(), userObj);
                     c.add(user);
                 }
                 return Collections.unmodifiableCollection(c);

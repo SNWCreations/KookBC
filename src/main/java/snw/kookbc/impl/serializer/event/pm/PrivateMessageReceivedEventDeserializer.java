@@ -24,6 +24,9 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
+
 import snw.jkook.entity.User;
 import snw.jkook.event.pm.PrivateMessageReceivedEvent;
 import snw.jkook.message.PrivateMessage;
@@ -48,6 +51,30 @@ public class PrivateMessageReceivedEventDeserializer extends BaseEventDeserializ
     @Override
     protected void beforeReturn(PrivateMessageReceivedEvent event) {
         client.getStorage().addMessage(event.getMessage());
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected PrivateMessageReceivedEvent deserializeFromNode(JsonNode node) {
+        // MessageBuilder现在支持JsonNode，直接使用Jackson版本
+        final PrivateMessage pm = client.getMessageBuilder().buildPrivateMessage(node);
+        final long timeStamp = pm.getTimeStamp();
+        final User user = pm.getSender();
+        return new PrivateMessageReceivedEvent(timeStamp, user, pm);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // MessageBuilder已完成Jackson迁移，可以启用
+        return true;
     }
 
 }

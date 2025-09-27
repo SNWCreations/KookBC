@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import snw.jkook.entity.Guild;
@@ -42,6 +43,21 @@ public class GuildBannedUserIterator extends PageIteratorImpl<Set<User>> {
         return String.format("%s?guild_id=%s", HttpAPIRoute.BLACKLIST_LIST.toFullURL(), guildId);
     }
 
+    @Override
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            JsonNode userNode = element.get("user");
+            String userId = userNode.get("id").asText();
+            object.add(client.getStorage().getUser(userId));
+        }
+    }
+
+    /**
+     * 向后兼容的Gson版本
+     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
+     */
+    @Deprecated
     @Override
     protected void processElements(JsonArray array) {
         object = new HashSet<>(array.size());

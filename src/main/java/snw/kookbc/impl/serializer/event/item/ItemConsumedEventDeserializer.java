@@ -19,16 +19,15 @@
 package snw.kookbc.impl.serializer.event.item;
 
 import static com.google.gson.JsonParser.parseString;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsJsonObject;
-import static snw.kookbc.util.GsonUtil.getAsLong;
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.User;
 import snw.jkook.event.item.ItemConsumedEvent;
@@ -46,13 +45,34 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
     protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx)
             throws JsonParseException {
         final EntityStorage storage = client.getStorage();
-        final JsonObject content = parseString(getAsString(object, "content")).getAsJsonObject();
-        final JsonObject data = getAsJsonObject(content, "data");
-        final long timeStamp = getAsLong(object, "msg_timestamp");
-        final User consumer = storage.getUser(getAsString(data, "user_id"));
-        final User affected = storage.getUser(getAsString(data, "target_id"));
-        final int itemId = getAsInt(data, "item_id");
+        final JsonObject content = parseString(object.get("content").getAsString()).getAsJsonObject();
+        final JsonObject data = content.getAsJsonObject("data");
+        final long timeStamp = object.get("msg_timestamp").getAsLong();
+        final User consumer = storage.getUser(data.get("user_id").getAsString());
+        final User affected = storage.getUser(data.get("target_id").getAsString());
+        final int itemId = data.get("item_id").getAsInt();
         return new ItemConsumedEvent(timeStamp, consumer, affected, itemId);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected ItemConsumedEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

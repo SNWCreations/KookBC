@@ -27,8 +27,6 @@ import snw.jkook.message.component.card.module.*;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
 
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
     public static final Map<String, Class<? extends BaseModule>> MODULE_MAP;
@@ -68,9 +66,9 @@ public class CardComponentSerializer implements JsonSerializer<CardComponent>, J
     @Override
     public CardComponent deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        String theme = get(jsonObject, "theme").getAsString();
-        String size = get(jsonObject, "size").getAsString();
-        String color = has(jsonObject, "color") ? get(jsonObject, "color").getAsString() : null;
+        String theme = jsonObject.has("theme") ? jsonObject.get("theme").getAsString() : null;
+        String size = jsonObject.get("size").getAsString();
+        String color = jsonObject.has("color") ? jsonObject.get("color").getAsString() : null;
         if (color != null && color.isEmpty()) {
             color = null;
         }

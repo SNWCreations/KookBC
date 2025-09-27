@@ -18,9 +18,9 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
+import static snw.kookbc.util.JacksonUtil.getMapper;
+import static snw.kookbc.util.JacksonUtil.get;
+import static snw.kookbc.util.JacksonUtil.has;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +31,7 @@ import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -74,8 +75,8 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .put("duration", validSeconds)
                 .put("setting_times", validTimes)
                 .build();
-        JsonObject object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return get(object, "url").getAsString();
+        JsonNode object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
+        return snw.kookbc.util.JacksonUtil.get(object, "url").asText();
     }
 
     @Override
@@ -116,9 +117,9 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public int getQuality() { // must query because we can't update this value by update(JsonObject) method
-        final JsonObject self = client.getNetworkClient()
+        final JsonNode self = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId());
-        return get(self, "voice_quality").getAsInt();
+        return snw.kookbc.util.JacksonUtil.get(self, "voice_quality").asInt();
     }
 
     @Override
@@ -159,9 +160,14 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
 
     @Override
     public synchronized void update(JsonObject data) {
+        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+    }
+
+    @Override
+    public synchronized void update(JsonNode data) {
         super.update(data);
-        boolean hasPassword = has(data, "has_password") && get(data, "has_password").getAsBoolean();
-        int size = has(data, "limit_amount") ? get(data, "limit_amount").getAsInt() : 0;
+        boolean hasPassword = data.has("has_password") && data.get("has_password").asBoolean();
+        int size = data.has("limit_amount") ? data.get("limit_amount").asInt() : 0;
         // KOOK does not provide voice quality value here!
         this.passwordProtected = hasPassword;
         this.maxSize = size;
@@ -173,8 +179,12 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .put("channel_id", getId())
                 .putIfNotNull("password", password)
                 .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+        final JsonNode res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        try {
+            return getMapper().readValue(res.toString(), StreamingInfoImpl.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse StreamingInfo", e);
+        }
     }
 
     @Override
@@ -184,8 +194,12 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .putIfNotNull("password", password)
                 .put("rtcp_mux", rtcpMux)
                 .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+        final JsonNode res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        try {
+            return getMapper().readValue(res.toString(), StreamingInfoImpl.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse StreamingInfo", e);
+        }
     }
 
     @Override
@@ -198,8 +212,12 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .put("audio_pt", audioPayloadType)
                 .put("rtcp_mux", rtcpMux)
                 .build();
-        final JsonObject res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
-        return NORMAL_GSON.fromJson(res, StreamingInfoImpl.class);
+        final JsonNode res = client.getNetworkClient().post(HttpAPIRoute.VOICE_JOIN.toFullURL(), body);
+        try {
+            return getMapper().readValue(res.toString(), StreamingInfoImpl.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse StreamingInfo", e);
+        }
     }
 
     @Override

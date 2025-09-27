@@ -38,6 +38,8 @@ import snw.kookbc.impl.serializer.component.card.element.ImageElementSerializer;
 import snw.kookbc.impl.serializer.component.card.module.*;
 import snw.kookbc.impl.serializer.component.card.structure.ParagraphSerializer;
 
+// Jackson Migration Support
+
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -77,6 +79,56 @@ public final class GsonUtil {
             .create();
 
     public static final Gson NORMAL_GSON = new Gson();
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * 新的卡片处理使用Jackson，性能更好且支持null-safe处理
+     * 为了向后兼容，保留CARD_GSON但推荐使用JacksonCardUtil
+     */
+    @Deprecated
+    public static final Gson LEGACY_CARD_GSON = CARD_GSON;
+
+    /**
+     * 推荐使用JacksonCardUtil.CARD_MAPPER替代CARD_GSON
+     * Jackson提供更好的null-safe处理，适合Kook API的不完整JSON
+     */
+    public static boolean useJacksonForCards() {
+        return true; // 默认启用Jackson处理卡片
+    }
+
+    // ===== Jackson兼容性方法 =====
+
+    /**
+     * 获取推荐的卡片序列化器（Jackson版本）
+     * @deprecated 请直接使用 JacksonCardUtil.CARD_MAPPER
+     */
+    @Deprecated
+    public static com.fasterxml.jackson.databind.ObjectMapper getCardMapper() {
+        return JacksonCardUtil.getMapper();
+    }
+
+    /**
+     * Jackson版本的卡片序列化 - 推荐使用
+     */
+    public static String toCardJson(Object cardComponent) {
+        try {
+            return JacksonCardUtil.toJson(cardComponent);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize card component with Jackson", e);
+        }
+    }
+
+    /**
+     * Jackson版本的卡片反序列化 - 推荐使用
+     */
+    public static <T> T fromCardJson(String json, Class<T> clazz) {
+        try {
+            return JacksonCardUtil.fromJson(json, clazz);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize card component with Jackson", e);
+        }
+    }
 
     public static Type createListType(Class<?> elementType) {
         Validate.notNull(elementType);

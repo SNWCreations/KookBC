@@ -59,7 +59,7 @@ public class Connector {
         do {
             connected = false;
             // if self connected is true, call shutdownHttp()
-            if (kbcClient.getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()).get("online").getAsBoolean()) {
+            if (kbcClient.getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()).get("online").asBoolean()) {
                 shutdownHttp();
             }
             int times = 0;
@@ -89,7 +89,7 @@ public class Connector {
     }
 
     private void getGateway() {
-        wsLink = kbcClient.getNetworkClient().get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").getAsString();
+        wsLink = kbcClient.getNetworkClient().get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").asText();
     }
 
     public void shutdown() {

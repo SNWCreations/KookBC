@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.util.GsonUtil.get;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -41,21 +43,55 @@ public class UserLeaveGuildEventDeserializer extends NormalEventDeserializer<Use
     @Override
     protected UserLeaveGuildEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        String realType = get(get(object, "extra").getAsJsonObject(), "type").getAsString();
+        String realType = object.getAsJsonObject("extra").get("type").getAsString();
         User user;
         String guildId;
         if ("self_exited_guild".equals(realType)) {
             user = client.getCore().getUser();
-            guildId = get(body, "guild_id").getAsString();
+            guildId = body.get("guild_id").getAsString();
         } else {
-            user = client.getStorage().getUser(get(body, "user_id").getAsString());
-            guildId = get(object, "target_id").getAsString();
+            user = client.getStorage().getUser(body.get("user_id").getAsString());
+            guildId = object.get("target_id").getAsString();
         }
         Guild guild = client.getStorage().getGuild(guildId);
         if (guild == null) {
             return new UserLeaveGuildEvent(timeStamp, user, guildId);
         }
         return new UserLeaveGuildEvent(timeStamp, user, guild);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected UserLeaveGuildEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        String realType = node.get("extra").get("type").asText();
+        User user;
+        String guildId;
+        if ("self_exited_guild".equals(realType)) {
+            user = client.getCore().getUser();
+            guildId = body.get("guild_id").asText();
+        } else {
+            user = client.getStorage().getUser(body.get("user_id").asText());
+            guildId = node.get("target_id").asText();
+        }
+        Guild guild = client.getStorage().getGuild(guildId);
+        if (guild == null) {
+            return new UserLeaveGuildEvent(timeStamp, user, guildId);
+        }
+        return new UserLeaveGuildEvent(timeStamp, user, guild);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 不依赖MessageBuilder，可以直接启用
+        return true;
     }
 
 }

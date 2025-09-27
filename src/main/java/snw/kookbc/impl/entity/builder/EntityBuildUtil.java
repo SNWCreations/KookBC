@@ -19,8 +19,6 @@
 package snw.kookbc.impl.entity.builder;
 
 import static snw.jkook.util.Validate.notNull;
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.getAsInt;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -28,6 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
@@ -43,7 +42,7 @@ import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 public class EntityBuildUtil {
 
     public static Collection<Channel.RolePermissionOverwrite> parseRPO(JsonObject object) {
-        JsonArray array = get(object, "permission_overwrites").getAsJsonArray();
+        JsonArray array = object.getAsJsonArray("permission_overwrites");
         Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
         for (JsonElement element : array) {
             JsonObject orpo = element.getAsJsonObject();
@@ -57,7 +56,7 @@ public class EntityBuildUtil {
     }
 
     public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, JsonObject object) {
-        JsonArray array = get(object, "permission_users").getAsJsonArray();
+        JsonArray array = object.getAsJsonArray("permission_users");
         Collection<Channel.UserPermissionOverwrite> upo = new ConcurrentLinkedQueue<>();
         for (JsonElement element : array) {
             JsonObject oupo = element.getAsJsonObject();
@@ -73,7 +72,7 @@ public class EntityBuildUtil {
 
     public static NotifyType parseNotifyType(JsonObject object) {
         Guild.NotifyType type = null;
-        int rawNotifyType = getAsInt(object, "notify_type");
+        int rawNotifyType = object.get("notify_type").getAsInt();
         for (Guild.NotifyType value : Guild.NotifyType.values()) {
             if (value.getValue() == rawNotifyType) {
                 type = value;
@@ -104,6 +103,92 @@ public class EntityBuildUtil {
             default:
                 return null;
         }
+    }
+
+    // ===== Jackson API - 安全版本（处理不完整JSON数据） =====
+
+    /**
+     * 解析角色权限覆写 (Jackson版本，安全处理不完整JSON)
+     */
+    public static Collection<Channel.RolePermissionOverwrite> parseRPO(JsonNode node) {
+        JsonNode array = snw.kookbc.util.JacksonUtil.getArrayOrNull(node, "permission_overwrites");
+        Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
+
+        if (array != null && array.isArray()) {
+            for (JsonNode element : array) {
+                if (element != null && element.isObject()) {
+                    int roleId = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "role_id", 0);
+                    int allow = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "allow", 0);
+                    int deny = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "deny", 0);
+
+                    rpo.add(new Channel.RolePermissionOverwrite(roleId, allow, deny));
+                }
+            }
+        }
+        return rpo;
+    }
+
+    /**
+     * 解析用户权限覆写 (Jackson版本，安全处理不完整JSON)
+     */
+    public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, JsonNode node) {
+        JsonNode array = snw.kookbc.util.JacksonUtil.getArrayOrNull(node, "permission_users");
+        Collection<Channel.UserPermissionOverwrite> upo = new ConcurrentLinkedQueue<>();
+
+        if (array != null && array.isArray()) {
+            for (JsonNode element : array) {
+                if (element != null && element.isObject()) {
+                    JsonNode rawUser = snw.kookbc.util.JacksonUtil.getObjectOrNull(element, "user");
+                    if (rawUser != null) {
+                        String userId = snw.kookbc.util.JacksonUtil.getRequiredString(rawUser, "id");
+                        int allow = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "allow", 0);
+                        int deny = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "deny", 0);
+
+                        // 临时桥接到Gson JsonObject
+                        com.google.gson.JsonObject gsonUser = convertToGsonJsonObject(rawUser);
+                        upo.add(new Channel.UserPermissionOverwrite(
+                                client.getStorage().getUser(userId, gsonUser),
+                                allow, deny));
+                    }
+                }
+            }
+        }
+        return upo;
+    }
+
+    /**
+     * 解析通知类型 (Jackson版本，安全处理不完整JSON)
+     */
+    public static NotifyType parseNotifyType(JsonNode node) {
+        int rawNotifyType = snw.kookbc.util.JacksonUtil.getIntOrDefault(node, "notify_type", 0);
+
+        for (Guild.NotifyType value : Guild.NotifyType.values()) {
+            if (value.getValue() == rawNotifyType) {
+                return value;
+            }
+        }
+
+        // 如果找不到匹配的通知类型，使用默认值而不是抛出异常
+        return Guild.NotifyType.values()[0]; // 使用第一个枚举值作为默认
+    }
+
+    /**
+     * 解析表情所属服务器 (Jackson版本，安全处理不完整JSON)
+     */
+    public static Guild parseEmojiGuild(String id, KBCClient client, JsonNode node) {
+        Guild guild = null;
+        if (id != null && id.contains("/")) {
+            String guildId = id.substring(0, id.indexOf("/"));
+            if (!guildId.isEmpty()) {
+                guild = client.getStorage().getGuild(guildId);
+            }
+        }
+        return guild;
+    }
+
+    // 临时桥接方法 - 将JsonNode转换为JsonObject供现有代码使用
+    private static com.google.gson.JsonObject convertToGsonJsonObject(JsonNode jacksonNode) {
+        return snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(jacksonNode);
     }
 
 }

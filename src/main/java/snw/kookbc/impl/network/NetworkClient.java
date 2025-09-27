@@ -19,7 +19,8 @@
 package snw.kookbc.impl.network;
 
 import static snw.kookbc.CLIOptions.NO_BUCKET;
-import static snw.kookbc.util.GsonUtil.NORMAL_GSON;
+import static snw.kookbc.util.JacksonUtil.parse;
+import static snw.kookbc.util.JacksonUtil.toJson;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -29,8 +30,8 @@ import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -68,13 +69,14 @@ public class NetworkClient {
         return client;
     }
 
-    public JsonObject get(String fullUrl) {
-        return checkResponse(JsonParser.parseString(getRawContent(fullUrl)).getAsJsonObject()).getAsJsonObject("data");
+    // Jackson API - 高性能JSON处理
+    public JsonNode get(String fullUrl) {
+        return checkResponseJackson(parse(getRawContent(fullUrl))).get("data");
     }
 
-    public JsonObject post(String fullUrl, Map<?, ?> body) {
-        return checkResponse(JsonParser.parseString(postContent(fullUrl, body)).getAsJsonObject())
-                .getAsJsonObject("data");
+    public JsonNode post(String fullUrl, Map<?, ?> body) {
+        return checkResponseJackson(parse(postContent(fullUrl, body)))
+                .get("data");
     }
 
     public String getRawContent(String fullUrl) {
@@ -88,7 +90,7 @@ public class NetworkClient {
     }
 
     public String postContent(String fullUrl, Map<?, ?> body) {
-        return postContent(fullUrl, NORMAL_GSON.toJson(body), "application/json");
+        return postContent(fullUrl, toJson(body), "application/json");
     }
 
     public String postContent(String fullUrl, String body, String mediaType) {
@@ -148,8 +150,19 @@ public class NetworkClient {
                 method, fullUrl, postBodyJson);
     }
 
-    // Return original object if check OK
-    public JsonObject checkResponse(JsonObject response) {
+    // Jackson响应检查
+    public JsonNode checkResponseJackson(JsonNode response) {
+        int code = response.get("code").asInt();
+
+        if (code != 0) {
+            String message = response.get("message").asText();
+            throw new BadResponseException(code, message);
+        }
+        return response;
+    }
+
+    // Gson响应检查 - 向后兼容性支持
+    public com.google.gson.JsonObject checkResponse(com.google.gson.JsonObject response) {
         int code = response.get("code").getAsInt();
 
         if (code != 0) {
@@ -158,4 +171,5 @@ public class NetworkClient {
         }
         return response;
     }
+
 }

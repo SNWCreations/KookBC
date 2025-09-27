@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.serializer.event.user;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
@@ -26,6 +25,9 @@ import java.util.Objects;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -42,16 +44,37 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
     @Override
     protected UserClickButtonEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        final String userId = getAsString(body, "user_id");
-        final String targetId = getAsString(body, "target_id");
+        final String userId = body.get("user_id").getAsString();
+        final String targetId = body.get("target_id").getAsString();
         final Boolean needChannel = Objects.equals(userId, targetId);
 
         final User user = client.getStorage().getUser(userId);
-        final String messageId = getAsString(body, "msg_id");
-        final String value = getAsString(body, "value");
+        final String messageId = body.get("msg_id").getAsString();
+        final String value = body.get("value").getAsString();
         final NonCategoryChannel channel = needChannel ? null
                 : (NonCategoryChannel) client.getStorage().getChannel(targetId);
         return new UserClickButtonEvent(timeStamp, user, messageId, value, channel);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected UserClickButtonEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

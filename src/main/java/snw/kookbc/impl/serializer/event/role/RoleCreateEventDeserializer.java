@@ -18,13 +18,15 @@
 
 package snw.kookbc.impl.serializer.event.role;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
 
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+// Jackson Migration Support
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -41,7 +43,7 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
     @Override
     protected RoleCreateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp,
             JsonObject body) throws JsonParseException {
-        final Guild guild = client.getStorage().getGuild(getAsString(object, "target_id"));
+        final Guild guild = client.getStorage().getGuild(object.get("target_id").getAsString());
         final Role role = client.getEntityBuilder().buildRole(guild, body);
         return new RoleCreateEvent(timeStamp, role);
     }
@@ -51,6 +53,27 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
         final Guild guild = client.getStorage().getGuild(event.getRole().getGuild().getId());
         final Role role = event.getRole();
         client.getStorage().addRole(guild, role);
+    }
+
+    // ===== Jackson Migration Support =====
+
+    /**
+     * Jackson版本的反序列化方法 - 处理Kook不完整JSON数据
+     * 提供更好的null-safe处理
+     */
+    @Override
+    protected RoleCreateEvent deserializeFromNode(JsonNode node) {
+        // 暂时使用默认实现，等相关依赖完成Jackson迁移
+        return super.deserializeFromNode(node);
+    }
+
+    /**
+     * 启用Jackson反序列化
+     */
+    @Override
+    protected boolean useJacksonDeserialization() {
+        // 暂时返回false，等相关依赖完成Jackson迁移
+        return false;
     }
 
 }

@@ -18,9 +18,9 @@
 
 package snw.kookbc.impl.pageiter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.entity.Game;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.GameImpl;
@@ -48,12 +48,30 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
     }
 
     @Override
+    protected void processElements(JsonNode node) {
+        object = new ArrayList<>(node.size());
+
+        for (JsonNode element : node) {
+            int id = element.get("id").asInt();
+            Game game = client.getStorage().getGame(id);
+            if (game != null) {
+                ((GameImpl) game).update(element);
+            } else {
+                game = client.getEntityBuilder().buildGame(element);
+                client.getStorage().addGame(game);
+            }
+            object.add(game);
+        }
+    }
+
+    // 向后兼容保留的重载方法
+    @Override
     protected void processElements(JsonArray array) {
         object = new ArrayList<>(array.size());
 
         for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            int id = rawObj.get("id").getAsInt();
+            JsonNode rawObj = snw.kookbc.util.JacksonUtil.parse(element.toString());
+            int id = rawObj.get("id").asInt();
             Game game = client.getStorage().getGame(id);
             if (game != null) {
                 ((GameImpl) game).update(rawObj);
@@ -69,4 +87,5 @@ public class GameIterator extends PageIteratorImpl<Collection<Game>> {
     public Collection<Game> next() {
         return Collections.unmodifiableCollection(super.next());
     }
+
 }

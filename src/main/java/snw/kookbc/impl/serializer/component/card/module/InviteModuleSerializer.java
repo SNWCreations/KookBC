@@ -23,7 +23,6 @@ import snw.jkook.message.component.card.module.InviteModule;
 
 import java.lang.reflect.Type;
 
-import static snw.kookbc.util.GsonUtil.get;
 
 public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
     @Override
@@ -37,6 +36,6 @@ public class InviteModuleSerializer implements JsonSerializer<InviteModule>, Jso
     @Override
     public InviteModule deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         JsonObject jsonObject = element.getAsJsonObject();
-        return new InviteModule(get(jsonObject, "code").getAsString());
+        return new InviteModule(jsonObject.get("code").getAsString());
     }
 }
