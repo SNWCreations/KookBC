@@ -85,7 +85,7 @@ public class Connector {
                 getGateway();
             }
         } while (!connected);
-        kbcClient.getCore().getLogger().info("WebSocket Connection OK");
+        kbcClient.getCore().getLogger().info("WebSocket 连接成功");
     }
 
     private void getGateway() {

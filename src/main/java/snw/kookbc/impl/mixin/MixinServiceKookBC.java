@@ -181,7 +181,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public void init() {
         int launch = MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch");
         if (launch < 4) {
-            MixinServiceKookBC.logger.error("MixinBootstrap.doInit() called during a tweak constructor! {}", launch);
+            MixinServiceKookBC.logger.error("MixinBootstrap.doInit() 在调整构造函数期间被调用！{}", launch);
         }
 
         List<String> tweakClasses = GlobalProperties.get(MixinServiceKookBC.BLACKBOARD_KEY_TWEAKCLASSES);
@@ -229,7 +229,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
             for (URL url : sources) {
                 try {
                     URI uri = url.toURI();
-                    MixinServiceKookBC.logger.debug("Scanning {} for mixin tweaker", uri);
+                    MixinServiceKookBC.logger.debug("正在扫描 {} 以查找 mixin 调整器", uri);
                     if (!"file".equals(uri.getScheme()) || !Files.toFile(uri).exists()) {
                         continue;
                     }
@@ -364,7 +364,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
             }
 
             if (transformer instanceof IClassNameTransformer) {
-                MixinServiceKookBC.logger.debug("Found name transformer: {}", transformer.getClass().getName());
+                MixinServiceKookBC.logger.debug("找到名称转换器：{}", transformer.getClass().getName());
                 this.nameTransformer = (IClassNameTransformer) transformer;
             }
 
@@ -398,7 +398,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
      * list just once per environment and cache the result.
      */
     private void buildTransformerDelegationList() {
-        MixinServiceKookBC.logger.debug("Rebuilding transformer delegation list:");
+        MixinServiceKookBC.logger.debug("正在重建转换器委托列表：");
         this.delegatedTransformers = new ArrayList<>();
         for (ITransformer transformer : this.getTransformers()) {
             if (!(transformer instanceof ILegacyClassTransformer)) {
@@ -415,14 +415,14 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
                 }
             }
             if (include && !legacyTransformer.isDelegationExcluded()) {
-                MixinServiceKookBC.logger.debug("  Adding:    {}", transformerName);
+                MixinServiceKookBC.logger.debug("  正在添加：    {}", transformerName);
                 this.delegatedTransformers.add(legacyTransformer);
             } else {
-                MixinServiceKookBC.logger.debug("  Excluding: {}", transformerName);
+                MixinServiceKookBC.logger.debug("  正在排除： {}", transformerName);
             }
         }
 
-        MixinServiceKookBC.logger.debug("Transformer delegation list created with {} entries", this.delegatedTransformers.size());
+        MixinServiceKookBC.logger.debug("转换器委托列表已创建，包含 {} 个条目", this.delegatedTransformers.size());
     }
 
     /**
@@ -539,7 +539,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
                 this.addTransformerExclusion(transformer.getName());
 
                 this.lock.clear();
-                MixinServiceKookBC.logger.info("A re-entrant transformer '{}' was detected and will no longer process meta class data",
+                MixinServiceKookBC.logger.info("检测到重入转换器 '{}'，将不再处理元类数据",
                         transformer.getName());
             }
         }
@@ -563,7 +563,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
         List<IClassTransformer> transformers = LaunchMain.classLoader.getTransformers();
         for (IClassTransformer transformer : transformers) {
             if (transformer instanceof IClassNameTransformer) {
-                MixinServiceKookBC.logger.debug("Found name transformer: {}", transformer.getClass().getName());
+                MixinServiceKookBC.logger.debug("找到名称转换器：{}", transformer.getClass().getName());
                 this.nameTransformer = (IClassNameTransformer) transformer;
             }
         }

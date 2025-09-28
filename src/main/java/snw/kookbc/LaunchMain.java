@@ -43,8 +43,8 @@ public class LaunchMain extends Launcher {
             ClassLoader appClassLoader = LaunchMain.class.getClassLoader();
             Class<?> mixinClass = Class.forName("org.spongepowered.asm.util.JavaVersion");
             if (mixinClass.getClassLoader() != appClassLoader) {
-                System.out.println("[KookBC/WARN] Mixin support is already enabled!");
-                System.out.println("[KookBC/WARN] If you're sure you don't need Mixin support, visit the following link:");
+                System.out.println("[KookBC/WARN] Mixin 支持已启用！");
+                System.out.println("[KookBC/WARN] 如果您确定不需要 Mixin 支持，请访问以下链接：");
                 System.out.println("[KookBC/WARN] https://github.com/SNWCreations/KookBC/blob/main/docs/KookBC_CommandLine.md#%E5%90%AF%E5%8A%A8%E5%85%A5%E5%8F%A3");
                 // Never part, never give up!
                 classLoader = new LaunchClassLoader(getUrls(appClassLoader).toArray(new URL[0]));
@@ -85,14 +85,6 @@ public class LaunchMain extends Launcher {
         }
         args = argsList.toArray(new String[0]);
         Thread.currentThread().setName(MAIN_THREAD_NAME);
-        // Actually here should not be warning, but the logging level of the LaunchWrapper is WARN.
-        // Also, I think this message can let the user know they are running KookBC under Launch mode.
-        LogWrapper.LOGGER.warn("Launching KookBC with Mixin support");
-        LogWrapper.LOGGER.warn("The author of Mixin support: huanmeng_qwq@Github"); // thank you!  --- SNWCreations
-        LogWrapper.LOGGER.warn("Tips: You can safely ignore this.");
-        LogWrapper.LOGGER.warn("But if you're really sure you don't need Mixin support, visit the following link:");
-        LogWrapper.LOGGER.warn("https://github.com/SNWCreations/KookBC/blob/main/docs/KookBC_CommandLine.md");
-        LogWrapper.LOGGER.warn("The documentation will tell you how can you launch KookBC without Mixin support.");
         launch.launch(args);
     }
 
@@ -147,7 +139,7 @@ public class LaunchMain extends Launcher {
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
 
-        final OptionSpec<String> tweakClassOption = parser.accepts("tweakClass", "Tweak class(es) to load").withRequiredArg().defaultsTo(MIXIN_TWEAK, DEFAULT_TWEAK);
+        final OptionSpec<String> tweakClassOption = parser.accepts("tweakClass", "要加载的调整类").withRequiredArg().defaultsTo(MIXIN_TWEAK, DEFAULT_TWEAK);
         final OptionSpec<String> nonOption = parser.nonOptions();
 
         final OptionSet options = parser.parse(args);
@@ -184,14 +176,14 @@ public class LaunchMain extends Launcher {
                     final String tweakName = it.next();
                     // Safety check - don't reprocess something we've already visited
                     if (allTweakerNames.contains(tweakName)) {
-                        LogWrapper.LOGGER.warn("Tweak class name {} has already been visited -- skipping", tweakName);
+                        LogWrapper.LOGGER.warn("调整类名 {} 已经被访问过 -- 跳过", tweakName);
                         // remove the tweaker from the stack otherwise it will create an infinite loop
                         it.remove();
                         continue;
                     } else {
                         allTweakerNames.add(tweakName);
                     }
-                    LogWrapper.LOGGER.info("Loading tweak class name {}", tweakName);
+                    LogWrapper.LOGGER.info("正在加载调整类 {}", tweakName);
 
                     // Ensure we allow the tweak class to load with the parent classloader
                     classLoader.addClassLoaderExclusion(tweakName.substring(0, tweakName.lastIndexOf('.')));
@@ -202,7 +194,7 @@ public class LaunchMain extends Launcher {
                     it.remove();
                     // If we haven't visited a tweaker yet, the first will become the 'primary' tweaker
                     if (primaryTweaker == null) {
-                        LogWrapper.LOGGER.info("Using primary tweak class name {}", tweakName);
+                        LogWrapper.LOGGER.info("使用主要调整类 {}", tweakName);
                         primaryTweaker = tweaker;
                     }
                 }
@@ -210,7 +202,7 @@ public class LaunchMain extends Launcher {
                 // Now, iterate all the tweakers we just instantiated
                 for (final Iterator<ITweaker> it = tweakers.iterator(); it.hasNext(); ) {
                     final ITweaker tweaker = it.next();
-                    LogWrapper.LOGGER.info("Calling tweak class {}", tweaker.getClass().getName());
+                    LogWrapper.LOGGER.info("调用调整类 {}", tweaker.getClass().getName());
                     tweaker.acceptOptions(options.valuesOf(nonOption));
                     tweaker.injectIntoClassLoader(classLoader);
                     allTweakers.add(tweaker);
@@ -230,7 +222,7 @@ public class LaunchMain extends Launcher {
             }
 
             if (primaryTweaker == null) {
-                throw new NullPointerException("Tweaker not found");
+                throw new NullPointerException("未找到调整器");
             }
 
             // Finally, we turn to the primary tweaker, and let it tell us where to go to launch
@@ -258,7 +250,7 @@ public class LaunchMain extends Launcher {
                 }
             }
         } catch (Exception e) {
-            LogWrapper.LOGGER.error("Unable to launch", e);
+            LogWrapper.LOGGER.error("无法启动", e);
             System.exit(1);
         }
     }

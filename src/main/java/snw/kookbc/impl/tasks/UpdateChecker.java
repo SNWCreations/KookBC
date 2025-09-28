@@ -50,10 +50,10 @@ public final class UpdateChecker extends Thread {
     }
 
     private void run0() throws Exception {
-        client.getCore().getLogger().info("Checking updates...");
+        client.getCore().getLogger().info("正在检查更新...");
         if (!Objects.equals(SharedConstants.REPO_URL, "https://github.com/SNWCreations/KookBC")) {
             client.getCore().getLogger()
-                    .warn("Not Official KookBC! We cannot check updates for you. Is this a fork version?");
+                    .warn("非官方 KookBC！我们无法为您检查更新。这是一个分支版本吗？");
             return;
         }
         final Request req = new Request.Builder()
@@ -128,7 +128,7 @@ public final class UpdateChecker extends Thread {
                 break;
             }
             case 0: {
-                client.getCore().getLogger().info("You are using the latest version! :)");
+                client.getCore().getLogger().info("您正在使用最新版本！:)");
                 break;
             }
             case 1: {

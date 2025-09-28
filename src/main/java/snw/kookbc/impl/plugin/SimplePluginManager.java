@@ -142,11 +142,11 @@ public class SimplePluginManager implements PluginManager {
         PluginDescription description = plugin.getDescription();
         int diff = getVersionDifference(description.getApiVersion(), client.getCore().getAPIVersion());
         if (diff == -1) {
-            plugin.getLogger().warn("The plugin is using old version of JKook API! We are using {}, got {}", client.getCore().getAPIVersion(), description.getApiVersion());
+            plugin.getLogger().warn("该插件使用的 JKook API 版本过旧！我们使用的是 {}，获取到的是 {}", client.getCore().getAPIVersion(), description.getApiVersion());
         }
         if (diff == 1) {
             closeLoaderIfPossible(loader); // plugin won't be returned, so the loader should be closed to prevent resource leak
-            throw new InvalidPluginException(String.format("The plugin is using unsupported version of JKook API! We are using %s, got %s", client.getCore().getAPIVersion(), description.getApiVersion()));
+            throw new InvalidPluginException(String.format("该插件使用的 JKook API 版本不受支持！我们使用的是 %s，获取到的是 %s", client.getCore().getAPIVersion(), description.getApiVersion()));
         }
         return plugin;
     }
@@ -175,7 +175,7 @@ public class SimplePluginManager implements PluginManager {
                 try {
                     plugin = loadPlugin0(file, false);
                 } catch (Throwable e) {
-                    logger.error("Unable to load a plugin in the provided file {}", file, e);
+                    logger.error("无法从指定文件 {} 中加载插件", file, e);
                     continue;
                 }
                 if (plugin == null) {
@@ -221,7 +221,7 @@ public class SimplePluginManager implements PluginManager {
     public void enablePlugin(Plugin plugin) throws UnknownDependencyException {
         if (isPluginEnabled(plugin)) return;
         PluginDescription description = plugin.getDescription();
-        plugin.getLogger().info("Enabling {} version {}", description.getName(), description.getVersion());
+        plugin.getLogger().info("正在启用 {} 版本 {}", description.getName(), description.getVersion());
         if (!plugin.getDataFolder().exists()) {
             //noinspection ResultOfMethodCallIgnored
             plugin.getDataFolder().mkdir();
@@ -243,7 +243,7 @@ public class SimplePluginManager implements PluginManager {
     public void disablePlugin(Plugin plugin) {
         if (!isPluginEnabled(plugin)) return;
         PluginDescription description = plugin.getDescription();
-        plugin.getLogger().info("Disabling {} version {}", description.getName(), description.getVersion());
+        plugin.getLogger().info("正在禁用 {} 版本 {}", description.getName(), description.getVersion());
         // cancel tasks
         client.getCore().getScheduler().cancelTasks(plugin);
         client.getCore().getEventManager().unregisterAllHandlers(plugin);
@@ -259,7 +259,7 @@ public class SimplePluginManager implements PluginManager {
             try {
                 ((SimplePluginClassLoader) plugin.getClass().getClassLoader()).close();
             } catch (IOException e) {
-                logger.error("Unexpected IOException while we're attempting to close the PluginClassLoader.", e);
+                logger.error("在尝试关闭 PluginClassLoader 时发生意外的 IOException。", e);
             }
         }
     }
