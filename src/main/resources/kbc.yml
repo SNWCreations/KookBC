@@ -91,20 +91,3 @@ allow-error-feedback: true
 # UNSAFE! Turn to true to disable SSL verification in HTTP requests.
 # DO NOT USE THIS IF YOU DO NOT KNOW WHAT YOU ARE DOING!
 ignore-ssl: false
-
-## ---- START EVENT PROCESSING OPTIMIZATION ----
-
-# Enable parallel event processing within individual events
-# This optimization maintains Kook's global SN ordering while allowing listeners to run in parallel
-# Improves performance with high event volumes while staying compliant with Kook specifications
-enable-parallel-event-processing: true
-
-# Enable advanced event performance monitoring and statistics
-# Tracks event processing times, counts, and generates performance reports
-enable-event-performance-monitoring: true
-
-# Automatic performance report interval (in minutes)
-# Set to 0 to disable automatic reports
-event-performance-report-interval: 30
-
-## ---- END EVENT PROCESSING OPTIMIZATION ----

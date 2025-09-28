@@ -34,9 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.stream.Collectors;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
@@ -49,17 +46,6 @@ public class EventManagerImpl implements EventManager {
     // 优化的并行事件处理
     private final ExecutorService eventExecutor;
     private final boolean parallelEventProcessing;
-    private final boolean performanceMonitoringEnabled;
-
-    // 性能监控
-    private final AtomicLong totalEventsProcessed = new AtomicLong(0);
-    private final LongAdder totalProcessingTime = new LongAdder();
-    private final AtomicLong parallelEventsProcessed = new AtomicLong(0);
-    private final Map<Class<? extends Event>, AtomicLong> eventTypeCounters = new ConcurrentHashMap<>();
-
-    // 定期性能报告
-    private final ScheduledExecutorService reportScheduler;
-    private ScheduledFuture<?> reportTask;
 
     public EventManagerImpl(KBCClient client) {
         this.client = client;
@@ -68,38 +54,15 @@ public class EventManagerImpl implements EventManager {
 
         // 从配置读取是否启用并行事件处理
         this.parallelEventProcessing = client.getConfig().getBoolean("enable-parallel-event-processing", true);
-        this.performanceMonitoringEnabled = client.getConfig().getBoolean("enable-event-performance-monitoring", true);
 
         // 创建专用的虚拟线程执行器用于并行事件处理
         this.eventExecutor = parallelEventProcessing ?
             VirtualThreadUtil.newVirtualThreadExecutor() :
             null;
 
-        // 创建定期报告调度器
-        this.reportScheduler = performanceMonitoringEnabled ?
-            Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "EventManager-PerformanceReporter");
-                t.setDaemon(true);
-                return t;
-            }) : null;
 
-        // 启动定期性能报告（如果启用）
-        int reportInterval = client.getConfig().getInt("event-performance-report-interval", 30);
-        if (performanceMonitoringEnabled && reportScheduler != null && reportInterval > 0) {
-            this.reportTask = reportScheduler.scheduleAtFixedRate(
-                this::printPerformanceReport,
-                reportInterval,
-                reportInterval,
-                TimeUnit.MINUTES
-            );
-            client.getCore().getLogger().info("定期性能报告已启用，间隔: {}分钟", reportInterval);
-        } else {
-            this.reportTask = null;
-        }
-
-        client.getCore().getLogger().info("事件管理器初始化完成 - 并行处理: {}, 性能监控: {}",
-            parallelEventProcessing ? "启用" : "禁用",
-            performanceMonitoringEnabled ? "启用" : "禁用");
+        client.getCore().getLogger().info("事件管理器初始化完成 - 并行处理: {}",
+            parallelEventProcessing ? "启用" : "禁用");
     }
 
     @Override
@@ -108,31 +71,13 @@ public class EventManagerImpl implements EventManager {
             return;
         }
 
-        long startTime = performanceMonitoringEnabled ? System.nanoTime() : 0;
 
-        // 更新事件计数器（仅在启用监控时）
-        if (performanceMonitoringEnabled) {
-            totalEventsProcessed.incrementAndGet();
-            eventTypeCounters.computeIfAbsent(event.getClass(), k -> new AtomicLong(0)).incrementAndGet();
-        }
-
-        try {
-            if (parallelEventProcessing && eventExecutor != null) {
-                // 并行模式：使用虚拟线程执行事件处理
-                callEventParallel(event);
-                if (performanceMonitoringEnabled) {
-                    parallelEventsProcessed.incrementAndGet();
-                }
-            } else {
-                // 传统同步模式：保持向后兼容
-                callEventSync(event);
-            }
-        } finally {
-            // 记录处理时间（仅在启用监控时）
-            if (performanceMonitoringEnabled && startTime > 0) {
-                long processingTime = System.nanoTime() - startTime;
-                totalProcessingTime.add(processingTime);
-            }
+        if (parallelEventProcessing && eventExecutor != null) {
+            // 并行模式：使用虚拟线程执行事件处理
+            callEventParallel(event);
+        } else {
+            // 传统同步模式：保持向后兼容
+            callEventSync(event);
         }
     }
 
@@ -215,59 +160,6 @@ public class EventManagerImpl implements EventManager {
         return bus.hasSubscribers(type);
     }
 
-    /**
-     * 获取性能统计信息
-     */
-    public EventPerformanceStats getPerformanceStats() {
-        return new EventPerformanceStats(
-            totalEventsProcessed.get(),
-            parallelEventsProcessed.get(),
-            totalProcessingTime.sum(),
-            Map.copyOf(eventTypeCounters.entrySet().stream()
-                .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry -> entry.getValue().get()
-                )))
-        );
-    }
-
-    /**
-     * 重置性能统计
-     */
-    public void resetPerformanceStats() {
-        totalEventsProcessed.set(0);
-        parallelEventsProcessed.set(0);
-        totalProcessingTime.reset();
-        eventTypeCounters.clear();
-        client.getCore().getLogger().debug("事件管理器性能统计已重置");
-    }
-
-    /**
-     * 打印性能统计报告
-     */
-    public void printPerformanceReport() {
-        EventPerformanceStats stats = getPerformanceStats();
-        long totalEvents = stats.getTotalEventsProcessed();
-
-        client.getCore().getLogger().info("=== 事件管理器性能报告 ===");
-        client.getCore().getLogger().info("总事件处理数: {}", totalEvents);
-        client.getCore().getLogger().info("并行事件处理数: {} ({:.1f}%)",
-            stats.getParallelEventsProcessed(),
-            totalEvents > 0 ? (stats.getParallelEventsProcessed() * 100.0 / totalEvents) : 0);
-
-        if (totalEvents > 0) {
-            client.getCore().getLogger().info("平均处理时间: {:.2f}ms",
-                stats.getTotalProcessingTimeNanos() / 1_000_000.0 / totalEvents);
-        }
-
-        client.getCore().getLogger().info("事件类型分布:");
-        stats.getEventTypeCounts().entrySet().stream()
-            .sorted(Map.Entry.<Class<? extends Event>, Long>comparingByValue().reversed())
-            .limit(10)
-            .forEach(entry -> client.getCore().getLogger().info("  {}: {}",
-                entry.getKey().getSimpleName(),
-                entry.getValue()));
-    }
 
     /**
      * 关闭事件管理器，清理资源
@@ -275,23 +167,6 @@ public class EventManagerImpl implements EventManager {
     public void shutdown() {
         client.getCore().getLogger().info("正在关闭事件管理器...");
 
-        // 取消定期报告任务
-        if (reportTask != null && !reportTask.isCancelled()) {
-            reportTask.cancel(false);
-        }
-
-        // 关闭报告调度器
-        if (reportScheduler != null && !reportScheduler.isShutdown()) {
-            reportScheduler.shutdown();
-            try {
-                if (!reportScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-                    reportScheduler.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                reportScheduler.shutdownNow();
-            }
-        }
 
         // 关闭事件执行器
         if (eventExecutor != null && !eventExecutor.isShutdown()) {
@@ -308,37 +183,10 @@ public class EventManagerImpl implements EventManager {
             }
         }
 
-        // 打印最终性能报告
-        if (performanceMonitoringEnabled) {
-            client.getCore().getLogger().info("=== 事件管理器关闭 - 最终性能报告 ===");
-            printPerformanceReport();
-        }
 
         client.getCore().getLogger().info("事件管理器已关闭");
     }
 
-    /**
-     * 事件性能统计数据类
-     */
-    public static class EventPerformanceStats {
-        private final long totalEventsProcessed;
-        private final long parallelEventsProcessed;
-        private final long totalProcessingTimeNanos;
-        private final Map<Class<? extends Event>, Long> eventTypeCounts;
-
-        public EventPerformanceStats(long totalEventsProcessed, long parallelEventsProcessed,
-                                   long totalProcessingTimeNanos, Map<Class<? extends Event>, Long> eventTypeCounts) {
-            this.totalEventsProcessed = totalEventsProcessed;
-            this.parallelEventsProcessed = parallelEventsProcessed;
-            this.totalProcessingTimeNanos = totalProcessingTimeNanos;
-            this.eventTypeCounts = eventTypeCounts;
-        }
-
-        public long getTotalEventsProcessed() { return totalEventsProcessed; }
-        public long getParallelEventsProcessed() { return parallelEventsProcessed; }
-        public long getTotalProcessingTimeNanos() { return totalProcessingTimeNanos; }
-        public Map<Class<? extends Event>, Long> getEventTypeCounts() { return eventTypeCounts; }
-    }
 
     private List<Listener> getListeners(Plugin plugin) {
         return listeners.computeIfAbsent(plugin, p -> new LinkedList<>());
