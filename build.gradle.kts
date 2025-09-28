@@ -3,8 +3,8 @@ import java.util.*
 plugins {
     `java-library`
     `maven-publish`
-    id("com.gorylenko.gradle-git-properties") version "2.4.2"
-    id("com.gradleup.shadow") version "9.0.0-beta4"
+    id("com.gorylenko.gradle-git-properties") version "2.5.3"
+    id("com.gradleup.shadow") version "9.2.2"
     id("jacoco")
     id("publish-conventions")
     id("me.champeau.jmh") version "0.7.2"
@@ -95,6 +95,7 @@ gitProperties {
 val skipShade = properties["skipShade"] == "true"
 tasks.shadowJar {
     enabled = !skipShade
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier = ""
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer())
     exclude(
@@ -103,6 +104,10 @@ tasks.shadowJar {
         "META-INF/*.RSA",
         "META-INF/services/cpw.*",
     )
+}
+
+tasks.compileJava {
+    options.encoding = "UTF-8"
 }
 
 tasks.processResources {
