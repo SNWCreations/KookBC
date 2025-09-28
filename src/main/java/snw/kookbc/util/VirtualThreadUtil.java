@@ -69,6 +69,9 @@ public final class VirtualThreadUtil {
     // 缓存操作专用虚拟线程执行器
     private static volatile ExecutorService cacheExecutor;
 
+    // JSON 处理专用虚拟线程执行器
+    private static volatile ExecutorService jsonExecutor;
+
     // 性能统计
     private static final AtomicLong totalVirtualThreadsCreated = new AtomicLong(0);
     private static final AtomicLong totalTasksExecuted = new AtomicLong(0);
@@ -165,6 +168,24 @@ public final class VirtualThreadUtil {
         return cacheExecutor;
     }
 
+    /**
+     * 获取 JSON 处理专用虚拟线程执行器
+     *
+     * <p>专为 JSON 解析、序列化、流式处理等操作优化
+     *
+     * @return JSON 处理专用执行器
+     */
+    public static ExecutorService getJsonExecutor() {
+        if (jsonExecutor == null) {
+            synchronized (VirtualThreadUtil.class) {
+                if (jsonExecutor == null) {
+                    jsonExecutor = createInstrumentedExecutor("JSON-VirtualThread");
+                }
+            }
+        }
+        return jsonExecutor;
+    }
+
     // ===== 执行器管理和监控 =====
 
     /**
@@ -245,6 +266,7 @@ public final class VirtualThreadUtil {
         shutdownExecutor("Plugin", pluginExecutor);
         shutdownExecutor("Database", databaseExecutor);
         shutdownExecutor("Cache", cacheExecutor);
+        shutdownExecutor("JSON", jsonExecutor);
 
         // 关闭缓存中的执行器
         EXECUTOR_CACHE.forEach((name, executor) -> shutdownExecutor(name, executor));
