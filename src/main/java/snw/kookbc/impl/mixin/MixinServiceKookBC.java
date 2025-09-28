@@ -24,6 +24,21 @@
  */
 package snw.kookbc.impl.mixin;
 
+import snw.kookbc.LaunchMain;
+import snw.kookbc.impl.launch.IClassNameTransformer;
+import snw.kookbc.impl.launch.IClassTransformer;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import org.jetbrains.annotations.ApiStatus;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -39,7 +54,14 @@ import org.spongepowered.asm.logging.ILogger;
 import org.spongepowered.asm.mixin.MixinEnvironment.CompatibilityLevel;
 import org.spongepowered.asm.mixin.MixinEnvironment.Phase;
 import org.spongepowered.asm.mixin.throwables.MixinException;
-import org.spongepowered.asm.service.*;
+import org.spongepowered.asm.service.IClassBytecodeProvider;
+import org.spongepowered.asm.service.IClassProvider;
+import org.spongepowered.asm.service.IClassTracker;
+import org.spongepowered.asm.service.ILegacyClassTransformer;
+import org.spongepowered.asm.service.IMixinAuditTrail;
+import org.spongepowered.asm.service.ITransformer;
+import org.spongepowered.asm.service.ITransformerProvider;
+import org.spongepowered.asm.service.MixinServiceAbstract;
 import org.spongepowered.asm.transformers.MixinClassReader;
 import org.spongepowered.asm.util.Constants;
 import org.spongepowered.asm.util.Files;
@@ -49,17 +71,6 @@ import org.spongepowered.include.com.google.common.collect.ImmutableList;
 import org.spongepowered.include.com.google.common.collect.Sets;
 import org.spongepowered.include.com.google.common.io.ByteStreams;
 import org.spongepowered.include.com.google.common.io.Closeables;
-import snw.kookbc.LaunchMain;
-import snw.kookbc.impl.launch.IClassNameTransformer;
-import snw.kookbc.impl.launch.IClassTransformer;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
 
 /**
  * Mixin service for launchwrapper
@@ -154,7 +165,7 @@ public class MixinServiceKookBC extends MixinServiceAbstract implements IClassPr
     public Phase getInitialPhase() {
         System.setProperty("mixin.env.disableRefMap", "true");
 
-        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 189) {
+        if (MixinServiceKookBC.findInStackTrace("snw.kookbc.LaunchMain", "launch") > 190) {
             return Phase.DEFAULT;
         }
         return Phase.PREINIT;
