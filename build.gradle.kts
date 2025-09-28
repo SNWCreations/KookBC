@@ -4,7 +4,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.0.0-beta4"
     id("jacoco")
     id("publish-conventions")
     id("me.champeau.jmh") version "0.7.2"
