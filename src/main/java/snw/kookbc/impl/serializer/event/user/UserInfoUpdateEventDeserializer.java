@@ -32,6 +32,7 @@ import snw.jkook.event.user.UserInfoUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
+import snw.kookbc.util.JacksonUtil;
 
 public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<UserInfoUpdateEvent> {
 
@@ -42,9 +43,28 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
     @Override
     protected UserInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
-        UserImpl user = ((UserImpl) client.getStorage().getUser(body.get("body_id").getAsString()));
-        user.setName(body.get("username").getAsString());
-        user.setAvatarUrl(body.get("avatar").getAsString());
+        // 处理Kook API不一致的字段命名，按优先级顺序查找
+        String userId = null;
+        if (body.has("user_id")) {
+            userId = body.get("user_id").getAsString();
+        } else if (body.has("body_id")) {
+            userId = body.get("body_id").getAsString();
+        }
+
+        if (userId == null) {
+            throw new JsonParseException("Missing required field 'user_id' or 'body_id' in user update event");
+        }
+
+        UserImpl user = ((UserImpl) client.getStorage().getUser(userId));
+
+        // Null-safe字段更新
+        if (body.has("username")) {
+            user.setName(body.get("username").getAsString());
+        }
+        if (body.has("avatar")) {
+            user.setAvatarUrl(body.get("avatar").getAsString());
+        }
+
         return new UserInfoUpdateEvent(timeStamp, user);
     }
 
@@ -56,9 +76,26 @@ public class UserInfoUpdateEventDeserializer extends NormalEventDeserializer<Use
      */
     @Override
     protected UserInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
-        UserImpl user = ((UserImpl) client.getStorage().getUser(body.get("body_id").asText()));
-        user.setName(body.get("username").asText());
-        user.setAvatarUrl(body.get("avatar").asText());
+        // 使用 JacksonUtil 的空值处理机制
+        String userId = JacksonUtil.getStringOrDefault(body, "user_id", null);
+        if (userId == null) {
+            userId = JacksonUtil.getStringOrDefault(body, "body_id", null);
+        }
+
+        if (userId == null) {
+            throw new RuntimeException("Missing required field 'user_id' or 'body_id' in user update event");
+        }
+
+        UserImpl user = ((UserImpl) client.getStorage().getUser(userId));
+
+        // 使用 null-safe 字段更新
+        if (JacksonUtil.hasNonNull(body, "username")) {
+            user.setName(JacksonUtil.getStringOrDefault(body, "username", user.getName()));
+        }
+        if (JacksonUtil.hasNonNull(body, "avatar")) {
+            user.setAvatarUrl(JacksonUtil.getStringOrDefault(body, "avatar", user.getAvatarUrl(false)));
+        }
+
         return new UserInfoUpdateEvent(timeStamp, user);
     }
 

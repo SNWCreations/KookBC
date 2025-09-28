@@ -34,6 +34,7 @@ import snw.jkook.event.guild.GuildUserNickNameUpdateEvent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
 import snw.kookbc.impl.storage.EntityStorage;
+import snw.kookbc.util.JacksonUtil;
 
 public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeserializer<GuildUserNickNameUpdateEvent> {
 
@@ -48,15 +49,26 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
         User user;
         String nickname;
         final EntityStorage entityStorage = client.getStorage();
-        if (body.has("my_nickname")) { // it is from GuildInfoUpdateEvent body...
+
+        if (body.has("my_nickname")) {
+            // GuildInfoUpdateEvent 中的昵称更新
             guildId = body.get("id").getAsString();
             user = client.getCore().getUser();
             nickname = body.get("my_nickname").getAsString();
         } else {
+            // 普通用户昵称更新事件
             guildId = object.get("target_id").getAsString();
+
+            // 处理 user_id 字段缺失的情况
+            if (!body.has("user_id")) {
+                throw new JsonParseException("Missing required field 'user_id' in guild member update event");
+            }
             user = entityStorage.getUser(body.get("user_id").getAsString());
-            nickname = body.get("nickname").getAsString();
+
+            // 处理 nickname 字段缺失的情况，使用空字符串作为默认值
+            nickname = body.has("nickname") ? body.get("nickname").getAsString() : "";
         }
+
         final Guild guild = entityStorage.getGuild(guildId);
         return new GuildUserNickNameUpdateEvent(timeStamp, guild, user, nickname);
     }
@@ -68,9 +80,34 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildUserNickNameUpdateEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildUserNickNameUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        String guildId;
+        User user;
+        String nickname;
+        final EntityStorage entityStorage = client.getStorage();
+
+        if (JacksonUtil.hasNonNull(body, "my_nickname")) {
+            // GuildInfoUpdateEvent 中的昵称更新
+            guildId = JacksonUtil.getRequiredString(body, "id");
+            user = client.getCore().getUser();
+            nickname = JacksonUtil.getStringOrDefault(body, "my_nickname", "");
+        } else {
+            // 普通用户昵称更新事件
+            guildId = JacksonUtil.getRequiredString(node, "target_id");
+
+            // 处理 user_id 字段缺失的情况
+            String userId = JacksonUtil.getStringOrDefault(body, "user_id", null);
+            if (userId == null) {
+                throw new RuntimeException("Missing required field 'user_id' in guild member update event");
+            }
+            user = entityStorage.getUser(userId);
+
+            // 使用 JacksonUtil 的空值处理，默认值为空字符串
+            nickname = JacksonUtil.getStringOrDefault(body, "nickname", "");
+        }
+
+        final Guild guild = entityStorage.getGuild(guildId);
+        return new GuildUserNickNameUpdateEvent(timeStamp, guild, user, nickname);
     }
 
     /**
@@ -78,8 +115,8 @@ public class GuildUserNickNameUpdateEventDeserializer extends NormalEventDeseria
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // 启用 Jackson 反序列化以更好地处理空值
+        return true;
     }
 
 }

@@ -25,6 +25,7 @@ import com.google.gson.JsonParseException;
 // Jackson Migration Support
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.event.channel.ChannelInfoUpdateEvent;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.channel.ChannelImpl;
 import snw.kookbc.impl.serializer.event.NormalEventDeserializer;
@@ -42,10 +43,20 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
 
     @Override
     protected ChannelInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx, long timeStamp, JsonObject body) throws JsonParseException {
-        final String id = body.get("id").getAsString();
-        final int channelType = body.get("type").getAsInt();
+        // Null-safe字段获取
+        final String id = body.has("id") ? body.get("id").getAsString() : null;
+        final int channelType = body.has("type") ? body.get("type").getAsInt() : 0;
+
+        if (id == null) {
+            throw new JsonParseException("Missing required field 'id' in channel update event");
+        }
+
         final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
-        Objects.requireNonNull(channel).update(body);
+        if (channel == null) {
+            throw new JsonParseException("Unable to parse channel with id: " + id + ", type: " + channelType);
+        }
+
+        channel.update(body);
         return new ChannelInfoUpdateEvent(timeStamp, channel);
     }
 
@@ -57,10 +68,20 @@ public class ChannelInfoUpdateEventDeserializer extends NormalEventDeserializer<
      */
     @Override
     protected ChannelInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
-        final String id = body.get("id").asText();
-        final int channelType = body.get("type").asInt();
+        // 使用 JacksonUtil 的空值处理机制
+        final String id = JacksonUtil.getStringOrDefault(body, "id", null);
+        final int channelType = JacksonUtil.getIntOrDefault(body, "type", 0);
+
+        if (id == null) {
+            throw new RuntimeException("Missing required field 'id' in channel update event");
+        }
+
         final ChannelImpl channel = (ChannelImpl) parseChannel(client, id, channelType);
-        Objects.requireNonNull(channel).update(body);
+        if (channel == null) {
+            throw new RuntimeException("Unable to parse channel with id: " + id + ", type: " + channelType);
+        }
+
+        channel.update(body);
         return new ChannelInfoUpdateEvent(timeStamp, channel);
     }
 
