@@ -31,10 +31,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,6 +54,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import java.net.URL;
 import snw.jkook.HttpAPI;
 import snw.jkook.entity.Game;
 import snw.jkook.entity.Guild;
@@ -72,8 +80,10 @@ import snw.kookbc.impl.pageiter.GameIterator;
 import snw.kookbc.impl.pageiter.JoinedGuildIterator;
 import snw.kookbc.impl.pageiter.JoinedVoiceChannelsIterator;
 import snw.kookbc.util.MapBuilder;
+import snw.kookbc.util.VirtualThreadUtil;
+import snw.kookbc.interfaces.AsyncHttpAPI;
 
-public class HttpAPIImpl implements HttpAPI {
+public class HttpAPIImpl implements HttpAPI, AsyncHttpAPI {
     private static final MediaType OCTET_STREAM;
     private static final Collection<String> SUPPORTED_MUSIC_SOFTWARES;
     // private static final long UPLOAD_FILE_LENGTH_LIMIT = 25; // in MB
@@ -88,6 +98,18 @@ public class HttpAPIImpl implements HttpAPI {
     }
 
     private final KBCClient client;
+
+    // ===== 异步 API 增强 - 智能请求合并器 =====
+
+    /**
+     * 智能请求合并器 - 避免重复请求，提升性能
+     */
+    private final RequestCoalescer requestCoalescer = new RequestCoalescer();
+
+    /**
+     * 异步执行器 - 专用于 HTTP API 操作
+     */
+    private final ExecutorService httpExecutor = VirtualThreadUtil.getHttpExecutor();
 
 
     public HttpAPIImpl(KBCClient client) {
@@ -131,30 +153,14 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public String uploadFile(File file) {
-        RequestBody body = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.getName(), RequestBody.create(file, OCTET_STREAM))
-                .build();
-        Request request = new Request.Builder()
-                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(body)
-                .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
-                .build();
-        return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
+        // 内部使用异步实现，但对外保持同步接口
+        return uploadFileAsync(file).join();
     }
 
     @Override
     public String uploadFile(String filename, byte[] content) {
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", filename, RequestBody.create(content, OCTET_STREAM))
-                .build();
-        Request request = new Request.Builder()
-                .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
-                .post(requestBody)
-                .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
-                .build();
-        return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
+        // 内部使用异步实现，但对外保持同步接口
+        return uploadFileAsync(filename, content).join();
     }
 
     @Override
@@ -185,8 +191,8 @@ public class HttpAPIImpl implements HttpAPI {
 
     @Override
     public void removeInvite(String urlCode) {
-        client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
-                Collections.singletonMap("url_code", urlCode));
+        // 内部使用异步实现，但对外保持同步接口
+        removeInviteAsync(urlCode).join();
     }
 
     @Override
@@ -435,5 +441,252 @@ public class HttpAPIImpl implements HttpAPI {
                 .put("accept", accept ? 1 : 0)
                 .build();
         HttpAPIImpl.this.client.getNetworkClient().postContent(HttpAPIRoute.FRIEND_HANDLE_REQUEST.toFullURL(), body);
+    }
+
+    // ===== 异步 API 实现 - 内部使用，提供给插件的异步版本 =====
+
+    /**
+     * 异步文件上传 - File 版本
+     *
+     * @param file 要上传的文件
+     * @return 异步上传结果，包含文件 URL
+     */
+    public CompletableFuture<String> uploadFileAsync(File file) {
+        return requestCoalescer.coalesce("upload_file_" + file.getName() + "_" + file.length(), () ->
+            CompletableFuture.supplyAsync(() -> {
+                RequestBody body = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("file", file.getName(), RequestBody.create(file, OCTET_STREAM))
+                        .build();
+                Request request = new Request.Builder()
+                        .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
+                        .post(body)
+                        .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
+                        .build();
+                return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
+            }, httpExecutor)
+        );
+    }
+
+    /**
+     * 异步文件上传 - 字节数组版本
+     *
+     * @param filename 文件名
+     * @param content 文件内容字节数组
+     * @return 异步上传结果，包含文件 URL
+     */
+    public CompletableFuture<String> uploadFileAsync(String filename, byte[] content) {
+        return requestCoalescer.coalesce("upload_file_" + filename + "_" + content.length, () ->
+            CompletableFuture.supplyAsync(() -> {
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("file", filename, RequestBody.create(content, OCTET_STREAM))
+                        .build();
+                Request request = new Request.Builder()
+                        .url(HttpAPIRoute.ASSET_UPLOAD.toFullURL())
+                        .post(requestBody)
+                        .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
+                        .build();
+                return get(parse(client.getNetworkClient().call(request)).get("data"), "url").asText();
+            }, httpExecutor)
+        );
+    }
+
+    /**
+     * 异步文件上传 - URL 版本
+     *
+     * @param fileName 文件名
+     * @param url 文件 URL
+     * @return 异步上传结果，包含文件 URL
+     */
+    public CompletableFuture<String> uploadFileAsync(String fileName, String url) {
+        return requestCoalescer.coalesce("upload_file_url_" + url, () ->
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    new URL(url);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException("Cannot upload file: Malformed URL", e);
+                }
+                try (Response response = client.getNetworkClient().getOkHttpClient().newCall(
+                        new Request.Builder()
+                                .get()
+                                .url(url)
+                                .build()
+                ).execute()) {
+                    final String bodyErr = "Cannot upload file at " + url + ": Response body should not be null";
+                    final ResponseBody body = Objects.requireNonNull(response.body(), bodyErr);
+                    byte[] bytes = body.bytes();
+                    return uploadFileAsync(fileName, bytes).join();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }, httpExecutor)
+        );
+    }
+
+    /**
+     * 异步删除邀请链接
+     *
+     * @param urlCode 邀请链接代码
+     * @return 异步删除结果
+     */
+    public CompletableFuture<Void> removeInviteAsync(String urlCode) {
+        return requestCoalescer.coalesce("remove_invite_" + urlCode, () ->
+            CompletableFuture.runAsync(() -> {
+                client.getNetworkClient().post(HttpAPIRoute.INVITE_DELETE.toFullURL(),
+                        Collections.singletonMap("url_code", urlCode));
+            }, httpExecutor)
+        );
+    }
+
+    /**
+     * 异步获取用户信息
+     *
+     * @param id 用户 ID
+     * @return 异步用户信息
+     */
+    public CompletableFuture<User> getUserAsync(String id) {
+        return requestCoalescer.coalesce("get_user_" + id, () ->
+            CompletableFuture.supplyAsync(() -> client.getStorage().getUser(id), httpExecutor)
+        );
+    }
+
+    /**
+     * 异步获取服务器信息
+     *
+     * @param id 服务器 ID
+     * @return 异步服务器信息
+     */
+    public CompletableFuture<Guild> getGuildAsync(String id) {
+        return requestCoalescer.coalesce("get_guild_" + id, () ->
+            CompletableFuture.supplyAsync(() -> client.getStorage().getGuild(id), httpExecutor)
+        );
+    }
+
+    /**
+     * 异步获取频道信息
+     *
+     * @param id 频道 ID
+     * @return 异步频道信息
+     */
+    public CompletableFuture<Channel> getChannelAsync(String id) {
+        return requestCoalescer.coalesce("get_channel_" + id, () ->
+            CompletableFuture.supplyAsync(() -> client.getStorage().getChannel(id), httpExecutor)
+        );
+    }
+
+    /**
+     * 批量异步获取用户信息
+     *
+     * @param userIds 用户 ID 列表
+     * @return 异步用户信息列表
+     */
+    public CompletableFuture<List<User>> getBatchUsersAsync(List<String> userIds) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<CompletableFuture<User>> futures = userIds.stream()
+                    .map(this::getUserAsync)
+                    .collect(Collectors.toList());
+
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream()
+                            .map(CompletableFuture::join)
+                            .collect(Collectors.toList()))
+                    .join();
+        }, httpExecutor);
+    }
+
+    /**
+     * 批量异步获取服务器信息
+     *
+     * @param guildIds 服务器 ID 列表
+     * @return 异步服务器信息列表
+     */
+    public CompletableFuture<List<Guild>> getBatchGuildsAsync(List<String> guildIds) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<CompletableFuture<Guild>> futures = guildIds.stream()
+                    .map(this::getGuildAsync)
+                    .collect(Collectors.toList());
+
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream()
+                            .map(CompletableFuture::join)
+                            .collect(Collectors.toList()))
+                    .join();
+        }, httpExecutor);
+    }
+
+    /**
+     * 批量异步获取频道信息
+     *
+     * @param channelIds 频道 ID 列表
+     * @return 异步频道信息列表
+     */
+    public CompletableFuture<List<Channel>> getBatchChannelsAsync(List<String> channelIds) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<CompletableFuture<Channel>> futures = channelIds.stream()
+                    .map(this::getChannelAsync)
+                    .collect(Collectors.toList());
+
+            return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> futures.stream()
+                            .map(CompletableFuture::join)
+                            .collect(Collectors.toList()))
+                    .join();
+        }, httpExecutor);
+    }
+
+    // ===== 智能请求合并器实现 =====
+
+    /**
+     * 智能请求合并器 - 避免重复的并发请求，提升性能
+     */
+    private static class RequestCoalescer {
+        private final Map<String, CompletableFuture<?>> ongoingRequests = new ConcurrentHashMap<>();
+
+        /**
+         * 合并相同的请求，避免重复执行
+         *
+         * @param key 请求的唯一标识
+         * @param supplier 请求的执行逻辑
+         * @param <T> 请求结果类型
+         * @return 合并后的请求结果
+         */
+        @SuppressWarnings("unchecked")
+        public <T> CompletableFuture<T> coalesce(String key, Supplier<CompletableFuture<T>> supplier) {
+            return (CompletableFuture<T>) ongoingRequests.computeIfAbsent(key, k -> {
+                CompletableFuture<T> future = supplier.get();
+                // 请求完成后清理缓存
+                future.whenComplete((result, exception) -> ongoingRequests.remove(k));
+                return future;
+            });
+        }
+
+        /**
+         * 获取当前正在进行的请求数量
+         *
+         * @return 正在进行的请求数量
+         */
+        public int getOngoingRequestCount() {
+            return ongoingRequests.size();
+        }
+
+        /**
+         * 清理所有请求缓存（用于测试或特殊情况）
+         */
+        public void clearCache() {
+            ongoingRequests.clear();
+        }
+    }
+
+    // ===== AsyncHttpAPI 接口实现 =====
+
+    @Override
+    public int getOngoingRequestCount() {
+        return requestCoalescer.getOngoingRequestCount();
+    }
+
+    @Override
+    public void clearRequestCache() {
+        requestCoalescer.clearCache();
     }
 }

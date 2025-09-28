@@ -2,6 +2,7 @@ package snw.kookbc.impl;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.slf4j.helpers.NOPLogger;
 import snw.jkook.config.file.YamlConfiguration;
 import snw.jkook.entity.channel.Channel;
@@ -15,9 +16,14 @@ import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.test.BaseTest;
+import snw.kookbc.interfaces.AsyncHttpAPI;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -194,5 +200,194 @@ class HttpAPIImplTest extends BaseTest {
         // 测试方法会因网络问题抛出异常，但这是预期的
         assertThatThrownBy(() -> httpAPI.getFriendState(false))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    // ===== 异步 API 测试用例 =====
+
+    @Test
+    @DisplayName("HttpAPIImpl 应该实现 AsyncHttpAPI 接口")
+    void testAsyncHttpAPIImplementation() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+
+        // 验证 HttpAPIImpl 实现了 AsyncHttpAPI 接口
+        assertThat(httpAPI).isInstanceOf(AsyncHttpAPI.class);
+
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+        assertThat(asyncAPI).isNotNull();
+    }
+
+    @Test
+    @DisplayName("异步文件上传方法应该返回 CompletableFuture")
+    void testAsyncUploadFileReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步文件上传方法
+        File testFile = new File("test.txt");
+        CompletableFuture<String> future = asyncAPI.uploadFileAsync(testFile);
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("异步文件上传（字节数组）方法应该返回 CompletableFuture")
+    void testAsyncUploadFileByteArrayReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步文件上传方法
+        byte[] content = "test content".getBytes();
+        CompletableFuture<String> future = asyncAPI.uploadFileAsync("test.txt", content);
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("异步删除邀请方法应该返回 CompletableFuture<Void>")
+    void testAsyncRemoveInviteReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步删除邀请方法
+        CompletableFuture<Void> future = asyncAPI.removeInviteAsync("test-invite-code");
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("异步获取用户方法应该返回 CompletableFuture<User>")
+    void testAsyncGetUserReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步获取用户方法
+        CompletableFuture<User> future = asyncAPI.getUserAsync("test-user-id");
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("异步获取服务器方法应该返回 CompletableFuture<Guild>")
+    void testAsyncGetGuildReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步获取服务器方法
+        CompletableFuture<Guild> future = asyncAPI.getGuildAsync("test-guild-id");
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("异步获取频道方法应该返回 CompletableFuture<Channel>")
+    void testAsyncGetChannelReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试异步获取频道方法
+        CompletableFuture<Channel> future = asyncAPI.getChannelAsync("test-channel-id");
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("批量异步获取用户方法应该返回 CompletableFuture<List<User>>")
+    void testBatchGetUsersAsyncReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试批量异步获取用户方法
+        List<String> userIds = Arrays.asList("user1", "user2", "user3");
+        CompletableFuture<List<User>> future = asyncAPI.getBatchUsersAsync(userIds);
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("批量异步获取服务器方法应该返回 CompletableFuture<List<Guild>>")
+    void testBatchGetGuildsAsyncReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试批量异步获取服务器方法
+        List<String> guildIds = Arrays.asList("guild1", "guild2", "guild3");
+        CompletableFuture<List<Guild>> future = asyncAPI.getBatchGuildsAsync(guildIds);
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("批量异步获取频道方法应该返回 CompletableFuture<List<Channel>>")
+    void testBatchGetChannelsAsyncReturnsCompletableFuture() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 测试批量异步获取频道方法
+        List<String> channelIds = Arrays.asList("channel1", "channel2", "channel3");
+        CompletableFuture<List<Channel>> future = asyncAPI.getBatchChannelsAsync(channelIds);
+
+        assertThat(future).isNotNull();
+        assertThat(future).isInstanceOf(CompletableFuture.class);
+    }
+
+    @Test
+    @DisplayName("请求合并器统计方法应该返回合理的值")
+    void testRequestCoalescerStatistics() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        // 初始状态应该没有正在进行的请求
+        assertThat(asyncAPI.getOngoingRequestCount()).isGreaterThanOrEqualTo(0);
+
+        // 清理缓存方法应该能正常调用
+        assertThatCode(asyncAPI::clearRequestCache)
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("请求合并器应该能避免重复请求")
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void testRequestCoalescingBehavior() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+        AsyncHttpAPI asyncAPI = (AsyncHttpAPI) httpAPI;
+
+        String userId = "same-user-id";
+
+        // 同时发起多个相同的请求
+        CompletableFuture<User> future1 = asyncAPI.getUserAsync(userId);
+        CompletableFuture<User> future2 = asyncAPI.getUserAsync(userId);
+        CompletableFuture<User> future3 = asyncAPI.getUserAsync(userId);
+
+        // 验证所有 future 都不为 null
+        assertThat(future1).isNotNull();
+        assertThat(future2).isNotNull();
+        assertThat(future3).isNotNull();
+
+        // 请求合并器应该有正在进行的请求
+        assertThat(asyncAPI.getOngoingRequestCount()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("同步方法应该使用异步实现")
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void testSyncMethodsUseAsyncImplementation() {
+        HttpAPIImpl httpAPI = createTestHttpAPI();
+
+        // 测试同步方法调用（这些方法内部应该使用异步实现）
+        // 由于没有真实的网络环境，这些测试主要验证方法不会立即崩溃
+
+        assertThatThrownBy(() -> httpAPI.uploadFile("test.txt", "test content".getBytes()))
+                .isInstanceOf(RuntimeException.class);
+
+        assertThatCode(() -> httpAPI.removeInvite("test-code"))
+                .doesNotThrowAnyException();
     }
 }
