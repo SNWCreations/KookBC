@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 
 import static snw.kookbc.impl.serializer.component.card.module.ContainerModuleSerializer.LIST_IMAGEELEMENT;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ImageGroupModuleSerializer implements JsonSerializer<ImageGroupModule>, JsonDeserializer<ImageGroupModule> {
     @Override
     public JsonElement serialize(ImageGroupModule module, Type typeOfSrc, JsonSerializationContext context) {

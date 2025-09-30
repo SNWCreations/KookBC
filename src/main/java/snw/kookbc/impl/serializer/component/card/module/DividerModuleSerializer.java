@@ -24,6 +24,7 @@ import snw.jkook.message.component.card.module.DividerModule;
 import java.lang.reflect.Type;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class DividerModuleSerializer implements JsonSerializer<DividerModule>, JsonDeserializer<DividerModule> {
     @Override
     public JsonElement serialize(DividerModule src, Type typeOfSrc, JsonSerializationContext context) {

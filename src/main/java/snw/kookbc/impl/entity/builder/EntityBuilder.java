@@ -27,7 +27,6 @@ import static snw.kookbc.util.JacksonUtil.*;
 
 import java.util.Collection;
 
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
@@ -60,7 +59,7 @@ public class EntityBuilder {
      * 构建User对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public User buildUser(JsonObject s) {
+    public User buildUser(com.google.gson.JsonObject s) {
         JsonNode node = parse(s.toString());
         return buildUser(node);
     }
@@ -69,7 +68,7 @@ public class EntityBuilder {
      * 构建Guild对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public Guild buildGuild(JsonObject object) {
+    public Guild buildGuild(com.google.gson.JsonObject object) {
         JsonNode node = parse(object.toString());
         return buildGuild(node);
     }
@@ -78,7 +77,7 @@ public class EntityBuilder {
      * 构建Channel对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public Channel buildChannel(JsonObject object) {
+    public Channel buildChannel(com.google.gson.JsonObject object) {
         JsonNode node = parse(object.toString());
         return buildChannel(node);
     }
@@ -87,7 +86,7 @@ public class EntityBuilder {
      * 构建Role对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public Role buildRole(Guild guild, JsonObject object) {
+    public Role buildRole(Guild guild, com.google.gson.JsonObject object) {
         JsonNode node = parse(object.toString());
         return buildRole(guild, node);
     }
@@ -96,7 +95,7 @@ public class EntityBuilder {
      * 构建CustomEmoji对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public CustomEmoji buildEmoji(JsonObject object) {
+    public CustomEmoji buildEmoji(com.google.gson.JsonObject object) {
         JsonNode node = parse(object.toString());
         return buildEmoji(node);
     }
@@ -105,7 +104,7 @@ public class EntityBuilder {
      * 构建Game对象 (Gson兼容版本)
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
-    public Game buildGame(JsonObject object) {
+    public Game buildGame(com.google.gson.JsonObject object) {
         JsonNode node = parse(object.toString());
         return buildGame(node);
     }

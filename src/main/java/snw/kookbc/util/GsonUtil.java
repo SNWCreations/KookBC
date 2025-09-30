@@ -17,177 +17,144 @@
  */
 package snw.kookbc.util;
 
-import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
-import snw.jkook.message.component.TemplateMessage;
-import snw.jkook.message.component.card.CardComponent;
-import snw.jkook.message.component.card.MultipleCardComponent;
-import snw.jkook.message.component.card.element.ButtonElement;
-import snw.jkook.message.component.card.element.ImageElement;
-import snw.jkook.message.component.card.element.MarkdownElement;
-import snw.jkook.message.component.card.element.PlainTextElement;
-import snw.jkook.message.component.card.module.*;
-import snw.jkook.message.component.card.structure.Paragraph;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import snw.jkook.util.Validate;
-import snw.kookbc.impl.serializer.component.TemplateMessageSerializer;
-import snw.kookbc.impl.serializer.component.card.CardComponentSerializer;
-import snw.kookbc.impl.serializer.component.card.MultipleCardComponentSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ButtonElementSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ContentElementSerializer;
-import snw.kookbc.impl.serializer.component.card.element.ImageElementSerializer;
-import snw.kookbc.impl.serializer.component.card.module.*;
-import snw.kookbc.impl.serializer.component.card.structure.ParagraphSerializer;
-
-// Jackson Migration Support
 
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * JSON 工具类 - 基于 Jackson 的 JSON 处理
+ *
+ * <p>此类已从 GSON 完全迁移到 Jackson。所有方法都使用 Jackson 实现。
+ *
+ * <p><b>迁移说明</b>：
+ * <ul>
+ *   <li>卡片消息处理：使用 {@link JacksonCardUtil}</li>
+ *   <li>通用 JSON 处理：使用 {@link JacksonUtil}</li>
+ *   <li>GSON 兼容 API：使用 {@link GsonCompat}</li>
+ * </ul>
+ *
+ * @since 0.52.0 完全基于 Jackson
+ */
 public final class GsonUtil {
-    public static final Gson CARD_GSON = new GsonBuilder()
-            // Template
-            .registerTypeAdapter(TemplateMessage.class, new TemplateMessageSerializer())
-            // Card
-            .registerTypeAdapter(CardComponent.class, new CardComponentSerializer())
-            .registerTypeAdapter(MultipleCardComponent.class, new MultipleCardComponentSerializer())
-
-            // Element
-            .registerTypeAdapter(ButtonElement.class, new ButtonElementSerializer())
-            .registerTypeAdapter(ImageElement.class, new ImageElementSerializer())
-            .registerTypeAdapter(MarkdownElement.class,
-                    new ContentElementSerializer<>("kmarkdown", MarkdownElement::getContent, MarkdownElement::new))
-            .registerTypeAdapter(PlainTextElement.class,
-                    new ContentElementSerializer<>("plain-text", PlainTextElement::getContent, PlainTextElement::new))
-
-            // Structure
-            .registerTypeAdapter(Paragraph.class, new ParagraphSerializer())
-
-            // Module
-            .registerTypeAdapter(ActionGroupModule.class, new ActionGroupModuleSerializer())
-            .registerTypeAdapter(ContainerModule.class, new ContainerModuleSerializer())
-            .registerTypeAdapter(ContextModule.class, new ContextModuleSerializer())
-            .registerTypeAdapter(CountdownModule.class, new CountdownModuleSerializer())
-            .registerTypeAdapter(DividerModule.class, new DividerModuleSerializer())
-            .registerTypeAdapter(FileModule.class, new FileModuleSerializer())
-            .registerTypeAdapter(HeaderModule.class, new HeaderModuleSerializer())
-            .registerTypeAdapter(ImageGroupModule.class, new ImageGroupModuleSerializer())
-            .registerTypeAdapter(InviteModule.class, new InviteModuleSerializer())
-            .registerTypeAdapter(SectionModule.class, new SectionModuleSerializer())
-
-            .disableHtmlEscaping()
-            .create();
-
-    public static final Gson NORMAL_GSON = new Gson();
-
-    // ===== Jackson Migration Support =====
 
     /**
-     * 新的卡片处理使用Jackson，性能更好且支持null-safe处理
-     * 为了向后兼容，保留CARD_GSON但推荐使用JacksonCardUtil
+     * 卡片消息专用 ObjectMapper
+     * @deprecated 请使用 {@link JacksonCardUtil#getMapper()}
      */
     @Deprecated
-    public static final Gson LEGACY_CARD_GSON = CARD_GSON;
+    public static final ObjectMapper CARD_GSON = JacksonCardUtil.getMapper();
 
     /**
-     * 推荐使用JacksonCardUtil.CARD_MAPPER替代CARD_GSON
-     * Jackson提供更好的null-safe处理，适合Kook API的不完整JSON
-     */
-    public static boolean useJacksonForCards() {
-        return true; // 默认启用Jackson处理卡片
-    }
-
-    // ===== Jackson兼容性方法 =====
-
-    /**
-     * 获取推荐的卡片序列化器（Jackson版本）
-     * @deprecated 请直接使用 JacksonCardUtil.CARD_MAPPER
+     * 通用 ObjectMapper
+     * @deprecated 请使用 {@link JacksonUtil#getMapper()}
      */
     @Deprecated
-    public static com.fasterxml.jackson.databind.ObjectMapper getCardMapper() {
-        return JacksonCardUtil.getMapper();
-    }
-
-    /**
-     * Jackson版本的卡片序列化 - 推荐使用
-     */
-    public static String toCardJson(Object cardComponent) {
-        try {
-            return JacksonCardUtil.toJson(cardComponent);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize card component with Jackson", e);
-        }
-    }
-
-    /**
-     * Jackson版本的卡片反序列化 - 推荐使用
-     */
-    public static <T> T fromCardJson(String json, Class<T> clazz) {
-        try {
-            return JacksonCardUtil.fromJson(json, clazz);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to deserialize card component with Jackson", e);
-        }
-    }
-
-    public static Type createListType(Class<?> elementType) {
-        Validate.notNull(elementType);
-        return TypeToken.getParameterized(List.class, elementType).getType();
-    }
-
-    // Return false if the provided object does not contain the specified key,
-    // or the value mapped to it is JSON null.
-    public static boolean has(JsonObject object, String key) {
-        return object.has(key) && !object.get(key).isJsonNull();
-    }
-
-    // Return the element object from the provided object using the key.
-    public static JsonElement get(JsonObject object, String key) {
-        JsonElement result = null;
-        if (object.has(key)) {
-            result = object.get(key);
-            if (result.isJsonNull()) {
-                result = null; // DO NOT RETURN JSON NULL.
-            }
-        }
-        if (result == null) {
-            throw new NoSuchElementException("There is no valid value mapped to requested key '" + key + "'.");
-        }
-        return result;
-    }
-
-    public static String getAsString(JsonObject object, String key) {
-        return get(object, key).getAsString();
-    }
-
-    public static int getAsInt(JsonObject object, String key) {
-        return get(object, key).getAsInt();
-    }
-
-    public static long getAsLong(JsonObject object, String key) {
-        return get(object, key).getAsLong();
-    }
-
-    public static double getAsDouble(JsonObject object, String key) {
-        return get(object, key).getAsDouble();
-    }
-
-    public static boolean getAsBoolean(JsonObject object, String key) {
-        return get(object, key).getAsBoolean();
-    }
-
-    public static JsonObject getAsJsonObject(JsonObject object, String key) {
-        return get(object, key).getAsJsonObject();
-    }
-
-    public static JsonArray getAsJsonArray(JsonObject object, String key) {
-        return get(object, key).getAsJsonArray();
-    }
-
-    public static JsonPrimitive getAsJsonPrimitive(JsonObject object, String key) {
-        return get(object, key).getAsJsonPrimitive();
-    }
+    public static final ObjectMapper NORMAL_GSON = JacksonUtil.getMapper();
 
     private GsonUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
+    // ===== 卡片处理方法 =====
+
+    /**
+     * 序列化卡片组件为 JSON
+     */
+    public static String toCardJson(Object cardComponent) {
+        return JacksonCardUtil.toJson(cardComponent);
+    }
+
+    /**
+     * 从 JSON 反序列化卡片组件
+     */
+    public static <T> T fromCardJson(String json, Class<T> clazz) {
+        return JacksonCardUtil.fromJson(json, clazz);
+    }
+
+    // ===== 类型工具方法 =====
+
+    /**
+     * 创建 List 类型
+     */
+    public static Type createListType(Class<?> elementType) {
+        Validate.notNull(elementType);
+        return JacksonUtil.getMapper().getTypeFactory()
+            .constructCollectionType(List.class, elementType);
+    }
+
+    // ===== JSON 节点访问方法（兼容 GSON API）=====
+
+    /**
+     * 检查节点是否包含指定键
+     */
+    public static boolean has(JsonNode node, String key) {
+        return GsonCompat.has(node, key);
+    }
+
+    /**
+     * 获取节点中的元素
+     */
+    public static JsonNode get(JsonNode node, String key) {
+        return GsonCompat.get(node, key);
+    }
+
+    /**
+     * 获取字符串值
+     */
+    public static String getAsString(JsonNode node, String key) {
+        return GsonCompat.getAsString(node, key);
+    }
+
+    /**
+     * 获取整数值
+     */
+    public static int getAsInt(JsonNode node, String key) {
+        return GsonCompat.getAsInt(node, key);
+    }
+
+    /**
+     * 获取长整数值
+     */
+    public static long getAsLong(JsonNode node, String key) {
+        return GsonCompat.getAsLong(node, key);
+    }
+
+    /**
+     * 获取双精度浮点数值
+     */
+    public static double getAsDouble(JsonNode node, String key) {
+        return GsonCompat.getAsDouble(node, key);
+    }
+
+    /**
+     * 获取布尔值
+     */
+    public static boolean getAsBoolean(JsonNode node, String key) {
+        return GsonCompat.getAsBoolean(node, key);
+    }
+
+    /**
+     * 获取 JSON 对象
+     */
+    public static JsonNode getAsJsonObject(JsonNode node, String key) {
+        return GsonCompat.getAsJsonObject(node, key);
+    }
+
+    /**
+     * 获取 JSON 数组
+     */
+    public static JsonNode getAsJsonArray(JsonNode node, String key) {
+        return GsonCompat.getAsJsonArray(node, key);
+    }
+
+    /**
+     * 获取原始类型值
+     */
+    public static JsonNode getAsJsonPrimitive(JsonNode node, String key) {
+        return GsonCompat.getAsJsonPrimitive(node, key);
     }
 }

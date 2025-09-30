@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 // Jackson Migration Support
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -50,13 +50,16 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
             long timeStamp, JsonObject body) throws JsonParseException {
         final EntityStorage storage = client.getStorage();
         final Guild guild = storage.getGuild(object.get("target_id").getAsString());
-        final List<User> unbanned = Collections.unmodifiableList(
-                body.getAsJsonArray("user_id")
-                        .asList()
-                        .stream()
-                        .map(JsonElement::getAsString)
-                        .map(storage::getUser)
-                        .collect(Collectors.toList()));
+
+        // 转换 JsonArray 为 List<User>
+        List<User> unbannedList = new ArrayList<>();
+        com.google.gson.JsonArray userIdArray = body.getAsJsonArray("user_id");
+        for (int i = 0; i < userIdArray.size(); i++) {
+            String userId = userIdArray.get(i).getAsString();
+            unbannedList.add(storage.getUser(userId));
+        }
+        final List<User> unbanned = Collections.unmodifiableList(unbannedList);
+
         final User operator = storage.getUser(body.get("operator_id").getAsString());
         return new GuildUnbanUserEvent(timeStamp, guild, unbanned, operator);
     }

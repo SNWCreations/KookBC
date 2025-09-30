@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
@@ -167,8 +166,8 @@ public class RoleImpl implements Role, Updatable {
         this.mentionable = mentionable;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

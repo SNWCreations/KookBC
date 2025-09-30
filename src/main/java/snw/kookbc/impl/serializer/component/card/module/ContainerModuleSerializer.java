@@ -26,6 +26,7 @@ import snw.kookbc.util.GsonUtil;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ContainerModuleSerializer implements JsonSerializer<ContainerModule>, JsonDeserializer<ContainerModule> {
     static Type LIST_IMAGEELEMENT = GsonUtil.createListType(ImageElement.class);
 

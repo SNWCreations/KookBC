@@ -18,7 +18,6 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.impl.KBCClient;

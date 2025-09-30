@@ -28,6 +28,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class CardComponentSerializer implements JsonSerializer<CardComponent>, JsonDeserializer<CardComponent> {
     public static final Map<String, Class<? extends BaseModule>> MODULE_MAP;
 

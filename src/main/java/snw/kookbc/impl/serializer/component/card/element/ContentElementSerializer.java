@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.function.Function;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ContentElementSerializer<T> implements JsonSerializer<T>, JsonDeserializer<T> {
     private final String type;
     private final Function<T, String> contentFunc;

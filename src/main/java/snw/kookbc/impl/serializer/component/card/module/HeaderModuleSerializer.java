@@ -24,6 +24,7 @@ import snw.jkook.message.component.card.module.HeaderModule;
 
 import java.lang.reflect.Type;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class HeaderModuleSerializer implements JsonSerializer<HeaderModule>, JsonDeserializer<HeaderModule> {
     @Override
     public JsonElement serialize(HeaderModule module, Type typeOfSrc, JsonSerializationContext context) {

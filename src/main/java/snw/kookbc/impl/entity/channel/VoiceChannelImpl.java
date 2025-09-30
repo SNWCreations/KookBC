@@ -34,10 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -46,6 +42,7 @@ import snw.jkook.entity.channel.VoiceChannel;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.util.MapBuilder;
+import snw.kookbc.util.JacksonUtil;
 
 public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceChannel {
     private boolean passwordProtected;
@@ -138,11 +135,11 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     public Collection<User> getUsers() {
         String rawContent = client.getNetworkClient()
                 .getRawContent(HttpAPIRoute.CHANNEL_USER_LIST.toFullURL() + "?channel_id=" + getId());
-        JsonArray array = JsonParser.parseString(rawContent).getAsJsonObject().getAsJsonArray("data");
+        JsonNode rootNode = JacksonUtil.parse(rawContent);
+        JsonNode array = JacksonUtil.get(rootNode, "data");
         Set<User> users = new HashSet<>();
-        for (JsonElement element : array) {
-            JsonObject obj = element.getAsJsonObject();
-            users.add(client.getStorage().getUser(obj.get("id").getAsString(), obj));
+        for (JsonNode element : array) {
+            users.add(client.getStorage().getUser(element.get("id").asText(), element));
         }
         return Collections.unmodifiableCollection(users);
     }
@@ -160,8 +157,8 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         this.passwordProtected = passwordProtected;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

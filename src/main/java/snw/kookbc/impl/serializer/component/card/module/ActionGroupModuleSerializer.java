@@ -29,6 +29,7 @@ import snw.kookbc.util.GsonUtil;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ActionGroupModuleSerializer implements JsonSerializer<ActionGroupModule>, JsonDeserializer<ActionGroupModule> {
     private static final Type LIST_BUTTONELEMENT = GsonUtil.createListType(ButtonElement.class);
 

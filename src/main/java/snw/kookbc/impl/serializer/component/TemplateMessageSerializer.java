@@ -8,6 +8,7 @@ import snw.jkook.message.component.TemplateMessage;
 
 import java.lang.reflect.Type;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class TemplateMessageSerializer implements JsonSerializer<TemplateMessage> {
 
     @Override

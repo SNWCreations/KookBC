@@ -19,9 +19,6 @@
 package snw.kookbc.impl.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
@@ -285,8 +282,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .post(requestBody)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        JsonObject object = JsonParser.parseString(client.getNetworkClient().call(request)).getAsJsonObject()
-                .getAsJsonObject("data");
+        JsonNode object = snw.kookbc.util.JacksonUtil.parse(client.getNetworkClient().call(request)).get("data");
         CustomEmoji emoji = client.getEntityBuilder().buildEmoji(object);
         client.getStorage().addEmoji(emoji);
         return emoji;
@@ -369,8 +365,8 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
         this.avatarUrl = avatarUrl;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
+    // GSON compatibility method - marked for deprecation
+    public synchronized void updateFromGson(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

@@ -164,7 +164,8 @@ public class EntityStorage {
             result = client.getEntityBuilder().buildGuild(def);
             addGuild(result);
         } else {
-            ((GuildImpl) result).update(def);
+            // 转换JsonObject到JsonNode再更新
+            ((GuildImpl) result).update(snw.kookbc.util.JacksonUtil.parse(def.toString()));
         }
         return result;
     }

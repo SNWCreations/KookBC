@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ParagraphSerializer implements JsonSerializer<Paragraph>, JsonDeserializer<Paragraph> {
     @Override
     public JsonElement serialize(Paragraph element, Type typeOfSrc, JsonSerializationContext context) {

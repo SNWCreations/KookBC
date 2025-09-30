@@ -4,7 +4,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.0.0-beta4"
     id("jacoco")
     id("publish-conventions")
     id("me.champeau.jmh") version "0.7.2"
@@ -39,7 +39,7 @@ dependencies {
     shadowApi(libs.net.kyori.event.api)
     shadowApi(libs.net.kyori.event.method)
     shadowApi(libs.net.freeutils.jlhttp)
-    shadowApi(libs.com.google.code.gson.gson)
+    // GSON 已移除 - 项目已完全迁移到 Jackson (v0.52.0+)
     shadow("com.fasterxml.jackson.core:jackson-core:2.17.2"); api("com.fasterxml.jackson.core:jackson-core:2.17.2")
     shadow("com.fasterxml.jackson.core:jackson-databind:2.17.2"); api("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     shadow("com.fasterxml.jackson.core:jackson-annotations:2.17.2"); api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")

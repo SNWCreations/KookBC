@@ -44,7 +44,8 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
     protected GuildInfoUpdateEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx,
             long timeStamp, JsonObject body) throws JsonParseException {
         final Guild guild = client.getStorage().getGuild(body.get("id").getAsString());
-        ((GuildImpl) guild).update(body);
+        // 转换JsonObject到JsonNode再更新
+        ((GuildImpl) guild).update(snw.kookbc.util.JacksonUtil.parse(body.toString()));
         return new GuildInfoUpdateEvent(timeStamp, guild);
     }
 

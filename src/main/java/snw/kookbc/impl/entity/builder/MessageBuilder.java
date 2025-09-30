@@ -18,8 +18,6 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.util.JacksonCardUtil;
@@ -88,19 +86,19 @@ public class MessageBuilder {
         throw new RuntimeException("Unsupported component");
     }
 
-    public PrivateMessage buildPrivateMessage(JsonObject object) {
+    public PrivateMessage buildPrivateMessage(com.google.gson.JsonObject object) {
         return buildPrivateMessage(JacksonUtil.parse(object.toString()));
     }
 
-    public ChannelMessage buildChannelMessage(JsonObject object) {
+    public ChannelMessage buildChannelMessage(com.google.gson.JsonObject object) {
         return buildChannelMessage(JacksonUtil.parse(object.toString()));
     }
 
-    private User getAuthor(JsonObject extra) {
+    private User getAuthor(com.google.gson.JsonObject extra) {
         return getAuthor(JacksonUtil.parse(extra.toString()));
     }
 
-    private Message getQuote(JsonObject extra) {
+    private Message getQuote(com.google.gson.JsonObject extra) {
         return getQuote(JacksonUtil.parse(extra.toString()));
     }
 
@@ -116,14 +114,14 @@ public class MessageBuilder {
         throw new RuntimeException("We can not found channel type: " + channelType);
     }
 
-    public Message buildQuote(JsonObject object) {
+    public Message buildQuote(com.google.gson.JsonObject object) {
         if (object == null) {
             return null;
         }
         return buildQuote(JacksonUtil.parse(object.toString()));
     }
 
-    public BaseComponent buildComponent(JsonObject object) {
+    public BaseComponent buildComponent(com.google.gson.JsonObject object) {
         return buildComponent(JacksonUtil.parse(object.toString()));
     }
 

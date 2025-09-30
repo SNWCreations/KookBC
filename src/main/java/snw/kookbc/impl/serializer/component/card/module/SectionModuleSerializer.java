@@ -31,6 +31,7 @@ import snw.jkook.message.component.card.structure.Paragraph;
 import java.lang.reflect.Type;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class SectionModuleSerializer implements JsonSerializer<SectionModule>, JsonDeserializer<SectionModule> {
     @Override
     public JsonElement serialize(SectionModule sectionModule, Type typeOfSrc, JsonSerializationContext context) {

@@ -24,6 +24,7 @@ import snw.jkook.message.component.card.module.CountdownModule;
 import java.lang.reflect.Type;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class CountdownModuleSerializer implements JsonSerializer<CountdownModule>, JsonDeserializer<CountdownModule> {
     @Override
     public JsonElement serialize(CountdownModule module, Type typeOfSrc, JsonSerializationContext context) {

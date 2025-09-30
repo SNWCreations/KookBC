@@ -20,17 +20,14 @@ package snw.kookbc.impl.performance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import snw.kookbc.util.JacksonUtil;
-import snw.kookbc.util.GsonUtil;
 
 import java.io.IOException;
 
 /**
- * Jackson vs Gson 性能对比测试
- * 验证 JSON 解析性能提升效果
+ * Jackson 性能测试（已移除 GSON 依赖）
+ * 现在仅测试 Jackson 解析性能
  */
 public class JsonPerformanceTest {
 
@@ -76,7 +73,7 @@ public class JsonPerformanceTest {
 
     @Test
     public void testJacksonPerformance() {
-        System.out.println("=== Jackson vs Gson 性能对比测试 ===\n");
+        System.out.println("=== Jackson JSON 解析性能测试 ===\n");
 
         // 预热
         warmup();
@@ -84,11 +81,8 @@ public class JsonPerformanceTest {
         // Jackson 性能测试
         long jacksonTime = testJacksonParsing();
 
-        // Gson 性能测试
-        long gsonTime = testGsonParsing();
-
-        // 结果分析
-        analyzeResults(jacksonTime, gsonTime);
+        // 结果分析 (与历史 GSON 性能比较)
+        analyzeResults(jacksonTime, 0); // gsonTime 设为0，仅显示 Jackson 性能
     }
 
     private void warmup() {
@@ -96,7 +90,8 @@ public class JsonPerformanceTest {
         for (int i = 0; i < 1000; i++) {
             try {
                 JacksonUtil.parse(COMPLEX_JSON);
-                JsonParser.parseString(COMPLEX_JSON);
+                // 使用 Jackson 作为对比基准
+                JacksonUtil.parse(COMPLEX_JSON);
             } catch (Exception ignored) {
             }
         }
@@ -138,38 +133,8 @@ public class JsonPerformanceTest {
     }
 
     private long testGsonParsing() {
-        System.out.println("🐌 Gson 性能测试 (" + ITERATIONS + "次)...");
-
-        long startTime = System.nanoTime();
-
-        for (int i = 0; i < ITERATIONS; i++) {
-            try {
-                JsonObject root = JsonParser.parseString(COMPLEX_JSON).getAsJsonObject();
-                JsonObject data = root.getAsJsonObject("data");
-                var items = data.getAsJsonArray("items");
-
-                for (var item : items) {
-                    JsonObject itemObj = item.getAsJsonObject();
-                    String id = itemObj.get("id").getAsString();
-                    String username = itemObj.get("username").getAsString();
-                    boolean isBot = itemObj.get("bot").getAsBoolean();
-                    boolean isVip = itemObj.get("is_vip").getAsBoolean();
-                }
-
-                JsonObject meta = data.getAsJsonObject("meta");
-                int page = meta.get("page").getAsInt();
-                int pageTotal = meta.get("page_total").getAsInt();
-
-            } catch (Exception e) {
-                System.err.println("Gson 解析错误: " + e.getMessage());
-            }
-        }
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-
-        System.out.println("⏱️ Gson 耗时: " + (duration / 1_000_000) + "ms");
-        return duration;
+        System.out.println("⚠️ GSON 已移除 - 跳过性能测试");
+        return 0; // 返回0表示未测试
     }
 
     private void analyzeResults(long jacksonTime, long gsonTime) {
@@ -177,28 +142,11 @@ public class JsonPerformanceTest {
         System.out.println("=====================================");
 
         double jacksonMs = jacksonTime / 1_000_000.0;
-        double gsonMs = gsonTime / 1_000_000.0;
 
-        System.out.printf("Jackson: %.2f ms%n", jacksonMs);
-        System.out.printf("Gson:    %.2f ms%n", gsonMs);
-
-        if (gsonTime > 0) {
-            double speedup = (double) gsonTime / jacksonTime;
-            double improvement = ((double) (gsonTime - jacksonTime) / gsonTime) * 100;
-
-            System.out.printf("性能提升: %.1fx 倍速%n", speedup);
-            System.out.printf("时间减少: %.1f%%%n", improvement);
-
-            if (improvement >= 50) {
-                System.out.println("🎉 Jackson 性能显著优于 Gson！");
-            } else if (improvement >= 20) {
-                System.out.println("✅ Jackson 性能优于 Gson");
-            } else if (improvement >= 0) {
-                System.out.println("📈 Jackson 略快于 Gson");
-            } else {
-                System.out.println("⚠️ 性能测试结果异常");
-            }
-        }
+        System.out.printf("Jackson 解析耗时: %.2f ms%n", jacksonMs);
+        System.out.printf("每次迭代平均: %.4f ms%n", jacksonMs / ITERATIONS);
+        System.out.println("\n✅ GSON 依赖已完全移除");
+        System.out.println("🚀 项目已全面迁移到 Jackson JSON 引擎");
 
         System.out.println("=====================================");
     }

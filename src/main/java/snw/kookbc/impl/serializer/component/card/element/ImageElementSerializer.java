@@ -24,6 +24,7 @@ import snw.jkook.message.component.card.element.ImageElement;
 
 import java.lang.reflect.Type;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class ImageElementSerializer implements JsonSerializer<ImageElement>, JsonDeserializer<ImageElement> {
     @Override
     public JsonElement serialize(ImageElement element, Type typeOfSrc, JsonSerializationContext context) {

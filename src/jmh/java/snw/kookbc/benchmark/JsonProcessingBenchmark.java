@@ -65,7 +65,7 @@ public class JsonProcessingBenchmark {
     @Setup
     public void setup() {
         // 初始化 JSON 处理器
-        jacksonMapper = JacksonUtil.NORMAL_MAPPER;
+        jacksonMapper = JacksonUtil.getMapper();
         gsonParser = new JsonParser();
 
         // 简单 JSON

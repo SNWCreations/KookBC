@@ -24,6 +24,7 @@ import snw.jkook.message.component.card.module.InviteModule;
 import java.lang.reflect.Type;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class InviteModuleSerializer implements JsonSerializer<InviteModule>, JsonDeserializer<InviteModule> {
     @Override
     public JsonElement serialize(InviteModule module, Type typeOfSrc, JsonSerializationContext context) {

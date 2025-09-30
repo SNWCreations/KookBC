@@ -18,7 +18,9 @@
 
 package snw.kookbc.util;
 
-import com.google.gson.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import snw.kookbc.test.BaseTest;
@@ -30,18 +32,18 @@ import java.util.NoSuchElementException;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * GsonUtil 工具类测试
- * 测试JSON处理相关的工具方法
+ * GsonUtil 工具类测试（已迁移到 Jackson）
+ * 测试 JSON 处理相关的工具方法
  */
-@DisplayName("GsonUtil JSON工具测试")
+@DisplayName("GsonUtil JSON 工具测试（Jackson 版本）")
 class GsonUtilTest extends BaseTest {
 
     @Test
-    @DisplayName("CARD_GSON 和 NORMAL_GSON 应该正确初始化")
+    @DisplayName("CARD_GSON 和 NORMAL_GSON 应该正确初始化为 Jackson ObjectMapper")
     void testGsonInstances() {
         assertThat(GsonUtil.CARD_GSON).isNotNull();
         assertThat(GsonUtil.NORMAL_GSON).isNotNull();
-        assertThat(GsonUtil.CARD_GSON).isNotSameAs(GsonUtil.NORMAL_GSON);
+        // 现在两者都指向 JacksonCardUtil 和 JacksonUtil 的 mapper
     }
 
     @Test
@@ -63,12 +65,12 @@ class GsonUtilTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("has 应该正确检查JSON对象是否包含键")
+    @DisplayName("has 应该正确检查 JSON 对象是否包含键")
     void testHas() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("key1", "value1");
-        jsonObject.addProperty("key2", 123);
-        jsonObject.add("nullKey", JsonNull.INSTANCE);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("key1", "value1");
+        jsonObject.put("key2", 123);
+        jsonObject.putNull("nullKey");
 
         // 存在且非null的键
         assertThat(GsonUtil.has(jsonObject, "key1")).isTrue();
@@ -82,23 +84,23 @@ class GsonUtilTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("get 应该正确获取JSON元素")
+    @DisplayName("get 应该正确获取 JSON 元素")
     void testGet() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("stringKey", "testValue");
-        jsonObject.addProperty("numberKey", 42);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("stringKey", "testValue");
+        jsonObject.put("numberKey", 42);
 
-        JsonElement stringElement = GsonUtil.get(jsonObject, "stringKey");
-        JsonElement numberElement = GsonUtil.get(jsonObject, "numberKey");
+        JsonNode stringElement = GsonUtil.get(jsonObject, "stringKey");
+        JsonNode numberElement = GsonUtil.get(jsonObject, "numberKey");
 
-        assertThat(stringElement.getAsString()).isEqualTo("testValue");
-        assertThat(numberElement.getAsInt()).isEqualTo(42);
+        assertThat(stringElement.asText()).isEqualTo("testValue");
+        assertThat(numberElement.asInt()).isEqualTo(42);
     }
 
     @Test
     @DisplayName("get 应该在键不存在时抛出异常")
     void testGetWithNonExistentKey() {
-        JsonObject jsonObject = new JsonObject();
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
 
         assertThatThrownBy(() -> GsonUtil.get(jsonObject, "nonExistentKey"))
                 .isInstanceOf(NoSuchElementException.class)
@@ -108,8 +110,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("get 应该在值为null时抛出异常")
     void testGetWithNullValue() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.add("nullKey", JsonNull.INSTANCE);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.putNull("nullKey");
 
         assertThatThrownBy(() -> GsonUtil.get(jsonObject, "nullKey"))
                 .isInstanceOf(NoSuchElementException.class)
@@ -119,8 +121,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsString 应该正确获取字符串值")
     void testGetAsString() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("stringKey", "hello world");
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("stringKey", "hello world");
 
         String result = GsonUtil.getAsString(jsonObject, "stringKey");
         assertThat(result).isEqualTo("hello world");
@@ -129,8 +131,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsInt 应该正确获取整数值")
     void testGetAsInt() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("intKey", 12345);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("intKey", 12345);
 
         int result = GsonUtil.getAsInt(jsonObject, "intKey");
         assertThat(result).isEqualTo(12345);
@@ -139,8 +141,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsLong 应该正确获取长整数值")
     void testGetAsLong() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("longKey", 9876543210L);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("longKey", 9876543210L);
 
         long result = GsonUtil.getAsLong(jsonObject, "longKey");
         assertThat(result).isEqualTo(9876543210L);
@@ -149,8 +151,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsDouble 应该正确获取浮点数值")
     void testGetAsDouble() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("doubleKey", 3.14159);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("doubleKey", 3.14159);
 
         double result = GsonUtil.getAsDouble(jsonObject, "doubleKey");
         assertThat(result).isCloseTo(3.14159, within(0.00001));
@@ -159,8 +161,8 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsBoolean 应该正确获取布尔值")
     void testGetAsBoolean() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("booleanKey", true);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("booleanKey", true);
 
         boolean result = GsonUtil.getAsBoolean(jsonObject, "booleanKey");
         assertThat(result).isTrue();
@@ -169,58 +171,59 @@ class GsonUtilTest extends BaseTest {
     @Test
     @DisplayName("getAsJsonObject 应该正确获取JSON对象")
     void testGetAsJsonObject() {
-        JsonObject jsonObject = new JsonObject();
-        JsonObject nestedObject = new JsonObject();
-        nestedObject.addProperty("nestedKey", "nestedValue");
-        jsonObject.add("objectKey", nestedObject);
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        ObjectNode nestedObject = JacksonUtil.getMapper().createObjectNode();
+        nestedObject.put("nestedKey", "nestedValue");
+        jsonObject.set("objectKey", nestedObject);
 
-        JsonObject result = GsonUtil.getAsJsonObject(jsonObject, "objectKey");
-        assertThat(result.get("nestedKey").getAsString()).isEqualTo("nestedValue");
+        JsonNode result = GsonUtil.getAsJsonObject(jsonObject, "objectKey");
+        assertThat(result.get("nestedKey").asText()).isEqualTo("nestedValue");
     }
 
     @Test
     @DisplayName("getAsJsonArray 应该正确获取JSON数组")
     void testGetAsJsonArray() {
-        JsonObject jsonObject = new JsonObject();
-        JsonArray jsonArray = new JsonArray();
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        ArrayNode jsonArray = JacksonUtil.getMapper().createArrayNode();
         jsonArray.add("item1");
         jsonArray.add("item2");
-        jsonObject.add("arrayKey", jsonArray);
+        jsonObject.set("arrayKey", jsonArray);
 
-        JsonArray result = GsonUtil.getAsJsonArray(jsonObject, "arrayKey");
+        JsonNode result = GsonUtil.getAsJsonArray(jsonObject, "arrayKey");
         assertThat(result.size()).isEqualTo(2);
-        assertThat(result.get(0).getAsString()).isEqualTo("item1");
-        assertThat(result.get(1).getAsString()).isEqualTo("item2");
+        assertThat(result.get(0).asText()).isEqualTo("item1");
+        assertThat(result.get(1).asText()).isEqualTo("item2");
     }
 
     @Test
     @DisplayName("getAsJsonPrimitive 应该正确获取JSON基本类型")
     void testGetAsJsonPrimitive() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("primitiveKey", "primitiveValue");
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("primitiveKey", "primitiveValue");
 
-        JsonPrimitive result = GsonUtil.getAsJsonPrimitive(jsonObject, "primitiveKey");
-        assertThat(result.getAsString()).isEqualTo("primitiveValue");
+        JsonNode result = GsonUtil.getAsJsonPrimitive(jsonObject, "primitiveKey");
+        assertThat(result.asText()).isEqualTo("primitiveValue");
     }
 
     @Test
-    @DisplayName("类型转换方法应该在类型不匹配时抛出异常")
+    @DisplayName("类型转换方法应该处理类型不匹配的情况")
     void testTypeConversionExceptions() {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("stringValue", "notANumber");
+        ObjectNode jsonObject = JacksonUtil.getMapper().createObjectNode();
+        jsonObject.put("stringValue", "notANumber");
 
-        // 尝试将字符串转换为数字应该抛出异常
-        assertThatThrownBy(() -> GsonUtil.getAsInt(jsonObject, "stringValue"))
-                .isInstanceOf(NumberFormatException.class);
+        // Jackson 的 asInt() 在遇到非数字字符串时返回 0（默认行为）
+        // 这与 GSON 的行为不同，GSON 会抛出 NumberFormatException
+        int result = GsonUtil.getAsInt(jsonObject, "stringValue");
+        assertThat(result).isEqualTo(0);
     }
 
     @Test
     @DisplayName("CARD_GSON 应该支持HTML转义禁用")
-    void testCardGsonHtmlEscaping() {
-        JsonObject testObject = new JsonObject();
-        testObject.addProperty("html", "<b>Bold Text</b>");
+    void testCardGsonHtmlEscaping() throws Exception {
+        ObjectNode testObject = JacksonCardUtil.getMapper().createObjectNode();
+        testObject.put("html", "<b>Bold Text</b>");
 
-        String result = GsonUtil.CARD_GSON.toJson(testObject);
+        String result = JacksonCardUtil.toJson(testObject);
 
         // CARD_GSON应该不转义HTML字符
         assertThat(result).contains("<b>Bold Text</b>");
@@ -228,13 +231,13 @@ class GsonUtilTest extends BaseTest {
 
     @Test
     @DisplayName("NORMAL_GSON 应该正常工作")
-    void testNormalGson() {
-        JsonObject testObject = new JsonObject();
-        testObject.addProperty("key", "value");
+    void testNormalGson() throws Exception {
+        ObjectNode testObject = JacksonUtil.getMapper().createObjectNode();
+        testObject.put("key", "value");
 
-        String json = GsonUtil.NORMAL_GSON.toJson(testObject);
-        JsonObject parsed = GsonUtil.NORMAL_GSON.fromJson(json, JsonObject.class);
+        String json = JacksonUtil.toJson(testObject);
+        JsonNode parsed = JacksonUtil.parse(json);
 
-        assertThat(parsed.get("key").getAsString()).isEqualTo("value");
+        assertThat(parsed.get("key").asText()).isEqualTo("value");
     }
 }

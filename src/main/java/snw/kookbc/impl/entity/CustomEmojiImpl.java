@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
@@ -86,8 +85,8 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
         this.name = name;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

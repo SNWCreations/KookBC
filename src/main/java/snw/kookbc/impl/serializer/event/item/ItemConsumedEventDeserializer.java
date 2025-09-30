@@ -18,8 +18,6 @@
 
 package snw.kookbc.impl.serializer.event.item;
 
-import static com.google.gson.JsonParser.parseString;
-
 import java.lang.reflect.Type;
 
 import com.google.gson.JsonDeserializationContext;
@@ -45,7 +43,9 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
     protected ItemConsumedEvent deserialize(JsonObject object, Type type, JsonDeserializationContext ctx)
             throws JsonParseException {
         final EntityStorage storage = client.getStorage();
-        final JsonObject content = parseString(object.get("content").getAsString()).getAsJsonObject();
+        final JsonObject content = new com.google.gson.JsonParser()
+            .parse(object.get("content").getAsString())
+            .getAsJsonObject();
         final JsonObject data = content.getAsJsonObject("data");
         final long timeStamp = object.get("msg_timestamp").getAsLong();
         final User consumer = storage.getUser(data.get("user_id").getAsString());

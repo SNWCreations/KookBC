@@ -21,9 +21,6 @@ package snw.kookbc.impl.entity;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
@@ -346,8 +343,8 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
-    @Override
-    public void update(JsonObject data) {
+    // GSON compatibility method
+    public void update(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

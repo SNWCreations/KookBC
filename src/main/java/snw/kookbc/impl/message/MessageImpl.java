@@ -20,7 +20,6 @@ package snw.kookbc.impl.message;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
@@ -48,6 +47,7 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
     private final String id;
@@ -107,7 +107,7 @@ public abstract class MessageImpl implements Message, LazyLoadable {
 
     @Override
     public Collection<User> getUserByReaction(CustomEmoji customEmoji) {
-        JsonArray array;
+            com.google.gson.JsonArray array;
         try {
             String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
@@ -117,7 +117,8 @@ public abstract class MessageImpl implements Message, LazyLoadable {
                                     .toFullURL(),
                             getId(),
                             URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())));
-            array = JsonParser.parseString(rawStr).getAsJsonObject().getAsJsonArray("data");
+            String dataJsonStr = snw.kookbc.util.JacksonUtil.parse(rawStr).get("data").toString();
+            array = new com.google.gson.JsonParser().parse(dataJsonStr).getAsJsonArray();
         } catch (BadResponseException e) {
             if (e.getCode() == 40300) { // 40300, so we should throw IllegalStateException
                 throw new IllegalStateException(e);

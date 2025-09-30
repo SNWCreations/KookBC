@@ -320,8 +320,8 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         return master;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
         update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 

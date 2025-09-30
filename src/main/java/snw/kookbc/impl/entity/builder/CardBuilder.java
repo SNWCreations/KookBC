@@ -19,9 +19,6 @@
 package snw.kookbc.impl.entity.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.util.Validate;
@@ -94,7 +91,7 @@ public class CardBuilder {
      * @param array Gson JsonArray
      * @return MultipleCardComponent
      */
-    public static MultipleCardComponent buildCard(JsonArray array) {
+    public static MultipleCardComponent buildCard(com.google.gson.JsonArray array) {
         // 转换Gson JsonArray到Jackson JsonNode
         JsonNode arrayNode = JacksonCardUtil.parse(array.toString());
         return buildCardArray(arrayNode);
@@ -105,7 +102,7 @@ public class CardBuilder {
      * @param object Gson JsonObject
      * @return CardComponent
      */
-    public static CardComponent buildCard(JsonObject object) {
+    public static CardComponent buildCard(com.google.gson.JsonObject object) {
         // 转换Gson JsonObject到Jackson JsonNode
         JsonNode objectNode = JacksonCardUtil.parse(object.toString());
         return buildCardObject(objectNode);
@@ -136,8 +133,8 @@ public class CardBuilder {
      * @param component CardComponent
      * @return JsonArray
      */
-    public static JsonArray serialize(CardComponent component) {
-        JsonArray result = new JsonArray();
+    public static com.google.gson.JsonArray serialize(CardComponent component) {
+        com.google.gson.JsonArray result = new com.google.gson.JsonArray();
         result.add(serialize0(component));
         return result;
     }
@@ -147,8 +144,8 @@ public class CardBuilder {
      * @param component MultipleCardComponent
      * @return JsonArray
      */
-    public static JsonArray serialize(MultipleCardComponent component) {
-        JsonArray array = new JsonArray();
+    public static com.google.gson.JsonArray serialize(MultipleCardComponent component) {
+        com.google.gson.JsonArray array = new com.google.gson.JsonArray();
         for (CardComponent card : component.getComponents()) {
             array.add(serialize0(card));
         }
@@ -160,8 +157,8 @@ public class CardBuilder {
      * @param component CardComponent
      * @return JsonObject
      */
-    public static JsonObject serialize0(CardComponent component) {
+    public static com.google.gson.JsonObject serialize0(CardComponent component) {
         String json = JacksonCardUtil.toJson(component);
-        return com.google.gson.JsonParser.parseString(json).getAsJsonObject();
+        return new com.google.gson.JsonParser().parse(json).getAsJsonObject();
     }
 }

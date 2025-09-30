@@ -23,9 +23,6 @@ import static snw.jkook.util.Validate.notNull;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.jetbrains.annotations.Nullable;
@@ -41,11 +38,13 @@ import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 public class EntityBuildUtil {
 
-    public static Collection<Channel.RolePermissionOverwrite> parseRPO(JsonObject object) {
-        JsonArray array = object.getAsJsonArray("permission_overwrites");
+    // ===== Gson兼容方法（向后兼容）=====
+
+    public static Collection<Channel.RolePermissionOverwrite> parseRPO(com.google.gson.JsonObject object) {
+        com.google.gson.JsonArray array = object.getAsJsonArray("permission_overwrites");
         Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
-        for (JsonElement element : array) {
-            JsonObject orpo = element.getAsJsonObject();
+        for (com.google.gson.JsonElement element : array) {
+            com.google.gson.JsonObject orpo = element.getAsJsonObject();
             rpo.add(
                     new Channel.RolePermissionOverwrite(
                             orpo.get("role_id").getAsInt(),
@@ -55,12 +54,12 @@ public class EntityBuildUtil {
         return rpo;
     }
 
-    public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, JsonObject object) {
-        JsonArray array = object.getAsJsonArray("permission_users");
+    public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, com.google.gson.JsonObject object) {
+        com.google.gson.JsonArray array = object.getAsJsonArray("permission_users");
         Collection<Channel.UserPermissionOverwrite> upo = new ConcurrentLinkedQueue<>();
-        for (JsonElement element : array) {
-            JsonObject oupo = element.getAsJsonObject();
-            JsonObject rawUser = oupo.getAsJsonObject("user");
+        for (com.google.gson.JsonElement element : array) {
+            com.google.gson.JsonObject oupo = element.getAsJsonObject();
+            com.google.gson.JsonObject rawUser = oupo.getAsJsonObject("user");
             upo.add(
                     new Channel.UserPermissionOverwrite(
                             client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
@@ -70,7 +69,7 @@ public class EntityBuildUtil {
         return upo;
     }
 
-    public static NotifyType parseNotifyType(JsonObject object) {
+    public static NotifyType parseNotifyType(com.google.gson.JsonObject object) {
         Guild.NotifyType type = null;
         int rawNotifyType = object.get("notify_type").getAsInt();
         for (Guild.NotifyType value : Guild.NotifyType.values()) {
@@ -83,7 +82,7 @@ public class EntityBuildUtil {
         return type;
     }
 
-    public static Guild parseEmojiGuild(String id, KBCClient client, JsonObject object) {
+    public static Guild parseEmojiGuild(String id, KBCClient client, com.google.gson.JsonObject object) {
         Guild guild = null;
         if (id.contains("/")) {
             guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));

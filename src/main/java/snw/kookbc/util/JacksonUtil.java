@@ -35,8 +35,8 @@ import java.util.NoSuchElementException;
  */
 public final class JacksonUtil {
 
-    // 兼容性字段，供现有代码使用
-    public static final com.google.gson.Gson NORMAL_GSON = GsonUtil.NORMAL_GSON;
+    // 兼容性字段，供现有代码使用 - 移除以避免类型不匹配
+    // public static final com.google.gson.Gson NORMAL_GSON = GsonUtil.NORMAL_GSON;
 
     // Jackson核心对象
     private static final ObjectMapper MAPPER;
@@ -291,7 +291,9 @@ public final class JacksonUtil {
         }
         try {
             // 优化：直接使用JsonParser而不是NORMAL_GSON，减少运行时Gson依赖
-            return com.google.gson.JsonParser.parseString(jacksonNode.toString()).getAsJsonObject();
+            // 将JsonNode转换为GSON JsonObject
+            String jsonString = jacksonNode.toString();
+            return new com.google.gson.JsonParser().parse(jsonString).getAsJsonObject();
         } catch (Exception e) {
             throw new RuntimeException("Failed to convert Jackson JsonNode to Gson JsonObject", e);
         }

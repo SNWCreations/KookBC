@@ -24,6 +24,7 @@ import snw.kookbc.util.GsonUtil;
 
 import java.lang.reflect.Type;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class MultipleCardComponentSerializer implements JsonSerializer<MultipleCardComponent>, JsonDeserializer<MultipleCardComponent> {
     private static final Type LIST_CARDCOMPONENT = GsonUtil.createListType(CardComponent.class);
 

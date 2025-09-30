@@ -24,6 +24,7 @@ import snw.jkook.permissions.PermissionAttachmentInfo;
 
 import java.util.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
 public class UserPermissionSaved {
     private final String uid;
     private final Map<String, Boolean> permissions;
@@ -60,7 +61,6 @@ public class UserPermissionSaved {
     }
 
     public static List<UserPermissionSaved> parseList(String json) {
-        return GSON.fromJson(json, new TypeToken<List<UserPermissionSaved>>() {
-        });
+        return GSON.fromJson(json, new TypeToken<List<UserPermissionSaved>>() {}.getType());
     }
 }
