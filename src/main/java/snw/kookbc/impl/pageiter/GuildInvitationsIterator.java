@@ -19,9 +19,6 @@
 package snw.kookbc.impl.pageiter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
@@ -58,27 +55,8 @@ public class GuildInvitationsIterator extends PageIteratorImpl<Set<Invitation>> 
             String url = element.get("url").asText();
             JsonNode userNode = element.get("user");
             String userId = userNode.get("id").asText();
-            User master = client.getStorage().getUser(userId);
-            object.add(new InvitationImpl(
-                    client, guild, null, urlCode, url, master
-            ));
-        }
-    }
-
-    /**
-     * 向后兼容的Gson版本
-     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
-     */
-    @Deprecated
-    @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            Guild guild = client.getStorage().getGuild(rawObj.get("guild_id").getAsString());
-            String urlCode = rawObj.get("url_code").getAsString();
-            String url = rawObj.get("url").getAsString();
-            User master = client.getStorage().getUser(rawObj.getAsJsonObject("user").get("id").getAsString());
+            // 使用完整的用户数据,避免额外的 HTTP 请求
+            User master = client.getStorage().getUser(userId, userNode);
             object.add(new InvitationImpl(
                     client, guild, null, urlCode, url, master
             ));

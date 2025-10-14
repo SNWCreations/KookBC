@@ -56,9 +56,11 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildInfoUpdateEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final Guild guild = client.getStorage().getGuild(body.get("id").asText());
+        // 直接使用Jackson JsonNode更新
+        ((GuildImpl) guild).update(body);
+        return new GuildInfoUpdateEvent(timeStamp, guild);
     }
 
     /**
@@ -66,8 +68,8 @@ public class GuildInfoUpdateEventDeserializer extends NormalEventDeserializer<Gu
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // GuildImpl已支持Jackson update，可以启用
+        return true;
     }
 
 }

@@ -90,29 +90,37 @@ public class EventFactory {
                 return null;
             }
         }
+        // 特殊处理: GuildUserNickNameUpdateEvent 使用特殊字段判断
         if (eventType == GuildInfoUpdateEvent.class) {
             if (has(
                     get(get(object, "extra"), "body"),
                     "my_nickname")) {
-                // 使用Jackson处理GuildUserNickNameUpdateEvent - 避免Gson运行时调用
+                // 修正事件类型为 GuildUserNickNameUpdateEvent
+                // 使用 Jackson 自定义反序列化器处理
                 try {
-                    return getMapper().readValue(object.toString(), GuildUserNickNameUpdateEvent.class);
+                    return jacksonMapper.readValue(object.toString(), GuildUserNickNameUpdateEvent.class);
                 } catch (Exception e) {
-                    client.getCore().getLogger().warn("Failed to parse GuildUserNickNameUpdateEvent with Jackson, fallback to Gson", e);
-                    return this.gson.fromJson(object.toString(), GuildUserNickNameUpdateEvent.class); // fallback
+                    client.getCore().getLogger().warn("Failed to parse GuildUserNickNameUpdateEvent with Jackson", e);
+                    // 回退到 GSON
+                    return this.gson.fromJson(object.toString(), GuildUserNickNameUpdateEvent.class);
                 }
             }
         }
 
-        // ===== Jackson Migration Support =====
-        // 优先使用Jackson进行反序列化，提供更好的null-safe处理
-        Event result = createEventWithJackson(object, eventType);
-        if (result != null) {
-            return result;
+        // ===== Jackson 优先策略 =====
+        // 使用 Jackson 自定义反序列化模块进行反序列化
+        try {
+            Event result = jacksonMapper.readValue(object.toString(), eventType);
+            if (result != null) {
+                return result;
+            }
+        } catch (Exception e) {
+            client.getCore().getLogger().debug("Jackson deserialization failed for {}, falling back to Gson: {}",
+                    eventType.getSimpleName(), e.getMessage());
         }
 
-        // 回退到Gson（向后兼容）
-        result = this.gson.fromJson(object.toString(), eventType);
+        // 回退到 Gson（向后兼容，将在后续版本移除）
+        Event result = this.gson.fromJson(object.toString(), eventType);
 
         // why the second condition? see ChannelInfoUpdateEventDeserializer
         if (result == null && !(eventType == ChannelInfoUpdateEvent.class)) {
@@ -120,34 +128,6 @@ public class EventFactory {
             client.getCore().getLogger().error("Frame content: {}", object);
         }
         return result;
-    }
-
-    /**
-     * Jackson版本的事件创建方法 - 处理Kook不完整JSON数据
-     * 提供更好的null-safe处理和性能
-     */
-    protected Event createEventWithJackson(JsonNode object, Class<? extends Event> eventType) {
-        try {
-            // 检查反序列化器是否支持Jackson
-            if (supportsJacksonDeserialization(eventType)) {
-                // 这里可以添加Jackson版本的事件反序列化逻辑
-                // 目前先返回null，让BaseEventDeserializer的子类逐步迁移
-                return null;
-            }
-        } catch (Exception e) {
-            client.getCore().getLogger().debug("Jackson deserialization failed for {}, falling back to Gson", eventType.getSimpleName(), e);
-        }
-        return null;
-    }
-
-    /**
-     * 检查事件类型是否支持Jackson反序列化
-     * 随着事件反序列化器逐步迁移，这个方法会返回更多true
-     */
-    protected boolean supportsJacksonDeserialization(Class<? extends Event> eventType) {
-        // 目前所有事件反序列化器都继承自BaseEventDeserializer
-        // BaseEventDeserializer已经支持Jackson，但子类需要逐步迁移
-        return false; // 暂时返回false，等待子类迁移
     }
 
     protected Class<? extends Event> parseEventType(JsonNode object) {
@@ -226,7 +206,8 @@ public class EventFactory {
     // Jackson ObjectMapper配置
     protected ObjectMapper createJacksonMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        // 添加事件反序列化器配置 - 如需要的话
+        // 注册 JKook 事件反序列化模块
+        mapper.registerModule(new snw.kookbc.impl.serializer.event.jackson.JKookEventModule(client));
         return mapper;
     }
 }

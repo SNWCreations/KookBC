@@ -34,6 +34,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.NonCategoryChannelImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.ThreadChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 public class EntityBuildUtil {
@@ -99,6 +100,9 @@ public class EntityBuildUtil {
                 return new TextChannelImpl(client, id);
             case 2:
                 return new VoiceChannelImpl(client, id);
+            case 4:
+                // 帖子频道 (Thread Channel)
+                return new ThreadChannelImpl(client, id);
             default:
                 return null;
         }

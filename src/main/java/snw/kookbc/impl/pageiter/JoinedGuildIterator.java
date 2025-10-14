@@ -57,17 +57,6 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
         return JacksonUtil.convertToGsonJsonObject(node);
     }
 
-    /**
-     * 向后兼容的Gson版本（已弃用）
-     * @deprecated 此方法仅为向后兼容保留，新代码请使用 {@link #processElements(JsonNode)}
-     */
-    @Deprecated
-    @Override
-    protected void processElements(com.google.gson.JsonArray array) {
-        // 此方法已弃用，不再维护
-        throw new UnsupportedOperationException("Deprecated GSON method - use Jackson version instead");
-    }
-
     @Override
     public Collection<Guild> next() {
         return Collections.unmodifiableCollection(super.next());

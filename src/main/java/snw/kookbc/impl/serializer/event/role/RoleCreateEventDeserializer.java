@@ -62,9 +62,10 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
      * 提供更好的null-safe处理
      */
     @Override
-    protected RoleCreateEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected RoleCreateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final Guild guild = client.getStorage().getGuild(node.get("target_id").asText());
+        final Role role = client.getEntityBuilder().buildRole(guild, body);
+        return new RoleCreateEvent(timeStamp, role);
     }
 
     /**
@@ -72,8 +73,8 @@ public class RoleCreateEventDeserializer extends NormalEventDeserializer<RoleCre
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // EntityBuilder已支持Jackson，可以启用
+        return true;
     }
 
 }

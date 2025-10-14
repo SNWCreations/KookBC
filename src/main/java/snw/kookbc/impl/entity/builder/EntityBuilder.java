@@ -216,6 +216,12 @@ public class EntityBuilder {
                 return new VoiceChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
                         hasPassword, size, quality, chatLimitTime);
             }
+            case 4: {
+                // 帖子频道 (Thread Channel)
+                final int chatLimitTime = getIntOrDefault(node, "slow_mode", 0);
+                return new snw.kookbc.impl.entity.channel.ThreadChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
+                        chatLimitTime);
+            }
             default: {
                 final String msg = "We can't construct the Channel using given information. Unknown channel type: " + channelType;
                 throw new IllegalArgumentException(msg);

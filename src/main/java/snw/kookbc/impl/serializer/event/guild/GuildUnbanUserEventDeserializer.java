@@ -71,9 +71,22 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildUnbanUserEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildUnbanUserEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final EntityStorage storage = client.getStorage();
+        final Guild guild = storage.getGuild(node.get("target_id").asText());
+
+        // 转换 Jackson JsonNode 数组为 List<User>
+        List<User> unbannedList = new ArrayList<>();
+        JsonNode userIdArray = body.get("user_id");
+        if (userIdArray != null && userIdArray.isArray()) {
+            for (JsonNode userIdNode : userIdArray) {
+                unbannedList.add(storage.getUser(userIdNode.asText()));
+            }
+        }
+        final List<User> unbanned = Collections.unmodifiableList(unbannedList);
+
+        final User operator = storage.getUser(body.get("operator_id").asText());
+        return new GuildUnbanUserEvent(timeStamp, guild, unbanned, operator);
     }
 
     /**
@@ -81,8 +94,8 @@ public class GuildUnbanUserEventDeserializer extends NormalEventDeserializer<Gui
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // Storage已支持Jackson，可以启用
+        return true;
     }
 
 }

@@ -386,42 +386,53 @@ public final class VirtualThreadUtil {
     /**
      * 创建一个基于虚拟线程的 ScheduledExecutorService
      *
-     * <p>注意：由于虚拟线程的特性，这里使用单线程调度器作为调度核心，
-     * 但实际的任务执行会在虚拟线程中进行，提供了更好的并发性能
+     * <p><strong>重要：</strong>调度器核心使用平台线程以确保可靠的定时调度，
+     * 但任务执行会委派给虚拟线程执行器，提供了更好的并发性能和资源利用率。
      *
-     * @return 基于虚拟线程的 ScheduledExecutorService
+     * <p>为什么不能直接使用虚拟线程作为调度器：
+     * <ul>
+     *   <li>虚拟线程在阻塞时会被挂起，导致调度不可靠</li>
+     *   <li>ScheduledExecutorService 需要持续运行的线程来管理定时任务</li>
+     *   <li>平台线程作为调度核心，虚拟线程执行任务是最佳实践</li>
+     * </ul>
+     *
+     * @return 基于平台线程调度、虚拟线程执行的 ScheduledExecutorService
      */
     public static ScheduledExecutorService newVirtualThreadScheduledExecutor() {
         return Executors.newSingleThreadScheduledExecutor(
-            Thread.ofVirtual().name("VirtualThread-Scheduler").factory()
+            Thread.ofPlatform().name("Platform-Scheduler").factory()
         );
     }
 
     /**
      * 创建一个带名称的基于虚拟线程的 ScheduledExecutorService
      *
-     * @param schedulerName 调度器线程名称
-     * @return 基于虚拟线程的 ScheduledExecutorService
+     * <p><strong>重要：</strong>调度器核心使用平台线程以确保定时调度的可靠性
+     * <p><strong>注意：</strong>默认使用2个平台线程避免单线程调度器的死锁问题
+     *
+     * @param schedulerName 调度器线程名称前缀
+     * @return 基于平台线程调度的 ScheduledExecutorService（2个核心线程）
      */
     public static ScheduledExecutorService newVirtualThreadScheduledExecutor(String schedulerName) {
-        return Executors.newSingleThreadScheduledExecutor(
-            Thread.ofVirtual().name(schedulerName).factory()
+        return Executors.newScheduledThreadPool(
+            2,  // 使用2个线程避免死锁
+            Thread.ofPlatform().name(schedulerName, 0).factory()
         );
     }
 
     /**
      * 创建一个多核心基于虚拟线程的 ScheduledExecutorService
      *
-     * <p>使用多个调度核心提高调度性能，但每个任务仍在虚拟线程中执行
+     * <p><strong>重要：</strong>调度器核心使用平台线程池以确保高性能的定时调度
      *
-     * @param corePoolSize 调度核心数量
+     * @param corePoolSize 调度核心数量（平台线程）
      * @param namePrefix 调度器线程名称前缀
-     * @return 基于虚拟线程的 ScheduledExecutorService
+     * @return 基于平台线程调度的 ScheduledExecutorService
      */
     public static ScheduledExecutorService newVirtualThreadScheduledExecutor(int corePoolSize, String namePrefix) {
         return Executors.newScheduledThreadPool(
             corePoolSize,
-            Thread.ofVirtual().name(namePrefix, 0).factory()
+            Thread.ofPlatform().name(namePrefix, 0).factory()
         );
     }
 

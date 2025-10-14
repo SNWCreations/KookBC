@@ -54,9 +54,10 @@ public class GuildAddEmojiEventDeserializer extends NormalEventDeserializer<Guil
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildAddEmojiEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildAddEmojiEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final CustomEmoji customEmoji = client.getEntityBuilder().buildEmoji(body);
+        final Guild guild = customEmoji.getGuild();
+        return new GuildAddEmojiEvent(timeStamp, guild, customEmoji);
     }
 
     /**
@@ -64,8 +65,8 @@ public class GuildAddEmojiEventDeserializer extends NormalEventDeserializer<Guil
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // EntityBuilder已支持Jackson，可以启用
+        return true;
     }
 
 }

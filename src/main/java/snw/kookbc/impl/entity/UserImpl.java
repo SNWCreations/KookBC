@@ -353,13 +353,28 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         Validate.isTrue(Objects.equals(getId(), data.get("id").asText()),
                 "You can't update user by using different data");
         synchronized (this) {
-            name = data.get("username").asText();
-            bot = data.get("bot").asBoolean();
-            avatarUrl = data.get("avatar").asText();
-            vipAvatarUrl = data.get("vip_avatar").asText();
-            identify = data.get("identify_num").asInt();
-            ban = data.get("status").asInt() == 10;
-            vip = data.get("is_vip").asBoolean();
+            // 安全获取字段，某些 API 返回的用户数据可能不完整
+            if (data.has("username")) {
+                name = data.get("username").asText();
+            }
+            if (data.has("bot")) {
+                bot = data.get("bot").asBoolean();
+            }
+            if (data.has("avatar")) {
+                avatarUrl = data.get("avatar").asText();
+            }
+            if (data.has("vip_avatar")) {
+                vipAvatarUrl = data.get("vip_avatar").asText();
+            }
+            if (data.has("identify_num")) {
+                identify = data.get("identify_num").asInt();
+            }
+            if (data.has("status")) {
+                ban = data.get("status").asInt() == 10;
+            }
+            if (data.has("is_vip")) {
+                vip = data.get("is_vip").asBoolean();
+            }
         }
     }
 

@@ -179,5 +179,13 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.FRIEND_LIST, "friend");
         bucketNameMap.put(HttpAPIRoute.FRIEND_BLOCK, "friend/block");
         bucketNameMap.put(HttpAPIRoute.FRIEND_UNBLOCK, "friend/unblock");
+        // Thread (帖子频道) API - 新增支持
+        bucketNameMap.put(HttpAPIRoute.THREAD_CATEGORY_LIST, "category/list");
+        bucketNameMap.put(HttpAPIRoute.THREAD_CREATE, "thread/create");
+        bucketNameMap.put(HttpAPIRoute.THREAD_REPLY, "thread/reply");
+        bucketNameMap.put(HttpAPIRoute.THREAD_VIEW, "thread/view");
+        bucketNameMap.put(HttpAPIRoute.THREAD_LIST, "thread/list");
+        bucketNameMap.put(HttpAPIRoute.THREAD_DELETE, "thread/delete");
+        bucketNameMap.put(HttpAPIRoute.THREAD_POST_LIST, "thread/post");
     }
 }

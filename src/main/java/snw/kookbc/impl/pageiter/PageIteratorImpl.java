@@ -58,17 +58,37 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
         );
 
         JsonNode meta = object.get("meta");
+        JsonNode items = object.get("items");
+
+        // 先处理返回的数据项
+        boolean hasData = false;
+        if (items != null && items.isArray() && items.size() > 0) {
+            processElements(items);
+            hasData = true;
+        }
+
+        // 然后判断是否还有下一页
         if (meta != null && !meta.isNull()) {
+            // 有 meta 字段：使用分页信息判断是否有下一页
             optionalMeta = Optional.of(new MetaImpl(meta.get("page").asInt(),
                     meta.get("page_total").asInt(),
                     meta.get("page_size").asInt(),
                     meta.get("total").asInt()));
             next = currentPage.getAndAdd(1) <= optionalMeta.get().getPageTotal();
         } else {
-            next = false;
+            // 无 meta 字段：根据返回的 items 数量判断是否有下一页
+            // 如果返回的 items 数量等于 page_size，可能还有下一页
+            if (items != null && items.isArray()) {
+                int itemCount = items.size();
+                next = itemCount >= pageSizePerRequest;
+                currentPage.incrementAndGet();
+            } else {
+                next = false;
+            }
         }
-        processElements(object.get("items"));
-        return next;
+
+        // 返回当前是否有数据（不是下一页是否有数据）
+        return hasData;
     }
 
     @Override

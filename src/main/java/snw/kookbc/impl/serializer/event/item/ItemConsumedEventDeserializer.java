@@ -62,8 +62,15 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
      */
     @Override
     protected ItemConsumedEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+        final EntityStorage storage = client.getStorage();
+        // Jackson直接解析嵌套JSON字符串
+        final JsonNode content = snw.kookbc.util.JacksonUtil.parse(node.get("content").asText());
+        final JsonNode data = content.get("data");
+        final long timeStamp = node.get("msg_timestamp").asLong();
+        final User consumer = storage.getUser(data.get("user_id").asText());
+        final User affected = storage.getUser(data.get("target_id").asText());
+        final int itemId = data.get("item_id").asInt();
+        return new ItemConsumedEvent(timeStamp, consumer, affected, itemId);
     }
 
     /**
@@ -71,8 +78,8 @@ public class ItemConsumedEventDeserializer extends BaseEventDeserializer<ItemCon
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // Storage已支持Jackson，可以启用
+        return true;
     }
 
 }

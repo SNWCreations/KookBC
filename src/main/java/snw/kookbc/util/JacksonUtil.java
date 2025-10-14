@@ -298,4 +298,22 @@ public final class JacksonUtil {
             throw new RuntimeException("Failed to convert Jackson JsonNode to Gson JsonObject", e);
         }
     }
+
+    // ===== ObjectMapper 工厂方法 =====
+
+    /**
+     * 创建一个格式化输出的 ObjectMapper (Pretty Print)
+     * 适用于配置文件、日志输出等需要可读性的场景
+     */
+    public static ObjectMapper createPrettyMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+        // 启用格式化输出
+        mapper.enable(com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT);
+        // 禁用 HTML 转义 (与 GSON 的 disableHtmlEscaping 对应)
+        mapper.getFactory().disable(com.fasterxml.jackson.core.JsonGenerator.Feature.ESCAPE_NON_ASCII);
+        return mapper;
+    }
 }

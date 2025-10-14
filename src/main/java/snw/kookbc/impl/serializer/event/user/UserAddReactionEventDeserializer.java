@@ -64,9 +64,13 @@ public class UserAddReactionEventDeserializer extends NormalEventDeserializer<Us
      * 提供更好的null-safe处理
      */
     @Override
-    protected UserAddReactionEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected UserAddReactionEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String messageId = body.get("msg_id").asText();
+        final User user = client.getStorage().getUser(body.get("user_id").asText());
+        final JsonNode rawEmoji = body.get("emoji");
+        final CustomEmoji emoji = client.getStorage().getEmoji(rawEmoji.get("id").asText(), rawEmoji);
+        final ReactionImpl reaction = new ReactionImpl(client, messageId, emoji, user, timeStamp);
+        return new UserAddReactionEvent(timeStamp, user, messageId, reaction);
     }
 
     /**
@@ -74,8 +78,8 @@ public class UserAddReactionEventDeserializer extends NormalEventDeserializer<Us
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // Storage已支持Jackson，可以启用
+        return true;
     }
 
 }

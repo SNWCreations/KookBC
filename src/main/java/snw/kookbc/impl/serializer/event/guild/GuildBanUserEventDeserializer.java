@@ -72,9 +72,23 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildBanUserEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildBanUserEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final EntityStorage entityStorage = client.getStorage();
+        final Guild guild = entityStorage.getGuild(node.get("target_id").asText());
+        final User operator = entityStorage.getUser(body.get("operator_id").asText());
+
+        // 转换 Jackson JsonNode 数组为 List<User>
+        List<User> bannedList = new ArrayList<>();
+        JsonNode userIdArray = body.get("user_id");
+        if (userIdArray != null && userIdArray.isArray()) {
+            for (JsonNode userIdNode : userIdArray) {
+                bannedList.add(entityStorage.getUser(userIdNode.asText()));
+            }
+        }
+        final List<User> banned = unmodifiableList(bannedList);
+
+        final String reason = body.get("remark").asText();
+        return new GuildBanUserEvent(timeStamp, guild, banned, operator, reason);
     }
 
     /**
@@ -82,8 +96,8 @@ public class GuildBanUserEventDeserializer extends NormalEventDeserializer<Guild
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // Storage已支持Jackson，可以启用
+        return true;
     }
 
 }

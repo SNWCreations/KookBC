@@ -19,9 +19,6 @@
 package snw.kookbc.impl.pageiter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Guild;
 import snw.kookbc.impl.KBCClient;
@@ -59,20 +56,6 @@ public class GuildEmojiListIterator extends PageIteratorImpl<Set<CustomEmoji>> {
      */
     private static com.google.gson.JsonObject convertToGsonObject(JsonNode node) {
         return new com.google.gson.JsonParser().parse(node.toString()).getAsJsonObject();
-    }
-
-    /**
-     * 向后兼容的Gson版本
-     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
-     */
-    @Deprecated
-    @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            object.add(client.getStorage().getEmoji(rawObj.get("id").getAsString(), rawObj));
-        }
     }
 
     @Override

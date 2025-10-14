@@ -57,9 +57,12 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
      * 提供更好的null-safe处理
      */
     @Override
-    protected RoleInfoUpdateEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected RoleInfoUpdateEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final Guild guild = client.getStorage().getGuild(node.get("target_id").asText());
+        final int roleId = body.get("role_id").asInt();
+        ((RoleImpl) client.getStorage().getRole(guild, roleId, body)).update(body);
+        final Role role = client.getStorage().getRole(guild, roleId);
+        return new RoleInfoUpdateEvent(timeStamp, role);
     }
 
     /**
@@ -67,8 +70,8 @@ public class RoleInfoUpdateEventDeserializer extends NormalEventDeserializer<Rol
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // RoleImpl已支持Jackson update，可以启用
+        return true;
     }
 
 }

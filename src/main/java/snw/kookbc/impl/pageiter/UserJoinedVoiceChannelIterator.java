@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -54,19 +52,6 @@ public class UserJoinedVoiceChannelIterator extends PageIteratorImpl<Collection<
         for (JsonNode element : node) {
             String id = element.get("id").asText();
             object.add(new VoiceChannelImpl(client, id));
-        }
-    }
-
-    /**
-     * 向后兼容的Gson版本
-     * @deprecated 使用 {@link #processElements(JsonNode)} 获得更好的性能
-     */
-    @Deprecated
-    @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>();
-        for (JsonElement element : array) {
-            object.add(new VoiceChannelImpl(client, element.getAsJsonObject().get("id").getAsString()));
         }
     }
 }

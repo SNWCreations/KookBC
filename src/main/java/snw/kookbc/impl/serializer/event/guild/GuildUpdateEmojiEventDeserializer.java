@@ -57,9 +57,11 @@ public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<G
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildUpdateEmojiEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildUpdateEmojiEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final CustomEmoji customEmoji = client.getStorage().getEmoji(body.get("id").asText(), body);
+        final Guild guild = customEmoji.getGuild();
+        ((CustomEmojiImpl) customEmoji).update(body);
+        return new GuildUpdateEmojiEvent(timeStamp, guild, customEmoji);
     }
 
     /**
@@ -67,8 +69,8 @@ public class GuildUpdateEmojiEventDeserializer extends NormalEventDeserializer<G
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // CustomEmojiImpl已支持Jackson update，可以启用
+        return true;
     }
 
 }

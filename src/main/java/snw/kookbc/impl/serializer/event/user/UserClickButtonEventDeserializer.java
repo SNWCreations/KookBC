@@ -63,9 +63,17 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
      * 提供更好的null-safe处理
      */
     @Override
-    protected UserClickButtonEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected UserClickButtonEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String userId = body.get("user_id").asText();
+        final String targetId = body.get("target_id").asText();
+        final Boolean needChannel = Objects.equals(userId, targetId);
+
+        final User user = client.getStorage().getUser(userId);
+        final String messageId = body.get("msg_id").asText();
+        final String value = body.get("value").asText();
+        final NonCategoryChannel channel = needChannel ? null
+                : (NonCategoryChannel) client.getStorage().getChannel(targetId);
+        return new UserClickButtonEvent(timeStamp, user, messageId, value, channel);
     }
 
     /**
@@ -73,8 +81,8 @@ public class UserClickButtonEventDeserializer extends NormalEventDeserializer<Us
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // Storage已支持Jackson，可以启用
+        return true;
     }
 
 }

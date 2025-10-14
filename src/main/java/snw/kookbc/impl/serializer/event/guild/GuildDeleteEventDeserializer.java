@@ -53,9 +53,10 @@ public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildD
      * 提供更好的null-safe处理
      */
     @Override
-    protected GuildDeleteEvent deserializeFromNode(JsonNode node) {
-        // 暂时使用默认实现，等相关依赖完成Jackson迁移
-        return super.deserializeFromNode(node);
+    protected GuildDeleteEvent deserializeFromNode(JsonNode node, long timeStamp, JsonNode body) {
+        final String id = body.get("id").asText();
+        client.getStorage().removeGuild(id);
+        return new GuildDeleteEvent(timeStamp, id);
     }
 
     /**
@@ -63,8 +64,8 @@ public class GuildDeleteEventDeserializer extends NormalEventDeserializer<GuildD
      */
     @Override
     protected boolean useJacksonDeserialization() {
-        // 暂时返回false，等相关依赖完成Jackson迁移
-        return false;
+        // 不依赖复杂构建器，可以直接启用
+        return true;
     }
 
 }

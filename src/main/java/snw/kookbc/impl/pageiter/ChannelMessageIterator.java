@@ -19,9 +19,6 @@
 package snw.kookbc.impl.pageiter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.ChannelMessage;
@@ -62,14 +59,6 @@ public class ChannelMessageIterator extends PageIteratorImpl<Collection<ChannelM
         }
     }
 
-    // 向后兼容保留的重载方法
-    @Override
-    protected void processElements(JsonArray array) {
-        object = new LinkedHashSet<>(array.size());
-        for (JsonElement element : array) {
-            object.add(buildMessage(element.getAsJsonObject()));
-        }
-    }
 
     @Override
     public Collection<ChannelMessage> next() {
@@ -97,11 +86,6 @@ public class ChannelMessageIterator extends PageIteratorImpl<Collection<ChannelM
                 quote,
                 channel
         );
-    }
-
-    // 向后兼容的Gson版本
-    private ChannelMessage buildMessage(JsonObject object) {
-        return buildMessage(snw.kookbc.util.JacksonUtil.parse(object.toString()));
     }
 
 }

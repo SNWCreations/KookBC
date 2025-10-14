@@ -19,9 +19,6 @@
 package snw.kookbc.impl.pageiter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
 import snw.jkook.entity.User;
@@ -57,7 +54,8 @@ public class ChannelInvitationIterator extends PageIteratorImpl<Set<Invitation>>
             String url = element.get("url").asText();
             JsonNode userNode = element.get("user");
             String userId = userNode.get("id").asText();
-            User master = client.getStorage().getUser(userId);
+            // 使用完整的用户数据,避免额外的 HTTP 请求
+            User master = client.getStorage().getUser(userId, userNode);
             object.add(new InvitationImpl(
                     client, guild, channel, urlCode, url, master
             ));
