@@ -28,7 +28,6 @@ import java.io.StringWriter;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 import snw.kookbc.util.JacksonUtil;
 
 import snw.jkook.command.CommandException;

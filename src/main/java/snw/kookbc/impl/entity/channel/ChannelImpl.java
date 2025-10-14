@@ -19,7 +19,6 @@
 package snw.kookbc.impl.entity.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;

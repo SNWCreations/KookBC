@@ -18,8 +18,7 @@
 
 package snw.kookbc.impl.message;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
@@ -47,7 +46,6 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
-import com.fasterxml.jackson.databind.JsonNode;
 public abstract class MessageImpl implements Message, LazyLoadable {
     protected final KBCClient client;
     private final String id;
@@ -107,7 +105,7 @@ public abstract class MessageImpl implements Message, LazyLoadable {
 
     @Override
     public Collection<User> getUserByReaction(CustomEmoji customEmoji) {
-            com.google.gson.JsonArray array;
+        JsonNode array;
         try {
             String rawStr = client.getNetworkClient().getRawContent(
                     String.format(
@@ -117,8 +115,8 @@ public abstract class MessageImpl implements Message, LazyLoadable {
                                     .toFullURL(),
                             getId(),
                             URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())));
-            String dataJsonStr = snw.kookbc.util.JacksonUtil.parse(rawStr).get("data").toString();
-            array = new com.google.gson.JsonParser().parse(dataJsonStr).getAsJsonArray();
+            JsonNode root = snw.kookbc.util.JacksonUtil.parse(rawStr);
+            array = root.get("data");
         } catch (BadResponseException e) {
             if (e.getCode() == 40300) { // 40300, so we should throw IllegalStateException
                 throw new IllegalStateException(e);
@@ -130,8 +128,8 @@ public abstract class MessageImpl implements Message, LazyLoadable {
             throw new Error("No UTF-8 encoding?");
         }
         Collection<User> result = new ArrayList<>(array.size());
-        for (JsonElement element : array) {
-            result.add(client.getStorage().getUser(element.getAsJsonObject().get("id").getAsString()));
+        for (JsonNode element : array) {
+            result.add(client.getStorage().getUser(element.get("id").asText()));
         }
         return Collections.unmodifiableCollection(result);
     }

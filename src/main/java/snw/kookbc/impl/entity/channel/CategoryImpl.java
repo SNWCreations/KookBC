@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;

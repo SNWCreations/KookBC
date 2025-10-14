@@ -30,7 +30,6 @@ import java.util.Objects;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -91,11 +90,6 @@ public class TextChannelImpl extends NonCategoryChannelImpl implements TextChann
         Validate.isTrue(Objects.equals(queryMode, "before") || Objects.equals(queryMode, "around")
                 || Objects.equals(queryMode, "after"), "Invalid queryMode");
         return new ChannelMessageIterator(client, this, refer, isPin, queryMode);
-    }
-
-    @Override
-    public synchronized void update(JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -200,16 +199,6 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
      */
     public void setChatLimitTime(int chatLimitTime) {
         this.chatLimitTime = chatLimitTime;
-    }
-
-    /**
-     * 从 GSON JsonObject 更新频道信息 (向后兼容)
-     *
-     * @param data JSON 数据
-     */
-    @Override
-    public synchronized void update(JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 
     /**

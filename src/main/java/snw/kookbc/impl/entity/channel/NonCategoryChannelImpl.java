@@ -19,7 +19,6 @@
 package snw.kookbc.impl.entity.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Invitation;
@@ -150,11 +149,6 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .build();
         client.getNetworkClient().post(HttpAPIRoute.CHANNEL_UPDATE.toFullURL(), body);
         this.chatLimitTime = chatLimitTime;
-    }
-
-    @Override
-    public synchronized void update(JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
     }
 
     @Override
