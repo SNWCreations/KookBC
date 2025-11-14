@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.thread.ThreadPost;
 import snw.jkook.entity.thread.ThreadReply;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.thread.ThreadReplyImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
 
 /**
@@ -58,8 +59,7 @@ public class ThreadReplyIterator extends PageIteratorImpl<java.util.Collection<T
         object = new java.util.ArrayList<>(array.size());
 
         for (JsonNode element : array) {
-            snw.jkook.entity.thread.ThreadReply reply =
-                    new snw.kookbc.impl.entity.thread.ThreadReplyImpl(client, threadPost, element);
+            ThreadReply reply = new ThreadReplyImpl(client, threadPost, element);
             object.add(reply);
         }
     }

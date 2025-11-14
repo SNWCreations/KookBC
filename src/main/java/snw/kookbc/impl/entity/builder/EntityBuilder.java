@@ -45,6 +45,7 @@ import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.ThreadChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 // The class for building entities.
@@ -219,7 +220,7 @@ public class EntityBuilder {
             case 4: {
                 // 帖子频道 (Thread Channel)
                 final int chatLimitTime = getIntOrDefault(node, "slow_mode", 0);
-                return new snw.kookbc.impl.entity.channel.ThreadChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
+                return new ThreadChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
                         chatLimitTime);
             }
             default: {

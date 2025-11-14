@@ -36,7 +36,10 @@ import snw.jkook.entity.channel.ThreadChannel;
 import snw.jkook.entity.thread.ThreadPost;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.thread.ThreadCategoryImpl;
+import snw.kookbc.impl.entity.thread.ThreadPostImpl;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.impl.pageiter.ThreadPostIterator;
 import snw.kookbc.util.MapBuilder;
 
 /**
@@ -126,7 +129,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
         );
 
         // 从响应中构建 ThreadPost 对象
-        return new snw.kookbc.impl.entity.thread.ThreadPostImpl(client, this, response);
+        return new ThreadPostImpl(client, this, response);
     }
 
     @Override
@@ -144,7 +147,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
                             "&thread_id=" + threadId
             );
 
-            return new snw.kookbc.impl.entity.thread.ThreadPostImpl(client, this, response);
+            return new ThreadPostImpl(client, this, response);
         } catch (Exception e) {
             // 帖子不存在或访问出错
             client.getCore().getLogger().warn("Failed to get thread post: " + threadId, e);
@@ -154,7 +157,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
 
     @Override
     public PageIterator<Collection<ThreadPost>> getThreadPosts(@Nullable String categoryId) {
-        return new snw.kookbc.impl.pageiter.ThreadPostIterator(client, this, categoryId);
+        return new ThreadPostIterator(client, this, categoryId);
     }
 
     @Override
@@ -170,7 +173,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
             JsonNode listNode = response.get("list");
             if (listNode != null && listNode.isArray()) {
                 for (JsonNode categoryNode : listNode) {
-                    ThreadCategory category = new snw.kookbc.impl.entity.thread.ThreadCategoryImpl(client, categoryNode);
+                    ThreadCategory category = new ThreadCategoryImpl(client, categoryNode);
                     categories.add(category);
                 }
             }

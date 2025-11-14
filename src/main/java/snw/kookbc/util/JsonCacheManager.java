@@ -150,7 +150,7 @@ public final class JsonCacheManager {
      */
     @NotNull
     private static JsonNode parseDirectly(@NotNull String jsonString) {
-        return JsonEngineSelector.parseJson(jsonString);
+        return JacksonUtil.parse(jsonString);
     }
 
     // ===== 序列化缓存 =====
@@ -179,7 +179,7 @@ public final class JsonCacheManager {
         long startTime = System.nanoTime();
 
         try {
-            String result = JsonEngineSelector.toJson(object);
+            String result = JacksonUtil.toJson(object);
 
             // 只缓存合理大小的结果
             if (isCacheable(result)) {

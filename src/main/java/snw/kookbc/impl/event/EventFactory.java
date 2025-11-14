@@ -32,6 +32,7 @@ import snw.jkook.event.role.RoleDeleteEvent;
 import snw.jkook.event.role.RoleInfoUpdateEvent;
 import snw.jkook.event.user.*;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.serializer.event.jackson.JKookEventModule;
 
 import static snw.kookbc.util.JacksonUtil.get;
 import static snw.kookbc.util.JacksonUtil.has;
@@ -149,7 +150,7 @@ public class EventFactory {
     protected ObjectMapper createJacksonMapper() {
         ObjectMapper mapper = new ObjectMapper();
         // 注册 JKook 事件反序列化模块
-        mapper.registerModule(new snw.kookbc.impl.serializer.event.jackson.JKookEventModule(client));
+        mapper.registerModule(new JKookEventModule(client));
         return mapper;
     }
 }

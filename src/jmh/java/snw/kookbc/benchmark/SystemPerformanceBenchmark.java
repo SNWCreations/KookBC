@@ -19,13 +19,11 @@
 package snw.kookbc.benchmark;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import snw.kookbc.util.GsonUtil;
 import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.util.VirtualThreadUtil;
 
@@ -361,22 +359,22 @@ public class SystemPerformanceBenchmark {
 
     private void processEventWithGson(String eventJson) {
         try {
-            JsonObject root = GsonUtil.NORMAL_GSON.fromJson(eventJson, JsonObject.class);
-            JsonObject data = GsonUtil.get(root, "d").getAsJsonObject();
+            JsonNode root = JacksonUtil.parse(eventJson);
+            JsonNode data = JacksonUtil.get(root, "d");
 
             // 解析事件类型
-            int type = GsonUtil.getAsInt(data, "type");
-            String channelType = GsonUtil.getAsString(data, "channel_type");
+            int type = JacksonUtil.getIntOrDefault(data, "type", 0);
+            String channelType = JacksonUtil.getStringOrDefault(data, "channel_type", "");
 
             // 模拟业务逻辑处理
             if (type == 1) { // 文本消息
-                String content = GsonUtil.getAsString(data, "content");
+                String content = JacksonUtil.getStringOrDefault(data, "content", "");
                 if (content.length() > 0) {
                     processedEvents.incrementAndGet();
                 }
             } else if (type == 9) { // 语音频道事件
-                JsonObject extra = GsonUtil.get(data, "extra").getAsJsonObject();
-                if (GsonUtil.has(extra, "body")) {
+                JsonNode extra = JacksonUtil.get(data, "extra");
+                if (JacksonUtil.has(extra, "body")) {
                     processedEvents.incrementAndGet();
                 }
             }

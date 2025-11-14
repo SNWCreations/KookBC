@@ -20,6 +20,7 @@ package snw.kookbc.impl.storage;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import snw.kookbc.impl.KBCClient;
 import snw.kookbc.test.BaseTest;
 
 import static org.assertj.core.api.Assertions.*;
@@ -112,7 +113,7 @@ class EntityStorageBasicTest extends BaseTest {
         Class<EntityStorage> storageClass = EntityStorage.class;
 
         // 验证构造函数存在
-        assertThat(storageClass.getConstructor(snw.kookbc.impl.KBCClient.class)).isNotNull();
+        assertThat(storageClass.getConstructor(KBCClient.class)).isNotNull();
     }
 
     @Test
