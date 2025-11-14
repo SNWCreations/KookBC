@@ -345,36 +345,37 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     // GSON compatibility method
     public void update(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
     }
 
     @Override
     public synchronized void update(JsonNode data) {
         Validate.isTrue(Objects.equals(getId(), data.get("id").asText()),
                 "You can't update user by using different data");
-        synchronized (this) {
-            // 安全获取字段，某些 API 返回的用户数据可能不完整
-            if (data.has("username")) {
-                name = data.get("username").asText();
-            }
-            if (data.has("bot")) {
-                bot = data.get("bot").asBoolean();
-            }
-            if (data.has("avatar")) {
-                avatarUrl = data.get("avatar").asText();
-            }
-            if (data.has("vip_avatar")) {
-                vipAvatarUrl = data.get("vip_avatar").asText();
-            }
-            if (data.has("identify_num")) {
-                identify = data.get("identify_num").asInt();
-            }
-            if (data.has("status")) {
-                ban = data.get("status").asInt() == 10;
-            }
-            if (data.has("is_vip")) {
-                vip = data.get("is_vip").asBoolean();
-            }
+
+        // 安全获取字段，某些 API 返回的用户数据可能不完整
+        // 注意: 方法已经是 synchronized，无需内部再加锁
+        if (data.has("username")) {
+            name = data.get("username").asText();
+        }
+        if (data.has("bot")) {
+            bot = data.get("bot").asBoolean();
+        }
+        if (data.has("avatar")) {
+            avatarUrl = data.get("avatar").asText();
+        }
+        if (data.has("vip_avatar")) {
+            vipAvatarUrl = data.get("vip_avatar").asText();
+        }
+        if (data.has("identify_num")) {
+            identify = data.get("identify_num").asInt();
+        }
+        if (data.has("status")) {
+            ban = data.get("status").asInt() == 10;
+        }
+        if (data.has("is_vip")) {
+            vip = data.get("is_vip").asBoolean();
         }
     }
 
@@ -422,30 +423,36 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     }
 
     public Map<Permission, Boolean> calculateChannel(Channel channel) {
-        Map<Permission, Boolean> result = new HashMap<>();
         Collection<Integer> cached = cacheRoleIds.asMap().get(id);
         if (cached == null) {
             cacheRoleIds.put(id, cached = getRoles(channel.getGuild()));
         }
-        Collection<Integer> userRoleIds = new HashSet<>(cached);
+        final Collection<Integer> userRoleIds = new HashSet<>(cached);
         HashSet<Role> guildRoles = new HashSet<>();
         List<Role> cachedGuildRoles = client.getStorage().getRoles(channel.getGuild());
         if (!cachedGuildRoles.isEmpty()) {
             guildRoles.addAll(cachedGuildRoles);
         }
-        for (Permission value : Permission.values()) {
-            boolean calculated = false;
-            try {
-                calculated = calculateDefaultPerms(value, channel, userRoleIds, guildRoles);
-            } catch (BadResponseException e) {
-                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-                break;
-            } catch (Exception e) {
-                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-            }
-            result.put(value, calculated);
-        }
-        return result;
+        final Collection<Role> finalGuildRoles = guildRoles;
+
+        // 性能优化：使用虚拟线程并行计算所有权限
+        // Permission.values() 通常有多个权限，并行计算可大幅提升性能
+        return Arrays.stream(Permission.values())
+            .parallel()  // 启用并行流，自动使用虚拟线程池
+            .collect(java.util.stream.Collectors.toConcurrentMap(
+                perm -> perm,
+                perm -> {
+                    try {
+                        return calculateDefaultPerms(perm, channel, userRoleIds, finalGuildRoles);
+                    } catch (BadResponseException e) {
+                        client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                        return false;
+                    } catch (Exception e) {
+                        client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                        return false;
+                    }
+                }
+            ));
     }
 
     public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> userRoleIds, Collection<Role> guildRoles) {

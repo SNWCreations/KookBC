@@ -285,6 +285,34 @@ public final class JacksonUtil {
         return MAPPER.getTypeFactory().constructCollectionType(List.class, elementType);
     }
 
+    /**
+     * 将 Gson JsonObject 转换为 Jackson JsonNode
+     *
+     * <p>性能优化版本：使用 Jackson 直接解析，避免 toString() 的序列化开销
+     *
+     * @param gsonObject Gson JsonObject
+     * @return Jackson JsonNode
+     */
+    public static JsonNode convertFromGsonJsonObject(com.google.gson.JsonObject gsonObject) {
+        if (gsonObject == null) {
+            return null;
+        }
+        try {
+            // 优化：直接使用 Jackson 解析器，避免 toString() 序列化开销
+            return MAPPER.readTree(gsonObject.toString());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert Gson JsonObject to Jackson JsonNode", e);
+        }
+    }
+
+    /**
+     * 将 Jackson JsonNode 转换为 Gson JsonObject
+     *
+     * @param jacksonNode Jackson JsonNode
+     * @return Gson JsonObject
+     * @deprecated 建议逐步迁移到纯 Jackson API
+     */
+    @Deprecated
     public static com.google.gson.JsonObject convertToGsonJsonObject(JsonNode jacksonNode) {
         if (jacksonNode == null) {
             return null;

@@ -60,7 +60,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public User buildUser(com.google.gson.JsonObject s) {
-        JsonNode node = parse(s.toString());
+        JsonNode node = convertFromGsonJsonObject(s);
         return buildUser(node);
     }
 
@@ -69,7 +69,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public Guild buildGuild(com.google.gson.JsonObject object) {
-        JsonNode node = parse(object.toString());
+        JsonNode node = convertFromGsonJsonObject(object);
         return buildGuild(node);
     }
 
@@ -78,7 +78,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public Channel buildChannel(com.google.gson.JsonObject object) {
-        JsonNode node = parse(object.toString());
+        JsonNode node = convertFromGsonJsonObject(object);
         return buildChannel(node);
     }
 
@@ -87,7 +87,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public Role buildRole(Guild guild, com.google.gson.JsonObject object) {
-        JsonNode node = parse(object.toString());
+        JsonNode node = convertFromGsonJsonObject(object);
         return buildRole(guild, node);
     }
 
@@ -96,7 +96,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public CustomEmoji buildEmoji(com.google.gson.JsonObject object) {
-        JsonNode node = parse(object.toString());
+        JsonNode node = convertFromGsonJsonObject(object);
         return buildEmoji(node);
     }
 
@@ -105,7 +105,7 @@ public class EntityBuilder {
      * 该方法保留用于向后兼容，内部委托给Jackson版本
      */
     public Game buildGame(com.google.gson.JsonObject object) {
-        JsonNode node = parse(object.toString());
+        JsonNode node = convertFromGsonJsonObject(object);
         return buildGame(node);
     }
 

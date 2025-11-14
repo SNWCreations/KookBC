@@ -367,7 +367,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     // GSON compatibility method - marked for deprecation
     public synchronized void updateFromGson(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.parse(data.toString()));
+        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
     }
 
     @Override

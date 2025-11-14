@@ -87,19 +87,23 @@ public class MessageBuilder {
     }
 
     public PrivateMessage buildPrivateMessage(com.google.gson.JsonObject object) {
-        return buildPrivateMessage(JacksonUtil.parse(object.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return buildPrivateMessage(JacksonUtil.convertFromGsonJsonObject(object));
     }
 
     public ChannelMessage buildChannelMessage(com.google.gson.JsonObject object) {
-        return buildChannelMessage(JacksonUtil.parse(object.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return buildChannelMessage(JacksonUtil.convertFromGsonJsonObject(object));
     }
 
     private User getAuthor(com.google.gson.JsonObject extra) {
-        return getAuthor(JacksonUtil.parse(extra.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return getAuthor(JacksonUtil.convertFromGsonJsonObject(extra));
     }
 
     private Message getQuote(com.google.gson.JsonObject extra) {
-        return getQuote(JacksonUtil.parse(extra.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return getQuote(JacksonUtil.convertFromGsonJsonObject(extra));
     }
 
     private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp,
@@ -118,11 +122,13 @@ public class MessageBuilder {
         if (object == null) {
             return null;
         }
-        return buildQuote(JacksonUtil.parse(object.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return buildQuote(JacksonUtil.convertFromGsonJsonObject(object));
     }
 
     public BaseComponent buildComponent(com.google.gson.JsonObject object) {
-        return buildComponent(JacksonUtil.parse(object.toString()));
+        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
+        return buildComponent(JacksonUtil.convertFromGsonJsonObject(object));
     }
 
     // ===== Jackson API - 高性能版本 =====
