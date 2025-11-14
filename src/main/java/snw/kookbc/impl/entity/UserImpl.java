@@ -53,6 +53,7 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static snw.kookbc.util.JacksonUtil.get;
@@ -439,7 +440,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         // Permission.values() 通常有多个权限，并行计算可大幅提升性能
         return Arrays.stream(Permission.values())
             .parallel()  // 启用并行流，自动使用虚拟线程池
-            .collect(java.util.stream.Collectors.toConcurrentMap(
+            .collect(Collectors.toConcurrentMap(
                 perm -> perm,
                 perm -> {
                     try {

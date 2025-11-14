@@ -33,6 +33,7 @@ import snw.kookbc.util.JacksonUtil;
 
 import java.io.IOException;
 import java.net.ProtocolException;
+import java.net.UnknownHostException;
 import java.util.zip.DataFormatException;
 
 import static snw.kookbc.util.Util.decompressDeflate;
@@ -71,7 +72,7 @@ public class WebSocketMessageProcessor extends WebSocketListener {
             Frame frame = new Frame(s, sn, dNode);
             listener.executeEvent(frame);
         } catch (Exception e) {
-            client.getCore().getLogger().error("处理 WebSocket 消息时发生异常: {}", e.getMessage(), e);
+            client.getCore().getLogger().error("处理 WebSocket 消息时发生异常: {}, 原始消息: {}", e.getMessage(), text, e);
             // 不触发重连，因为可能只是单个消息格式错误
         }
     }
@@ -80,8 +81,9 @@ public class WebSocketMessageProcessor extends WebSocketListener {
     @Override
     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
         super.onMessage(webSocket, bytes);
+        String res = null;
         try {
-            String res = new String(decompressDeflate(bytes.toByteArray()));
+            res = new String(decompressDeflate(bytes.toByteArray()));
             JsonNode object = JacksonUtil.parse(res);
             JsonNode sNode = object.get("s");
             JsonNode snNode = object.get("sn");
@@ -93,10 +95,14 @@ public class WebSocketMessageProcessor extends WebSocketListener {
             Frame frame = new Frame(s, sn, dNode);
             listener.executeEvent(frame);
         } catch (DataFormatException | IOException e) {
-            client.getCore().getLogger().error("解压缩 WebSocket 数据失败: {}", e.getMessage(), e);
+            client.getCore().getLogger().error("解压缩 WebSocket 数据失败: {}, 数据长度: {} 字节", e.getMessage(), bytes.size(), e);
             // 不触发重连，因为可能只是单个消息损坏
         } catch (Exception e) {
-            client.getCore().getLogger().error("处理压缩 WebSocket 消息时发生异常: {}", e.getMessage(), e);
+            if (res != null) {
+                client.getCore().getLogger().error("处理压缩 WebSocket 消息时发生异常: {}, 原始消息: {}", e.getMessage(), res, e);
+            } else {
+                client.getCore().getLogger().error("处理压缩 WebSocket 消息时发生异常: {}", e.getMessage(), e);
+            }
             // 不触发重连，因为可能只是单个消息格式错误
         }
     }
@@ -112,7 +118,7 @@ public class WebSocketMessageProcessor extends WebSocketListener {
         if (t instanceof ProtocolException) {
             // 协议异常，通常是正常的连接关闭
             client.getCore().getLogger().debug("WebSocket 协议异常（可能是正常关闭）: {}", message);
-        } else if (t instanceof java.net.UnknownHostException) {
+        } else if (t instanceof UnknownHostException) {
             // DNS 解析失败
             client.getCore().getLogger().error("DNS 解析失败，无法连接到 Kook 服务器: {}", message);
             client.getCore().getLogger().error("请检查：1) 网络连接是否正常 2) DNS 服务器配置 3) 域名 kookapp.cn 是否可访问");
