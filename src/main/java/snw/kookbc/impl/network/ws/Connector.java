@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 // The Connector. It will communicate with Kook WebSocket Server.
 public class Connector {
     private final KBCClient kbcClient;
+    private final ReconnectStrategy reconnectStrategy;
     private String wsLink = "";
     private WebSocket ws;
     private volatile boolean firstConnected = false; // sub-threads should not work on startup
@@ -40,6 +41,7 @@ public class Connector {
 
     public Connector(KBCClient kbcClient) {
         this.kbcClient = kbcClient;
+        this.reconnectStrategy = new ReconnectStrategy();
         new PingThread().start();
         new Reconnector(kbcClient, reconnectLock, this).start();
     }
@@ -51,45 +53,79 @@ public class Connector {
     }
 
     private void start0() {
-        getGateway();
-        start1();
+        try {
+            getGateway();
+            start1();
+        } catch (Exception e) {
+            kbcClient.getCore().getLogger().error("连接启动失败: {}", e.getMessage(), e);
+            throw e; // 向上抛出以便 restart() 处理
+        }
     }
 
     private void start1() {
         do {
             connected = false;
-            // if self connected is true, call shutdownHttp()
-            if (kbcClient.getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()).get("online").asBoolean()) {
-                shutdownHttp();
+            try {
+                // if self connected is true, call shutdownHttp()
+                if (kbcClient.getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()).get("online").asBoolean()) {
+                    shutdownHttp();
+                }
+            } catch (Exception e) {
+                kbcClient.getCore().getLogger().warn("检查在线状态失败（可能是网络问题），继续尝试连接: {}", e.getMessage());
             }
+
             int times = 0;
             do {
-                ws = kbcClient.getNetworkClient().newWebSocket(
-                        new Request.Builder()
-                                .url(wsLink)
-                                .build(),
-                        new WebSocketMessageProcessor(kbcClient, this)
-                );
-                long ts = System.currentTimeMillis();
-                while (System.currentTimeMillis() - ts < 6000L) {
-                    if (connected) {
-                        break;
+                try {
+                    ws = kbcClient.getNetworkClient().newWebSocket(
+                            new Request.Builder()
+                                    .url(wsLink)
+                                    .build(),
+                            new WebSocketMessageProcessor(kbcClient, this)
+                    );
+                    long ts = System.currentTimeMillis();
+                    // 增加超时时间从 6 秒到 15 秒，适应网络波动
+                    while (System.currentTimeMillis() - ts < 15000L) {
+                        if (connected) {
+                            break;
+                        }
+                        Thread.sleep(100); // 避免忙等待
                     }
+                } catch (Exception e) {
+                    kbcClient.getCore().getLogger().warn("WebSocket 连接尝试失败 (第 {} 次): {}", times + 1, e.getMessage());
                 }
-                if (!connected) { // I WASTE 2 HOURS ON THIS
+
+                if (!connected) {
                     shutdownWs();
                     times++;
                 }
             } while (!connected && times < 2);
-            if (!connected) { // if this round failed, then we need to get a new WS link
-                getGateway();
+
+            if (!connected) {
+                // if this round failed, then we need to get a new WS link
+                try {
+                    getGateway();
+                } catch (Exception e) {
+                    kbcClient.getCore().getLogger().error("获取 Gateway 失败（可能是 DNS 解析或网络问题）: {}", e.getMessage());
+                    throw new RuntimeException("无法获取 WebSocket Gateway", e);
+                }
             }
         } while (!connected);
+
         kbcClient.getCore().getLogger().info("WebSocket 连接成功");
+        // 连接成功后通知重连策略
+        reconnectStrategy.onConnectionSuccess();
     }
 
     private void getGateway() {
-        wsLink = kbcClient.getNetworkClient().get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").asText();
+        try {
+            wsLink = kbcClient.getNetworkClient().get(HttpAPIRoute.GATEWAY.toFullURL()).get("url").asText();
+            kbcClient.getCore().getLogger().debug("成功获取 WebSocket Gateway: {}", wsLink);
+        } catch (Exception e) {
+            kbcClient.getCore().getLogger().error("获取 WebSocket Gateway 失败: {}", e.getMessage(), e);
+            // 抛出异常以便上层处理
+            throw new RuntimeException("无法获取 WebSocket Gateway（可能是 DNS 解析失败或网络连接问题）", e);
+        }
     }
 
     public void shutdown() {
@@ -115,10 +151,42 @@ public class Connector {
     // following methods should be called by other class:
 
     public synchronized void restart() {
+        restart(null);
+    }
+
+    public synchronized void restart(Throwable exception) {
+        // 检查是否应该重连
+        if (!reconnectStrategy.shouldReconnect(exception)) {
+            kbcClient.getCore().getLogger().error("重连策略决定不再重连，停止重连尝试");
+            kbcClient.getCore().getLogger().info(reconnectStrategy.getStatisticsReport());
+            return;
+        }
+
+        // 关闭当前连接
         shutdown();
         kbcClient.getSession().getSN().set(0);
         kbcClient.getSession().getBuffer().clear();
-        start0();
+
+        // 计算延迟并等待
+        int delay = reconnectStrategy.getNextDelay();
+        kbcClient.getCore().getLogger().info("准备在 {} 秒后重连...", delay);
+
+        if (!reconnectStrategy.waitBeforeReconnect(delay)) {
+            kbcClient.getCore().getLogger().warn("重连等待被中断，取消重连");
+            return;
+        }
+
+        // 尝试重连
+        try {
+            kbcClient.getCore().getLogger().info("开始重连...");
+            start0();
+            reconnectStrategy.onConnectionSuccess();
+        } catch (Exception e) {
+            kbcClient.getCore().getLogger().error("重连过程中发生异常", e);
+            reconnectStrategy.onConnectionFailure();
+            // 递归重试（会被 shouldReconnect 限制次数）
+            restart(e);
+        }
     }
 
     public void setConnected(boolean connected) {
@@ -192,6 +260,10 @@ public class Connector {
 
     public boolean isConnected() {
         return connected;
+    }
+
+    public ReconnectStrategy getReconnectStrategy() {
+        return reconnectStrategy;
     }
 
     protected class PingThread extends Thread {
