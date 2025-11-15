@@ -31,6 +31,7 @@ import snw.jkook.entity.Guild.NotifyType;
 import snw.jkook.entity.channel.Channel;
 import snw.jkook.entity.channel.NonCategoryChannel;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.NonCategoryChannelImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
@@ -62,15 +63,15 @@ public class EntityBuildUtil {
      * 解析角色权限覆写 (Jackson版本，安全处理不完整JSON)
      */
     public static Collection<Channel.RolePermissionOverwrite> parseRPO(JsonNode node) {
-        JsonNode array = snw.kookbc.util.JacksonUtil.getArrayOrNull(node, "permission_overwrites");
+        JsonNode array = JacksonUtil.getArrayOrNull(node, "permission_overwrites");
         Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
 
         if (array != null && array.isArray()) {
             for (JsonNode element : array) {
                 if (element != null && element.isObject()) {
-                    int roleId = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "role_id", 0);
-                    int allow = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "allow", 0);
-                    int deny = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "deny", 0);
+                    int roleId = JacksonUtil.getIntOrDefault(element, "role_id", 0);
+                    int allow = JacksonUtil.getIntOrDefault(element, "allow", 0);
+                    int deny = JacksonUtil.getIntOrDefault(element, "deny", 0);
 
                     rpo.add(new Channel.RolePermissionOverwrite(roleId, allow, deny));
                 }
@@ -83,17 +84,17 @@ public class EntityBuildUtil {
      * 解析用户权限覆写 (Jackson版本，安全处理不完整JSON)
      */
     public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, JsonNode node) {
-        JsonNode array = snw.kookbc.util.JacksonUtil.getArrayOrNull(node, "permission_users");
+        JsonNode array = JacksonUtil.getArrayOrNull(node, "permission_users");
         Collection<Channel.UserPermissionOverwrite> upo = new ConcurrentLinkedQueue<>();
 
         if (array != null && array.isArray()) {
             for (JsonNode element : array) {
                 if (element != null && element.isObject()) {
-                    JsonNode rawUser = snw.kookbc.util.JacksonUtil.getObjectOrNull(element, "user");
+                    JsonNode rawUser = JacksonUtil.getObjectOrNull(element, "user");
                     if (rawUser != null) {
-                        String userId = snw.kookbc.util.JacksonUtil.getRequiredString(rawUser, "id");
-                        int allow = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "allow", 0);
-                        int deny = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "deny", 0);
+                        String userId = JacksonUtil.getRequiredString(rawUser, "id");
+                        int allow = JacksonUtil.getIntOrDefault(element, "allow", 0);
+                        int deny = JacksonUtil.getIntOrDefault(element, "deny", 0);
 
                         // 直接使用Jackson JsonNode
                         upo.add(new Channel.UserPermissionOverwrite(
@@ -110,7 +111,7 @@ public class EntityBuildUtil {
      * 解析通知类型 (Jackson版本，安全处理不完整JSON)
      */
     public static NotifyType parseNotifyType(JsonNode node) {
-        int rawNotifyType = snw.kookbc.util.JacksonUtil.getIntOrDefault(node, "notify_type", 0);
+        int rawNotifyType = JacksonUtil.getIntOrDefault(node, "notify_type", 0);
 
         for (Guild.NotifyType value : Guild.NotifyType.values()) {
             if (value.getValue() == rawNotifyType) {

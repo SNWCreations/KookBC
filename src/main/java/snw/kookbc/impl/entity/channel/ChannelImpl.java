@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
@@ -320,10 +321,10 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     }
 
     public synchronized void update(JsonNode data) {
-        isTrue(Objects.equals(getId(), snw.kookbc.util.JacksonUtil.get(data, "id").asText()), "You can't update channel by using different data");
-        this.name = snw.kookbc.util.JacksonUtil.get(data, "name").asText();
-        this.permSync = snw.kookbc.util.JacksonUtil.get(data, "permission_sync").asInt() != 0;
-        this.guild = client.getStorage().getGuild(snw.kookbc.util.JacksonUtil.get(data, "guild_id").asText());
+        isTrue(Objects.equals(getId(), JacksonUtil.get(data, "id").asText()), "You can't update channel by using different data");
+        this.name = JacksonUtil.get(data, "name").asText();
+        this.permSync = JacksonUtil.get(data, "permission_sync").asInt() != 0;
+        this.guild = client.getStorage().getGuild(JacksonUtil.get(data, "guild_id").asText());
         this.rpo = parseRPO(data);
         this.upo = parseUPO(client, data);
 

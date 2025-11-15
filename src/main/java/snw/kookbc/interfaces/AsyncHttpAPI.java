@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import snw.jkook.HttpAPI;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.Channel;
@@ -87,7 +88,7 @@ import snw.jkook.entity.channel.Channel;
  * 该接口的所有方法都是线程安全的，可以在多线程环境中安全使用。
  *
  * @since KookBC 0.33.0
- * @see snw.jkook.HttpAPI
+ * @see HttpAPI
  * @see java.util.concurrent.CompletableFuture
  */
 public interface AsyncHttpAPI {

@@ -38,6 +38,7 @@ import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.util.PageIterator;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.CardBuilder;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.impl.pageiter.ThreadReplyIterator;
@@ -140,15 +141,15 @@ public class ThreadPostImpl implements ThreadPost {
             try {
                 // content 是 JSON 字符串，需要先解析
                 String contentStr = contentNode.asText();
-                JsonNode contentJson = snw.kookbc.util.JacksonUtil.parse(contentStr);
+                JsonNode contentJson = parse(contentStr);
 
                 // 使用 CardBuilder 构建卡片组件
                 if (contentJson.isArray()) {
                     // 多个卡片
-                    this.content = snw.kookbc.impl.entity.builder.CardBuilder.buildCardArray(contentJson);
+                    this.content = CardBuilder.buildCardArray(contentJson);
                 } else if (contentJson.isObject()) {
                     // 单个卡片，包装成 MultipleCardComponent
-                    CardComponent card = snw.kookbc.impl.entity.builder.CardBuilder.buildCardObject(contentJson);
+                    CardComponent card = CardBuilder.buildCardObject(contentJson);
                     this.content = new MultipleCardComponent(Collections.singletonList(card));
                 } else {
                     this.content = null;

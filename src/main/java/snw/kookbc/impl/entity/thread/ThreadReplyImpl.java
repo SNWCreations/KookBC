@@ -33,6 +33,7 @@ import snw.jkook.entity.User;
 import snw.jkook.entity.thread.ThreadPost;
 import snw.jkook.entity.thread.ThreadReply;
 import snw.jkook.message.component.BaseComponent;
+import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
@@ -119,10 +120,10 @@ public class ThreadReplyImpl implements ThreadReply {
                 // 如果是 MultipleCardComponent 或者可以转换为 MultipleCardComponent
                 if (component instanceof MultipleCardComponent) {
                     this.content = (MultipleCardComponent) component;
-                } else if (component instanceof snw.jkook.message.component.card.CardComponent) {
+                } else if (component instanceof CardComponent) {
                     // 单个卡片包装成 MultipleCardComponent
                     this.content = new MultipleCardComponent(
-                            Collections.singletonList((snw.jkook.message.component.card.CardComponent) component)
+                            Collections.singletonList((CardComponent) component)
                     );
                 } else {
                     // 其他类型的消息组件暂不支持

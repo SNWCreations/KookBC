@@ -75,7 +75,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
                 .put("setting_times", validTimes)
                 .build();
         JsonNode object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return snw.kookbc.util.JacksonUtil.get(object, "url").asText();
+        return get(object, "url").asText();
     }
 
     @Override
@@ -118,7 +118,7 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
     public int getQuality() { // must query because we can't update this value by update(JsonObject) method
         final JsonNode self = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId());
-        return snw.kookbc.util.JacksonUtil.get(self, "voice_quality").asInt();
+        return get(self, "voice_quality").asInt();
     }
 
     @Override

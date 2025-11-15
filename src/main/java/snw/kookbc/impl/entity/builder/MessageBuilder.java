@@ -34,6 +34,7 @@ import snw.jkook.message.component.card.Size;
 import snw.jkook.message.component.card.Theme;
 import snw.jkook.message.component.card.module.FileModule;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.impl.entity.builder.CardBuilder;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 import snw.kookbc.impl.message.*;

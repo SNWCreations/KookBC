@@ -18,6 +18,7 @@
 
 package snw.kookbc.impl.entity.channel;
 
+import static snw.kookbc.util.JacksonUtil.get;
 import static snw.kookbc.util.JacksonUtil.getAsJsonArray;
 
 import java.util.Collection;
@@ -51,7 +52,7 @@ public class CategoryImpl extends ChannelImpl implements Category {
                 .get(HttpAPIRoute.CHANNEL_INFO.toFullURL() + "?target_id=" + getId() + "&need_children=true");
         update(object);
         final Collection<Channel> channels = new LinkedList<>();
-        snw.kookbc.util.JacksonUtil.get(object, "children")
+        get(object, "children")
                 .elements()
                 .forEachRemaining(element -> channels.add(client.getStorage().getChannel(element.asText())));
         return Collections.unmodifiableCollection(channels);

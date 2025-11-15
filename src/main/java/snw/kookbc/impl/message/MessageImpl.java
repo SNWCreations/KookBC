@@ -34,6 +34,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.entity.builder.MessageBuilder;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.LazyLoadable;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.util.MapBuilder;
 
 import java.io.UnsupportedEncodingException;
@@ -115,7 +116,7 @@ public abstract class MessageImpl implements Message, LazyLoadable {
                                     .toFullURL(),
                             getId(),
                             URLEncoder.encode(customEmoji.getId(), StandardCharsets.UTF_8.name())));
-            JsonNode root = snw.kookbc.util.JacksonUtil.parse(rawStr);
+            JsonNode root = JacksonUtil.parse(rawStr);
             array = root.get("data");
         } catch (BadResponseException e) {
             if (e.getCode() == 40300) { // 40300, so we should throw IllegalStateException

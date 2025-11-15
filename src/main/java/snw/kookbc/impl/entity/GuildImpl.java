@@ -282,7 +282,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .post(requestBody)
                 .addHeader("Authorization", client.getNetworkClient().getTokenWithPrefix())
                 .build();
-        JsonNode object = snw.kookbc.util.JacksonUtil.parse(client.getNetworkClient().call(request)).get("data");
+        JsonNode object = parse(client.getNetworkClient().call(request)).get("data");
         CustomEmoji emoji = client.getEntityBuilder().buildEmoji(object);
         client.getStorage().addEmoji(emoji);
         return emoji;
@@ -338,7 +338,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .put("setting_times", validTimes)
                 .build();
         JsonNode object = client.getNetworkClient().post(HttpAPIRoute.INVITE_CREATE.toFullURL(), body);
-        return snw.kookbc.util.JacksonUtil.get(object, "url").asText();
+        return get(object, "url").asText();
     }
 
     @Override
