@@ -121,9 +121,4 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
 
     protected abstract void processElements(JsonNode node);
 
-    // 向后兼容方法：支持GSON JsonArray（已弃用）
-    protected void processElements(com.google.gson.JsonArray array) {
-        // 将JsonArray转换为JsonNode供新方法使用，确保兼容性
-        processElements(snw.kookbc.util.JacksonUtil.parse(array.toString()));
-    }
 }

@@ -31,12 +31,8 @@ import java.util.NoSuchElementException;
 
 /**
  * Jackson JSON工具类 - 高性能JSON处理
- * 提供与GsonUtil兼容的API，但使用Jackson实现更高性能
  */
 public final class JacksonUtil {
-
-    // 兼容性字段，供现有代码使用 - 移除以避免类型不匹配
-    // public static final com.google.gson.Gson NORMAL_GSON = GsonUtil.NORMAL_GSON;
 
     // Jackson核心对象
     private static final ObjectMapper MAPPER;
@@ -283,48 +279,6 @@ public final class JacksonUtil {
         // 为兼容性提供Type支持，返回List<elementType>的Type
         // 注意：序列化器应该使用GsonUtil.createListType()避免静态初始化循环依赖
         return MAPPER.getTypeFactory().constructCollectionType(List.class, elementType);
-    }
-
-    /**
-     * 将 Gson JsonObject 转换为 Jackson JsonNode
-     *
-     * <p>性能优化版本：使用 Jackson 直接解析，避免 toString() 的序列化开销
-     *
-     * @param gsonObject Gson JsonObject
-     * @return Jackson JsonNode
-     */
-    public static JsonNode convertFromGsonJsonObject(com.google.gson.JsonObject gsonObject) {
-        if (gsonObject == null) {
-            return null;
-        }
-        try {
-            // 优化：直接使用 Jackson 解析器，避免 toString() 序列化开销
-            return MAPPER.readTree(gsonObject.toString());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to convert Gson JsonObject to Jackson JsonNode", e);
-        }
-    }
-
-    /**
-     * 将 Jackson JsonNode 转换为 Gson JsonObject
-     *
-     * @param jacksonNode Jackson JsonNode
-     * @return Gson JsonObject
-     * @deprecated 建议逐步迁移到纯 Jackson API
-     */
-    @Deprecated
-    public static com.google.gson.JsonObject convertToGsonJsonObject(JsonNode jacksonNode) {
-        if (jacksonNode == null) {
-            return null;
-        }
-        try {
-            // 优化：直接使用JsonParser而不是NORMAL_GSON，减少运行时Gson依赖
-            // 将JsonNode转换为GSON JsonObject
-            String jsonString = jacksonNode.toString();
-            return new com.google.gson.JsonParser().parse(jsonString).getAsJsonObject();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert Jackson JsonNode to Gson JsonObject", e);
-        }
     }
 
     // ===== ObjectMapper 工厂方法 =====

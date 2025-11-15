@@ -86,26 +86,6 @@ public class MessageBuilder {
         throw new RuntimeException("Unsupported component");
     }
 
-    public PrivateMessage buildPrivateMessage(com.google.gson.JsonObject object) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return buildPrivateMessage(JacksonUtil.convertFromGsonJsonObject(object));
-    }
-
-    public ChannelMessage buildChannelMessage(com.google.gson.JsonObject object) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return buildChannelMessage(JacksonUtil.convertFromGsonJsonObject(object));
-    }
-
-    private User getAuthor(com.google.gson.JsonObject extra) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return getAuthor(JacksonUtil.convertFromGsonJsonObject(extra));
-    }
-
-    private Message getQuote(com.google.gson.JsonObject extra) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return getQuote(JacksonUtil.convertFromGsonJsonObject(extra));
-    }
-
     private ChannelMessageImpl buildMessage(String id, User author, BaseComponent component, long timeStamp,
             Message message, String targetId, int channelType) {
         if (channelType == CHANNEL_TYPE_TEXT) {
@@ -116,19 +96,6 @@ public class MessageBuilder {
             return new VoiceChannelMessageImpl(client, id, author, component, timeStamp, message, channel);
         }
         throw new RuntimeException("We can not found channel type: " + channelType);
-    }
-
-    public Message buildQuote(com.google.gson.JsonObject object) {
-        if (object == null) {
-            return null;
-        }
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return buildQuote(JacksonUtil.convertFromGsonJsonObject(object));
-    }
-
-    public BaseComponent buildComponent(com.google.gson.JsonObject object) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        return buildComponent(JacksonUtil.convertFromGsonJsonObject(object));
     }
 
     // ===== Jackson API - 高性能版本 =====

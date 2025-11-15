@@ -40,8 +40,6 @@ import static snw.kookbc.util.JacksonUtil.has;
 /**
  * 事件工厂类 - 负责从 JSON 数据创建事件对象
  *
- * <p>已完全迁移到 Jackson,移除了 Gson 依赖
- *
  * @since 0.52.0 使用 Jackson 作为唯一 JSON 引擎
  */
 public class EventFactory {

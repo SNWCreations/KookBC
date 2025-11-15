@@ -39,7 +39,6 @@ import java.util.Objects;
 import static snw.jkook.util.Validate.isTrue;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
-import static snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject;
 import static snw.kookbc.util.JacksonUtil.getAsInt;
 import static snw.kookbc.util.JacksonUtil.getAsString;
 
@@ -320,18 +319,13 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         return master;
     }
 
-    // GSON compatibility method
-    public synchronized void update(com.google.gson.JsonObject data) {
-        update(convertFromGsonJsonObject(data));
-    }
-
     public synchronized void update(JsonNode data) {
         isTrue(Objects.equals(getId(), snw.kookbc.util.JacksonUtil.get(data, "id").asText()), "You can't update channel by using different data");
         this.name = snw.kookbc.util.JacksonUtil.get(data, "name").asText();
         this.permSync = snw.kookbc.util.JacksonUtil.get(data, "permission_sync").asInt() != 0;
         this.guild = client.getStorage().getGuild(snw.kookbc.util.JacksonUtil.get(data, "guild_id").asText());
-        this.rpo = parseRPO(snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(data));
-        this.upo = parseUPO(client, snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(data));
+        this.rpo = parseRPO(data);
+        this.upo = parseUPO(client, data);
 
         // Why we delay the add operation?
         // We may construct the channel object at any time,

@@ -251,7 +251,7 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
                 .put("name", s)
                 .build();
         JsonNode res = client.getNetworkClient().post(HttpAPIRoute.ROLE_CREATE.toFullURL(), body);
-        Role result = client.getEntityBuilder().buildRole(this, snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(res));
+        Role result = client.getEntityBuilder().buildRole(this, res);
         client.getStorage().addRole(this, result);
         return result;
     }
@@ -363,11 +363,6 @@ public class GuildImpl implements Guild, Updatable, LazyLoadable {
 
     public void setAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
-    }
-
-    // GSON compatibility method - marked for deprecation
-    public synchronized void updateFromGson(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
     }
 
     @Override

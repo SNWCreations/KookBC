@@ -56,60 +56,6 @@ public class EntityBuilder {
         this.client = client;
     }
 
-    /**
-     * 构建User对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public User buildUser(com.google.gson.JsonObject s) {
-        JsonNode node = convertFromGsonJsonObject(s);
-        return buildUser(node);
-    }
-
-    /**
-     * 构建Guild对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public Guild buildGuild(com.google.gson.JsonObject object) {
-        JsonNode node = convertFromGsonJsonObject(object);
-        return buildGuild(node);
-    }
-
-    /**
-     * 构建Channel对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public Channel buildChannel(com.google.gson.JsonObject object) {
-        JsonNode node = convertFromGsonJsonObject(object);
-        return buildChannel(node);
-    }
-
-    /**
-     * 构建Role对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public Role buildRole(Guild guild, com.google.gson.JsonObject object) {
-        JsonNode node = convertFromGsonJsonObject(object);
-        return buildRole(guild, node);
-    }
-
-    /**
-     * 构建CustomEmoji对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public CustomEmoji buildEmoji(com.google.gson.JsonObject object) {
-        JsonNode node = convertFromGsonJsonObject(object);
-        return buildEmoji(node);
-    }
-
-    /**
-     * 构建Game对象 (Gson兼容版本)
-     * 该方法保留用于向后兼容，内部委托给Jackson版本
-     */
-    public Game buildGame(com.google.gson.JsonObject object) {
-        JsonNode node = convertFromGsonJsonObject(object);
-        return buildGame(node);
-    }
-
     // ===== Jackson API - 高性能版本（处理Kook不完整JSON数据）=====
 
     /**

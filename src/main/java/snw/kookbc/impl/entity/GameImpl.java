@@ -98,13 +98,6 @@ public class GameImpl implements Game, Updatable {
         this.icon = icon;
     }
 
-    // GSON compatibility method
-    public synchronized void update(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
-    }
-
-    // ===== Jackson API - 高性能版本 =====
-
     @Override
     public synchronized void update(JsonNode data) {
         this.name = getStringOrDefault(data, "name", "Unknown Game");

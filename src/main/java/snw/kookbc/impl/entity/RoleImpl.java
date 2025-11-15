@@ -166,13 +166,6 @@ public class RoleImpl implements Role, Updatable {
         this.mentionable = mentionable;
     }
 
-    // GSON compatibility method
-    public synchronized void update(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
-    }
-
-    // ===== Jackson API - 高性能版本 =====
-
     @Override
     public synchronized void update(JsonNode data) {
         isTrue(getId() == getRequiredInt(data, "role_id"), "You can't update the role by using different data");

@@ -28,8 +28,6 @@ public interface Request<T> {
 
     // To parsed Java JSON Object.
     // No actual type for T, because it is depend on the dependency of implementation.
-    // e.g.
-    // com.google.gson.JsonObject json = request.toJson(); // it should be OK
     T toJson();
 
     // Only for implementation use.

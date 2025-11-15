@@ -85,13 +85,6 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
         this.name = name;
     }
 
-    // GSON compatibility method
-    public synchronized void update(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
-    }
-
-    // ===== Jackson API - 高性能版本 =====
-
     @Override
     public synchronized void update(JsonNode data) {
         isTrue(Objects.equals(getId(), getRequiredString(data, "id")), "You can't update the emoji by using different data");

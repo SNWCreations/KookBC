@@ -44,17 +44,8 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
         object = new HashSet<>(node.size());
         for (JsonNode element : node) {
             String id = element.get("id").asText();
-            // 使用桥接方法将JsonNode转换为JsonObject给Storage使用
-            object.add(client.getStorage().getGuild(id, convertToGsonObject(element)));
+            object.add(client.getStorage().getGuild(id, element));
         }
-    }
-
-    /**
-     * 桥接方法：将Jackson JsonNode转换为Gson JsonObject
-     * 这是为了与Storage层的接口兼容，Storage层仍在使用Gson接口
-     */
-    private static com.google.gson.JsonObject convertToGsonObject(JsonNode node) {
-        return JacksonUtil.convertToGsonJsonObject(node);
     }
 
     @Override

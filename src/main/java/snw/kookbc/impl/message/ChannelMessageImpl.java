@@ -1,6 +1,5 @@
 package snw.kookbc.impl.message;
 
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;

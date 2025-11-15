@@ -344,12 +344,6 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         this.vipAvatarUrl = vipAvatarUrl;
     }
 
-    // GSON compatibility method
-    public void update(com.google.gson.JsonObject data) {
-        // 性能优化：使用 convertFromGsonJsonObject 避免 toString() 序列化开销
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
-    }
-
     @Override
     public synchronized void update(JsonNode data) {
         Validate.isTrue(Objects.equals(getId(), data.get("id").asText()),

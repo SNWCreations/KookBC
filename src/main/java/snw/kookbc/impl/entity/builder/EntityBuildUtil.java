@@ -39,58 +39,6 @@ import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 public class EntityBuildUtil {
 
-    // ===== Gson兼容方法（向后兼容）=====
-
-    public static Collection<Channel.RolePermissionOverwrite> parseRPO(com.google.gson.JsonObject object) {
-        com.google.gson.JsonArray array = object.getAsJsonArray("permission_overwrites");
-        Collection<Channel.RolePermissionOverwrite> rpo = new ConcurrentLinkedQueue<>();
-        for (com.google.gson.JsonElement element : array) {
-            com.google.gson.JsonObject orpo = element.getAsJsonObject();
-            rpo.add(
-                    new Channel.RolePermissionOverwrite(
-                            orpo.get("role_id").getAsInt(),
-                            orpo.get("allow").getAsInt(),
-                            orpo.get("deny").getAsInt()));
-        }
-        return rpo;
-    }
-
-    public static Collection<Channel.UserPermissionOverwrite> parseUPO(KBCClient client, com.google.gson.JsonObject object) {
-        com.google.gson.JsonArray array = object.getAsJsonArray("permission_users");
-        Collection<Channel.UserPermissionOverwrite> upo = new ConcurrentLinkedQueue<>();
-        for (com.google.gson.JsonElement element : array) {
-            com.google.gson.JsonObject oupo = element.getAsJsonObject();
-            com.google.gson.JsonObject rawUser = oupo.getAsJsonObject("user");
-            upo.add(
-                    new Channel.UserPermissionOverwrite(
-                            client.getStorage().getUser(rawUser.get("id").getAsString(), rawUser),
-                            oupo.get("allow").getAsInt(),
-                            oupo.get("deny").getAsInt()));
-        }
-        return upo;
-    }
-
-    public static NotifyType parseNotifyType(com.google.gson.JsonObject object) {
-        Guild.NotifyType type = null;
-        int rawNotifyType = object.get("notify_type").getAsInt();
-        for (Guild.NotifyType value : Guild.NotifyType.values()) {
-            if (value.getValue() == rawNotifyType) {
-                type = value;
-                break;
-            }
-        }
-        notNull(type, String.format("Internal Error: Unexpected NotifyType from remote: %s", rawNotifyType));
-        return type;
-    }
-
-    public static Guild parseEmojiGuild(String id, KBCClient client, com.google.gson.JsonObject object) {
-        Guild guild = null;
-        if (id.contains("/")) {
-            guild = client.getStorage().getGuild(id.substring(0, id.indexOf("/")));
-        }
-        return guild;
-    }
-
     @Nullable
     public static Channel parseChannel(KBCClient client, String id, int type) {
         switch (type) {
@@ -147,10 +95,9 @@ public class EntityBuildUtil {
                         int allow = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "allow", 0);
                         int deny = snw.kookbc.util.JacksonUtil.getIntOrDefault(element, "deny", 0);
 
-                        // 临时桥接到Gson JsonObject
-                        com.google.gson.JsonObject gsonUser = convertToGsonJsonObject(rawUser);
+                        // 直接使用Jackson JsonNode
                         upo.add(new Channel.UserPermissionOverwrite(
-                                client.getStorage().getUser(userId, gsonUser),
+                                client.getStorage().getUser(userId, rawUser),
                                 allow, deny));
                     }
                 }
@@ -187,11 +134,6 @@ public class EntityBuildUtil {
             }
         }
         return guild;
-    }
-
-    // 临时桥接方法 - 将JsonNode转换为JsonObject供现有代码使用
-    private static com.google.gson.JsonObject convertToGsonJsonObject(JsonNode jacksonNode) {
-        return snw.kookbc.util.JacksonUtil.convertToGsonJsonObject(jacksonNode);
     }
 
 }

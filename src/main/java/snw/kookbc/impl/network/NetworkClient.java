@@ -337,15 +337,4 @@ public class NetworkClient {
         return response;
     }
 
-    // Gson响应检查 - 向后兼容性支持
-    public com.google.gson.JsonObject checkResponse(com.google.gson.JsonObject response) {
-        int code = response.get("code").getAsInt();
-
-        if (code != 0) {
-            String message = response.get("message").getAsString();
-            throw new BadResponseException(code, message);
-        }
-        return response;
-    }
-
 }

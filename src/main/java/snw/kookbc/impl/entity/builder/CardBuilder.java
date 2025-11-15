@@ -84,30 +84,6 @@ public class CardBuilder {
         }
     }
 
-    // ===== Gson兼容方法（向后兼容）=====
-
-    /**
-     * 从Gson JsonArray构建多卡片组件（向后兼容）
-     * @param array Gson JsonArray
-     * @return MultipleCardComponent
-     */
-    public static MultipleCardComponent buildCard(com.google.gson.JsonArray array) {
-        // 转换Gson JsonArray到Jackson JsonNode
-        JsonNode arrayNode = JacksonCardUtil.parse(array.toString());
-        return buildCardArray(arrayNode);
-    }
-
-    /**
-     * 从Gson JsonObject构建单个卡片组件（向后兼容）
-     * @param object Gson JsonObject
-     * @return CardComponent
-     */
-    public static CardComponent buildCard(com.google.gson.JsonObject object) {
-        // 转换Gson JsonObject到Jackson JsonNode
-        JsonNode objectNode = JacksonCardUtil.parse(object.toString());
-        return buildCardObject(objectNode);
-    }
-
     // ===== 序列化方法 =====
 
     /**
@@ -128,37 +104,4 @@ public class CardBuilder {
         return JacksonCardUtil.toJsonNode(component);
     }
 
-    /**
-     * 序列化单个卡片组件为Gson JsonArray（向后兼容）
-     * @param component CardComponent
-     * @return JsonArray
-     */
-    public static com.google.gson.JsonArray serialize(CardComponent component) {
-        com.google.gson.JsonArray result = new com.google.gson.JsonArray();
-        result.add(serialize0(component));
-        return result;
-    }
-
-    /**
-     * 序列化多卡片组件为Gson JsonArray（向后兼容）
-     * @param component MultipleCardComponent
-     * @return JsonArray
-     */
-    public static com.google.gson.JsonArray serialize(MultipleCardComponent component) {
-        com.google.gson.JsonArray array = new com.google.gson.JsonArray();
-        for (CardComponent card : component.getComponents()) {
-            array.add(serialize0(card));
-        }
-        return array;
-    }
-
-    /**
-     * 序列化单个卡片组件为Gson JsonObject（向后兼容）
-     * @param component CardComponent
-     * @return JsonObject
-     */
-    public static com.google.gson.JsonObject serialize0(CardComponent component) {
-        String json = JacksonCardUtil.toJson(component);
-        return new com.google.gson.JsonParser().parse(json).getAsJsonObject();
-    }
 }

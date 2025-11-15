@@ -46,16 +46,8 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
         object = new HashSet<>(node.size());
         for (JsonNode element : node) {
             int roleId = element.get("role_id").asInt();
-            // 使用桥接方法将JsonNode转换为JsonObject给Storage使用
-            object.add(client.getStorage().getRole(guild, roleId, convertToGsonObject(element)));
+            object.add(client.getStorage().getRole(guild, roleId, element));
         }
-    }
-
-    /**
-     * 桥接方法：将Jackson JsonNode转换为Gson JsonObject
-     */
-    private static com.google.gson.JsonObject convertToGsonObject(JsonNode node) {
-        return new com.google.gson.JsonParser().parse(node.toString()).getAsJsonObject();
     }
 
     @Override

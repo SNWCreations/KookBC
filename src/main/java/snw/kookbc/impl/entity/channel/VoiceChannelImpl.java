@@ -157,11 +157,6 @@ public class VoiceChannelImpl extends NonCategoryChannelImpl implements VoiceCha
         this.passwordProtected = passwordProtected;
     }
 
-    // GSON compatibility method
-    public synchronized void update(com.google.gson.JsonObject data) {
-        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
-    }
-
     @Override
     public synchronized void update(JsonNode data) {
         super.update(data);

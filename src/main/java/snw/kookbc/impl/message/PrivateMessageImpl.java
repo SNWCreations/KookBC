@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
