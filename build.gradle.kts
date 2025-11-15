@@ -69,7 +69,7 @@ dependencies {
     testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 }
 group = "io.github.snwcreations"
-version = "0.32.2"
+version = "0.33.0"
 description = "KookBC"
 java.sourceCompatibility = JavaVersion.VERSION_21
 java.targetCompatibility = JavaVersion.VERSION_21
