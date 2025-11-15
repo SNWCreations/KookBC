@@ -121,3 +121,10 @@ logs
 kbc.yml
 plugins
 permissions.json
+
+# AI Tools
+.claude/
+.spec-workflow/
+.fastRequest/
+AGENTS.md
+CLAUDE.md

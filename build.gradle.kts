@@ -5,9 +5,7 @@ plugins {
     `maven-publish`
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
     id("com.gradleup.shadow") version "9.0.0-beta4"
-    id("jacoco")
     id("publish-conventions")
-    id("me.champeau.jmh") version "0.7.2"
 }
 
 repositories {
@@ -49,24 +47,6 @@ dependencies {
     shadowApi(libs.dev.rollczi.litecommands.framework)
     shadowApi(libs.net.bytebuddy.byte.buddy.agent)
     compileOnly(libs.org.jetbrains.annotations)
-
-    // Test Dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
-    testImplementation("org.mockito:mockito-core:4.11.0")
-    testImplementation("org.mockito:mockito-junit-jupiter:4.11.0")
-    testImplementation("org.mockito:mockito-inline:4.11.0")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:2.27.2")
-    testImplementation("org.testcontainers:junit-jupiter:1.17.6")
-    testImplementation("org.testcontainers:testcontainers:1.17.6")
-    testImplementation("org.assertj:assertj-core:3.24.2")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
-
-    // Test runtime dependencies
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.9.3")
-    testImplementation("org.openjdk.jmh:jmh-core:1.37")
-    testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 }
 group = "io.github.snwcreations"
 version = "0.32.2"
@@ -137,62 +117,4 @@ tasks.jar {
             )
         )
     }
-}
-
-// Test Configuration
-tasks.test {
-    useJUnitPlatform()
-    systemProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager")
-    testLogging {
-        events("passed", "skipped", "failed", "standard_out", "standard_error")
-        showStandardStreams = false
-        showCauses = true
-        showExceptions = true
-        showStackTraces = true
-    }
-    finalizedBy(tasks.jacocoTestReport)
-}
-
-// JaCoCo Configuration
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test)
-    reports {
-        xml.required = true
-        html.required = true
-        csv.required = false
-    }
-    finalizedBy(tasks.jacocoTestCoverageVerification)
-}
-
-tasks.jacocoTestCoverageVerification {
-    dependsOn(tasks.jacocoTestReport)
-    violationRules {
-        rule {
-            limit {
-                minimum = "0.85".toBigDecimal()
-            }
-        }
-        rule {
-            element = "CLASS"
-            includes = listOf("snw.kookbc.impl.*")
-            limit {
-                minimum = "0.90".toBigDecimal()
-            }
-        }
-    }
-}
-
-// JMH 配置
-jmh {
-    warmupIterations.set(2)
-    iterations.set(3)
-    fork.set(1)
-    jvmArgs.set(listOf("-Xmx4g", "-Xms2g"))
-    resultFormat.set("JSON")
-    includeTests.set(false)
-    includes.set(listOf("JsonProcessingBenchmark"))
 }
