@@ -18,14 +18,14 @@
 
 package snw.kookbc.interfaces;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 // Represents an object which can be updated.
 public interface Updatable {
 
-    // Use the provided object to update the data inside this instance.
+    // Use the provided JsonNode to update the data inside this instance.
     // MUST lock the object itself to ensure the read operations during the update progress
     // will be blocked until the update is done.
-    void update(JsonObject data);
+    void update(JsonNode data);
 
 }

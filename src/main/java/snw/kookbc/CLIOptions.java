@@ -11,7 +11,7 @@ public final class CLIOptions {
     static {
         NO_BUCKET = Boolean.getBoolean("kookbc.nobucket");
         if (NO_BUCKET) {
-            logger.warn("You've used kookbc.nobucket option, we won't check if you're going to be out of rate limit!");
+            logger.warn("您已使用 kookbc.nobucket 选项，我们将不会检查是否会超出速率限制！");
         }
     }
 

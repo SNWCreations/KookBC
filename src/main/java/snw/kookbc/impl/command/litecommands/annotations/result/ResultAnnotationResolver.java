@@ -43,7 +43,7 @@ public class ResultAnnotationResolver<SENDER> implements AnnotationProcessor<SEN
                     resultTypes = annotation.custom().getConstructor().newInstance();
                 } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                          NoSuchMethodException e) {
-                    logger.error("@Result(custom) create failure, using value()", e);
+                    logger.error("@Result(custom) 创建失败，使用 value() 方法", e);
                 }
             }
             if (resultTypes == ResultTypes.DEFAULT) return;

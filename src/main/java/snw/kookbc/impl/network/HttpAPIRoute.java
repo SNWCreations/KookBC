@@ -163,7 +163,17 @@ public enum HttpAPIRoute {
 
     FRIEND_BLOCK("/v3/friend/block"),
 
-    FRIEND_UNBLOCK("/v3/friend/unblock");
+    FRIEND_UNBLOCK("/v3/friend/unblock"),
+
+    // ------ THREAD (5e165b5098919053) ------
+
+    THREAD_CATEGORY_LIST("/v3/category/list"),
+    THREAD_CREATE("/v3/thread/create"),
+    THREAD_REPLY("/v3/thread/reply"),
+    THREAD_VIEW("/v3/thread/view"),
+    THREAD_LIST("/v3/thread/list"),
+    THREAD_DELETE("/v3/thread/delete"),
+    THREAD_POST_LIST("/v3/thread/post");
 
     private static final Map<String, HttpAPIRoute> map = new HashMap<>();
 

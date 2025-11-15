@@ -72,6 +72,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
+import static snw.kookbc.util.VirtualThreadUtil.newVirtualThreadExecutor;
 
 // The client representation.
 public class KBCClient {
@@ -133,7 +134,7 @@ public class KBCClient {
         this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> EntityBuilder::new).apply(this);
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> MessageBuilder::new).apply(this);
-        this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.eventExecutor = newVirtualThreadExecutor("Event-Executor");
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
         this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> EventFactory::new).apply(this);
@@ -234,40 +235,40 @@ public class KBCClient {
     // or you will get NullPointerException.
     public synchronized void start() {
         // Print version information
-        getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
-        getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
-        getCore().getLogger().info("Working directory: {}", new File(".").getAbsolutePath());
+        getCore().getLogger().info("正在启动 {} 版本 {}", getCore().getImplementationName(), getCore().getImplementationVersion());
+        getCore().getLogger().info("当前运行 {} 版本 {} (实现 API 版本 {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
+        getCore().getLogger().info("工作目录: {}", new File(".").getAbsolutePath());
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
-            getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id"), gitProperties.get("git.commit.time"));
+            getCore().getLogger().info("编译信息: Git 提交 {}, 构建时间 {}", gitProperties.get("git.commit.id"), gitProperties.get("git.commit.time"));
         } catch (NullPointerException | IOException e) {
-            getCore().getLogger().warn("Unable to read Git commit information", e);
+            getCore().getLogger().warn("无法读取 Git 提交信息", e);
         }
 
         if (SharedConstants.IS_SNAPSHOT) {
             getCore().getLogger().warn("***********************************");
-            getCore().getLogger().warn("YOU ARE RUNNING A SNAPSHOT BUILD.");
-            getCore().getLogger().warn("DO NOT USE SNAPSHOT BUILDS IN YOUR");
-            getCore().getLogger().warn(" PRODUCTION ENVIRONMENT!");
-            getCore().getLogger().warn("If you don't know why you're seeing");
-            getCore().getLogger().warn(" this, download the stable version.");
+            getCore().getLogger().warn("您正在运行快照构建版本。");
+            getCore().getLogger().warn("请勿在生产环境中使用");
+            getCore().getLogger().warn(" 快照构建版本！");
+            getCore().getLogger().warn("如果您不知道为什么看到");
+            getCore().getLogger().warn(" 这个消息，请下载稳定版本。");
             getCore().getLogger().warn("***********************************");
         }
 
-        core.getLogger().debug("Fetching Bot user object");
+        core.getLogger().debug("正在获取 Bot 用户对象");
         User botUser = getEntityBuilder().buildUser(getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
         getCore().getLogger().debug("Enabling plugins");
         enablePlugins();
-        getCore().getLogger().info("Running delayed init tasks");
+        getCore().getLogger().info("正在运行延迟初始化任务");
         ((SchedulerImpl) core.getScheduler()).runAfterPluginInitTasks();
         getCore().getLogger().debug("Starting Network");
         startNetwork();
         finishStart();
-        getCore().getLogger().info("Done! Type \"help\" for help.");
+        getCore().getLogger().info("完成！输入 \"help\" 获取帮助。");
 
         if (getConfig().getBoolean("check-update", true)) {
             new UpdateChecker(this).start(); // check update. Added since 2022/7/24
@@ -356,7 +357,7 @@ public class KBCClient {
 
             // onLoad
             PluginDescription description = plugin.getDescription();
-            plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
+            plugin.getLogger().info("正在加载 {} 版本 {}", description.getName(), description.getVersion());
             try {
                 plugin.onLoad();
             } catch (Throwable e) {
@@ -453,15 +454,15 @@ public class KBCClient {
         }
         running = false; // make sure the client will shut down if Bot wish the client stop.
 
-        getCore().getLogger().info("Stopping client");
+        getCore().getLogger().info("正在停止客户端");
         getCore().getPluginManager().clearPlugins();
 
         shutdownNetwork();
         eventExecutor.shutdown();
-        getCore().getLogger().info("Stopping core");
-        getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
+        getCore().getLogger().info("正在停止核心");
+        getCore().getLogger().info("正在停止调度器（如果应用程序陷入无限循环，请终止此进程！）");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
-        getCore().getLogger().info("Client stopped");
+        getCore().getLogger().info("客户端已停止");
 
         // region Emit shutdown signal
         shutdownLock.lock();

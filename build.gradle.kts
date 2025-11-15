@@ -3,7 +3,7 @@ import java.util.*
 plugins {
     `java-library`
     `maven-publish`
-    id("com.gorylenko.gradle-git-properties") version "2.4.2"
+    id("com.gorylenko.gradle-git-properties") version "2.5.3"
     id("com.gradleup.shadow") version "9.0.0-beta4"
     id("publish-conventions")
 }
@@ -25,7 +25,7 @@ dependencies {
         shadow(dep)
         api(dep)
     }
-    shadowApi(libs.com.github.snwcreations.jkook)
+    shadowApi(libs.io.github.snwcreations.jkook)
     shadowApi(libs.com.github.snwcreations.terminalconsoleappender)
     shadowApi(libs.uk.org.lidalia.sysout.over.slf4j)
     shadowApi(libs.org.apache.logging.log4j.log4j.core)
@@ -37,7 +37,11 @@ dependencies {
     shadowApi(libs.net.kyori.event.api)
     shadowApi(libs.net.kyori.event.method)
     shadowApi(libs.net.freeutils.jlhttp)
-    shadowApi(libs.com.google.code.gson.gson)
+    // GSON 已移除 - 项目已完全迁移到 Jackson (v0.52.0+)
+    shadow("com.fasterxml.jackson.core:jackson-core:2.17.2"); api("com.fasterxml.jackson.core:jackson-core:2.17.2")
+    shadow("com.fasterxml.jackson.core:jackson-databind:2.17.2"); api("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    shadow("com.fasterxml.jackson.core:jackson-annotations:2.17.2"); api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
+    shadow("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2"); api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
     shadowApi(libs.com.github.ben.manes.caffeine.caffeine)
     shadowApi(libs.net.fabricmc.sponge.mixin)
     shadowApi(libs.dev.rollczi.litecommands.framework)
@@ -47,8 +51,8 @@ dependencies {
 group = "io.github.snwcreations"
 version = "0.32.2"
 description = "KookBC"
-java.sourceCompatibility = JavaVersion.VERSION_1_8
-java.targetCompatibility = JavaVersion.VERSION_1_8
+java.sourceCompatibility = JavaVersion.VERSION_21
+java.targetCompatibility = JavaVersion.VERSION_21
 
 tasks.compileJava {
     options.encoding = "UTF-8"
@@ -71,6 +75,7 @@ gitProperties {
 val skipShade = properties["skipShade"] == "true"
 tasks.shadowJar {
     enabled = !skipShade
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier = ""
     transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer())
     exclude(
@@ -81,9 +86,13 @@ tasks.shadowJar {
     )
 }
 
+tasks.compileJava {
+    options.encoding = "UTF-8"
+}
+
 tasks.processResources {
     filesMatching("*.json") {
-        expand(properties + mapOf("jkookVersion" to libs.versions.com.github.snwcreations.jkook.get()))
+        expand(properties + mapOf("jkookVersion" to libs.versions.io.github.snwcreations.jkook.get()))
     }
 }
 
@@ -99,7 +108,7 @@ tasks.jar {
             mapOf(
                 "Build-Time" to Date(),
                 "Specification-Title" to "JKook",
-                "Specification-Version" to libs.com.github.snwcreations.jkook.get().version,
+                "Specification-Version" to libs.io.github.snwcreations.jkook.get().version,
                 "Specification-Vendor" to "SNWCreations",
                 "Implementation-Title" to "KookBC",
                 "Implementation-Version" to version.toString(),

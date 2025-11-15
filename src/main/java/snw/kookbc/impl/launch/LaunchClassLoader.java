@@ -218,7 +218,7 @@ public class LaunchClassLoader extends URLClassLoader implements AccessClassLoad
                     if (pkg == null) {
                         pkg = definePackage(packageName, null, null, null, null, null, null, null);
                     } else if (pkg.isSealed()) {
-                        LogWrapper.LOGGER.warn("The URL {} is defining elements for sealed path {}", urlConnection == null ? "null" : urlConnection.getURL(), packageName);
+                        LogWrapper.LOGGER.warn("URL {} 正在为密封路径 {} 定义元素", urlConnection == null ? "null" : urlConnection.getURL(), packageName);
                     }
                 }
             }
@@ -246,7 +246,7 @@ public class LaunchClassLoader extends URLClassLoader implements AccessClassLoad
             }
             invalidClasses.add(name);
             if (DEBUG) {
-                LogWrapper.LOGGER.error("Exception encountered attempting classloading of {}", name, e);
+                LogWrapper.LOGGER.error("尝试加载类 {} 时遇到异常", name, e);
             }
             throw new ClassNotFoundException(name, e);
         }
@@ -356,7 +356,7 @@ public class LaunchClassLoader extends URLClassLoader implements AccessClassLoad
             System.arraycopy(buffer, 0, result, 0, totalLength);
             return result;
         } catch (Throwable t) {
-            LogWrapper.LOGGER.error("Problem loading class", t);
+            LogWrapper.LOGGER.error("加载类时出现问题", t);
             return new byte[0];
         }
     }
@@ -407,14 +407,14 @@ public class LaunchClassLoader extends URLClassLoader implements AccessClassLoad
 
             if (classResource == null) {
                 if (DEBUG)
-                    LogWrapper.LOGGER.warn("Failed to find class resource {}", resourcePath);
+                    LogWrapper.LOGGER.warn("未能找到类资源 {}", resourcePath);
                 negativeResourceCache.add(name);
                 return null;
             }
             classStream = classResource.openStream();
 
             if (DEBUG)
-                LogWrapper.LOGGER.warn("Loading class {} from resource {}", name, classResource);
+                LogWrapper.LOGGER.warn("从资源 {} 加载类 {}", name, classResource);
             final byte[] data = readFully(classStream);
             resourceCache.put(name, data);
             return data;

@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.network;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.Objects;
 
@@ -26,9 +26,9 @@ import java.util.Objects;
 public class Frame {
     private final MessageType type;
     private final int sn;
-    private final JsonObject d;
+    private final JsonNode d;
 
-    public Frame(int s, int sn, JsonObject d) {
+    public Frame(int s, int sn, JsonNode d) {
         this.type = Objects.requireNonNull(MessageType.valueOf(s));
         this.sn = sn;
         this.d = d;
@@ -42,7 +42,7 @@ public class Frame {
         return sn;
     }
 
-    public JsonObject getData() {
+    public JsonNode getData() {
         return d;
     }
 

@@ -18,16 +18,16 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.freeutils.httpserver.HTTPServer;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.interfaces.network.FrameHandler;
 import snw.kookbc.interfaces.network.webhook.RequestHandler;
 import snw.kookbc.interfaces.network.webhook.WebhookServer;
-import snw.kookbc.util.PrefixThreadFactory;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
+
+import static snw.kookbc.util.VirtualThreadUtil.newVirtualThreadExecutor;
 
 public class JLHttpWebhookServer implements WebhookServer {
     private final KBCClient client;
@@ -38,7 +38,7 @@ public class JLHttpWebhookServer implements WebhookServer {
         this.client = client;
         this.route = route;
         this.server = new HTTPServer(port);
-        this.server.setExecutor(Executors.newCachedThreadPool(new PrefixThreadFactory("Webhook Thread #")));
+        this.server.setExecutor(newVirtualThreadExecutor("Webhook-Thread"));
         this.setHandler(new JLHttpRequestHandler(client, listener));
     }
 
@@ -57,7 +57,7 @@ public class JLHttpWebhookServer implements WebhookServer {
     }
 
     @Override
-    public void setHandler(RequestHandler<JsonObject> handler) {
+    public void setHandler(RequestHandler<JsonNode> handler) {
         if (server != null) {
             HTTPServer.VirtualHost virtualHost = server.getVirtualHost(null);
             virtualHost.addContext('/' + route, new JLHttpRequestWrapper(client, handler), "POST");

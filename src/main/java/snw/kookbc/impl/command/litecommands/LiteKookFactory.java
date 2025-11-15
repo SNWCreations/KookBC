@@ -93,7 +93,7 @@ public class LiteKookFactory {
                         .context(ConsoleCommandSender.class, new KookOnlyConsoleContextual<>("只有后台才能执行该命令"))
                         .scheduler(new KookScheduler(client, plugin))
 
-                        .selfProcessor((builder, internal) ->
+                        .self((builder, internal) ->
                                 builder.argument(User.class, new UserArgument(httpAPI, internal.getMessageRegistry()))
                                         .argument(Guild.class, new GuildArgument(httpAPI, internal.getMessageRegistry()))
                                         .argument(Channel.class, new ChannelArgument<>(httpAPI, internal.getMessageRegistry()))

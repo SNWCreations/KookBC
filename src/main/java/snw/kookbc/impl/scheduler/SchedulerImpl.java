@@ -23,7 +23,6 @@ import snw.jkook.scheduler.Scheduler;
 import snw.jkook.scheduler.Task;
 import snw.jkook.util.Validate;
 import snw.kookbc.impl.KBCClient;
-import snw.kookbc.util.PrefixThreadFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 import static snw.kookbc.util.Util.pluginNotNull;
+import static snw.kookbc.util.VirtualThreadUtil.newVirtualThreadScheduledExecutor;
 
 public class SchedulerImpl implements Scheduler {
     private final KBCClient client;
@@ -42,7 +42,8 @@ public class SchedulerImpl implements Scheduler {
     private final Map<Integer, AfterPluginInitTask> scheduledAfterPluginInitTasks = new HashMap<>();
 
     public SchedulerImpl(KBCClient client) {
-        this(client, new PrefixThreadFactory("Scheduler Thread #"));
+        this.client = client;
+        this.pool = newVirtualThreadScheduledExecutor("Scheduler-Thread");
     }
 
     public SchedulerImpl(KBCClient client, ThreadFactory factory) {
@@ -51,7 +52,7 @@ public class SchedulerImpl implements Scheduler {
 
     public SchedulerImpl(KBCClient client, int corePoolSize, ThreadFactory factory) {
         this.client = client;
-        pool = Executors.newScheduledThreadPool(corePoolSize, factory);
+        this.pool = newVirtualThreadScheduledExecutor(corePoolSize, "Scheduler-Thread-#");
     }
 
 
@@ -59,7 +60,7 @@ public class SchedulerImpl implements Scheduler {
     public Task runTask(Plugin plugin, Runnable runnable) {
         ensurePluginEnabled(plugin);
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.submit(runnable), id, plugin);
+        TaskImpl task = new TaskImpl(this, pool.submit(wrap(runnable, id, false)), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }
@@ -74,10 +75,10 @@ public class SchedulerImpl implements Scheduler {
     }
 
     @Override
-    public Task runTaskTimer(Plugin plugin, Runnable runnable, long period, long delay) {
+    public Task runTaskTimer(Plugin plugin, Runnable runnable, long delay, long period) {
         ensurePluginEnabled(plugin);
         int id = nextId();
-        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id, true), period, delay, TimeUnit.MILLISECONDS), id, plugin);
+        TaskImpl task = new TaskImpl(this, pool.scheduleAtFixedRate(wrap(runnable, id, true), delay, period, TimeUnit.MILLISECONDS), id, plugin);
         scheduledTasks.put(id, task);
         return task;
     }

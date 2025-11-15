@@ -19,13 +19,15 @@
 package snw.kookbc.impl.entity;
 
 import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getRequiredString;
+import static snw.kookbc.util.JacksonUtil.getStringOrDefault;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Guild;
@@ -83,9 +85,16 @@ public class CustomEmojiImpl implements CustomEmoji, Updatable {
         this.name = name;
     }
 
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
+        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
+    }
+
+    // ===== Jackson API - 高性能版本 =====
+
     @Override
-    public synchronized void update(JsonObject data) {
-        isTrue(Objects.equals(getId(), getAsString(data, "id")), "You can't update the emoji by using different data");
-        this.name = getAsString(data, "name");
+    public synchronized void update(JsonNode data) {
+        isTrue(Objects.equals(getId(), getRequiredString(data, "id")), "You can't update the emoji by using different data");
+        this.name = getStringOrDefault(data, "name", "Unknown Emoji");
     }
 }

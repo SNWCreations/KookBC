@@ -21,6 +21,7 @@ package snw.kookbc.impl.storage;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.JsonObject;
 import snw.jkook.entity.*;
 import snw.jkook.entity.channel.Channel;
@@ -35,8 +36,11 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import snw.kookbc.util.VirtualThreadUtil;
 
 public class EntityStorage {
     private static final int RETRY_TIMES = 1;
@@ -140,7 +144,33 @@ public class EntityStorage {
         return result;
     }
 
+    // ===== Jackson API - 高性能版本 =====
+
+    public User getUser(String id, JsonNode def) {
+        // use getIfPresent, because the def should not be wasted
+        User result = users.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildUser(def);
+            addUser(result);
+        } else {
+            ((UserImpl) result).update(def);
+        }
+        return result;
+    }
+
     public Guild getGuild(String id, JsonObject def) {
+        Guild result = guilds.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildGuild(def);
+            addGuild(result);
+        } else {
+            // 转换JsonObject到JsonNode再更新
+            ((GuildImpl) result).update(snw.kookbc.util.JacksonUtil.parse(def.toString()));
+        }
+        return result;
+    }
+
+    public Guild getGuild(String id, JsonNode def) {
         Guild result = guilds.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildGuild(def);
@@ -152,6 +182,17 @@ public class EntityStorage {
     }
 
     public Channel getChannel(String id, JsonObject def) {
+        Channel result = channels.getIfPresent(id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildChannel(def);
+            addChannel(result);
+        } else {
+            ((ChannelImpl) result).update(def);
+        }
+        return result;
+    }
+
+    public Channel getChannel(String id, JsonNode def) {
         Channel result = channels.getIfPresent(id);
         if (result == null) {
             result = client.getEntityBuilder().buildChannel(def);
@@ -174,7 +215,30 @@ public class EntityStorage {
         return result;
     }
 
+    public Role getRole(Guild guild, int id, JsonNode def) {
+        // getRole is Nullable
+        Role result = getRole(guild, id);
+        if (result == null) {
+            result = client.getEntityBuilder().buildRole(guild, def);
+            addRole(guild, result);
+        } else {
+            ((RoleImpl) result).update(def);
+        }
+        return result;
+    }
+
     public CustomEmoji getEmoji(String id, JsonObject def) {
+        CustomEmoji emoji = getEmoji(id);
+        if (emoji == null) {
+            emoji = client.getEntityBuilder().buildEmoji(def);
+            addEmoji(emoji);
+        } else {
+            ((CustomEmojiImpl) emoji).update(def);
+        }
+        return emoji;
+    }
+
+    public CustomEmoji getEmoji(String id, JsonNode def) {
         CustomEmoji emoji = getEmoji(id);
         if (emoji == null) {
             emoji = client.getEntityBuilder().buildEmoji(def);
@@ -281,6 +345,192 @@ public class EntityStorage {
                 .map(i -> ((ChannelImpl) i).getOverwrittenUserPermissions0())
                 .forEach(i -> i.removeIf(o -> o.getUser() == user));
     }
+
+    // ===== 虚拟线程异步 API =====
+
+    /**
+     * 异步获取用户 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行用户获取操作，适合需要从网络获取用户信息的场景
+     *
+     * @param id 用户ID
+     * @return 异步用户对象
+     */
+    public CompletableFuture<User> getUserAsync(String id) {
+        return CompletableFuture.supplyAsync(() -> getUser(id), VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 异步获取服务器 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行服务器获取操作，适合需要从网络获取服务器信息的场景
+     *
+     * @param id 服务器ID
+     * @return 异步服务器对象
+     */
+    public CompletableFuture<Guild> getGuildAsync(String id) {
+        return CompletableFuture.supplyAsync(() -> getGuild(id), VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 异步获取频道 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行频道获取操作，避免阻塞主线程
+     *
+     * @param id 频道ID
+     * @return 异步频道对象
+     */
+    public CompletableFuture<Channel> getChannelAsync(String id) {
+        return CompletableFuture.supplyAsync(() -> getChannel(id), VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 异步预热缓存 - 使用虚拟线程
+     *
+     * <p>并行预加载常用实体，提升后续访问性能
+     *
+     * @param userIds 要预加载的用户ID列表
+     * @param guildIds 要预加载的服务器ID列表
+     * @return 异步预热结果
+     */
+    public CompletableFuture<Void> preloadCacheAsync(List<String> userIds, List<String> guildIds) {
+        return CompletableFuture.runAsync(() -> {
+            // 并行预加载用户
+            List<CompletableFuture<User>> userFutures = userIds.stream()
+                .map(this::getUserAsync)
+                .collect(Collectors.toList());
+
+            // 并行预加载服务器
+            List<CompletableFuture<Guild>> guildFutures = guildIds.stream()
+                .map(this::getGuildAsync)
+                .collect(Collectors.toList());
+
+            // 等待所有预加载完成
+            CompletableFuture.allOf(userFutures.toArray(new CompletableFuture[0])).join();
+            CompletableFuture.allOf(guildFutures.toArray(new CompletableFuture[0])).join();
+        }, VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 异步批量获取用户 - 使用虚拟线程
+     *
+     * <p>并行获取多个用户，显著提升批量操作性能
+     *
+     * @param userIds 用户ID列表
+     * @return 异步用户列表
+     */
+    public CompletableFuture<List<User>> batchGetUsersAsync(List<String> userIds) {
+        List<CompletableFuture<User>> futures = userIds.stream()
+            .map(this::getUserAsync)
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * 异步批量获取服务器 - 使用虚拟线程
+     *
+     * <p>并行获取多个服务器，显著提升批量操作性能
+     *
+     * @param guildIds 服务器ID列表
+     * @return 异步服务器列表
+     */
+    public CompletableFuture<List<Guild>> batchGetGuildsAsync(List<String> guildIds) {
+        List<CompletableFuture<Guild>> futures = guildIds.stream()
+            .map(this::getGuildAsync)
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * 异步缓存清理 - 使用虚拟线程
+     *
+     * <p>在虚拟线程中执行缓存清理操作，避免阻塞主线程
+     *
+     * @return 异步清理结果
+     */
+    public CompletableFuture<Void> cleanupCacheAsync() {
+        return CompletableFuture.runAsync(() -> {
+            users.cleanUp();
+            guilds.cleanUp();
+            channels.cleanUp();
+            roles.cleanUp();
+            emojis.cleanUp();
+        }, VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 异步获取缓存统计 - 使用虚拟线程
+     *
+     * <p>收集所有缓存的统计信息
+     *
+     * @return 异步缓存统计结果
+     */
+    public CompletableFuture<CacheStats> getCacheStatsAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            return new CacheStats(
+                users.estimatedSize(),
+                guilds.estimatedSize(),
+                channels.estimatedSize(),
+                roles.estimatedSize(),
+                emojis.estimatedSize(),
+                users.stats(),
+                guilds.stats()
+            );
+        }, VirtualThreadUtil.getCacheExecutor());
+    }
+
+    /**
+     * 缓存统计数据类
+     */
+    public static class CacheStats {
+        private final long userCacheSize;
+        private final long guildCacheSize;
+        private final long channelCacheSize;
+        private final long roleCacheSize;
+        private final long emojiCacheSize;
+        private final com.github.benmanes.caffeine.cache.stats.CacheStats userStats;
+        private final com.github.benmanes.caffeine.cache.stats.CacheStats guildStats;
+
+        public CacheStats(long userCacheSize, long guildCacheSize, long channelCacheSize,
+                         long roleCacheSize, long emojiCacheSize,
+                         com.github.benmanes.caffeine.cache.stats.CacheStats userStats,
+                         com.github.benmanes.caffeine.cache.stats.CacheStats guildStats) {
+            this.userCacheSize = userCacheSize;
+            this.guildCacheSize = guildCacheSize;
+            this.channelCacheSize = channelCacheSize;
+            this.roleCacheSize = roleCacheSize;
+            this.emojiCacheSize = emojiCacheSize;
+            this.userStats = userStats;
+            this.guildStats = guildStats;
+        }
+
+        public long getUserCacheSize() { return userCacheSize; }
+        public long getGuildCacheSize() { return guildCacheSize; }
+        public long getChannelCacheSize() { return channelCacheSize; }
+        public long getRoleCacheSize() { return roleCacheSize; }
+        public long getEmojiCacheSize() { return emojiCacheSize; }
+        public com.github.benmanes.caffeine.cache.stats.CacheStats getUserStats() { return userStats; }
+        public com.github.benmanes.caffeine.cache.stats.CacheStats getGuildStats() { return guildStats; }
+
+        @Override
+        public String toString() {
+            return String.format(
+                "CacheStats{users=%d, guilds=%d, channels=%d, roles=%d, emojis=%d, " +
+                "userHitRate=%.2f%%, guildHitRate=%.2f%%}",
+                userCacheSize, guildCacheSize, channelCacheSize, roleCacheSize, emojiCacheSize,
+                userStats.hitRate() * 100, guildStats.hitRate() * 100
+            );
+        }
+    }
+
 }
 
 interface UncheckedFunction<K, V> {

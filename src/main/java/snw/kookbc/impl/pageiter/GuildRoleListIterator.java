@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
 import snw.kookbc.impl.KBCClient;
@@ -44,12 +42,20 @@ public class GuildRoleListIterator extends PageIteratorImpl<Set<Role>> {
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            object.add(client.getStorage().getRole(guild, rawObj.get("role_id").getAsInt(), rawObj));
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            int roleId = element.get("role_id").asInt();
+            // 使用桥接方法将JsonNode转换为JsonObject给Storage使用
+            object.add(client.getStorage().getRole(guild, roleId, convertToGsonObject(element)));
         }
+    }
+
+    /**
+     * 桥接方法：将Jackson JsonNode转换为Gson JsonObject
+     */
+    private static com.google.gson.JsonObject convertToGsonObject(JsonNode node) {
+        return new com.google.gson.JsonParser().parse(node.toString()).getAsJsonObject();
     }
 
     @Override

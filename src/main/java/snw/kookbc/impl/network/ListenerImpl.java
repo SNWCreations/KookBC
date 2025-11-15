@@ -18,18 +18,17 @@
 
 package snw.kookbc.impl.network;
 
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
@@ -71,7 +70,7 @@ public class ListenerImpl implements FrameHandler {
         }
         switch (frame.getType()) {
             case EVENT:
-                client.getEventExecutor().execute(() -> event(frame));
+                event(frame);  // 直接在当前线程处理，保证顺序
                 break;
             case HELLO:
                 hello(frame);
@@ -92,7 +91,10 @@ public class ListenerImpl implements FrameHandler {
                 break;
             case RESUME_ACK:
                 client.getCore().getLogger().info("Resume finished");
-                client.getSession().setId(frame.getData().get("session_id").getAsString());
+                JsonNode sessionIdNode = frame.getData().get("session_id");
+                if (sessionIdNode != null) {
+                    client.getSession().setId(sessionIdNode.asText());
+                }
                 break;
         }
     }
@@ -102,51 +104,49 @@ public class ListenerImpl implements FrameHandler {
             client.getCore().getLogger().debug("Got EVENT");
             Session session = client.getSession();
             AtomicInteger sn = session.getSN();
-            Set<Frame> buffer = session.getBuffer();
             int expected = Session.UPDATE_FUNC.applyAsInt(sn.get());
             int actual = frame.getSN();
+
             if (actual > expected) {
                 client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
-                client.getCore().getLogger().warn("We will process it later.");
-                buffer.add(frame);
+                session.getBuffer().add(frame);
             } else if (expected == actual) {
                 event0(frame);
                 session.increaseSN();
                 saveSN();
-                if (!buffer.isEmpty()) {
-                    int continueId = sn.get() + 1;
-                    do {
-                        boolean found = false;
-                        Iterator<Frame> bufferIterator = buffer.iterator();
-                        while (bufferIterator.hasNext()) {
-                            Frame bufFrame = bufferIterator.next();
-                            if (bufFrame.getSN() == continueId) {
-                                found = true;       // we found the frame matching the continueId,
-                                // so we will continue after the frame got processed
-                                event0(bufFrame);
-                                session.increaseSN(); // make sure the SN will update!
-                                saveSN();
-                                continueId++;
-                                bufferIterator.remove(); // we won't need this frame, because it has processed
-                                client.getCore().getLogger().debug("Processed message in buffer with SN {}", bufFrame.getSN());
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            break;
-                        }
-                    } while (true);
+
+                // 处理缓冲区中的连续帧
+                int continueId = sn.get() + 1;
+                Frame bufFrame;
+                while ((bufFrame = find(continueId)) != null) {
+                    event0(bufFrame);
+                    session.increaseSN();
+                    saveSN();
+                    continueId++;
+                    client.getCore().getLogger().debug("Processed buffered message with SN {}", bufFrame.getSN());
                 }
-            } else if(client.getConfig().getBoolean("allow-warn-old-message")){
+            } else if (client.getConfig().getBoolean("allow-warn-old-message")) {
                 client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
             }
         }
     }
 
+    private Frame find(int sn) {
+        for (Frame frame : client.getSession().getBuffer()) {
+            if (frame.getSN() == sn) {
+                client.getSession().getBuffer().remove(frame);
+                return frame;
+            }
+        }
+        return null;
+    }
+
     protected void event0(Frame frame) {
         Event event;
         try {
-            event = client.getEventFactory().createEvent(frame.getData());
+            // 直接使用 Jackson JsonNode 进行事件创建
+            JsonNode jacksonData = frame.getData();
+            event = client.getEventFactory().createEvent(jacksonData);
         } catch (Exception e) {
             client.getCore().getLogger().error("Unable to create event from payload.");
             client.getCore().getLogger().error("Event payload: {}", frame);
@@ -181,10 +181,14 @@ public class ListenerImpl implements FrameHandler {
     protected void hello(Frame frame) {
         client.getCore().getLogger().debug("Got HELLO");
         connector.setConnected(true);
-        JsonObject object = frame.getData();
-        int status = get(object, "code").getAsInt();
+        JsonNode object = frame.getData();
+        JsonNode codeNode = object.get("code");
+        int status = codeNode != null ? codeNode.asInt() : -1;
         if (status == 0) {
-            client.getSession().setId(get(object, "session_id").getAsString());
+            JsonNode sessionIdNode = object.get("session_id");
+            if (sessionIdNode != null) {
+                client.getSession().setId(sessionIdNode.asText());
+            }
         } else {
             connector.requestReconnect();
         }

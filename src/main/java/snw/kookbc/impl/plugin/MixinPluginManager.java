@@ -146,7 +146,7 @@ public class MixinPluginManager {
         if (!confNameSet.isEmpty()) {
             if (!Util.isStartByLaunch()) {
                 logger.warn(
-                        "[{}] {} v{} plugin is using the Mixin framework. Please use 'Launch' mode to enable support for Mixin",
+                        "[{}] {} v{} 插件正在使用 Mixin 框架。请使用 'Launch' 模式来启用 Mixin 支持",
                         description.getName(),
                         description.getName(),
                         description.getVersion()

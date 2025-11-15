@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.freeutils.httpserver.HTTPServer;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.interfaces.network.webhook.RequestHandler;
@@ -27,9 +27,9 @@ import java.io.IOException;
 
 public class JLHttpRequestWrapper implements HTTPServer.ContextHandler {
     private final KBCClient client;
-    private final RequestHandler<JsonObject> handler;
+    private final RequestHandler<JsonNode> handler;
 
-    public JLHttpRequestWrapper(KBCClient client, RequestHandler<JsonObject> handler) {
+    public JLHttpRequestWrapper(KBCClient client, RequestHandler<JsonNode> handler) {
         this.client = client;
         this.handler = handler;
     }

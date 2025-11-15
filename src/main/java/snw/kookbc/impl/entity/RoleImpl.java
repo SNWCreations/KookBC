@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.entity;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.Role;
@@ -30,8 +30,11 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Map;
 
 import static snw.jkook.util.Validate.isTrue;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getAsInt;
+import static snw.kookbc.util.JacksonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getRequiredInt;
+import static snw.kookbc.util.JacksonUtil.getIntOrDefault;
+import static snw.kookbc.util.JacksonUtil.getStringOrDefault;
 
 public class RoleImpl implements Role, Updatable {
     private final KBCClient client;
@@ -163,14 +166,21 @@ public class RoleImpl implements Role, Updatable {
         this.mentionable = mentionable;
     }
 
+    // GSON compatibility method
+    public synchronized void update(com.google.gson.JsonObject data) {
+        update(snw.kookbc.util.JacksonUtil.convertFromGsonJsonObject(data));
+    }
+
+    // ===== Jackson API - 高性能版本 =====
+
     @Override
-    public synchronized void update(JsonObject data) {
-        isTrue(getId() == getAsInt(data, "role_id"), "You can't update the role by using different data");
-        this.color = getAsInt(data, "color");
-        this.position = getAsInt(data, "position");
-        this.permSum = getAsInt(data, "permissions");
-        this.mentionable = getAsInt(data, "mentionable") == 1;
-        this.hoist = getAsInt(data, "hoist") == 1;
-        this.name = getAsString(data, "name");
+    public synchronized void update(JsonNode data) {
+        isTrue(getId() == getRequiredInt(data, "role_id"), "You can't update the role by using different data");
+        this.color = getIntOrDefault(data, "color", 0);
+        this.position = getIntOrDefault(data, "position", 0);
+        this.permSum = getIntOrDefault(data, "permissions", 0);
+        this.mentionable = getIntOrDefault(data, "mentionable", 0) == 1;
+        this.hoist = getIntOrDefault(data, "hoist", 0) == 1;
+        this.name = getStringOrDefault(data, "name", "Unknown Role");
     }
 }

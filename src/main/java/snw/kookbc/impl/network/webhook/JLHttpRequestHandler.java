@@ -18,16 +18,18 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.Frame;
 import snw.kookbc.interfaces.network.FrameHandler;
 import snw.kookbc.interfaces.network.webhook.Request;
 import snw.kookbc.interfaces.network.webhook.RequestHandler;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.JacksonUtil.*;
 
-public class JLHttpRequestHandler implements RequestHandler<JsonObject> {
+public class JLHttpRequestHandler implements RequestHandler<JsonNode> {
     private final String ourToken;
     private final FrameHandler handler;
 
@@ -39,31 +41,44 @@ public class JLHttpRequestHandler implements RequestHandler<JsonObject> {
         }
     }
 
-    @Override
-    public void handle(Request<JsonObject> request) {
-        final JsonObject object = request.toJson();
-        final int signalType = get(object, "s").getAsInt();
+    public void handle(Request<JsonNode> request) {
+        final JsonNode object = request.toJson();
+        final int signalType = object.get("s").asInt();
         final int sn;
-        if (has(object, "sn")) {
-            sn = get(object, "sn").getAsInt();
+        JsonNode snNode = object.get("sn");
+        if (snNode != null && !snNode.isNull()) {
+            sn = snNode.asInt();
         } else {
             sn = -1;
         }
-        final JsonObject data = get(object, "d").getAsJsonObject();
+        final JsonNode data = object.get("d");
         Frame frame = new Frame(signalType, sn, data);
-        final String gotToken = get(frame.getData(), "verify_token").getAsString();
+
+        JsonNode verifyTokenNode = frame.getData().get("verify_token");
+        if (verifyTokenNode == null || verifyTokenNode.isNull()) {
+            request.reply(400, "");
+            return;
+        }
+        final String gotToken = verifyTokenNode.asText();
         if (!ourToken.equals(gotToken)) {
             request.reply(400, "");
             return;
         }
-        if (has(frame.getData(), "channel_type")) {
-            final String channelType = get(frame.getData(), "channel_type").getAsString();
+
+        JsonNode channelTypeNode = frame.getData().get("channel_type");
+        if (channelTypeNode != null && !channelTypeNode.isNull()) {
+            final String channelType = channelTypeNode.asText();
             if ("WEBHOOK_CHALLENGE".equals(channelType)) {
                 // challenge part
-                String challengeValue = frame.getData().get("challenge").getAsString();
-                JsonObject obj = new JsonObject();
-                obj.addProperty("challenge", challengeValue);
-                String challengeJson = NORMAL_GSON.toJson(obj);
+                JsonNode challengeNode = frame.getData().get("challenge");
+                if (challengeNode == null || challengeNode.isNull()) {
+                    request.reply(400, "");
+                    return;
+                }
+                String challengeValue = challengeNode.asText();
+                ObjectNode obj = JacksonUtil.createObjectNode();
+                obj.put("challenge", challengeValue);
+                String challengeJson = JacksonUtil.toJsonString(obj);
                 request.reply(200, challengeJson);
                 return;
                 // end challenge part
