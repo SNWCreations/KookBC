@@ -1,5 +1,6 @@
 [versions]
 com-github-ben-manes-caffeine-caffeine = "2.9.3"
+com-google-code-gson-gson = "2.10.1"
 io-github-snwcreations-jkook = "0.54.2"
 com-github-snwcreations-terminalconsoleappender = "1.3.5"
 com-squareup-okhttp3-okhttp = "4.10.0"
@@ -27,6 +28,7 @@ mockwebserver = "4.10.0"
 
 [libraries]
 com-github-ben-manes-caffeine-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "com-github-ben-manes-caffeine-caffeine" }
+com-google-code-gson-gson = { module = "com.google.code.gson:gson", version.ref = "com-google-code-gson-gson" }
 io-github-snwcreations-jkook = { module = "io.github.snwcreations:jkook", version.ref = "io-github-snwcreations-jkook" }
 com-github-snwcreations-terminalconsoleappender = { module = "com.github.SNWCreations:TerminalConsoleAppender", version.ref = "com-github-snwcreations-terminalconsoleappender" }
 com-squareup-okhttp3-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "com-squareup-okhttp3-okhttp" }

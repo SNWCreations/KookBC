@@ -37,7 +37,7 @@ dependencies {
     shadowApi(libs.net.kyori.event.api)
     shadowApi(libs.net.kyori.event.method)
     shadowApi(libs.net.freeutils.jlhttp)
-    // GSON 已移除 - 项目已完全迁移到 Jackson (v0.52.0+)
+    shadowApi(libs.com.google.code.gson.gson)
     shadow("com.fasterxml.jackson.core:jackson-core:2.17.2"); api("com.fasterxml.jackson.core:jackson-core:2.17.2")
     shadow("com.fasterxml.jackson.core:jackson-databind:2.17.2"); api("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     shadow("com.fasterxml.jackson.core:jackson-annotations:2.17.2"); api("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
