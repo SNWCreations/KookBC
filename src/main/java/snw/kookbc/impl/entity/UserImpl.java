@@ -440,10 +440,10 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                     try {
                         return calculateDefaultPerms(perm, channel, userRoleIds, finalGuildRoles);
                     } catch (BadResponseException e) {
-                        client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                        client.getCore().getLogger().error("计算内置权限时发生错误", e);
                         return false;
                     } catch (Exception e) {
-                        client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
+                        client.getCore().getLogger().error("计算内置权限时发生错误", e);
                         return false;
                     }
                 }

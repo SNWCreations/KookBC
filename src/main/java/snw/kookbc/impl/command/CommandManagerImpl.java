@@ -145,7 +145,7 @@ public class CommandManagerImpl implements CommandManager {
     @Override
     public boolean executeCommand(CommandSender sender, String cmdLine, Message msg) throws CommandException {
         if (cmdLine.isEmpty()) {
-            client.getCore().getLogger().debug("Received empty command!");
+            client.getCore().getLogger().debug("收到空命令！");
             return false;
         }
 
@@ -176,18 +176,18 @@ public class CommandManagerImpl implements CommandManager {
         // we will use the "/hello a b" as the example
         JKookCommand actualCommand = null; // "a" is an actual subcommand, so we expect it is not null
         if (!sub.isEmpty()) { // if the command have subcommand, expect true
-            client.getCore().getLogger().debug("The subcommand does exists. Attempting to search the final command.");
+            client.getCore().getLogger().debug("子命令存在，正在尝试搜索最终命令");
             while (!args.isEmpty()) {
                 // get the first argument, so we got "a"
                 String subName = args.get(0);
-                client.getCore().getLogger().debug("Got temp subcommand root name: {}", subName);
+                client.getCore().getLogger().debug("获取临时子命令根名称: {}", subName);
 
                 boolean found = false; // expect true
                 // then get the command
                 for (JKookCommand s : sub) {
                     // if the root name equals to the sub name
                     if (Objects.equals(s.getRootName(), subName)) { // expect true
-                        client.getCore().getLogger().debug("Got valid subcommand: {}", subName); // debug
+                        client.getCore().getLogger().debug("获取到有效的子命令: {}", subName); // debug
                         // then remove the first argument
                         args.remove(0); // "a" was removed, so we have "b" in next round
                         actualCommand = s; // got "a" subcommand
@@ -197,27 +197,27 @@ public class CommandManagerImpl implements CommandManager {
                     }
                 }
                 if (!found) { // if the subcommand is not found
-                    client.getCore().getLogger().debug("No subcommand matching current command root name. We will attempt to execute the command currently found."); // debug
+                    client.getCore().getLogger().debug("没有与当前命令根名称匹配的子命令，将尝试执行当前找到的命令"); // debug
                     // then we can regard the actualCommand as the final result to be executed
                     break; // exit the while loop
                 }
             }
         }
 
-        client.getCore().getLogger().debug("The final command has been found. Time elasped: {}ms", System.currentTimeMillis() - startTimeStamp);
+        client.getCore().getLogger().debug("已找到最终命令，用时: {}ms", System.currentTimeMillis() - startTimeStamp);
 
         if (sender instanceof User) {
             if (msg == null) {
-                client.getCore().getLogger().warn("A user issued command but the message object is null. Is the plugin calling a command as the user?");
+                client.getCore().getLogger().warn("用户发出命令但消息对象为空，是插件以用户身份调用命令吗？");
             }
             client.getCore().getLogger().info(
-                    "{}(User ID: {}) issued command: {}",
+                    "{}(用户 ID: {}) 发出命令: {}",
                     ((User) sender).getName(),
                     ((User) sender).getId(),
                     cmdLine
             );
             if (sender == client.getCore().getUser()) {
-                client.getCore().getLogger().warn("Running a command as the bot in this client instance. It is impossible.");
+                client.getCore().getLogger().warn("在此客户端实例中以 Bot 身份运行命令，这是不可能的");
             }
         }
 
@@ -439,14 +439,14 @@ public class CommandManagerImpl implements CommandManager {
         try {
             runnable.run();
         } catch (Throwable e) {
-            client.getCore().getLogger().debug("The execution of command line '{}' is FAILED, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+            client.getCore().getLogger().debug("命令行 '{}' 执行失败，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
             // Why Throwable? We need to keep the client safe.
             // it is easy to understand. NoClassDefError? NoSuchMethodError?
             // It is OutOfMemoryError? nothing matters lol.
             throw new CommandException("Something unexpected happened.", e);
         }
         // Do not put this in the try statement because we don't know if the logging system will throw an exception.
-        client.getCore().getLogger().debug("The execution of command line \"{}\" is done, time elapsed: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+        client.getCore().getLogger().debug("命令行 \"{}\" 执行完成，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
     }
 
     private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {

@@ -234,7 +234,7 @@ public class SimplePluginManager implements PluginManager {
         try {
             plugin.setEnabled(true);
         } catch (Throwable e) {
-            plugin.getLogger().error("Unable to enable this plugin", e);
+            plugin.getLogger().error("无法启用此插件", e);
             disablePlugin(plugin); // make sure the plugin is still disabled
         }
     }
@@ -253,7 +253,7 @@ public class SimplePluginManager implements PluginManager {
             ((CommandManagerImpl) client.getCore().getCommandManager()).getCommandMap().unregisterAll(plugin);
             plugin.setEnabled(false);
         } catch (Throwable e) {
-            plugin.getLogger().error("Exception occurred when we are disabling this plugin", e);
+            plugin.getLogger().error("禁用此插件时发生异常", e);
         }
         if (plugin.getClass().getClassLoader() instanceof SimplePluginClassLoader) {
             try {

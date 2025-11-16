@@ -93,7 +93,7 @@ public class ReconnectStrategy {
      * 创建重连策略（无限重试）
      */
     public ReconnectStrategy() {
-        // 无需初始化，重连将持���到连接成功或遇到不可恢复的异常
+        // 无需初始化，重连将持续到连接成功或遇到不可恢复的异常
     }
 
     /**

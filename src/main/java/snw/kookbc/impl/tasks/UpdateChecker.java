@@ -45,7 +45,7 @@ public final class UpdateChecker extends Thread {
         try {
             run0();
         } catch (Exception e) {
-            client.getCore().getLogger().warn("Unable to check update from remote.", e);
+            client.getCore().getLogger().warn("无法从远程检查更新", e);
         }
     }
 
@@ -73,10 +73,10 @@ public final class UpdateChecker extends Thread {
             String errorMessage = messageNode.asText();
             if (errorMessage.contains("API rate limit exceeded")) {
                 client.getCore().getLogger()
-                        .warn("Cannot check update! GitHub API rate limit exceeded. Please try again later.");
+                        .warn("无法检查更新！GitHub API 请求频率限制已超出，请稍后重试");
             } else {
                 client.getCore().getLogger()
-                        .warn("Cannot check update! GitHub API returned error: {}", errorMessage);
+                        .warn("无法检查更新！GitHub API 返回错误: {}", errorMessage);
             }
             return;
         }
@@ -84,7 +84,7 @@ public final class UpdateChecker extends Thread {
         JsonNode tagNameNode = resObj.get("tag_name");
         if (tagNameNode == null || tagNameNode.isNull()) {
             client.getCore().getLogger()
-                    .warn("Cannot check update! GitHub API response missing 'tag_name' field. API format may have changed.");
+                    .warn("无法检查更新！GitHub API 响应缺少 'tag_name' 字段，API 格式可能已更改");
             return;
         }
 
@@ -99,31 +99,31 @@ public final class UpdateChecker extends Thread {
             versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
         } catch (NumberFormatException e) {
             client.getCore().getLogger()
-                    .warn("Cannot check update! We can't recognize version! Custom build or snapshot API?");
+                    .warn("无法检查更新！版本号无法识别！自定义构建版本或快照 API？");
             return;
         }
         switch (versionDifference) {
             case -1: {
-                client.getCore().getLogger().info("Update available! Information is following:");
-                client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion,
+                client.getCore().getLogger().info("发现可用更新！相关信息如下：");
+                client.getCore().getLogger().info("最新版本: {}，当前版本: {}", receivedVersion,
                         client.getCore().getImplementationVersion());
 
                 JsonNode nameNode = resObj.get("name");
-                String releaseName = nameNode != null && !nameNode.isNull() ? nameNode.asText() : "Unknown";
-                client.getCore().getLogger().info("Release Title: {}", releaseName);
+                String releaseName = nameNode != null && !nameNode.isNull() ? nameNode.asText() : "未知";
+                client.getCore().getLogger().info("发布标题: {}", releaseName);
 
                 JsonNode publishedAtNode = resObj.get("published_at");
-                String publishedAt = publishedAtNode != null && !publishedAtNode.isNull() ? publishedAtNode.asText() : "Unknown";
-                client.getCore().getLogger().info("Release Time: {}", publishedAt);
+                String publishedAt = publishedAtNode != null && !publishedAtNode.isNull() ? publishedAtNode.asText() : "未知";
+                client.getCore().getLogger().info("发布时间: {}", publishedAt);
 
-                client.getCore().getLogger().info("Release message is following:");
+                client.getCore().getLogger().info("发布说明如下：");
                 JsonNode bodyNode = resObj.get("body");
-                String releaseBody = bodyNode != null && !bodyNode.isNull() ? bodyNode.asText() : "No release notes available";
+                String releaseBody = bodyNode != null && !bodyNode.isNull() ? bodyNode.asText() : "无发布说明";
                 for (String body : releaseBody.split("\r\n")) {
                     client.getCore().getLogger().info(body);
                 }
                 client.getCore().getLogger().info(
-                        "You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}",
+                        "您可以在以下地址获取新版本的 KookBC: https://github.com/SNWCreations/KookBC/releases/{}",
                         receivedVersion);
                 break;
             }
@@ -132,12 +132,12 @@ public final class UpdateChecker extends Thread {
                 break;
             }
             case 1: {
-                client.getCore().getLogger().info("Your KookBC is newer than the latest version from remote!");
-                client.getCore().getLogger().info("Are you using development version?");
+                client.getCore().getLogger().info("您的 KookBC 版本比远程最新版本还要新！");
+                client.getCore().getLogger().info("您是否正在使用开发版本？");
                 break;
             }
             default: {
-                client.getCore().getLogger().info("Unable to compare the version! Internal method returns {}",
+                client.getCore().getLogger().info("无法比较版本！内部方法返回值: {}",
                         versionDifference);
                 break;
             }

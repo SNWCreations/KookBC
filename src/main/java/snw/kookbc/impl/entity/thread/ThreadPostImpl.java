@@ -156,7 +156,7 @@ public class ThreadPostImpl implements ThreadPost {
                 }
             } catch (Exception e) {
                 // 解析失败时记录日志并设置为 null
-                client.getCore().getLogger().warn("Failed to parse thread post content: {}", e.getMessage());
+                client.getCore().getLogger().warn("解析帖子内容失败: {}", e.getMessage());
                 this.content = null;
             }
         } else {

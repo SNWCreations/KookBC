@@ -56,7 +56,7 @@ public final class BotMarketPingThread extends Thread {
             run0();
         } catch (InterruptedException ignored) {
         } catch (Exception e) {
-            client.getCore().getLogger().error("Thread terminated because an exception occurred.", e);
+            client.getCore().getLogger().error("线程因发生异常而终止", e);
         }
     }
 
@@ -92,7 +92,7 @@ public final class BotMarketPingThread extends Thread {
                     throw new RuntimeException("No response body when we attempting to PING BotMarket.");
                 }
             } catch (Exception e) {
-                client.getCore().getLogger().error("Unable to PING BotMarket.", e);
+                client.getCore().getLogger().error("无法 PING BotMarket", e);
                 continue;
             }
             client.getCore().getLogger().debug("PING BotMarket success");

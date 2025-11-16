@@ -110,7 +110,7 @@ public enum ResultTypes implements ResultType {
     public void message(Invocation<CommandSender> invocation, Message message, Object result) {
         CommandSender sender = invocation.sender();
         if (sender instanceof ConsoleCommandSender) {
-            ((ConsoleCommandSender) sender).getLogger().info("The execution result of command {}: {}", invocation.label(), result);
+            ((ConsoleCommandSender) sender).getLogger().info("命令 {} 的执行结果: {}", invocation.label(), result);
         } else if (sender instanceof User) {
             Class<?> clazz = null;
             if (result instanceof BaseComponent) {

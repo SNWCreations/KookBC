@@ -62,10 +62,10 @@ public class ListenerImpl implements FrameHandler {
     @Override
     public void handle(Frame frame) {
         if (!(frame.getType() == MessageType.PONG)) { // I hate PONG logging messages
-            client.getCore().getLogger().debug("Got payload frame: {}", frame);
+            client.getCore().getLogger().debug("收到载荷帧: {}", frame);
         }
         if (frame.getType() == null) {
-            client.getCore().getLogger().warn("Unknown event type!");
+            client.getCore().getLogger().warn("未知的事件类型！");
             return;
         }
         switch (frame.getType()) {
@@ -76,21 +76,21 @@ public class ListenerImpl implements FrameHandler {
                 hello(frame);
                 break;
             case PING:
-                client.getCore().getLogger().debug("Impossible Message from remote: type is PING.");
+                client.getCore().getLogger().debug("收到不可能的远程消息: 类型为 PING");
                 break;
             case PONG:
-                client.getCore().getLogger().trace("Got PONG");
+                client.getCore().getLogger().trace("收到 PONG");
                 connector.pong();
                 break;
             case RESUME:
-                client.getCore().getLogger().debug("Impossible Message from remote: type is RESUME.");
+                client.getCore().getLogger().debug("收到不可能的远程消息: 类型为 RESUME");
                 break;
             case RECONNECT:
-                client.getCore().getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
+                client.getCore().getLogger().warn("收到远程重连请求，正在尝试重连");
                 connector.requestReconnect();
                 break;
             case RESUME_ACK:
-                client.getCore().getLogger().info("Resume finished");
+                client.getCore().getLogger().info("恢复完成");
                 JsonNode sessionIdNode = frame.getData().get("session_id");
                 if (sessionIdNode != null) {
                     client.getSession().setId(sessionIdNode.asText());
@@ -101,14 +101,14 @@ public class ListenerImpl implements FrameHandler {
 
     protected void event(Frame frame) {
         synchronized (lck) {
-            client.getCore().getLogger().debug("Got EVENT");
+            client.getCore().getLogger().debug("收到 EVENT");
             Session session = client.getSession();
             AtomicInteger sn = session.getSN();
             int expected = Session.UPDATE_FUNC.applyAsInt(sn.get());
             int actual = frame.getSN();
 
             if (actual > expected) {
-                client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
+                client.getCore().getLogger().warn("意外的错误 SN，期望 {}，实际收到 {}", expected, actual);
                 session.getBuffer().add(frame);
             } else if (expected == actual) {
                 event0(frame);
@@ -123,10 +123,10 @@ public class ListenerImpl implements FrameHandler {
                     session.increaseSN();
                     saveSN();
                     continueId++;
-                    client.getCore().getLogger().debug("Processed buffered message with SN {}", bufFrame.getSN());
+                    client.getCore().getLogger().debug("已处理缓冲消息，SN: {}", bufFrame.getSN());
                 }
             } else if (client.getConfig().getBoolean("allow-warn-old-message")) {
-                client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
+                client.getCore().getLogger().warn("收到来自远程的意外旧消息，已丢弃");
             }
         }
     }
@@ -148,8 +148,8 @@ public class ListenerImpl implements FrameHandler {
             JsonNode jacksonData = frame.getData();
             event = client.getEventFactory().createEvent(jacksonData);
         } catch (Exception e) {
-            client.getCore().getLogger().error("Unable to create event from payload.");
-            client.getCore().getLogger().error("Event payload: {}", frame);
+            client.getCore().getLogger().error("无法从载荷创建事件");
+            client.getCore().getLogger().error("事件载荷: {}", frame);
             e.printStackTrace();
             return;
         }
@@ -173,13 +173,13 @@ public class ListenerImpl implements FrameHandler {
                 writer.write(String.valueOf(client.getSession().getSN().get()));
                 writer.close();
             } catch (IOException e) {
-                client.getCore().getLogger().warn("Unable to write SN to local.", e);
+                client.getCore().getLogger().warn("无法将 SN 写入本地", e);
             }
         }
     }
 
     protected void hello(Frame frame) {
-        client.getCore().getLogger().debug("Got HELLO");
+        client.getCore().getLogger().debug("收到 HELLO");
         connector.setConnected(true);
         JsonNode object = frame.getData();
         JsonNode codeNode = object.get("code");
@@ -268,10 +268,10 @@ public class ListenerImpl implements FrameHandler {
                         sender.sendPrivateMessage(content);
                     }
                 } catch (BadResponseException ex) { // too long? or timed out? however, we won't retry.
-                    client.getCore().getLogger().error("Unable to send command failure message.", ex);
+                    client.getCore().getLogger().error("无法发送命令失败消息", ex);
                 }
             }
-            client.getCore().getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
+            client.getCore().getLogger().error("执行来自远程的命令时发生意外异常", e);
             return true; // Although this failed, but it is a valid command
         }
     }

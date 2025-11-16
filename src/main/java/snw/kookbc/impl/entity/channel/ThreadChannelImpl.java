@@ -150,7 +150,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
             return new ThreadPostImpl(client, this, response);
         } catch (Exception e) {
             // 帖子不存在或访问出错
-            client.getCore().getLogger().warn("Failed to get thread post: " + threadId, e);
+            client.getCore().getLogger().warn("获取帖子失败: " + threadId, e);
             return null;
         }
     }
@@ -180,7 +180,7 @@ public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadC
 
             return categories;
         } catch (Exception e) {
-            client.getCore().getLogger().warn("Failed to get thread categories", e);
+            client.getCore().getLogger().warn("获取帖子分类失败", e);
             return java.util.Collections.emptyList();
         }
     }

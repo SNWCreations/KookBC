@@ -54,7 +54,7 @@ public class JLHttpWebhookNetworkSystem implements WebhookNetworkSystem {
     @Override
     public void start() {
         try {
-            client.getCore().getLogger().debug("Initializing SN from local file.");
+            client.getCore().getLogger().debug("正在从本地文件初始化 SN");
             int initSN = 0;
             File snfile = new File(client.getPluginsFolder(), "sn");
             if (snfile.exists()) {
@@ -68,12 +68,12 @@ public class JLHttpWebhookNetworkSystem implements WebhookNetworkSystem {
             throw new RuntimeException(e);
         }
         server.start();
-        client.getCore().getLogger().info("Webhook HTTP server listening on port " + port);
+        client.getCore().getLogger().info("Webhook HTTP 服务器正在监听端口 " + port);
     }
 
     @Override
     public void stop() {
-        client.getCore().getLogger().info("Stopping Webhook HTTP server");
+        client.getCore().getLogger().info("正在停止 Webhook HTTP 服务器");
         server.stop();
     }
 }

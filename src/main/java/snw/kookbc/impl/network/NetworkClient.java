@@ -88,7 +88,7 @@ public class NetworkClient {
                 .protocols(Arrays.asList(Protocol.HTTP_2, Protocol.HTTP_1_1)); // HTTP/2 优先，HTTP/1.1 兼容
 
         if (kbcClient.getConfig().getBoolean("ignore-ssl")) {
-            kbcClient.getCore().getLogger().warn("Ignoring SSL verification for networking!!!");
+            kbcClient.getCore().getLogger().warn("网络请求忽略 SSL 验证！！！");
             builder.sslSocketFactory(IgnoreSSLHelper.getSSLSocketFactory(), IgnoreSSLHelper.TRUST_MANAGER)
                     .hostnameVerifier(IgnoreSSLHelper.getHostnameVerifier());
         }
@@ -147,7 +147,7 @@ public class NetworkClient {
      */
     public void evictIdleConnections() {
         connectionPool.evictAll();
-        kbcClient.getCore().getLogger().debug("Evicted all idle connections from connection pool");
+        kbcClient.getCore().getLogger().debug("已从连接池中清理所有空闲连接");
     }
 
     // Jackson API - 高性能JSON处理
@@ -203,7 +203,7 @@ public class NetworkClient {
 
             final String body = Objects.requireNonNull(response.body()).string();
             if (!response.isSuccessful()) {
-                kbcClient.getCore().getLogger().debug("Request failed. Full response object: {}", response);
+                kbcClient.getCore().getLogger().debug("请求失败，完整响应对象: {}", response);
                 throw new BadResponseException(response.code(), body);
             }
             return body;
@@ -227,7 +227,7 @@ public class NetworkClient {
     }
 
     protected void logRequest(String method, String fullUrl, @Nullable String postBodyJson) {
-        kbcClient.getCore().getLogger().debug("Sending HTTP API Request: Method {}, URL: {}, Body (POST only): {}",
+        kbcClient.getCore().getLogger().debug("正在发送 HTTP API 请求: 方法 {}, URL: {}, 请求体 (仅 POST): {}",
                 method, fullUrl, postBodyJson);
     }
 

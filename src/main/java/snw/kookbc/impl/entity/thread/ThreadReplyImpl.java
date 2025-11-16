@@ -131,7 +131,7 @@ public class ThreadReplyImpl implements ThreadReply {
                 }
             } catch (Exception e) {
                 // 解析失败时记录日志并设置为 null
-                client.getCore().getLogger().warn("Failed to parse thread reply content: {}", e.getMessage());
+                client.getCore().getLogger().warn("解析帖子回复内容失败: {}", e.getMessage());
                 this.content = null;
             }
         } else {

@@ -45,7 +45,7 @@ public class AfterPluginInitTask implements Task {
         try {
             runnable.run();
         } catch (Throwable e) {
-            plugin.getLogger().warn("Exception occurred while running the after-plugin-init task", e);
+            plugin.getLogger().warn("运行插件初始化后任务时发生异常", e);
         }
         executed = true;
     }

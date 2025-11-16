@@ -53,7 +53,7 @@ public class IgnoreSNListenerImpl extends ListenerImpl {
     protected void event(Frame frame) {
         synchronized (lck) {
             if (processedSN.contains(frame.getSN())) {
-                client.getCore().getLogger().warn("Duplicated message from remote. Ignored.");
+                client.getCore().getLogger().warn("收到来自远程的重复消息，已忽略");
                 return;
             }
             client.getSession().increaseSN();

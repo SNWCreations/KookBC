@@ -142,9 +142,9 @@ public class Connector {
 
     public void shutdownHttp() {
         try {
-            kbcClient.getCore().getLogger().debug("Called HTTP Bot offline API. Response: {}", kbcClient.getNetworkClient().postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
+            kbcClient.getCore().getLogger().debug("已调用 HTTP Bot 离线 API，响应: {}", kbcClient.getNetworkClient().postContent(HttpAPIRoute.USER_BOT_OFFLINE.toFullURL(), "", ""));
         } catch (Exception e) {
-            kbcClient.getCore().getLogger().error("Unexpected Exception when we attempting to request HTTP Bot offline API.", e);
+            kbcClient.getCore().getLogger().error("尝试请求 HTTP Bot 离线 API 时发生意外异常", e);
         }
     }
 
@@ -221,7 +221,7 @@ public class Connector {
             setPingOk(true);
             return;
         }
-        kbcClient.getCore().getLogger().trace("Attempting to PING.");
+        kbcClient.getCore().getLogger().trace("正在尝试 PING");
         setPingOk(false);
         boolean queued = ws.send(String.format("{\"s\":2,\"sn\":%s}", kbcClient.getSession().getSN().get()));
         Validate.isTrue(queued, "Unable to queue ping request");

@@ -80,7 +80,7 @@ public class EventFactory {
                 try {
                     return jacksonMapper.readValue(object.toString(), GuildUserNickNameUpdateEvent.class);
                 } catch (Exception e) {
-                    client.getCore().getLogger().warn("Failed to parse GuildUserNickNameUpdateEvent with Jackson", e);
+                    client.getCore().getLogger().warn("使用 Jackson 解析 GuildUserNickNameUpdateEvent 失败", e);
                     return null;
                 }
             }
@@ -93,15 +93,15 @@ public class EventFactory {
                 return result;
             }
         } catch (Exception e) {
-            client.getCore().getLogger().error("Failed to deserialize event of type {}: {}",
+            client.getCore().getLogger().error("反序列化类型为 {} 的事件失败: {}",
                     eventType.getSimpleName(), e.getMessage());
-            client.getCore().getLogger().debug("Event JSON: {}", object);
+            client.getCore().getLogger().debug("事件 JSON: {}", object);
         }
 
         // 如果 Jackson 反序列化失败,记录错误
         if (!(eventType == ChannelInfoUpdateEvent.class)) {
-            client.getCore().getLogger().error("We cannot understand the frame.");
-            client.getCore().getLogger().error("Frame content: {}", object);
+            client.getCore().getLogger().error("无法理解此数据帧");
+            client.getCore().getLogger().error("数据帧内容: {}", object);
         }
         return null;
     }

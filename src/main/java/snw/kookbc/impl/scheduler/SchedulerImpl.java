@@ -135,7 +135,7 @@ public class SchedulerImpl implements Scheduler {
             try {
                 runnable.run();
             } catch (Throwable e) {
-                client.getCore().getLogger().warn("Unexpected exception thrown from task #{}", id, e);
+                client.getCore().getLogger().warn("任务 #{} 抛出意外异常", id, e);
             } finally {
                 if (!isRepeat) { // if this task should be repeated until it cancel itself...
                     scheduledTasks.remove(id);
@@ -163,7 +163,7 @@ public class SchedulerImpl implements Scheduler {
                 //noinspection ResultOfMethodCallIgnored
                 pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                client.getCore().getLogger().error("Unexpected interrupt happened while we waiting the scheduler got fully stopped.", e);
+                client.getCore().getLogger().error("等待调度器完全停止时发生意外中断", e);
             }
         }
     }

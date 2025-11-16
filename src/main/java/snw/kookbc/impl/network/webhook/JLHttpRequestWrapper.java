@@ -44,7 +44,7 @@ public class JLHttpRequestWrapper implements HTTPServer.ContextHandler {
         try {
             handler.handle(wrapped);
         } catch (Exception e) {
-            client.getCore().getLogger().error("Unable to process request", e);
+            client.getCore().getLogger().error("无法处理请求", e);
             throw new IOException(e);
         }
         if (!wrapped.isReplyPresent()) {

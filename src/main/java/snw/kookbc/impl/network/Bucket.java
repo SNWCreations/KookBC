@@ -64,9 +64,9 @@ public class Bucket {
         if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
             final int resetTime = this.resetTime.get();
             if (Objects.equals(client.getConfig().getString("over-limit-warning-log-level"), "INFO")) {
-                client.getCore().getLogger().info("Route '{}' over limit! Current reset time: {}", name, resetTime);
+                client.getCore().getLogger().info("路由 '{}' 超出限制！当前重置时间: {}", name, resetTime);
             } else {
-                client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+                client.getCore().getLogger().debug("路由 '{}' 超出限制！当前重置时间: {}", name, resetTime);
             }
             RateLimitPolicy.getDefault().perform(client, name, resetTime);
             return;

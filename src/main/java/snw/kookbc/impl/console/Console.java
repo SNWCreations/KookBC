@@ -46,16 +46,16 @@ public class Console extends SimpleTerminalConsole {
         try {
             foundCommand = client.getCore().getCommandManager().executeCommand(client.getCore().getConsoleCommandSender(), s);
         } catch (Exception e) {
-            client.getCore().getLogger().error("Unexpected situation happened during the execution of the command.", e);
+            client.getCore().getLogger().error("执行命令时发生意外情况", e);
         }
         if (!foundCommand) {
-            client.getCore().getLogger().info("Unknown command. Type \"/help\" for help.");
+            client.getCore().getLogger().info("未知命令，输入 \"/help\" 获取帮助");
         }
     }
 
     @Override
     protected void shutdown() {
-        client.getCore().getLogger().debug("Got shutdown request from console! Stopping!");
+        client.getCore().getLogger().debug("收到来自控制台的关闭请求！正在停止！");
         client.shutdown();
     }
 
