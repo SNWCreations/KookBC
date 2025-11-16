@@ -70,7 +70,7 @@ public class ListenerImpl implements FrameHandler {
         }
         switch (frame.getType()) {
             case EVENT:
-                event(frame);  // 直接在当前线程处理，保证顺序
+                client.getEventExecutor().execute(() -> event(frame));
                 break;
             case HELLO:
                 hello(frame);
