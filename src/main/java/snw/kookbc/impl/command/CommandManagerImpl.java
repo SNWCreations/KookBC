@@ -208,10 +208,10 @@ public class CommandManagerImpl implements CommandManager {
 
         if (sender instanceof User) {
             if (msg == null) {
-                client.getCore().getLogger().warn("用户发出命令但消息对象为空，是插件以用户身份调用命令吗？");
+                client.getCore().getLogger().warn("用户执行命令但消息对象为空，是插件以用户身份调用命令吗？");
             }
             client.getCore().getLogger().info(
-                    "{}(用户 ID: {}) 发出命令: {}",
+                    "{}(用户 ID: {}) 执行命令: {}",
                     ((User) sender).getName(),
                     ((User) sender).getId(),
                     cmdLine
@@ -439,14 +439,14 @@ public class CommandManagerImpl implements CommandManager {
         try {
             runnable.run();
         } catch (Throwable e) {
-            client.getCore().getLogger().debug("命令行 '{}' 执行失败，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+            client.getCore().getLogger().debug("命令 '{}' 执行失败，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
             // Why Throwable? We need to keep the client safe.
             // it is easy to understand. NoClassDefError? NoSuchMethodError?
             // It is OutOfMemoryError? nothing matters lol.
             throw new CommandException("Something unexpected happened.", e);
         }
         // Do not put this in the try statement because we don't know if the logging system will throw an exception.
-        client.getCore().getLogger().debug("命令行 \"{}\" 执行完成，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
+        client.getCore().getLogger().debug("命令 \"{}\" 执行完成，用时: {}ms", cmdLine, System.currentTimeMillis() - startTimeStamp);
     }
 
     private void reply(String content, String contentForConsole, CommandSender sender, @Nullable Message message) {
