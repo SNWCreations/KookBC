@@ -35,7 +35,7 @@ import static snw.kookbc.util.JacksonUtil.get;
  * <p>提供事件反序列化的通用逻辑和工具方法。
  *
  * @param <T> 事件类型
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public abstract class BaseJacksonEventDeserializer<T extends Event> extends JsonDeserializer<T> {
 
