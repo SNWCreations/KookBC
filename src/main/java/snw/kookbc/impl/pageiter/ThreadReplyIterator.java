@@ -35,7 +35,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
  *
  * <p>用于获取帖子的回复列表
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadReplyIterator extends PageIteratorImpl<java.util.Collection<ThreadReply>> {
 

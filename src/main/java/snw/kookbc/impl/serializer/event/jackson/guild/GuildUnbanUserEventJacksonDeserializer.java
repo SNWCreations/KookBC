@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * GuildUnbanUserEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class GuildUnbanUserEventJacksonDeserializer extends BaseJacksonEventDeserializer<GuildUnbanUserEvent> {
 

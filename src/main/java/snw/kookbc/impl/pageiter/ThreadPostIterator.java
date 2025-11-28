@@ -37,7 +37,7 @@ import snw.kookbc.impl.network.HttpAPIRoute;
  *
  * <p>用于获取帖子频道中的帖子列表
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadPostIterator extends PageIteratorImpl<Collection<ThreadPost>> {
 

@@ -50,7 +50,7 @@ import snw.kookbc.util.MapBuilder;
  * <p>代表帖子频道中的一个帖子,支持富文本内容、回复和统计信息
  *
  * @see ThreadPost
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadPostImpl implements ThreadPost {
 

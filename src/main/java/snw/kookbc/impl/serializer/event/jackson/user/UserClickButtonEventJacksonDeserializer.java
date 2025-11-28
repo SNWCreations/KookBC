@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * UserClickButtonEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class UserClickButtonEventJacksonDeserializer extends BaseJacksonEventDeserializer<UserClickButtonEvent> {
 
