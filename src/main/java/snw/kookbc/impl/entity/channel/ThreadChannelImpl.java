@@ -57,8 +57,6 @@ import snw.kookbc.util.MapBuilder;
  *   <li>支持 @提及功能</li>
  * </ul>
  *
- * <p>注意: 帖子频道API有每日配额限制(每个开发者账号10000条消息/天,
- * 每日12:00北京时间重置)
  *
  * @see <a href="https://developer.kookapp.cn/doc/http/thread">Kook 帖子频道文档</a>
  * @since KookBC 0.32.2
