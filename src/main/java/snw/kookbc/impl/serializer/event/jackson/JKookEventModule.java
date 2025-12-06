@@ -55,7 +55,7 @@ import snw.kookbc.impl.serializer.event.jackson.user.*;
  *   <li>完全替代 GSON 反序列化器</li>
  * </ul>
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  * @see com.fasterxml.jackson.databind.module.SimpleModule
  */
 public class JKookEventModule extends SimpleModule {

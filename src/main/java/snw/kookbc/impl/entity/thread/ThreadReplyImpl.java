@@ -46,7 +46,7 @@ import snw.kookbc.util.MapBuilder;
  * <p>代表帖子频道中对主贴的回复,支持富文本内容和嵌套回复(楼中楼)
  *
  * @see ThreadReply
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadReplyImpl implements ThreadReply {
 

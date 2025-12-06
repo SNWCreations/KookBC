@@ -28,7 +28,7 @@ import snw.kookbc.util.JacksonUtil;
 /**
  * UserInfoUpdateEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class UserInfoUpdateEventJacksonDeserializer extends BaseJacksonEventDeserializer<UserInfoUpdateEvent> {
 

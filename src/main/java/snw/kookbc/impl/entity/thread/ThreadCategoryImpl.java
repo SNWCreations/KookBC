@@ -37,7 +37,7 @@ import snw.kookbc.impl.entity.builder.EntityBuildUtil;
  * <p>代表帖子频道中的分类,用于组织和管理帖子
  *
  * @see ThreadCategory
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadCategoryImpl implements ThreadCategory {
 

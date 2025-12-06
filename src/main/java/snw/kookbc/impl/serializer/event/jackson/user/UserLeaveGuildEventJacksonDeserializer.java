@@ -30,7 +30,7 @@ import static snw.kookbc.util.JacksonUtil.get;
 /**
  * UserLeaveGuildEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class UserLeaveGuildEventJacksonDeserializer extends BaseJacksonEventDeserializer<UserLeaveGuildEvent> {
 

@@ -28,7 +28,7 @@ import snw.kookbc.impl.serializer.event.jackson.BaseJacksonEventDeserializer;
 /**
  * ChannelMessageEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ChannelMessageEventJacksonDeserializer extends BaseJacksonEventDeserializer<ChannelMessageEvent> {
 

@@ -59,7 +59,7 @@ import snw.kookbc.util.MapBuilder;
  *
  *
  * @see <a href="https://developer.kookapp.cn/doc/http/thread">Kook 帖子频道文档</a>
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ThreadChannelImpl extends NonCategoryChannelImpl implements ThreadChannel {
 

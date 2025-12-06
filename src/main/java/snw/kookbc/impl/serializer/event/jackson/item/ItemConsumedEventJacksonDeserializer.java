@@ -29,7 +29,7 @@ import snw.kookbc.util.JacksonUtil;
 /**
  * ItemConsumedEvent 的 Jackson 反序列化器
  *
- * @since KookBC 0.32.2
+ * @since KookBC 0.33.0
  */
 public class ItemConsumedEventJacksonDeserializer extends BaseJacksonEventDeserializer<ItemConsumedEvent> {
 

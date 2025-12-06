@@ -53,7 +53,7 @@ public class JacksonCardSerializationTest {
                     .addModule(new SectionModule(new MarkdownElement("(/)**help**: 此命令没有简介。")))
                     .addModule(DividerModule.INSTANCE)
                     .addModule(new ContextModule(Collections.singletonList(
-                        new MarkdownElement("由 [KookBC](https://github.com/SNWCreations/KookBC) v0.32.2 驱动 - JKook API 0.54.1")
+                        new MarkdownElement("由 [KookBC](https://github.com/SNWCreations/KookBC) v0.33.0 驱动 - JKook API 0.54.1")
                     )))
                     .build();
 
