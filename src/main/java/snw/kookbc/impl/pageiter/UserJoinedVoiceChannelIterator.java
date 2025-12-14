@@ -18,13 +18,10 @@
 
 package snw.kookbc.impl.pageiter;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
-
 import java.util.Collection;
 import java.util.HashSet;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.Guild;
 import snw.jkook.entity.User;
@@ -50,10 +47,11 @@ public class UserJoinedVoiceChannelIterator extends PageIteratorImpl<Collection<
     }
 
     @Override
-    protected void processElements(JsonArray array) {
+    protected void processElements(JsonNode node) {
         object = new HashSet<>();
-        for (JsonElement element : array) {
-            object.add(new VoiceChannelImpl(client, getAsString(element.getAsJsonObject(), "id")));
+        for (JsonNode element : node) {
+            String id = element.get("id").asText();
+            object.add(new VoiceChannelImpl(client, id));
         }
     }
 }

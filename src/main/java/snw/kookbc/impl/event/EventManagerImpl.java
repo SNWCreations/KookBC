@@ -28,11 +28,12 @@ import snw.jkook.event.EventManager;
 import snw.jkook.event.Listener;
 import snw.jkook.plugin.Plugin;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.VirtualThreadUtil;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 import static snw.kookbc.util.Util.ensurePluginEnabled;
 
@@ -42,19 +43,89 @@ public class EventManagerImpl implements EventManager {
     private final MethodSubscriptionAdapter<Listener> msa;
     private final Map<Plugin, List<Listener>> listeners = new ConcurrentHashMap<>();
 
+    // 优化的并行事件处理
+    private final ExecutorService eventExecutor;
+    private final boolean parallelEventProcessing;
+
     public EventManagerImpl(KBCClient client) {
         this.client = client;
         this.bus = new SimpleEventBus<>(Event.class);
         this.msa = new SimpleMethodSubscriptionAdapter<>(bus, EventExecutorFactoryImpl.INSTANCE, MethodScannerImpl.INSTANCE);
+
+        // 从配置读取是否启用并行事件处理
+        this.parallelEventProcessing = client.getConfig().getBoolean("enable-parallel-event-processing", true);
+
+        // 创建专用的虚拟线程执行器用于并行事件处理
+        this.eventExecutor = parallelEventProcessing ?
+            VirtualThreadUtil.newVirtualThreadExecutor() :
+            null;
+
+
+        client.getCore().getLogger().info("事件管理器初始化完成 - 并行处理: {}",
+            parallelEventProcessing ? "启用" : "禁用");
     }
 
     @Override
     public void callEvent(Event event) {
+        if (event == null) {
+            return;
+        }
+
+
+        if (parallelEventProcessing && eventExecutor != null) {
+            // 并行模式：使用虚拟线程执行事件处理
+            callEventParallel(event);
+        } else {
+            // 传统同步模式：保持向后兼容
+            callEventSync(event);
+        }
+    }
+
+    /**
+     * 并行事件处理方法 - 符合 Kook SN 顺序要求
+     *
+     * 关键设计：
+     * 1. 全局事件顺序已由 ListenerImpl 保证（通过 SN 检查）
+     * 2. 单个事件内部的监听器可以并行处理
+     * 3. 使用虚拟线程提高吞吐量，减少上下文切换开销
+     */
+    private void callEventParallel(Event event) {
+        CompletableFuture<PostResult> future = CompletableFuture.supplyAsync(() -> {
+            return bus.post(event);
+        }, eventExecutor);
+
+        try {
+            // 等待事件处理完成，不设置超时以避免中断重要事件
+            PostResult result = future.get();
+            handlePostResult(result, event);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            client.getCore().getLogger().warn("事件处理被中断: {}", event.getClass().getSimpleName(), e);
+            // 回退到同步处理
+            callEventSync(event);
+        } catch (ExecutionException e) {
+            client.getCore().getLogger().error("并行事件处理异常: {}", event.getClass().getSimpleName(), e.getCause());
+            // 回退到同步处理
+            callEventSync(event);
+        }
+    }
+
+    /**
+     * 传统同步事件处理方法
+     */
+    private void callEventSync(Event event) {
         final PostResult result = bus.post(event);
+        handlePostResult(result, event);
+    }
+
+    /**
+     * 处理事件处理结果
+     */
+    private void handlePostResult(PostResult result, Event event) {
         if (!result.wasSuccessful()) {
-            client.getCore().getLogger().error("Unexpected exception while posting event.");
+            client.getCore().getLogger().error("事件处理异常: {}", event.getClass().getSimpleName());
             for (final Throwable t : result.exceptions().values()) {
-                t.printStackTrace();
+                client.getCore().getLogger().error("监听器异常", t);
             }
         }
     }
@@ -88,6 +159,34 @@ public class EventManagerImpl implements EventManager {
     public boolean isSubscribed(Class<? extends Event> type) {
         return bus.hasSubscribers(type);
     }
+
+
+    /**
+     * 关闭事件管理器，清理资源
+     */
+    public void shutdown() {
+        client.getCore().getLogger().info("正在关闭事件管理器...");
+
+
+        // 关闭事件执行器
+        if (eventExecutor != null && !eventExecutor.isShutdown()) {
+            client.getCore().getLogger().info("正在关闭事件处理器...");
+            eventExecutor.shutdown();
+            try {
+                if (!eventExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    client.getCore().getLogger().warn("事件处理器未在10秒内正常关闭，强制关闭");
+                    eventExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                eventExecutor.shutdownNow();
+            }
+        }
+
+
+        client.getCore().getLogger().info("事件管理器已关闭");
+    }
+
 
     private List<Listener> getListeners(Plugin plugin) {
         return listeners.computeIfAbsent(plugin, p -> new LinkedList<>());

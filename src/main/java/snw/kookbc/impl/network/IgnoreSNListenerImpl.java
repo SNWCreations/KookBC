@@ -25,12 +25,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static snw.kookbc.util.VirtualThreadUtil.startVirtualThread;
+
 public class IgnoreSNListenerImpl extends ListenerImpl {
     private final List<Integer> processedSN = new LinkedList<>();
 
     public IgnoreSNListenerImpl(KBCClient client, Connector connector) {
         super(client, connector);
-        new Thread(() -> {
+        startVirtualThread(() -> {
             while (client.isRunning()) {
                 try {
                     //noinspection BusyWait
@@ -51,7 +53,7 @@ public class IgnoreSNListenerImpl extends ListenerImpl {
     protected void event(Frame frame) {
         synchronized (lck) {
             if (processedSN.contains(frame.getSN())) {
-                client.getCore().getLogger().warn("Duplicated message from remote. Ignored.");
+                client.getCore().getLogger().warn("收到来自远程的重复消息，已忽略");
                 return;
             }
             client.getSession().increaseSN();

@@ -20,9 +20,7 @@ package snw.kookbc.impl.entity;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
@@ -55,9 +53,10 @@ import snw.kookbc.util.MapBuilder;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
 
 public class UserImpl implements User, Updatable, LazyLoadable {
     private final KBCClient client;
@@ -106,7 +105,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
         return client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id, guild.getId()))
                 .get("nickname")
-                .getAsString();
+                .asText();
     }
 
     @Override
@@ -149,7 +148,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     @Override
     public boolean isOnline() {
         return client.getNetworkClient().get(String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id))
-                .get("online").getAsBoolean();
+                .get("online").asBoolean();
     }
 
     @Override
@@ -160,15 +159,15 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public Collection<Integer> getRoles(Guild guild) {
-        JsonArray array = client.getNetworkClient()
+        JsonNode array = client.getNetworkClient()
                 .get(String.format("%s?user_id=%s&guild_id=%s",
                         HttpAPIRoute.USER_WHO.toFullURL(),
                         id,
                         guild.getId()))
-                .getAsJsonArray("roles");
+                .get("roles");
         HashSet<Integer> result = new HashSet<>();
-        for (JsonElement element : array) {
-            result.add(element.getAsInt());
+        for (JsonNode element : array) {
+            result.add(element.asInt());
         }
         return Collections.unmodifiableSet(result);
     }
@@ -201,7 +200,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 .putIfNotNull("quote", quote, Message::getId)
                 .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id")
-                .getAsString();
+                .asText();
     }
 
     @Override
@@ -213,23 +212,22 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     public int getIntimacy() {
         return client.getNetworkClient()
                 .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId())).get("score")
-                .getAsInt();
+                .asInt();
     }
 
     @Override
     public IntimacyInfo getIntimacyInfo() {
-        JsonObject object = client.getNetworkClient()
+        JsonNode object = client.getNetworkClient()
                 .get(String.format("%s?user_id=%s", HttpAPIRoute.INTIMACY_INFO.toFullURL(), getId()));
-        String socialImage = get(object, "img_url").getAsString();
-        String socialInfo = get(object, "social_info").getAsString();
-        int lastRead = get(object, "last_read").getAsInt();
-        int score = get(object, "score").getAsInt();
-        JsonArray socialImageListRaw = get(object, "img_list").getAsJsonArray();
+        String socialImage = get(object, "img_url").asText();
+        String socialInfo = get(object, "social_info").asText();
+        int lastRead = get(object, "last_read").asInt();
+        int score = get(object, "score").asInt();
+        JsonNode socialImageListRaw = get(object, "img_list");
         Collection<IntimacyInfo.SocialImage> socialImages = new ArrayList<>(socialImageListRaw.size());
-        for (JsonElement element : socialImageListRaw) {
-            JsonObject obj = element.getAsJsonObject();
-            String id = obj.get("id").getAsString();
-            String url = obj.get("url").getAsString();
+        for (JsonNode element : socialImageListRaw) {
+            String id = element.get("id").asText();
+            String url = element.get("url").asText();
             socialImages.add(
                     new SocialImageImpl(id, url));
         }
@@ -347,17 +345,32 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     }
 
     @Override
-    public void update(JsonObject data) {
-        Validate.isTrue(Objects.equals(getId(), get(data, "id").getAsString()),
+    public synchronized void update(JsonNode data) {
+        Validate.isTrue(Objects.equals(getId(), data.get("id").asText()),
                 "You can't update user by using different data");
-        synchronized (this) {
-            name = get(data, "username").getAsString();
-            bot = get(data, "bot").getAsBoolean();
-            avatarUrl = get(data, "avatar").getAsString();
-            vipAvatarUrl = get(data, "vip_avatar").getAsString();
-            identify = get(data, "identify_num").getAsInt();
-            ban = get(data, "status").getAsInt() == 10;
-            vip = get(data, "is_vip").getAsBoolean();
+
+        // 安全获取字段，某些 API 返回的用户数据可能不完整
+        // 注意: 方法已经是 synchronized，无需内部再加锁
+        if (data.has("username")) {
+            name = data.get("username").asText();
+        }
+        if (data.has("bot")) {
+            bot = data.get("bot").asBoolean();
+        }
+        if (data.has("avatar")) {
+            avatarUrl = data.get("avatar").asText();
+        }
+        if (data.has("vip_avatar")) {
+            vipAvatarUrl = data.get("vip_avatar").asText();
+        }
+        if (data.has("identify_num")) {
+            identify = data.get("identify_num").asInt();
+        }
+        if (data.has("status")) {
+            ban = data.get("status").asInt() == 10;
+        }
+        if (data.has("is_vip")) {
+            vip = data.get("is_vip").asBoolean();
         }
     }
 
@@ -368,7 +381,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public void initialize() {
-        final JsonObject data = client.getNetworkClient().get(
+        final JsonNode data = client.getNetworkClient().get(
                 String.format("%s?user_id=%s", HttpAPIRoute.USER_WHO.toFullURL(), id));
         update(data);
         completed = true;
@@ -405,30 +418,36 @@ public class UserImpl implements User, Updatable, LazyLoadable {
     }
 
     public Map<Permission, Boolean> calculateChannel(Channel channel) {
-        Map<Permission, Boolean> result = new HashMap<>();
         Collection<Integer> cached = cacheRoleIds.asMap().get(id);
         if (cached == null) {
             cacheRoleIds.put(id, cached = getRoles(channel.getGuild()));
         }
-        Collection<Integer> userRoleIds = new HashSet<>(cached);
+        final Collection<Integer> userRoleIds = new HashSet<>(cached);
         HashSet<Role> guildRoles = new HashSet<>();
         List<Role> cachedGuildRoles = client.getStorage().getRoles(channel.getGuild());
         if (!cachedGuildRoles.isEmpty()) {
             guildRoles.addAll(cachedGuildRoles);
         }
-        for (Permission value : Permission.values()) {
-            boolean calculated = false;
-            try {
-                calculated = calculateDefaultPerms(value, channel, userRoleIds, guildRoles);
-            } catch (BadResponseException e) {
-                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-                break;
-            } catch (Exception e) {
-                this.client.getCore().getLogger().error("Error occurred while calculating built-in permissions", e);
-            }
-            result.put(value, calculated);
-        }
-        return result;
+        final Collection<Role> finalGuildRoles = guildRoles;
+
+        // 性能优化：使用虚拟线程并行计算所有权限
+        // Permission.values() 通常有多个权限，并行计算可大幅提升性能
+        return Arrays.stream(Permission.values())
+            .parallel()  // 启用并行流，自动使用虚拟线程池
+            .collect(Collectors.toConcurrentMap(
+                perm -> perm,
+                perm -> {
+                    try {
+                        return calculateDefaultPerms(perm, channel, userRoleIds, finalGuildRoles);
+                    } catch (BadResponseException e) {
+                        client.getCore().getLogger().error("计算内置权限时发生错误", e);
+                        return false;
+                    } catch (Exception e) {
+                        client.getCore().getLogger().error("计算内置权限时发生错误", e);
+                        return false;
+                    }
+                }
+            ));
     }
 
     public boolean calculateDefaultPerms(Permission permission, Channel channel, Collection<Integer> userRoleIds, Collection<Role> guildRoles) {

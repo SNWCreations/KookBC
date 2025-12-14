@@ -1,13 +1,9 @@
 package snw.kookbc.impl.pageiter;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.channel.VoiceChannel;
 import snw.kookbc.impl.KBCClient;
@@ -26,11 +22,10 @@ public class JoinedVoiceChannelsIterator extends PageIteratorImpl<Collection<Voi
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new ArrayList<>(array.size());
-        for (JsonElement element : array) {
-            final JsonObject asObj = element.getAsJsonObject();
-            final String id = getAsString(asObj, "id");
+    protected void processElements(JsonNode node) {
+        object = new ArrayList<>(node.size());
+        for (JsonNode element : node) {
+            final String id = element.get("id").asText();
             final VoiceChannel channel = new VoiceChannelImpl(client, id);
             object.add(channel);
         }

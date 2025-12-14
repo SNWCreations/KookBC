@@ -18,14 +18,11 @@
 
 package snw.kookbc.impl.pageiter;
 
-import static snw.kookbc.util.GsonUtil.getAsString;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.channel.Channel;
 import snw.kookbc.impl.KBCClient;
@@ -45,10 +42,11 @@ public class GuildChannelListIterator extends PageIteratorImpl<Set<Channel>> {
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            object.add(client.getStorage().getChannel(getAsString(element.getAsJsonObject(), "id")));
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            // 使用完整的频道数据,避免额外的 HTTP 请求
+            object.add(client.getStorage().getChannel(element.get("id").asText(), element));
         }
     }
 

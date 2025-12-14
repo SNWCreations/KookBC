@@ -18,7 +18,8 @@
 
 package snw.kookbc.impl.network.webhook;
 
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.impl.KBCClient;
 
 import javax.crypto.Cipher;
@@ -36,7 +37,7 @@ public final class EncryptUtils {
         if (key != null && !key.isEmpty()) { // decryption
             String decodedBase64 = new String(
                     Base64.getDecoder().decode(
-                            JsonParser.parseString(src).getAsJsonObject().get("encrypt").getAsString()
+                            JacksonUtil.parse(src).get("encrypt").asText()
                     )
             );
             String iv = decodedBase64.substring(0, 16);

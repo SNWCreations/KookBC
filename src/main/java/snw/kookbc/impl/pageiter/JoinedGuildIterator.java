@@ -18,12 +18,11 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.Guild;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
+import snw.kookbc.util.JacksonUtil;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,11 +40,11 @@ public class JoinedGuildIterator extends PageIteratorImpl<Collection<Guild>> {
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            object.add(client.getStorage().getGuild(rawObj.get("id").getAsString(), rawObj));
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            String id = element.get("id").asText();
+            object.add(client.getStorage().getGuild(id, element));
         }
     }
 

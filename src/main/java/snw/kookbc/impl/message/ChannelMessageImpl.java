@@ -1,6 +1,6 @@
 package snw.kookbc.impl.message;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -17,7 +17,7 @@ import snw.kookbc.util.MapBuilder;
 import java.util.Collections;
 import java.util.Map;
 
-import static snw.kookbc.util.GsonUtil.*;
+import static snw.kookbc.util.JacksonUtil.*;
 
 public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
@@ -135,17 +135,17 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
     @Override
     public void initialize() {
         final String id = getId();
-        final JsonObject object = client.getNetworkClient()
+        final JsonNode object = client.getNetworkClient()
                 .get(HttpAPIRoute.CHANNEL_MESSAGE_INFO.toFullURL() + "?msg_id=" + id);
         final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        final long timeStamp = getAsLong(object, "create_at");
+        final long timeStamp = get(object, "create_at").asLong();
         ChannelMessage quote = null;
         if (has(object, "quote")) {
-            final JsonObject rawQuote = getAsJsonObject(object, "quote");
-            final String quoteId = getAsString(rawQuote, "id");
+            final JsonNode rawQuote = get(object, "quote");
+            final String quoteId = rawQuote.get("id").asText();
             quote = client.getCore().getHttpAPI().getChannelMessage(quoteId);
         }
-        final String channelId = getAsString(object, "channel_id");
+        final String channelId = get(object, "channel_id").asText();
         final NonCategoryChannel channel = retrieveOwningChannel(channelId);
         this.component = component;
         this.timeStamp = timeStamp;

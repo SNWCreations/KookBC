@@ -17,10 +17,11 @@
  */
 package snw.kookbc.impl.permissions;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import snw.jkook.permissions.PermissionAttachmentInfo;
+import snw.kookbc.util.JacksonUtil;
 
 import java.util.*;
 
@@ -49,18 +50,30 @@ public class UserPermissionSaved {
         return permissions;
     }
 
-    public static final Gson GSON = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+    // Jackson ObjectMapper - 高性能 JSON 处理
+    private static final ObjectMapper MAPPER = JacksonUtil.createPrettyMapper();
 
     public static String toString(UserPermissionSaved... array) {
-        return GSON.toJson(array);
+        try {
+            return MAPPER.writeValueAsString(array);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize UserPermissionSaved array", e);
+        }
     }
 
     public static UserPermissionSaved parse(String json) {
-        return GSON.fromJson(json, UserPermissionSaved.class);
+        try {
+            return MAPPER.readValue(json, UserPermissionSaved.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse UserPermissionSaved", e);
+        }
     }
 
     public static List<UserPermissionSaved> parseList(String json) {
-        return GSON.fromJson(json, new TypeToken<List<UserPermissionSaved>>() {
-        });
+        try {
+            return MAPPER.readValue(json, new TypeReference<List<UserPermissionSaved>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse UserPermissionSaved list", e);
+        }
     }
 }

@@ -16,8 +16,8 @@ indra {
     gpl3OnlyLicense()
 
     javaVersions {
-        target(8)
-        minimumToolchain(17)
+        target(21)
+        minimumToolchain(21)
     }
 
     configurePublications {

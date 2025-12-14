@@ -18,15 +18,14 @@
 
 package snw.kookbc.impl.message;
 
-import static snw.kookbc.util.GsonUtil.get;
-import static snw.kookbc.util.GsonUtil.has;
+import static snw.kookbc.util.JacksonUtil.get;
+import static snw.kookbc.util.JacksonUtil.has;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
@@ -100,8 +99,8 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
         final String chatCode = get(client.getNetworkClient()
                 .post(HttpAPIRoute.USER_CHAT_SESSION_CREATE.toFullURL(), // KOOK won't create multiple session
                         Collections.singletonMap("target_id", getSender().getId())),
-                "code").getAsString();
-        final JsonObject object;
+                "code").asText();
+        final JsonNode object;
         try {
             object = client.getNetworkClient()
                     .get(HttpAPIRoute.USER_CHAT_MESSAGE_INFO.toFullURL() + "?chat_code=" + chatCode + "&msg_id="
@@ -115,13 +114,12 @@ public class PrivateMessageImpl extends MessageImpl implements PrivateMessage {
             throw e;
         }
         final BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        long timeStamp = get(object, "create_at").getAsLong();
+        long timeStamp = object.get("create_at").asLong();
         PrivateMessage quote = null;
-        if (has(object, "quote")) {
-            JsonElement rawQuote = get(object, "quote");
-            if (rawQuote.isJsonObject()) {
-                final JsonObject quoteObj = rawQuote.getAsJsonObject();
-                final String quoteId = get(quoteObj, "id").getAsString();
+        if (object.has("quote")) {
+            JsonNode rawQuote = object.get("quote");
+            if (rawQuote.isObject()) {
+                final String quoteId = rawQuote.get("id").asText();
                 quote = client.getCore().getHttpAPI().getPrivateMessage(getSender(), quoteId);
             }
         }

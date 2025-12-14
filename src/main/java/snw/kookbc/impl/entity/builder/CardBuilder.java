@@ -18,52 +18,90 @@
 
 package snw.kookbc.impl.entity.builder;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.message.component.card.CardComponent;
 import snw.jkook.message.component.card.MultipleCardComponent;
 import snw.jkook.util.Validate;
-import snw.kookbc.util.GsonUtil;
+import snw.kookbc.util.JacksonCardUtil;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static snw.kookbc.util.GsonUtil.get;
-
-// Just for (de)serialize the CardMessages.
+/**
+ * Jackson-based高性能卡片消息构建器
+ * 提供null-safe的卡片消息序列化/反序列化功能
+ */
 public class CardBuilder {
 
-    public static MultipleCardComponent buildCard(JsonArray array) {
-        List<CardComponent> components = new LinkedList<>();
-        for (JsonElement jsonElement : array) {
-            components.add(buildCard(jsonElement.getAsJsonObject()));
+    // ===== Jackson版本方法（推荐使用）=====
+
+    /**
+     * 从JsonNode数组构建多卡片组件
+     * @param arrayNode Jackson JsonNode数组
+     * @return MultipleCardComponent
+     */
+    public static MultipleCardComponent buildCardArray(JsonNode arrayNode) {
+        Validate.notNull(arrayNode, "JsonNode array cannot be null");
+        Validate.isTrue(arrayNode.isArray(), "JsonNode must be an array");
+
+        List<CardComponent> components = new ArrayList<>();
+        for (JsonNode jsonElement : arrayNode) {
+            if (jsonElement.isObject()) {
+                components.add(buildCardObject(jsonElement));
+            }
         }
         return new MultipleCardComponent(components);
     }
 
-    public static CardComponent buildCard(JsonObject object) {
-        Validate.isTrue(Objects.equals(get(object, "type").getAsString(), "card"), "The provided element is not a card.");
-        return GsonUtil.CARD_GSON.fromJson(object, CardComponent.class);
+    /**
+     * 从JsonNode对象构建单个卡片组件
+     * @param objectNode Jackson JsonNode对象
+     * @return CardComponent
+     */
+    public static CardComponent buildCardObject(JsonNode objectNode) {
+        Validate.notNull(objectNode, "JsonNode object cannot be null");
+        Validate.isTrue(objectNode.isObject(), "JsonNode must be an object");
+        Validate.isTrue(Objects.equals(JacksonCardUtil.getStringOrDefault(objectNode, "type", ""), "card"),
+                       "The provided element is not a card.");
+
+        return JacksonCardUtil.fromJson(objectNode, CardComponent.class);
     }
 
-    public static JsonArray serialize(CardComponent component) {
-        JsonArray result = new JsonArray();
-        result.add(serialize0(component));
-        return result;
-    }
-
-    public static JsonArray serialize(MultipleCardComponent component) {
-        JsonArray array = new JsonArray();
-        for (CardComponent card : component.getComponents()) {
-            array.add(serialize0(card));
+    /**
+     * 从JSON字符串构建卡片组件
+     * @param jsonString JSON字符串
+     * @return CardComponent或MultipleCardComponent
+     */
+    public static Object buildCard(String jsonString) {
+        JsonNode root = JacksonCardUtil.parse(jsonString);
+        if (root.isArray()) {
+            return buildCardArray(root);
+        } else if (root.isObject()) {
+            return buildCardObject(root);
+        } else {
+            throw new IllegalArgumentException("JSON must be object or array");
         }
-        return array;
     }
 
-    public static JsonObject serialize0(CardComponent component) {
-        return GsonUtil.CARD_GSON.toJsonTree(component).getAsJsonObject();
+    // ===== 序列化方法 =====
+
+    /**
+     * 序列化单个卡片组件为JsonNode
+     * @param component CardComponent
+     * @return JsonNode
+     */
+    public static JsonNode serializeToNode(CardComponent component) {
+        return JacksonCardUtil.toJsonNode(component);
+    }
+
+    /**
+     * 序列化多卡片组件为JsonNode
+     * @param component MultipleCardComponent
+     * @return JsonNode（数组类型）
+     */
+    public static JsonNode serializeToNode(MultipleCardComponent component) {
+        return JacksonCardUtil.toJsonNode(component);
     }
 
 }

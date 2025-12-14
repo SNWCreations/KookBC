@@ -18,18 +18,17 @@
 
 package snw.kookbc.impl.network;
 
-import static snw.kookbc.util.GsonUtil.get;
+import static snw.kookbc.util.JacksonUtil.get;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 
 import snw.jkook.command.CommandException;
 import snw.jkook.entity.User;
@@ -63,10 +62,10 @@ public class ListenerImpl implements FrameHandler {
     @Override
     public void handle(Frame frame) {
         if (!(frame.getType() == MessageType.PONG)) { // I hate PONG logging messages
-            client.getCore().getLogger().debug("Got payload frame: {}", frame);
+            client.getCore().getLogger().debug("收到载荷帧: {}", frame);
         }
         if (frame.getType() == null) {
-            client.getCore().getLogger().warn("Unknown event type!");
+            client.getCore().getLogger().warn("未知的事件类型！");
             return;
         }
         switch (frame.getType()) {
@@ -77,79 +76,80 @@ public class ListenerImpl implements FrameHandler {
                 hello(frame);
                 break;
             case PING:
-                client.getCore().getLogger().debug("Impossible Message from remote: type is PING.");
+                client.getCore().getLogger().debug("收到不可能的远程消息: 类型为 PING");
                 break;
             case PONG:
-                client.getCore().getLogger().trace("Got PONG");
+                client.getCore().getLogger().trace("收到 PONG");
                 connector.pong();
                 break;
             case RESUME:
-                client.getCore().getLogger().debug("Impossible Message from remote: type is RESUME.");
+                client.getCore().getLogger().debug("收到不可能的远程消息: 类型为 RESUME");
                 break;
             case RECONNECT:
-                client.getCore().getLogger().warn("Got RECONNECT request from remote. Attempting to reconnect.");
+                client.getCore().getLogger().warn("收到远程重连请求，正在尝试重连");
                 connector.requestReconnect();
                 break;
             case RESUME_ACK:
-                client.getCore().getLogger().info("Resume finished");
-                client.getSession().setId(frame.getData().get("session_id").getAsString());
+                client.getCore().getLogger().info("恢复完成");
+                JsonNode sessionIdNode = frame.getData().get("session_id");
+                if (sessionIdNode != null) {
+                    client.getSession().setId(sessionIdNode.asText());
+                }
                 break;
         }
     }
 
     protected void event(Frame frame) {
         synchronized (lck) {
-            client.getCore().getLogger().debug("Got EVENT");
+            client.getCore().getLogger().debug("收到 EVENT");
             Session session = client.getSession();
             AtomicInteger sn = session.getSN();
-            Set<Frame> buffer = session.getBuffer();
             int expected = Session.UPDATE_FUNC.applyAsInt(sn.get());
             int actual = frame.getSN();
+
             if (actual > expected) {
-                client.getCore().getLogger().warn("Unexpected wrong SN, expected {}, got {}", expected, actual);
-                client.getCore().getLogger().warn("We will process it later.");
-                buffer.add(frame);
+                client.getCore().getLogger().warn("意外的错误 SN，期望 {}，实际收到 {}", expected, actual);
+                session.getBuffer().add(frame);
             } else if (expected == actual) {
                 event0(frame);
                 session.increaseSN();
                 saveSN();
-                if (!buffer.isEmpty()) {
-                    int continueId = sn.get() + 1;
-                    do {
-                        boolean found = false;
-                        Iterator<Frame> bufferIterator = buffer.iterator();
-                        while (bufferIterator.hasNext()) {
-                            Frame bufFrame = bufferIterator.next();
-                            if (bufFrame.getSN() == continueId) {
-                                found = true;       // we found the frame matching the continueId,
-                                // so we will continue after the frame got processed
-                                event0(bufFrame);
-                                session.increaseSN(); // make sure the SN will update!
-                                saveSN();
-                                continueId++;
-                                bufferIterator.remove(); // we won't need this frame, because it has processed
-                                client.getCore().getLogger().debug("Processed message in buffer with SN {}", bufFrame.getSN());
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            break;
-                        }
-                    } while (true);
+
+                // 处理缓冲区中的连续帧
+                int continueId = sn.get() + 1;
+                Frame bufFrame;
+                while ((bufFrame = find(continueId)) != null) {
+                    event0(bufFrame);
+                    session.increaseSN();
+                    saveSN();
+                    continueId++;
+                    client.getCore().getLogger().debug("已处理缓冲消息，SN: {}", bufFrame.getSN());
                 }
-            } else if(client.getConfig().getBoolean("allow-warn-old-message")){
-                client.getCore().getLogger().warn("Unexpected old message from remote. Dropped it.");
+            } else if (client.getConfig().getBoolean("allow-warn-old-message")) {
+                client.getCore().getLogger().warn("收到来自远程的意外旧消息，已丢弃");
             }
         }
+    }
+
+    private Frame find(int sn) {
+        for (Frame frame : client.getSession().getBuffer()) {
+            if (frame.getSN() == sn) {
+                client.getSession().getBuffer().remove(frame);
+                return frame;
+            }
+        }
+        return null;
     }
 
     protected void event0(Frame frame) {
         Event event;
         try {
-            event = client.getEventFactory().createEvent(frame.getData());
+            // 直接使用 Jackson JsonNode 进行事件创建
+            JsonNode jacksonData = frame.getData();
+            event = client.getEventFactory().createEvent(jacksonData);
         } catch (Exception e) {
-            client.getCore().getLogger().error("Unable to create event from payload.");
-            client.getCore().getLogger().error("Event payload: {}", frame);
+            client.getCore().getLogger().error("无法从载荷创建事件");
+            client.getCore().getLogger().error("事件载荷: {}", frame);
             e.printStackTrace();
             return;
         }
@@ -173,18 +173,22 @@ public class ListenerImpl implements FrameHandler {
                 writer.write(String.valueOf(client.getSession().getSN().get()));
                 writer.close();
             } catch (IOException e) {
-                client.getCore().getLogger().warn("Unable to write SN to local.", e);
+                client.getCore().getLogger().warn("无法将 SN 写入本地", e);
             }
         }
     }
 
     protected void hello(Frame frame) {
-        client.getCore().getLogger().debug("Got HELLO");
+        client.getCore().getLogger().debug("收到 HELLO");
         connector.setConnected(true);
-        JsonObject object = frame.getData();
-        int status = get(object, "code").getAsInt();
+        JsonNode object = frame.getData();
+        JsonNode codeNode = object.get("code");
+        int status = codeNode != null ? codeNode.asInt() : -1;
         if (status == 0) {
-            client.getSession().setId(get(object, "session_id").getAsString());
+            JsonNode sessionIdNode = object.get("session_id");
+            if (sessionIdNode != null) {
+                client.getSession().setId(sessionIdNode.asText());
+            }
         } else {
             connector.requestReconnect();
         }
@@ -264,10 +268,10 @@ public class ListenerImpl implements FrameHandler {
                         sender.sendPrivateMessage(content);
                     }
                 } catch (BadResponseException ex) { // too long? or timed out? however, we won't retry.
-                    client.getCore().getLogger().error("Unable to send command failure message.", ex);
+                    client.getCore().getLogger().error("无法发送命令失败消息", ex);
                 }
             }
-            client.getCore().getLogger().error("Unexpected exception while we attempting to execute command from remote.", e);
+            client.getCore().getLogger().error("执行来自远程的命令时发生意外异常", e);
             return true; // Although this failed, but it is a valid command
         }
     }

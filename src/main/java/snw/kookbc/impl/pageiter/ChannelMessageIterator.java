@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.TextChannel;
 import snw.jkook.message.ChannelMessage;
@@ -33,8 +31,6 @@ import snw.kookbc.impl.network.HttpAPIRoute;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-
-import static snw.kookbc.util.GsonUtil.get;
 
 public class ChannelMessageIterator extends PageIteratorImpl<Collection<ChannelMessage>> {
     private final TextChannel channel;
@@ -56,30 +52,31 @@ public class ChannelMessageIterator extends PageIteratorImpl<Collection<ChannelM
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new LinkedHashSet<>(array.size());
-        for (JsonElement element : array) {
-            object.add(buildMessage(element.getAsJsonObject()));
+    protected void processElements(JsonNode node) {
+        object = new LinkedHashSet<>(node.size());
+        for (JsonNode element : node) {
+            object.add(buildMessage(element));
         }
     }
+
 
     @Override
     public Collection<ChannelMessage> next() {
         return Collections.unmodifiableCollection(super.next());
     }
 
-    private ChannelMessage buildMessage(JsonObject object) {
-        String id = get(object, "id").getAsString();
+    private ChannelMessage buildMessage(JsonNode node) {
+        String id = node.get("id").asText();
         Message message = client.getStorage().getMessage(id);
         if (message != null) {
-            return (ChannelMessage) message; // if this throw ClassCastException, then we can know the message ID for pm and text channel message is in the same "space"
+            return (ChannelMessage) message;
         }
-        long timeStamp = get(object, "create_at").getAsLong();
-        JsonObject authorObj = object.getAsJsonObject("author");
-        User author = client.getStorage().getUser(authorObj.get("id").getAsString(), authorObj);
-        BaseComponent component = client.getMessageBuilder().buildComponent(object);
-        JsonElement quoteElement = object.get("quote");
-        Message quote = quoteElement != null && !quoteElement.isJsonNull() ? client.getMessageBuilder().buildQuote(quoteElement.getAsJsonObject()) : null;
+        long timeStamp = node.get("create_at").asLong();
+        JsonNode authorNode = node.get("author");
+        User author = client.getStorage().getUser(authorNode.get("id").asText(), authorNode);
+        BaseComponent component = client.getMessageBuilder().buildComponent(node);
+        JsonNode quoteNode = node.get("quote");
+        Message quote = quoteNode != null && !quoteNode.isNull() ? client.getMessageBuilder().buildQuote(quoteNode) : null;
         return new ChannelMessageImpl(
                 client,
                 id,

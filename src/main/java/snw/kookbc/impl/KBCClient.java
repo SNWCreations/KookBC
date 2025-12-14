@@ -72,6 +72,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static snw.kookbc.util.Util.closeLoaderIfPossible;
+import static snw.kookbc.util.VirtualThreadUtil.newVirtualThreadExecutor;
 
 // The client representation.
 public class KBCClient {
@@ -133,7 +134,7 @@ public class KBCClient {
         this.storage = Optional.ofNullable(storage).orElseGet(() -> EntityStorage::new).apply(this);
         this.entityBuilder = Optional.ofNullable(entityBuilder).orElseGet(() -> EntityBuilder::new).apply(this);
         this.msgBuilder = Optional.ofNullable(msgBuilder).orElseGet(() -> MessageBuilder::new).apply(this);
-        this.eventExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Event Executor"));
+        this.eventExecutor = newVirtualThreadExecutor("Event-Executor");
         this.shutdownLock = new ReentrantLock();
         this.shutdownCondition = this.shutdownLock.newCondition();
         this.eventFactory = Optional.ofNullable(eventFactory).orElseGet(() -> EventFactory::new).apply(this);
@@ -145,8 +146,8 @@ public class KBCClient {
                 this.networkSystem = new JLHttpWebhookNetworkSystem(this, null);
             } else {
                 getCore().getLogger().warn("***********************************");
-                getCore().getLogger().warn("Unrecognized network mode: " + mode);
-                getCore().getLogger().warn("Switch to default mode: websocket");
+                getCore().getLogger().warn("无法识别的网络模式: " + mode);
+                getCore().getLogger().warn("切换到默认模式: websocket");
                 getCore().getLogger().warn("***********************************");
                 this.networkSystem = new OkhttpWebSocketNetworkSystem(this);
             }
@@ -171,7 +172,7 @@ public class KBCClient {
                 this.userPermissions.put(userPermissionSaved.getUid(), userPermissionSaved);
             }
         } catch (IOException e) {
-            getCore().getLogger().error("Failed to load permissions", e);
+            getCore().getLogger().error("加载权限失败", e);
         }
     }
 
@@ -234,40 +235,40 @@ public class KBCClient {
     // or you will get NullPointerException.
     public synchronized void start() {
         // Print version information
-        getCore().getLogger().info("Starting {} version {}", getCore().getImplementationName(), getCore().getImplementationVersion());
-        getCore().getLogger().info("This VM is running {} version {} (Implementing API version {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
-        getCore().getLogger().info("Working directory: {}", new File(".").getAbsolutePath());
+        getCore().getLogger().info("正在启动 {} 版本 {}", getCore().getImplementationName(), getCore().getImplementationVersion());
+        getCore().getLogger().info("当前运行 {} 版本 {} (实现 API 版本 {})", getCore().getImplementationName(), getCore().getImplementationVersion(), getCore().getAPIVersion());
+        getCore().getLogger().info("工作目录: {}", new File(".").getAbsolutePath());
         Properties gitProperties = new Properties();
         try {
             gitProperties.load(getClass().getClassLoader().getResourceAsStream("kookbc_git_data.properties"));
-            getCore().getLogger().info("Compiled from Git commit {}, build at {}", gitProperties.get("git.commit.id"), gitProperties.get("git.commit.time"));
+            getCore().getLogger().info("编译信息: Git 提交 {}, 构建时间 {}", gitProperties.get("git.commit.id"), gitProperties.get("git.commit.time"));
         } catch (NullPointerException | IOException e) {
-            getCore().getLogger().warn("Unable to read Git commit information", e);
+            getCore().getLogger().warn("无法读取 Git 提交信息", e);
         }
 
         if (SharedConstants.IS_SNAPSHOT) {
             getCore().getLogger().warn("***********************************");
-            getCore().getLogger().warn("YOU ARE RUNNING A SNAPSHOT BUILD.");
-            getCore().getLogger().warn("DO NOT USE SNAPSHOT BUILDS IN YOUR");
-            getCore().getLogger().warn(" PRODUCTION ENVIRONMENT!");
-            getCore().getLogger().warn("If you don't know why you're seeing");
-            getCore().getLogger().warn(" this, download the stable version.");
+            getCore().getLogger().warn("您正在运行快照构建版本。");
+            getCore().getLogger().warn("请勿在生产环境中使用");
+            getCore().getLogger().warn(" 快照构建版本！");
+            getCore().getLogger().warn("如果您不知道为什么看到");
+            getCore().getLogger().warn(" 这个消息，请下载稳定版本。");
             getCore().getLogger().warn("***********************************");
         }
 
-        core.getLogger().debug("Fetching Bot user object");
+        core.getLogger().debug("正在获取 Bot 用户对象");
         User botUser = getEntityBuilder().buildUser(getNetworkClient().get(HttpAPIRoute.USER_ME.toFullURL()));
         getStorage().addUser(botUser);
         core.setUser(botUser);
         registerInternal();
-        getCore().getLogger().debug("Enabling plugins");
+        getCore().getLogger().debug("正在启用插件");
         enablePlugins();
-        getCore().getLogger().info("Running delayed init tasks");
+        getCore().getLogger().info("正在运行延迟初始化任务");
         ((SchedulerImpl) core.getScheduler()).runAfterPluginInitTasks();
-        getCore().getLogger().debug("Starting Network");
+        getCore().getLogger().debug("正在启动网络");
         startNetwork();
         finishStart();
-        getCore().getLogger().info("Done! Type \"help\" for help.");
+        getCore().getLogger().info("完成！输入 \"help\" 获取帮助。");
 
         if (getConfig().getBoolean("check-update", true)) {
             new UpdateChecker(this).start(); // check update. Added since 2022/7/24
@@ -294,18 +295,18 @@ public class KBCClient {
         }
         @SuppressWarnings("DataFlowIssue") List<File> newIncomingFiles = new ArrayList<>(Arrays.asList(getPluginsFolder().listFiles(File::isFile)));
 
-        getCore().getLogger().debug("Before filtering: {}", newIncomingFiles);
-        getCore().getLogger().debug("Current known plugins: {}", this.plugins);
+        getCore().getLogger().debug("过滤前: {}", newIncomingFiles);
+        getCore().getLogger().debug("当前已知插件: {}", this.plugins);
         for (Plugin plugin : this.plugins) {
-            getCore().getLogger().debug("Checking file: {}", plugin.getFile());
+            getCore().getLogger().debug("正在检查文件: {}", plugin.getFile());
             newIncomingFiles.removeIf(i -> i.getAbsolutePath().equals(plugin.getFile().getAbsolutePath())); // remove already loaded file
         }
-        getCore().getLogger().debug("After filtering: {}", newIncomingFiles);
+        getCore().getLogger().debug("过滤后: {}", newIncomingFiles);
 
         int before = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
 
         List<Plugin> pluginsToEnable = this.plugins;
-        getCore().getLogger().debug("Plugins to be enabled: {}", pluginsToEnable);
+        getCore().getLogger().debug("待启用的插件: {}", pluginsToEnable);
 
         boolean shouldContinue;
 
@@ -314,9 +315,9 @@ public class KBCClient {
             enablePlugins(pluginsToEnable);
             int after = ((SimplePluginManager) getCore().getPluginManager()).getLoaderProviders().size();
             if (after > before) { // new loader providers added
-                getCore().getLogger().debug("Found new plugin loader providers, trying to load more plugins");
+                getCore().getLogger().debug("发现新的插件加载器提供者，尝试加载更多插件");
                 if (!newIncomingFiles.isEmpty()) {
-                    getCore().getLogger().debug("Files to be loaded: {}", newIncomingFiles);
+                    getCore().getLogger().debug("待加载的文件: {}", newIncomingFiles);
                     List<Plugin> newPlugins = new ArrayList<>();
                     for (Iterator<File> iterator = newIncomingFiles.iterator(); iterator.hasNext(); ) {
                         File fileToLoad = iterator.next();
@@ -324,14 +325,14 @@ public class KBCClient {
                         try {
                             plugin = getCore().getPluginManager().loadPlugin(fileToLoad);
                         } catch (InvalidPluginException e) {
-                            getCore().getLogger().debug("Exception appeared", e);
+                            getCore().getLogger().debug("出现异常", e);
                             continue; // don't remove, maybe it will be loaded in next loop?
                         }
-                        getCore().getLogger().debug("Successfully loaded {} from file {}", plugin, fileToLoad);
+                        getCore().getLogger().debug("成功从文件 {} 加载插件 {}", fileToLoad, plugin);
                         newPlugins.add(plugin);
                         iterator.remove(); // prevent next loop load this again
                     }
-                    getCore().getLogger().debug("New plugins to be enabled in next round: {}", newPlugins);
+                    getCore().getLogger().debug("下一轮待启用的新插件: {}", newPlugins);
                     if (!newPlugins.isEmpty()) {
                         newPlugins.sort(DependencyListBasedPluginComparator.INSTANCE);
                         pluginsToEnable = newPlugins;
@@ -356,11 +357,11 @@ public class KBCClient {
 
             // onLoad
             PluginDescription description = plugin.getDescription();
-            plugin.getLogger().info("Loading {} version {}", description.getName(), description.getVersion());
+            plugin.getLogger().info("正在加载 {} 版本 {}", description.getName(), description.getVersion());
             try {
                 plugin.onLoad();
             } catch (Throwable e) {
-                plugin.getLogger().error("Unable to load this plugin", e);
+                plugin.getLogger().error("无法加载此插件", e);
                 iterator.remove();
             }
             // end onLoad
@@ -372,14 +373,14 @@ public class KBCClient {
             try {
                 plugin.reloadConfig(); // ensure the default configuration will be loaded
             } catch (Exception e) {
-                plugin.getLogger().error("Unable to load configuration", e);
+                plugin.getLogger().error("无法加载配置", e);
             }
 
             // onEnable
             try {
                 getCore().getPluginManager().enablePlugin(plugin);
             } catch (UnknownDependencyException e) {
-                getCore().getLogger().error("Unable to enable plugin {} because unknown dependency detected.", plugin.getDescription().getName(), e);
+                getCore().getLogger().error("无法启用插件 {}，检测到未知的依赖项", plugin.getDescription().getName(), e);
                 closeLoaderIfPossible(plugin);
                 iterator.remove();
                 continue;
@@ -414,10 +415,10 @@ public class KBCClient {
                     UUID.fromString(rawBotMarketUUID);
                     new BotMarketPingThread(this, rawBotMarketUUID, () -> getNetworkSystem().isConnected()).start();
                 } catch (IllegalArgumentException e) {
-                    getCore().getLogger().warn("Invalid UUID of BotMarket. We won't schedule the PING task for BotMarket.");
+                    getCore().getLogger().warn("BotMarket 的 UUID 无效，不会为 BotMarket 安排 PING 任务");
                 }
                 */
-                getCore().getLogger().warn("BotMarket Ping is currently deprecated, as they are upgrading their system.");
+                getCore().getLogger().warn("BotMarket Ping 目前已弃用，他们正在升级系统");
             }
         }
         // endregion
@@ -427,41 +428,41 @@ public class KBCClient {
     // Note that this method won't return until the client stopped,
     // so call it in a single thread.
     public void loop() {
-        getCore().getLogger().debug("Starting console");
+        getCore().getLogger().debug("正在启动控制台");
         try {
             new Console(this).start();
         } catch (IOException e) {
-            getCore().getLogger().error("Failed to read input from console");
-            getCore().getLogger().error("Running WITHOUT console!");
-            getCore().getLogger().error("You can stop this process by creating a new file named");
-            getCore().getLogger().error("KOOKBC_STOP in the working directory of this process.");
-            getCore().getLogger().error("Stacktrace is following:");
+            getCore().getLogger().error("从控制台读取输入失败");
+            getCore().getLogger().error("在没有控制台的情况下运行！");
+            getCore().getLogger().error("您可以通过创建一个名为");
+            getCore().getLogger().error("KOOKBC_STOP 的新文件来停止此进程，文件位于此进程的工作目录中");
+            getCore().getLogger().error("堆栈跟踪如下：");
             e.printStackTrace();
             new StopSignalListener(this).start();
         } catch (Exception e) {
-            getCore().getLogger().error("Unexpected situation happened during the main loop.", e);
+            getCore().getLogger().error("主循环执行过程中发生意外情况", e);
         }
-        getCore().getLogger().debug("REPL end");
+        getCore().getLogger().debug("REPL 结束");
     }
 
     // Shutdown this client, and loop() method will return after this method completes.
     public synchronized void shutdown() {
-        getCore().getLogger().debug("Client shutdown request received");
+        getCore().getLogger().debug("收到客户端关闭请求");
         if (!isRunning()) {
-            getCore().getLogger().debug("The client has already stopped");
+            getCore().getLogger().debug("客户端已经停止");
             return;
         }
         running = false; // make sure the client will shut down if Bot wish the client stop.
 
-        getCore().getLogger().info("Stopping client");
+        getCore().getLogger().info("正在停止客户端");
         getCore().getPluginManager().clearPlugins();
 
         shutdownNetwork();
         eventExecutor.shutdown();
-        getCore().getLogger().info("Stopping core");
-        getCore().getLogger().info("Stopping scheduler (If the application got into infinite loop, please kill this process!)");
+        getCore().getLogger().info("正在停止核心");
+        getCore().getLogger().info("正在停止调度器（如果应用程序陷入无限循环，请终止此进程！）");
         ((SchedulerImpl) getCore().getScheduler()).shutdown();
-        getCore().getLogger().info("Client stopped");
+        getCore().getLogger().info("客户端已停止");
 
         // region Emit shutdown signal
         shutdownLock.lock();
@@ -560,7 +561,7 @@ public class KBCClient {
                 ResultTypes resultTypes = ResultTypes.valueOf(getConfig().getString("internal-commands-reply-result-type"));
                 k.defaultResultType(resultTypes);
             } catch (Exception e) {
-                getCore().getLogger().error("`internal-commands-reply-result-type` is not a valid result-type");
+                getCore().getLogger().error("`internal-commands-reply-result-type` 不是有效的 result-type");
             }
             return k;
         }).commands(commands.toArray()).build();

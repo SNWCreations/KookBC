@@ -18,13 +18,11 @@
 
 package snw.kookbc;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 // The shared constants as the symbol for KookBC.
 // Want to modify them? see kookbc_version_data.json in src/main/resources folder.
@@ -47,24 +45,24 @@ public final class SharedConstants {
 
     static {
         // region Initialize data object
-        JsonObject dataObject;
+        JsonNode dataObject;
         try (InputStream inputStream = SharedConstants.class.getClassLoader().getResourceAsStream("kookbc_version_data.json")) {
             if (inputStream == null) {
                 throw new Error("Cannot find kookbc_version_data.json");
             }
-            dataObject = JsonParser.parseReader(new InputStreamReader(inputStream)).getAsJsonObject();
-        } catch (JsonParseException | IOException e) {
+            dataObject = JacksonUtil.getMapper().readTree(inputStream);
+        } catch (IOException e) {
             throw new Error("Cannot initialize KookBC data", e); // should never happen
         }
         // endregion
 
         try {
-            SPEC_NAME = dataObject.get("spec_name").getAsString();
-            SPEC_VERSION = dataObject.get("spec_version").getAsString();
-            IMPL_NAME = dataObject.get("name").getAsString();
-            IMPL_VERSION = dataObject.get("version").getAsString();
-            REPO_URL = dataObject.get("repo_url").getAsString();
-            IS_SNAPSHOT = Boolean.parseBoolean(dataObject.get("is_snapshot").getAsString());
+            SPEC_NAME = dataObject.get("spec_name").asText();
+            SPEC_VERSION = dataObject.get("spec_version").asText();
+            IMPL_NAME = dataObject.get("name").asText();
+            IMPL_VERSION = dataObject.get("version").asText();
+            REPO_URL = dataObject.get("repo_url").asText();
+            IS_SNAPSHOT = Boolean.parseBoolean(dataObject.get("is_snapshot").asText());
         } catch (Exception e) {
             throw new Error("Cannot define KookBC data", e);
         }

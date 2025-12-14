@@ -18,7 +18,7 @@
 
 package snw.kookbc.interfaces.network.webhook;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.kookbc.interfaces.Lifecycle;
 
 public interface WebhookServer extends Lifecycle {
@@ -26,7 +26,7 @@ public interface WebhookServer extends Lifecycle {
     // Should only be called once during its lifecycle.
     // So its implementations should be protected.
     // Only for implementation use.
-    void setHandler(RequestHandler<JsonObject> handler);
+    void setHandler(RequestHandler<JsonNode> handler);
 
     // Set the endpoint of the Webhook handler, should be called BEFORE THE SERVER STARTS.
     void setEndpoint(String path);

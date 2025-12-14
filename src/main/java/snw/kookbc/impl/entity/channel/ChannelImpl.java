@@ -18,7 +18,7 @@
 
 package snw.kookbc.impl.entity.channel;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.Nullable;
 import snw.jkook.Permission;
 import snw.jkook.entity.Guild;
@@ -29,6 +29,7 @@ import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
 import snw.kookbc.interfaces.LazyLoadable;
 import snw.kookbc.interfaces.Updatable;
+import snw.kookbc.util.JacksonUtil;
 import snw.kookbc.util.MapBuilder;
 
 import java.util.Collection;
@@ -39,8 +40,8 @@ import java.util.Objects;
 import static snw.jkook.util.Validate.isTrue;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
+import static snw.kookbc.util.JacksonUtil.getAsInt;
+import static snw.kookbc.util.JacksonUtil.getAsString;
 
 public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
     protected final KBCClient client;
@@ -319,12 +320,11 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
         return master;
     }
 
-    @Override
-    public synchronized void update(JsonObject data) {
-        isTrue(Objects.equals(getId(), getAsString(data, "id")), "You can't update channel by using different data");
-        this.name = getAsString(data, "name");
-        this.permSync = getAsInt(data, "permission_sync") != 0;
-        this.guild = client.getStorage().getGuild(getAsString(data, "guild_id"));
+    public synchronized void update(JsonNode data) {
+        isTrue(Objects.equals(getId(), JacksonUtil.get(data, "id").asText()), "You can't update channel by using different data");
+        this.name = JacksonUtil.get(data, "name").asText();
+        this.permSync = JacksonUtil.get(data, "permission_sync").asInt() != 0;
+        this.guild = client.getStorage().getGuild(JacksonUtil.get(data, "guild_id").asText());
         this.rpo = parseRPO(data);
         this.upo = parseUPO(client, data);
 
@@ -344,7 +344,7 @@ public abstract class ChannelImpl implements Channel, Updatable, LazyLoadable {
 
     @Override
     public void initialize() {
-        final JsonObject data = client.getNetworkClient()
+        final JsonNode data = client.getNetworkClient()
                 .get(String.format("%s?target_id=%s", HttpAPIRoute.CHANNEL_INFO.toFullURL(), this.id));
         update(data);
         completed = true;

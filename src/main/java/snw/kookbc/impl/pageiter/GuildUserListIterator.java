@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import snw.jkook.entity.User;
 import snw.kookbc.impl.KBCClient;
 import snw.kookbc.impl.network.HttpAPIRoute;
@@ -73,13 +71,15 @@ public class GuildUserListIterator extends PageIteratorImpl<Set<User>> {
     }
 
     @Override
-    protected void processElements(JsonArray array) {
-        object = new HashSet<>(array.size());
-        for (JsonElement element : array) {
-            JsonObject rawObj = element.getAsJsonObject();
-            object.add(client.getStorage().getUser(rawObj.get("id").getAsString()));
+    protected void processElements(JsonNode node) {
+        object = new HashSet<>(node.size());
+        for (JsonNode element : node) {
+            String userId = element.get("id").asText();
+            // 使用完整的用户数据,避免额外的 HTTP 请求
+            object.add(client.getStorage().getUser(userId, element));
         }
     }
+
 
     @Override
     public Set<User> next() {

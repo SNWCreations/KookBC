@@ -22,13 +22,12 @@ import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseEmojiGuild;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseNotifyType;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseRPO;
 import static snw.kookbc.impl.entity.builder.EntityBuildUtil.parseUPO;
-import static snw.kookbc.util.GsonUtil.getAsBoolean;
-import static snw.kookbc.util.GsonUtil.getAsInt;
-import static snw.kookbc.util.GsonUtil.getAsString;
+// Jackson utils for safe field access
+import static snw.kookbc.util.JacksonUtil.*;
 
 import java.util.Collection;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.Game;
@@ -46,6 +45,7 @@ import snw.kookbc.impl.entity.RoleImpl;
 import snw.kookbc.impl.entity.UserImpl;
 import snw.kookbc.impl.entity.channel.CategoryImpl;
 import snw.kookbc.impl.entity.channel.TextChannelImpl;
+import snw.kookbc.impl.entity.channel.ThreadChannelImpl;
 import snw.kookbc.impl.entity.channel.VoiceChannelImpl;
 
 // The class for building entities.
@@ -56,88 +56,174 @@ public class EntityBuilder {
         this.client = client;
     }
 
-    public User buildUser(JsonObject s) {
-        final String id = getAsString(s, "id");
-        final boolean bot = getAsBoolean(s, "bot");
-        final String name = getAsString(s, "username");
-        final int identify = getAsInt(s, "identify_num");
-        final boolean ban = getAsInt(s, "status") == 10;
-        final boolean vip = getAsBoolean(s, "is_vip");
-        final String avatarUrl = getAsString(s, "avatar");
-        final String vipAvatarUrl = getAsString(s, "vip_avatar");
+    // ===== Jackson API - 高性能版本（处理Kook不完整JSON数据）=====
+
+    /**
+     * 构建User对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public User buildUser(JsonNode node) {
+        // 必需字段 - 如果不存在会抛出异常
+        final String id = getRequiredString(node, "id");
+
+        // 可选字段 - 提供合适的默认值
+        final boolean bot = getBooleanOrDefault(node, "bot", false);
+        final String name = getStringOrDefault(node, "username", "Unknown User");
+        final int identify = getIntOrDefault(node, "identify_num", 0);
+
+        // 状态字段 - 默认为正常状态（非封禁）
+        final int status = getIntOrDefault(node, "status", 0);
+        final boolean ban = (status == 10);
+
+        // VIP状态默认为false
+        final boolean vip = getBooleanOrDefault(node, "is_vip", false);
+
+        // 头像URL - 提供空字符串作为默认值
+        final String avatarUrl = getStringOrDefault(node, "avatar", "");
+        final String vipAvatarUrl = getStringOrDefault(node, "vip_avatar", "");
+
         return new UserImpl(client, id, bot, name, identify, ban, vip, avatarUrl, vipAvatarUrl);
     }
 
-    public Guild buildGuild(JsonObject object) {
-        final String id = getAsString(object, "id");
-        final NotifyType notifyType = parseNotifyType(object);
-        final User master = client.getStorage().getUser(getAsString(object, "master_id"));
-        final String name = getAsString(object, "name");
-        final boolean public_ = getAsBoolean(object, "enable_open");
-        final String region = getAsString(object, "region");
-        final String avatarUrl = getAsString(object, "icon");
+    /**
+     * 构建Guild对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public Guild buildGuild(JsonNode node) {
+        // 必需字段
+        final String id = getRequiredString(node, "id");
+
+        // 通知类型 - 使用EntityBuildUtil解析
+        final NotifyType notifyType = parseNotifyType(node);
+
+        // 服务器主人 - 必需字段
+        final String masterId = getRequiredString(node, "master_id");
+        final User master = client.getStorage().getUser(masterId);
+
+        // 服务器基本信息
+        final String name = getStringOrDefault(node, "name", "Unknown Guild");
+        final boolean public_ = getBooleanOrDefault(node, "enable_open", false);
+        final String region = getStringOrDefault(node, "region", "unknown");
+        final String avatarUrl = getStringOrDefault(node, "icon", "");
+
         return new GuildImpl(client, id, notifyType, master, name, public_, region, avatarUrl);
     }
 
-    public Channel buildChannel(JsonObject object) {
-        final String id = getAsString(object, "id");
-        final String name = getAsString(object, "name");
-        final Guild guild = client.getStorage().getGuild(getAsString(object, "guild_id"));
-        final User master = client.getStorage().getUser(getAsString(object, "user_id"));
-        final boolean isPermSync = getAsInt(object, "permission_sync") != 0;
-        final int level = getAsInt(object, "level");
-        final Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(object);
-        final Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, object);
-        if (getAsBoolean(object, "is_category")) {
+    /**
+     * 构建Channel对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public Channel buildChannel(JsonNode node) {
+        // 必需字段
+        final String id = getRequiredString(node, "id");
+        final String name = getStringOrDefault(node, "name", "Unknown Channel");
+
+        // 所属服务器和创建者
+        final String guildId = getRequiredString(node, "guild_id");
+        final Guild guild = client.getStorage().getGuild(guildId);
+
+        final String userId = getRequiredString(node, "user_id");
+        final User master = client.getStorage().getUser(userId);
+
+        // 权限同步和级别
+        final boolean isPermSync = getIntOrDefault(node, "permission_sync", 0) != 0;
+        final int level = getIntOrDefault(node, "level", 0);
+
+        // 权限覆写 - 使用EntityBuildUtil安全解析
+        final Collection<Channel.RolePermissionOverwrite> rpo = parseRPO(node);
+        final Collection<Channel.UserPermissionOverwrite> upo = parseUPO(client, node);
+
+        // 检查是否为分类频道
+        if (getBooleanOrDefault(node, "is_category", false)) {
             return new CategoryImpl(client, id, master, guild, isPermSync, rpo, upo, level, name);
         }
-        final String parentId = getAsString(object, "parent_id");
+
+        // 处理父级分类
+        final String parentId = getStringOrDefault(node, "parent_id", "");
         final Boolean needCategory = "".equals(parentId) || "0".equals(parentId);
         final Category parent = needCategory ? null : new CategoryImpl(client, parentId);
-        switch (getAsInt(object, "type")) {
+
+        // 根据频道类型创建对应对象
+        final int channelType = getIntOrDefault(node, "type", 1); // 默认为文本频道
+
+        switch (channelType) {
             case 1: {
-                final int chatLimitTime = getAsInt(object, "slow_mode");
-                final String topic = getAsString(object, "topic");
+                // 文本频道
+                final int chatLimitTime = getIntOrDefault(node, "slow_mode", 0);
+                final String topic = getStringOrDefault(node, "topic", "");
                 return new TextChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
                         chatLimitTime, topic);
             }
             case 2: {
-                final int chatLimitTime = getAsInt(object, "slow_mode");
-                final boolean hasPassword = object.has("has_password") && getAsBoolean(object, "has_password");
-                final int size = getAsInt(object, "limit_amount");
-                final int quality = getAsInt(object, "voice_quality");
+                // 语音频道
+                final int chatLimitTime = getIntOrDefault(node, "slow_mode", 0);
+                final boolean hasPassword = hasNonNull(node, "has_password") && getBooleanOrDefault(node, "has_password", false);
+                final int size = getIntOrDefault(node, "limit_amount", 99);
+                final int quality = getIntOrDefault(node, "voice_quality", 1);
                 return new VoiceChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
                         hasPassword, size, quality, chatLimitTime);
             }
+            case 4: {
+                // 帖子频道 (Thread Channel)
+                final int chatLimitTime = getIntOrDefault(node, "slow_mode", 0);
+                return new ThreadChannelImpl(client, id, master, guild, isPermSync, parent, name, rpo, upo, level,
+                        chatLimitTime);
+            }
             default: {
-                final String msg = "We can't construct the Channel using given information. Is your information correct?";
+                final String msg = "We can't construct the Channel using given information. Unknown channel type: " + channelType;
                 throw new IllegalArgumentException(msg);
             }
         }
     }
 
-    public Role buildRole(Guild guild, JsonObject object) {
-        final int id = getAsInt(object, "role_id");
-        final String name = getAsString(object, "name");
-        final int color = getAsInt(object, "color");
-        final int pos = getAsInt(object, "position");
-        final boolean hoist = getAsInt(object, "hoist") == 1;
-        final boolean mentionable = getAsInt(object, "mentionable") == 1;
-        final int permissions = getAsInt(object, "permissions");
+    /**
+     * 构建Role对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public Role buildRole(Guild guild, JsonNode node) {
+        // 必需字段
+        final int id = getRequiredInt(node, "role_id");
+        final String name = getStringOrDefault(node, "name", "Unknown Role");
+
+        // 外观属性
+        final int color = getIntOrDefault(node, "color", 0); // 默认无颜色
+        final int pos = getIntOrDefault(node, "position", 0); // 默认位置0
+
+        // 显示设置 (0/1值转换为布尔值)
+        final boolean hoist = getIntOrDefault(node, "hoist", 0) == 1;
+        final boolean mentionable = getIntOrDefault(node, "mentionable", 0) == 1;
+
+        // 权限位掩码
+        final int permissions = getIntOrDefault(node, "permissions", 0);
+
         return new RoleImpl(client, guild, id, color, pos, permissions, mentionable, hoist, name);
     }
 
-    public CustomEmoji buildEmoji(JsonObject object) {
-        final String id = getAsString(object, "id");
-        final Guild guild = parseEmojiGuild(id, client, object);
-        final String name = getAsString(object, "name");
+    /**
+     * 构建CustomEmoji对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public CustomEmoji buildEmoji(JsonNode node) {
+        // 必需字段
+        final String id = getRequiredString(node, "id");
+        final String name = getStringOrDefault(node, "name", "Unknown Emoji");
+
+        // 解析表情所属服务器 - 使用EntityBuildUtil
+        final Guild guild = parseEmojiGuild(id, client, node);
+
         return new CustomEmojiImpl(client, id, guild, name);
     }
 
-    public Game buildGame(JsonObject object) {
-        final int id = getAsInt(object, "id");
-        final String name = getAsString(object, "name");
-        final String icon = getAsString(object, "icon");
+    /**
+     * 构建Game对象 (Jackson版本，安全处理不完整JSON)
+     * 处理Kook可能发送不完整JSON的情况
+     */
+    public Game buildGame(JsonNode node) {
+        // 必需字段
+        final int id = getRequiredInt(node, "id");
+        final String name = getStringOrDefault(node, "name", "Unknown Game");
+        final String icon = getStringOrDefault(node, "icon", "");
+
         return new GameImpl(client, id, name, icon);
     }
 }

@@ -46,7 +46,7 @@ public final class StopSignalListener extends Thread {
             if (localFile.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 localFile.delete();
-                client.getCore().getLogger().info("Received stop signal by new file. Stopping!");
+                client.getCore().getLogger().info("通过新文件收到停止信号，正在停止！");
                 client.shutdown();
                 return;
             }

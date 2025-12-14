@@ -64,9 +64,9 @@ public class Bucket {
         if (availableTimes.get() <= 10) { // why not 0? Giving the server more time is better than real over limit
             final int resetTime = this.resetTime.get();
             if (Objects.equals(client.getConfig().getString("over-limit-warning-log-level"), "INFO")) {
-                client.getCore().getLogger().info("Route '{}' over limit! Current reset time: {}", name, resetTime);
+                client.getCore().getLogger().info("路由 '{}' 超出限制！当前重置时间: {}", name, resetTime);
             } else {
-                client.getCore().getLogger().debug("Route '{}' over limit! Current reset time: {}", name, resetTime);
+                client.getCore().getLogger().debug("路由 '{}' 超出限制！当前重置时间: {}", name, resetTime);
             }
             RateLimitPolicy.getDefault().perform(client, name, resetTime);
             return;
@@ -179,5 +179,13 @@ public class Bucket {
         bucketNameMap.put(HttpAPIRoute.FRIEND_LIST, "friend");
         bucketNameMap.put(HttpAPIRoute.FRIEND_BLOCK, "friend/block");
         bucketNameMap.put(HttpAPIRoute.FRIEND_UNBLOCK, "friend/unblock");
+        // Thread (帖子频道) API - 新增支持
+        bucketNameMap.put(HttpAPIRoute.THREAD_CATEGORY_LIST, "category/list");
+        bucketNameMap.put(HttpAPIRoute.THREAD_CREATE, "thread/create");
+        bucketNameMap.put(HttpAPIRoute.THREAD_REPLY, "thread/reply");
+        bucketNameMap.put(HttpAPIRoute.THREAD_VIEW, "thread/view");
+        bucketNameMap.put(HttpAPIRoute.THREAD_LIST, "thread/list");
+        bucketNameMap.put(HttpAPIRoute.THREAD_DELETE, "thread/delete");
+        bucketNameMap.put(HttpAPIRoute.THREAD_POST_LIST, "thread/post");
     }
 }

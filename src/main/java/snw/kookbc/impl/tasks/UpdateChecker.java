@@ -22,8 +22,7 @@ import static snw.kookbc.util.Util.getVersionDifference;
 
 import java.util.Objects;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -31,6 +30,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import snw.kookbc.SharedConstants;
 import snw.kookbc.impl.KBCClient;
+import snw.kookbc.util.JacksonUtil;
 
 public final class UpdateChecker extends Thread {
     private final KBCClient client;
@@ -45,29 +45,50 @@ public final class UpdateChecker extends Thread {
         try {
             run0();
         } catch (Exception e) {
-            client.getCore().getLogger().warn("Unable to check update from remote.", e);
+            client.getCore().getLogger().warn("无法从远程检查更新", e);
         }
     }
 
     private void run0() throws Exception {
-        client.getCore().getLogger().info("Checking updates...");
+        client.getCore().getLogger().info("正在检查更新...");
         if (!Objects.equals(SharedConstants.REPO_URL, "https://github.com/SNWCreations/KookBC")) {
             client.getCore().getLogger()
-                    .warn("Not Official KookBC! We cannot check updates for you. Is this a fork version?");
+                    .warn("非官方 KookBC！我们无法为您检查更新。这是一个分支版本吗？");
             return;
         }
         final Request req = new Request.Builder()
                 .get()
                 .url("https://api.github.com/repos/SNWCreations/KookBC/releases/latest")
                 .build();
-        JsonObject resObj;
+        JsonNode resObj;
         try (Response response = new OkHttpClient().newCall(req).execute()) {
             final ResponseBody body = response.body();
             assert body != null;
-            resObj = JsonParser.parseString(body.string()).getAsJsonObject();
+            resObj = JacksonUtil.parse(body.string());
         }
 
-        String receivedVersion = resObj.get("tag_name").getAsString();
+        // 检查 GitHub API 错误响应
+        JsonNode messageNode = resObj.get("message");
+        if (messageNode != null && !messageNode.isNull()) {
+            String errorMessage = messageNode.asText();
+            if (errorMessage.contains("API rate limit exceeded")) {
+                client.getCore().getLogger()
+                        .warn("无法检查更新！GitHub API 请求频率限制已超出，请稍后重试");
+            } else {
+                client.getCore().getLogger()
+                        .warn("无法检查更新！GitHub API 返回错误: {}", errorMessage);
+            }
+            return;
+        }
+
+        JsonNode tagNameNode = resObj.get("tag_name");
+        if (tagNameNode == null || tagNameNode.isNull()) {
+            client.getCore().getLogger()
+                    .warn("无法检查更新！GitHub API 响应缺少 'tag_name' 字段，API 格式可能已更改");
+            return;
+        }
+
+        String receivedVersion = tagNameNode.asText();
 
         if (receivedVersion.startsWith("v")) { // normally I won't add "v" prefix.
             receivedVersion = receivedVersion.substring(1);
@@ -78,36 +99,45 @@ public final class UpdateChecker extends Thread {
             versionDifference = getVersionDifference(client.getCore().getImplementationVersion(), receivedVersion);
         } catch (NumberFormatException e) {
             client.getCore().getLogger()
-                    .warn("Cannot check update! We can't recognize version! Custom build or snapshot API?");
+                    .warn("无法检查更新！版本号无法识别！自定义构建版本或快照 API？");
             return;
         }
         switch (versionDifference) {
             case -1: {
-                client.getCore().getLogger().info("Update available! Information is following:");
-                client.getCore().getLogger().info("New Version: {}, Currently on: {}", receivedVersion,
+                client.getCore().getLogger().info("发现可用更新！相关信息如下：");
+                client.getCore().getLogger().info("最新版本: {}，当前版本: {}", receivedVersion,
                         client.getCore().getImplementationVersion());
-                client.getCore().getLogger().info("Release Title: {}", resObj.get("name").getAsString());
-                client.getCore().getLogger().info("Release Time: {}", resObj.get("published_at").getAsString());
-                client.getCore().getLogger().info("Release message is following:");
-                for (String body : resObj.get("body").getAsString().split("\r\n")) {
+
+                JsonNode nameNode = resObj.get("name");
+                String releaseName = nameNode != null && !nameNode.isNull() ? nameNode.asText() : "未知";
+                client.getCore().getLogger().info("发布标题: {}", releaseName);
+
+                JsonNode publishedAtNode = resObj.get("published_at");
+                String publishedAt = publishedAtNode != null && !publishedAtNode.isNull() ? publishedAtNode.asText() : "未知";
+                client.getCore().getLogger().info("发布时间: {}", publishedAt);
+
+                client.getCore().getLogger().info("发布说明如下：");
+                JsonNode bodyNode = resObj.get("body");
+                String releaseBody = bodyNode != null && !bodyNode.isNull() ? bodyNode.asText() : "无发布说明";
+                for (String body : releaseBody.split("\r\n")) {
                     client.getCore().getLogger().info(body);
                 }
                 client.getCore().getLogger().info(
-                        "You can get the new version of KookBC at: https://github.com/SNWCreations/KookBC/releases/{}",
+                        "您可以在以下地址获取新版本的 KookBC: https://github.com/SNWCreations/KookBC/releases/{}",
                         receivedVersion);
                 break;
             }
             case 0: {
-                client.getCore().getLogger().info("You are using the latest version! :)");
+                client.getCore().getLogger().info("您正在使用最新版本！:)");
                 break;
             }
             case 1: {
-                client.getCore().getLogger().info("Your KookBC is newer than the latest version from remote!");
-                client.getCore().getLogger().info("Are you using development version?");
+                client.getCore().getLogger().info("您的 KookBC 版本比远程最新版本还要新！");
+                client.getCore().getLogger().info("您是否正在使用开发版本？");
                 break;
             }
             default: {
-                client.getCore().getLogger().info("Unable to compare the version! Internal method returns {}",
+                client.getCore().getLogger().info("无法比较版本！内部方法返回值: {}",
                         versionDifference);
                 break;
             }

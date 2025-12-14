@@ -18,9 +18,7 @@
 
 package snw.kookbc.impl.pageiter;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.jetbrains.annotations.Range;
 import snw.jkook.util.Meta;
 import snw.jkook.util.PageIterator;
@@ -54,24 +52,43 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
             executedOnce = true;
         }
         String reqUrl = getRequestURL();
-        JsonObject object = client.getNetworkClient().get(
+        // 使用Jackson API获得更好的性能
+        JsonNode object = client.getNetworkClient().get(
                 reqUrl + (reqUrl.contains("?") ? "&" : "?") + "page=" + currentPage.get() + "&page_size=" + getPageSize()
         );
 
+        JsonNode meta = object.get("meta");
+        JsonNode items = object.get("items");
 
-        JsonElement meta = object.get("meta");
-        if (meta != null && !meta.isJsonNull()) {
-            JsonObject metaAsJsonObject = meta.getAsJsonObject();
-            optionalMeta = Optional.of(new MetaImpl(metaAsJsonObject.get("page").getAsInt(),
-                    metaAsJsonObject.get("page_total").getAsInt(),
-                    metaAsJsonObject.get("page_size").getAsInt(),
-                    metaAsJsonObject.get("total").getAsInt()));
+        // 先处理返回的数据项
+        boolean hasData = false;
+        if (items != null && items.isArray() && items.size() > 0) {
+            processElements(items);
+            hasData = true;
+        }
+
+        // 然后判断是否还有下一页
+        if (meta != null && !meta.isNull()) {
+            // 有 meta 字段：使用分页信息判断是否有下一页
+            optionalMeta = Optional.of(new MetaImpl(meta.get("page").asInt(),
+                    meta.get("page_total").asInt(),
+                    meta.get("page_size").asInt(),
+                    meta.get("total").asInt()));
             next = currentPage.getAndAdd(1) <= optionalMeta.get().getPageTotal();
         } else {
-            next = false;
+            // 无 meta 字段：根据返回的 items 数量判断是否有下一页
+            // 如果返回的 items 数量等于 page_size，可能还有下一页
+            if (items != null && items.isArray()) {
+                int itemCount = items.size();
+                next = itemCount >= pageSizePerRequest;
+                currentPage.incrementAndGet();
+            } else {
+                next = false;
+            }
         }
-        processElements(object.getAsJsonArray("items"));
-        return next;
+
+        // 返回当前是否有数据（不是下一页是否有数据）
+        return hasData;
     }
 
     @Override
@@ -102,5 +119,6 @@ public abstract class PageIteratorImpl<E> implements PageIterator<E> {
 
     protected abstract String getRequestURL();
 
-    protected abstract void processElements(JsonArray array);
+    protected abstract void processElements(JsonNode node);
+
 }

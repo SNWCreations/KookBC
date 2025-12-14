@@ -1,7 +1,7 @@
 package snw.kookbc.impl.event.internal;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import snw.kookbc.util.JacksonUtil;
 import snw.jkook.event.EventHandler;
 import snw.jkook.event.Listener;
 import snw.jkook.event.user.UserClickButtonEvent;
@@ -39,10 +39,10 @@ public final class UserClickButtonListener implements Listener {
         if (!value.startsWith(HELP_VALUE_HEADER)) {
             return;
         }
-        JsonObject detail = JsonParser.parseString(value.substring(HELP_VALUE_HEADER.length())).getAsJsonObject();
-        int page = detail.get("page").getAsInt();
-        int currentPage = detail.get("current").getAsInt();
-        String messageType = detail.get("messageType").getAsString();
+        JsonNode detail = JacksonUtil.parse(value.substring(HELP_VALUE_HEADER.length()));
+        int page = detail.get("page").asInt();
+        int currentPage = detail.get("current").asInt();
+        String messageType = detail.get("messageType").asText();
         if (page == currentPage) {
             return;
         }
