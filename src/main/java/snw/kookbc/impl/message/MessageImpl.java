@@ -137,12 +137,24 @@ public abstract class MessageImpl implements Message, LazyLoadable {
 
     @Override
     public void setComponent(BaseComponent component) {
+        setComponent(component, null);
+    }
+
+    /**
+     * 更新消息内容。
+     *
+     * @param component   新的消息组件
+     * @param replyMsgId  用户 5 分钟内发送的消息 ID（可选，用于降低 API 额度消耗）
+     */
+    @Override
+    public void setComponent(BaseComponent component, @Nullable String replyMsgId) {
         checkCompatibleComponentType(component);
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
                 .put("msg_id", getId())
                 .put("content", content)
                 .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
+                .putIfNotNull("reply_msg_id", replyMsgId)
                 .build();
         client.getNetworkClient().post(
                 ((this instanceof ChannelMessage) ? HttpAPIRoute.CHANNEL_MESSAGE_UPDATE

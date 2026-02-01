@@ -1,6 +1,7 @@
 package snw.kookbc.impl.message;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.jetbrains.annotations.Nullable;
 import snw.jkook.entity.CustomEmoji;
 import snw.jkook.entity.User;
 import snw.jkook.entity.channel.NonCategoryChannel;
@@ -88,6 +89,18 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
 
     @Override
     public void setComponentTemp(User user, BaseComponent component) {
+        setComponentTemp(user, component, null);
+    }
+
+    /**
+     * 临时更新频道消息内容（仅对指定用户可见）。
+     *
+     * @param user        目标用户
+     * @param component   新的消息组件
+     * @param replyMsgId  用户 5 分钟内发送的消息 ID（可选，用于降低 API 额度消耗）
+     */
+    @Override
+    public void setComponentTemp(User user, BaseComponent component, @Nullable String replyMsgId) {
         checkCompatibleComponentType(component);
         Object content = MessageBuilder.serialize(component)[1];
         Map<String, Object> body = new MapBuilder()
@@ -95,6 +108,7 @@ public class ChannelMessageImpl extends MessageImpl implements ChannelMessage {
                 .put("content", content)
                 .put("temp_target_id", user.getId())
                 .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
+                .putIfNotNull("reply_msg_id", replyMsgId)
                 .build();
         client.getNetworkClient().post(
                 HttpAPIRoute.CHANNEL_MESSAGE_UPDATE.toFullURL(),

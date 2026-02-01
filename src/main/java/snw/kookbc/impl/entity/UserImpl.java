@@ -189,6 +189,19 @@ public class UserImpl implements User, Updatable, LazyLoadable {
 
     @Override
     public String sendPrivateMessage(BaseComponent component, PrivateMessage quote) {
+        return sendPrivateMessage(component, quote, null);
+    }
+
+    /**
+     * 发送私聊消息。
+     *
+     * @param component   消息组件
+     * @param quote       引用的消息（可选，UI 上会显示引用）
+     * @param replyMsgId  用户 5 分钟内发送的消息 ID（可选，用于降低 API 额度消耗）
+     * @return 发送的消息 ID
+     */
+    @Override
+    public String sendPrivateMessage(BaseComponent component, PrivateMessage quote, @Nullable String replyMsgId) {
         Object[] serialize = MessageBuilder.serialize(component);
         int type = (int) serialize[0];
         String json = (String) serialize[1];
@@ -198,6 +211,7 @@ public class UserImpl implements User, Updatable, LazyLoadable {
                 .put("content", json)
                 .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .putIfNotNull("quote", quote, Message::getId)
+                .putIfNotNull("reply_msg_id", replyMsgId)
                 .build();
         return client.getNetworkClient().post(HttpAPIRoute.USER_CHAT_MESSAGE_CREATE.toFullURL(), body).get("msg_id")
                 .asText();

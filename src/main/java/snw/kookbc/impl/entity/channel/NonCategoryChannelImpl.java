@@ -112,6 +112,21 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
 
     @Override
     public String sendComponent(BaseComponent component, @Nullable ChannelMessage quote, @Nullable User tempTarget) {
+        return sendComponent(component, quote, tempTarget, null);
+    }
+
+    /**
+     * 发送消息到频道。
+     *
+     * @param component   消息组件
+     * @param quote       引用的消息（可选，UI 上会显示引用）
+     * @param tempTarget  临时消息目标用户（可选）
+     * @param replyMsgId  用户 5 分钟内发送的消息 ID（可选，用于降低 API 额度消耗）
+     * @return 发送的消息 ID
+     */
+    @Override
+    public String sendComponent(BaseComponent component, @Nullable ChannelMessage quote,
+                               @Nullable User tempTarget, @Nullable String replyMsgId) {
         Object[] result = MessageBuilder.serialize(component);
         Map<String, Object> body = new MapBuilder()
                 .put("target_id", getId())
@@ -120,6 +135,7 @@ public abstract class NonCategoryChannelImpl extends ChannelImpl implements NonC
                 .putIfInstance("template_id", component, TemplateMessage.class, TemplateMessage::getId)
                 .putIfNotNull("quote", quote, Message::getId)
                 .putIfNotNull("temp_target_id", tempTarget, User::getId)
+                .putIfNotNull("reply_msg_id", replyMsgId)
                 .build();
         try {
             return client.getNetworkClient().post(HttpAPIRoute.CHANNEL_MESSAGE_SEND.toFullURL(), body).get("msg_id")
